@@ -1,51 +1,36 @@
 import xml.etree.ElementTree as ET
 
-def get_nodes_and_edges(xmlfile: 'file descriptor') -> (['nodes'], ['edges']):
-    ''' given a file descriptor that points to a XML file return a tuple that
-    contains as first element the nodes of the xml, and as second element the
-    edges '''
-    parser = ET.XMLPullParser(['end'])
-    nodes, edges = [], []
-
-    for line in xmlfile:
-        parser.feed(line)
-
-        for event, elem in parser.read_events():
-            if elem.tag == 'node':
-                nodes.append(elem)
-            elif elem.tag == 'connector':
-                edges.append(elem)
-
-    return nodes, edges
-
-def etree_from_list(config:dict, nodes:[ET.Element]) -> ET.ElementTree:
+def etree_from_list(root:ET.Element, nodes:[ET.Element]) -> ET.ElementTree:
     ''' Returns a built ElementTree from the list of its members '''
-    tb = ET.TreeBuilder()
-    root = tb.start(config['PROCESS_ELEMENT'], dict())
-
+    root = ET.Element(root.tag, attrib=root.attrib)
     root.extend(nodes)
 
-    tb.end(config['PROCESS_ELEMENT'])
+    return ET.ElementTree(root)
 
-    return ET.ElementTree(tb.close())
+def nodes_from(node:ET.Element, graph):
+    for edge in graph.findall(".//*[@from='{}']".format(node.attrib['id'])):
+        yield (graph.find(".//*[@id='{}']".format(edge.attrib['to'])), edge)
 
-def topological_sort(nodes:[ET.Element], edges:[ET.Element]) -> ET.ElementTree:
+def topological_sort(start_node:ET.Element, graph:ET.Element) -> ET.ElementTree:
     ''' sorts topologically the given xml element tree, source:
     https://en.wikipedia.org/wiki/Topological_sorting '''
-    sorted_elements = [] # L ← Empty list that will contain the sorted elements
-    # S ← Set of all nodes with no incoming edge
-    # while S is non-empty do
-        # remove a node n from S
-        # add n to tail of L
-        # for each node m with an edge e from n to m do
-            # remove edge e from the graph
-            # if m has no other incoming edges then
-                # insert m into S
-    # if graph has edges then
-        # return error (graph has at least one cycle)
-    # else
-        # return L (a topologically sorted order)
-    return etree_from_list(sorted_elements)
+    sorted_elements = [] # sorted_elements ← Empty list that will contain the sorted elements
+    no_incoming = [start_node]
+
+    while len(no_incoming) > 0:
+        node = no_incoming.pop()
+        sorted_elements.append(node)
+
+        for m, edge in nodes_from(node, graph=graph):
+            graph.remove(e)
+
+            if has_no_incoming(m, graph):
+                no_incoming.append(m)
+
+    if has_edges(graph) > 0:
+        raise Exception('graph is cyclic')
+
+    return etree_from_list(graph, sorted_elements)
 
 class XML:
 

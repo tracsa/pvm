@@ -18,26 +18,9 @@ def get_testing_config(overwrites:dict=None):
 # Tests
 #-------
 
-def test_get_nodes_and_edges():
-    config = get_testing_config()
-    expctnodes = [ "A", "G", "F", "I", "B", "D", "K", "E", "H", "C", "J" ]
-    expctedges = [ "A-B", "I-K", "H-J", "B-D", "C-G", "B-C", "C-F", "G-H", "G-I", "B-E" ]
-
-    with open(os.path.join(config['XML_PATH'], 'unsorted.xml')) as xmlfile:
-        nodes, edges = lib.xml.get_nodes_and_edges(xmlfile)
-
-    assert len(nodes) == len(expctnodes)
-    assert len(edges) == len(expctedges)
-
-    for node, expctnode in zip(nodes, expctnodes):
-        assert node.attrib['id'] == expctnode
-
-    for edge, expctedge in zip(edges, expctedges):
-        assert edge.attrib['id'] == expctedge
-
 def test_etree_from_list_empty():
     nodes = []
-    etree = lib.xml.etree_from_list({ 'PROCESS_ELEMENT': 'process' }, nodes)
+    etree = lib.xml.etree_from_list(ET.Element('process'), nodes)
 
     root = etree.getroot()
     assert root.tag == 'process'
@@ -54,7 +37,7 @@ def test_etree_from_list_withnodes():
     ]
     nodes[2].append(ET.Element('sub'))
 
-    etree = lib.xml.etree_from_list({ 'PROCESS_ELEMENT': 'process' }, nodes)
+    etree = lib.xml.etree_from_list(ET.Element('process'), nodes)
 
     root = etree.getroot()
     assert root.tag == 'process'
@@ -66,21 +49,41 @@ def test_etree_from_list_withnodes():
     ch = root[2][0]
     assert ch.tag == 'sub'
 
+def test_nodes_from():
+    config = get_testing_config()
+    xml = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
+
+    start_node = list(xml.getroot())[10]
+
+    assert start_node.attrib['id'] == 'B'
+
+    given = list(lib.xml.nodes_from(start_node, xml.getroot()))
+    expct = [
+        (ET.Element('node', {'id':'D'}), ET.Element('connector', {'id':'B-D'})),
+        (ET.Element('node', {'id':'C'}), ET.Element('connector', {'id':'B-C'})),
+        (ET.Element('node', {'id':'E'}), ET.Element('connector', {'id':'B-E'})),
+    ]
+
+    assert len(given) == len(expct)
+
+    for (node, edge), (expct_node, expct_edge) in zip(given, expct):
+        assert node.attrib['id'] == expct_node.attrib['id']
+        assert edge.attrib['id'] == expct_edge.attrib['id']
+
 def test_toposort():
     config = get_testing_config()
 
-    with open(os.path.join(config['XML_PATH'], 'unsorted.xml')) as xmlfile:
-        new_xml = lib.xml.topological_sort(*lib.xml.get_nodes_and_edges(xmlfile))
+    xml = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
+    new_xml = lib.xml.topological_sort(xml)
 
-    expct = os.path.join(config['XML_PATH'], 'sorted.xml')
+    expct_tree = ET.parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
 
-    with tempfile.TemporaryFile() as tmpf, open(expct) as expctf:
-        new_xml.write(tmpf)
-        tmpf.seek(0)
+    assert len(new_xml.getroot()) == len(expct_tree.getroot())
+    assert len(new_xml.getroot()) == 21
 
-        assert tmpf.read() == expctf.read()
-
-    assert new_xml.write()
+    for elem, expct in zip(new_xml.iter(), expct_tree.iter()):
+        assert elem.tag == expct.tag
+        assert elem.attrib == expct.attrib
 
 def test_find_next_element_normal():
     ''' given a node, retrieves the next element in the graph '''

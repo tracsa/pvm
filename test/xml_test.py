@@ -70,11 +70,53 @@ def test_nodes_from():
         assert node.attrib['id'] == expct_node.attrib['id']
         assert edge.attrib['id'] == expct_edge.attrib['id']
 
+def test_has_no_incoming_sorted():
+    config = get_testing_config()
+    xml = ET.parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
+
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'A'}), xml.getroot()) == True
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'B'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'C'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'D'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'E'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'F'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'G'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'H'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'I'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'J'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'K'}), xml.getroot()) == False
+
+def test_has_no_incoming_unsorted():
+    config = get_testing_config()
+    xml = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
+
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'A'}), xml.getroot()) == True
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'B'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'C'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'D'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'E'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'F'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'G'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'H'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'I'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'J'}), xml.getroot()) == False
+    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'K'}), xml.getroot()) == False
+
+def test_has_edges():
+    config = get_testing_config()
+    sortedxml = ET.parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
+    unsorted = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
+    no_edges = ET.parse(os.path.join(config['XML_PATH'], 'no_edges.xml'))
+
+    assert lib.xml.has_edges(sortedxml) == True
+    assert lib.xml.has_edges(unsorted) == True
+    assert lib.xml.has_edges(no_edges) == False
+
 def test_toposort():
     config = get_testing_config()
 
     xml = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
-    new_xml = lib.xml.topological_sort(xml)
+    new_xml = lib.xml.topological_sort(xml.find(".//*[@id='A']"), xml.getroot())
 
     expct_tree = ET.parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
 

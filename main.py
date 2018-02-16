@@ -10,11 +10,11 @@ if __name__ == '__main__':
     config.from_envvar('PVM_SETTINGS', silent=False)
 
     # Set the timezone
-    os.environ['TZ'] = config.TIMEZONE
+    os.environ['TZ'] = config['TIMEZONE']
     time.tzset()
 
     # Logging stuff
-    if not config.TESTING:
+    if not config['TESTING']:
         from lib.logger import init_logging
 
         init_logging(config)

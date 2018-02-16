@@ -2,8 +2,6 @@
     <node id="A" />
     <connector from="A" to="B" id="A-B" />
     <node id="B" />
-    <connector from="B" to="D" id="B-D" />
-    <node id="D" />
     <connector from="B" to="E" id="B-E" />
     <node id="E" />
     <connector from="B" to="C" id="B-C" />
@@ -12,12 +10,14 @@
     <node id="F" />
     <connector from="C" to="G" id="C-G" />
     <node id="G" />
-    <connector from="G" to="H" id="G-H" />
-    <node id="H" />
-    <connector from="H" to="J" id="H-J" />
-    <node id="J" />
     <connector from="G" to="I" id="G-I" />
     <node id="I" />
     <connector from="I" to="K" id="I-K" />
     <node id="K" />
+    <connector from="G" to="H" id="G-H" />
+    <node id="H" />
+    <connector from="H" to="J" id="H-J" />
+    <node id="J" />
+    <connector from="B" to="D" id="B-D" />
+    <node id="D" />
 </process>

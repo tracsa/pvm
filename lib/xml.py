@@ -25,17 +25,20 @@ def topological_sort(start_node:ET.Element, graph:'root ET.Element') -> ET.Eleme
     ''' sorts topologically the given xml element tree, source:
     https://en.wikipedia.org/wiki/Topological_sorting '''
     sorted_elements = [] # sorted_elements ← Empty list that will contain the sorted elements
-    no_incoming = [start_node]
+    no_incoming = [(start_node, None)] # (node, edge that points to this node)
 
     while len(no_incoming) > 0:
-        node = no_incoming.pop()
+        node, edge = no_incoming.pop()
+
+        if edge is not None:
+            sorted_elements.append(edge)
         sorted_elements.append(node)
 
         for m, edge in nodes_from(node, graph=graph):
             graph.remove(edge)
 
             if has_no_incoming(m, graph):
-                no_incoming.append(m)
+                no_incoming.append((m, edge))
 
     if has_edges(graph) > 0:
         raise Exception('graph is cyclic')

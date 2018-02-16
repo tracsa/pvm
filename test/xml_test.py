@@ -128,7 +128,8 @@ def test_toposort():
         assert elem.attrib == expct.attrib
 
 def test_find_next_element_normal():
-    ''' given a node, retrieves the next element in the graph '''
+    ''' given a node, retrieves the next element in the graph, assumes that
+    the element only has one outgoing edge '''
     lib.xml.XML(config)
     assert 1==1
 

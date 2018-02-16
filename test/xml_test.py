@@ -1,5 +1,5 @@
 from itacate import Config
-from xml.etree import ElementTree
+import xml.etree.ElementTree as ET
 import os
 import tempfile
 
@@ -35,8 +35,36 @@ def test_get_nodes_and_edges():
     for edge, expctedge in zip(edges, expctedges):
         assert edge.attrib['id'] == expctedge
 
-def test_etree_from_list():
-    assert False
+def test_etree_from_list_empty():
+    nodes = []
+    etree = lib.xml.etree_from_list({ 'PROCESS_ELEMENT': 'process' }, nodes)
+
+    root = etree.getroot()
+    assert root.tag == 'process'
+
+    for elem, expct in zip(root.iter(), nodes):
+        assert elem.tag == expct.tag
+        assert elem.id == expct.id
+
+def test_etree_from_list_withnodes():
+    nodes = [
+        ET.Element('foo', attrib={'a': 0}),
+        ET.Element('var', attrib={'a': 1}),
+        ET.Element('log', attrib={'a': 2}),
+    ]
+    nodes[2].append(ET.Element('sub'))
+
+    etree = lib.xml.etree_from_list({ 'PROCESS_ELEMENT': 'process' }, nodes)
+
+    root = etree.getroot()
+    assert root.tag == 'process'
+
+    for i, (elem, expct) in enumerate(zip(root, nodes)):
+        assert elem.tag == expct.tag
+        assert elem.attrib['a'] == i
+
+    ch = root[2][0]
+    assert ch.tag == 'sub'
 
 def test_toposort():
     config = get_testing_config()

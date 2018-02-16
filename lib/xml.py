@@ -1,10 +1,10 @@
-import xml.etree.ElementTree as ElementTree
+import xml.etree.ElementTree as ET
 
 def get_nodes_and_edges(xmlfile: 'file descriptor') -> (['nodes'], ['edges']):
     ''' given a file descriptor that points to a XML file return a tuple that
     contains as first element the nodes of the xml, and as second element the
     edges '''
-    parser = ElementTree.XMLPullParser(['end'])
+    parser = ET.XMLPullParser(['end'])
     nodes, edges = [], []
 
     for line in xmlfile:
@@ -18,10 +18,18 @@ def get_nodes_and_edges(xmlfile: 'file descriptor') -> (['nodes'], ['edges']):
 
     return nodes, edges
 
-def etree_from_list(nodes:[ElementTree.Element]) -> ElementTree:
+def etree_from_list(config:dict, nodes:[ET.Element]) -> ET.ElementTree:
     ''' Returns a built ElementTree from the list of its members '''
+    tb = ET.TreeBuilder()
+    root = tb.start(config['PROCESS_ELEMENT'], dict())
 
-def topological_sort(nodes:[ElementTree.Element], edges:[ElementTree.Element]) -> ElementTree:
+    root.extend(nodes)
+
+    tb.end(config['PROCESS_ELEMENT'])
+
+    return ET.ElementTree(tb.close())
+
+def topological_sort(nodes:[ET.Element], edges:[ET.Element]) -> ET.ElementTree:
     ''' sorts topologically the given xml element tree, source:
     https://en.wikipedia.org/wiki/Topological_sorting '''
     sorted_elements = [] # L ← Empty list that will contain the sorted elements

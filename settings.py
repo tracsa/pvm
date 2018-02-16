@@ -4,3 +4,6 @@ base_dir = os.path.dirname(os.path.realpath(__file__))
 
 # Where to store xml files
 XML_PATH = os.path.join(base_dir, 'xml')
+
+# what is the name of the root element for xml files
+PROCESS_ELEMENT = 'process'

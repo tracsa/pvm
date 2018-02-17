@@ -1,22 +1,7 @@
-from itacate import Config
 import xml.etree.ElementTree as ET
 import os
-import tempfile
 
-from .context import lib
-
-def get_testing_config(overwrites:dict=None):
-    config = Config(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
-    config.from_pyfile('settings.py')
-
-    if overwrites is not None:
-        config.from_mapping(overwrites)
-
-    return config
-
-#-------
-# Tests
-#-------
+from .context import lib, get_testing_config
 
 def test_etree_from_list_empty():
     nodes = []
@@ -131,7 +116,7 @@ def test_find_next_element_normal():
     ''' given a node, retrieves the next element in the graph, assumes that
     the element only has one outgoing edge '''
     lib.xml.XML(config)
-    assert 1==1
+    assert False
 
 def test_find_next_element_if_true():
     ''' given an if and asociated data, retrieves the next element '''

@@ -1,15 +1,14 @@
 import pika
 
 from .logger import log
+from .handler import Handler
 
 
 class Loop:
 
     def __init__(self, config:dict):
         self.config = config
-
-    def callback(self, channel, method, properties, body):
-        log.info(body)
+        self.handler = Handler(config)
 
     def start(self):
         connection = pika.BlockingConnection(pika.ConnectionParameters(
@@ -23,7 +22,7 @@ class Loop:
         )
 
         channel.basic_consume(
-            self.callback,
+            self.handler,
             queue = self.config['RABBIT_QUEUE'],
             consumer_tag = self.config['RABBIT_CONSUMER_TAG'],
             no_ack = True,

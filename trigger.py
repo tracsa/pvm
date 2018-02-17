@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import pika
+import json
 import os
 from itacate import Config
 
@@ -23,7 +24,10 @@ if __name__ == '__main__':
     channel.basic_publish(
         exchange = '',
         routing_key = config['RABBIT_QUEUE'],
-        body = 'Hello',
+        body = json.dumps({
+            'process': 'simple',
+            'command': 'start',
+        }),
         properties = pika.BasicProperties(
             delivery_mode = 2, # make message persistent
         ),

@@ -14,3 +14,8 @@ RABBIT_CONSUMER_TAG = 'pvm_consumer_1'
 
 # Time stuff
 TIMEZONE = 'UTC'
+
+# Supported commands for the PVM
+COMMANDS = [
+    'start',
+]

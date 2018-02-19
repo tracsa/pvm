@@ -13,23 +13,18 @@ class Handler:
 
     def __call__(self, channel, method, properties, body:bytes):
         try:
-            message = json.loads(body)
-        except json.decoder.JSONDecodeError:
-            return log.warning('Could not json-decode message')
-
-        if 'command' not in message:
-            return log.warning('Malformed message: must contain command keyword')
-
-        if message['command'] not in self.config['COMMANDS']:
-            return log.warning('Command not supported: {}'.format(message['command']))
+            message = self.parse_message(body)
+        except Exception as e:
+            log.error('Message didnt pass validation: ' + str(e))
 
         if message['command'] == 'start':
-            current_node = self.get_start_node()
+            current_node = self.get_start()
         elif message['command'] == 'step':
             current_node = self.recover_step()
 
-        while current_node.can_reach_next_step():
+        while current_node.can_continue():
             current_node = current_node.next()
+            current_node()
 
             if current_node.is_end():
                 log.info('Execution of branch ended')
@@ -37,7 +32,23 @@ class Handler:
         else:
             self.save_execution()
 
-    def get_start_node(self, message:dict):
+    def parse_message(self, body:bytes):
+        ''' validates a received message against all possible needed fields
+        and structure '''
+        try:
+            message = json.loads(body)
+        except json.decoder.JSONDecodeError:
+            raise ValueError('Message is not json')
+
+        if 'command' not in message:
+            raise KeyError('Malformed message: must contain command keyword')
+
+        if message['command'] not in self.config['COMMANDS']:
+            raise ValueError('Command not supported: {}'.format(message['command']))
+
+        return message
+
+    def get_start(self, message:dict):
         if 'process' not in message:
             return log.warning('Requested start without process name')
 

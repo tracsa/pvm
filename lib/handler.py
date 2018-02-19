@@ -23,9 +23,21 @@ class Handler:
         if message['command'] not in self.config['COMMANDS']:
             return log.warning('Command not supported: {}'.format(message['command']))
 
-        getattr(self, message['command'])(message)
+        if message['command'] == 'start':
+            current_node = self.get_start_node()
+        elif message['command'] == 'step':
+            current_node = self.recover_step()
 
-    def start(self, message:dict):
+        while current_node.can_reach_next_step():
+            current_node = current_node.next()
+
+            if current_node.is_end():
+                log.info('Execution of branch ended')
+                break
+        else:
+            self.save_execution()
+
+    def get_start_node(self, message:dict):
         if 'process' not in message:
             return log.warning('Requested start without process name')
 

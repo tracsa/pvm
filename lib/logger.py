@@ -45,7 +45,7 @@ def init_logging(config):
     formatter = logging.Formatter(fmt='[%(levelname)s] %(message)s - %(filename)s:%(lineno)d', datefmt='%Y-%m-%d %H:%M:%S %z')
 
     file_handler = logging.StreamHandler(stream=sys.stderr)
-    file_handler.setLevel(logging.INFO)
+    file_handler.setLevel(config['LOG_LEVEL'])
     file_handler.setFormatter(formatter)
 
     # Send messages to broker

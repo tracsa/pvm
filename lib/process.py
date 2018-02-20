@@ -10,4 +10,4 @@ def load(config, common_name:str) -> ET.ElementTree:
         if filename.startswith(common_name):
             return ET.parse(os.path.join(config['XML_PATH'], filename))
 
-    raise ProcessNotFound('Could not find the requested process definition file')
+    raise ProcessNotFound('Could not find the requested process definition file: {}'.format(common_name))

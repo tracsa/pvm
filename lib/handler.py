@@ -1,7 +1,8 @@
 import json
 
 from .logger import log
-import .process
+from .process import load as process_load
+from .errors import ProcessNotFound
 
 
 class Handler:
@@ -53,6 +54,11 @@ class Handler:
             return log.warning('Requested start without process name')
 
         try:
-            xml = process.load(self.config, message['process'])
-        except ProcessNotFound:
-            return log.warning('File for requested process could not be found')
+            xml = process_load(self.config, message['process'])
+        except ProcessNotFound as e:
+            return log.warning(str(e))
+
+        try:
+            start_point = xml.find(".//*[@class='start']")
+        except Exception:
+            return log.warning('Malformed xml')

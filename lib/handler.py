@@ -3,6 +3,7 @@ import json
 from .logger import log
 from .process import load as process_load
 from .errors import ProcessNotFound
+from .node import make_node
 
 
 class Handler:
@@ -13,10 +14,7 @@ class Handler:
         self.config = config
 
     def __call__(self, channel, method, properties, body:bytes):
-        try:
-            message = self.parse_message(body)
-        except Exception as e:
-            log.error('Message didnt pass validation: ' + str(e))
+        message = self.parse_message(body)
 
         if message['command'] == 'start':
             current_node = self.get_start()
@@ -51,14 +49,9 @@ class Handler:
 
     def get_start(self, message:dict):
         if 'process' not in message:
-            return log.warning('Requested start without process name')
+            raise KeyError('Requested start without process name')
 
-        try:
-            xml = process_load(self.config, message['process'])
-        except ProcessNotFound as e:
-            return log.warning(str(e))
+        xml = process_load(self.config, message['process'])
+        start_point = xml.find(".//*[@class='start']")
 
-        try:
-            start_point = xml.find(".//*[@class='start']")
-        except Exception:
-            return log.warning('Malformed xml')
+        return make_node(start_point)

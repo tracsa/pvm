@@ -4,7 +4,9 @@ def test_get_start_node():
     config = get_testing_config()
     handler = lib.handler.Handler(config)
 
-    start_node = handler.get_start()
+    start_node = handler.get_start({
+        'process': 'simple',
+    })
 
     assert start_node is not None
     assert isinstance(start_node, lib.node.Node)

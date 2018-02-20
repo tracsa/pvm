@@ -1,3 +1,32 @@
+import xml.etree.ElementTree as ET
+import pytest
+
+from .context import lib
+
+def test_make_node_requires_class():
+    element = ET.Element('node', {})
+
+    with pytest.raises(KeyError) as e:
+        lib.node.make_node(element)
+
+def test_make_node_requires_existent_class():
+    element = ET.Element('node', {
+        'class': 'foo',
+    })
+
+    with pytest.raises(ValueError) as e:
+        lib.node.make_node(element)
+
+def test_make_start_node():
+    element = ET.Element('node', {
+        'class': 'start',
+    })
+    node = lib.node.make_node(element)
+
+    assert node is not None
+    assert isinstance(node, lib.node.Node)
+    assert isinstance(node, lib.node.StartNode)
+
 def test_find_next_element_normal():
     ''' given a node, retrieves the next element in the graph, assumes that
     the element only has one outgoing edge '''

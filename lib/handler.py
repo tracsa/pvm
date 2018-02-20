@@ -14,22 +14,26 @@ class Handler:
         self.config = config
 
     def __call__(self, channel, method, properties, body:bytes):
+        ''' the main callback of the PVM '''
         message = self.parse_message(body)
 
         if message['command'] == 'start':
-            current_node = self.get_start()
+            current_node = self.get_start(message)
         elif message['command'] == 'step':
             current_node = self.recover_step()
 
-        while current_node.can_continue():
-            current_node = current_node.next()
-            current_node()
+        if current_node.can_continue():
+            next_nodes = current_node.next()
 
-            if current_node.is_end():
-                log.info('Execution of branch ended')
-                break
+            for node in next_nodes:
+                node()
+
+        if current_node.is_end():
+            self.end_execution()
         else:
             self.save_execution()
+
+        channel.basic_ack(delivery_tag = method.delivery_tag)
 
     def parse_message(self, body:bytes):
         ''' validates a received message against all possible needed fields
@@ -48,6 +52,7 @@ class Handler:
         return message
 
     def get_start(self, message:dict):
+        ''' finds the start node of a given process '''
         if 'process' not in message:
             raise KeyError('Requested start without process name')
 
@@ -55,3 +60,7 @@ class Handler:
         start_point = xml.find(".//*[@class='start']")
 
         return make_node(start_point)
+
+    def save_execution(self):
+        ''' persists the execution in the current state '''
+        pass

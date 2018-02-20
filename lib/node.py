@@ -21,13 +21,25 @@ class Node:
         execution of the script '''
         raise NotImplementedError('Should be implemented for subclasses')
 
-    def next(self):
+    def next(self) -> ['Node']:
         ''' Gets the next node in the graph, if it fails raises an exception.
         Assumes that can_continue() has been called before '''
         raise NotImplementedError('Should be implemented for subclasses')
 
+    def is_end(self) -> bool:
+        ''' tells if this node is the final node of the graph '''
+        return False
 
-class StartNode(Node): pass
+
+class StartNode(Node):
+
+    def can_continue(self):
+        ''' start nodes have everything they need to continue '''
+        return True
+
+    def next(self):
+        ''' just find the next node in the graph '''
+        return []
 
 
 def make_node(element):

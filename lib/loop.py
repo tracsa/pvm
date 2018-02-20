@@ -25,7 +25,7 @@ class Loop:
             self.handler,
             queue = self.config['RABBIT_QUEUE'],
             consumer_tag = self.config['RABBIT_CONSUMER_TAG'],
-            no_ack = True,
+            no_ack = False,
         )
 
         log.info('PVM started')

@@ -4,7 +4,7 @@ import os
 
 from .errors import ProcessNotFound, ElementNotFound
 
-def load(config, common_name:str) -> TextIO:
+def load(config:dict, common_name:str) -> TextIO:
     ''' Loads an xml file and returns the corresponding TextIOWrapper for
     further usage. The file might contain multiple versions so the latest one
     is chosen.

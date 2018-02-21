@@ -5,7 +5,8 @@ a virtual machine that keeps track of the execution of instances of the process.
 
 ## Develop
 
-* Clone && cd into directory
+* `git clone https://github.com/tracsa/pvm.git && cd pvm`
 * `virtualenv -p /usr/bin/python3 .env`
 * `source .env/bin/activate`
+* `pip install -r requirements.txt`
 * `pytest`

@@ -71,3 +71,44 @@ def test_make_iterator():
     for given, expected in zip(xmliter, expected_nodes):
         assert given.tag == expected.tag
         assert given.attrib == expected.attrib
+
+def test_find():
+    config = get_testing_config()
+    xmliter = lib.process.iter_nodes(lib.process.load(config, 'simple'))
+
+    start = lib.process.find(xmliter, lambda e:e.tag=='node')
+
+    assert start.tag == 'node'
+    assert start.attrib['id'] == 'gYcj0XjbgjSO'
+
+    conn = lib.process.find(
+        xmliter,
+        lambda e:e.tag=='connector' and e.attrib['from']==start.attrib['id']
+    )
+
+    assert conn.tag == 'connector'
+    assert conn.attrib == { 'from':"gYcj0XjbgjSO", 'to':"4g9lOdPKmRUf" }
+
+    echo = lib.process.find(
+        xmliter,
+        lambda e:e.attrib['id']==conn.attrib['to']
+    )
+
+    assert echo.tag == 'node'
+    assert echo.attrib['id'] == '4g9lOdPKmRUf'
+
+    conn = lib.process.find(
+        xmliter,
+        lambda e:e.tag=='connector' and e.attrib['from']==echo.attrib['id']
+    )
+
+    assert conn.tag == 'connector'
+    assert conn.attrib == {'from':"4g9lOdPKmRUf", 'to':"kV9UWSeA89IZ"}
+
+    end = lib.process.find(
+        xmliter,
+        lambda e:e.attrib['id']==conn.attrib['to']
+    )
+
+    assert end.tag == 'node'
+    assert end.attrib['id'] == 'kV9UWSeA89IZ'

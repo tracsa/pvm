@@ -36,7 +36,7 @@ def test_load_last_matching_process():
     assert root[0][2].text == 'Oldest process v2'
     assert root[1].tag == 'process'
 
-def test_can_pick_specific_version():
+def test_load_specific_version():
     ''' one should be able to request a specific version of a process,
     thus overriding the process described by the previous test '''
     config = get_testing_config()
@@ -53,3 +53,21 @@ def test_can_pick_specific_version():
     assert root[0][2].tag == 'name'
     assert root[0][2].text == 'Oldest process'
     assert root[1].tag == 'process'
+
+def test_make_iterator():
+    ''' test that the iter function actually returns an interator over the
+    nodes and edges of the process '''
+    config = get_testing_config()
+    xmliter = lib.process.iter_nodes(lib.process.load(config, 'simple'))
+
+    expected_nodes = [
+        ET.Element('node', {'id':"gYcj0XjbgjSO", 'class':"start"}),
+        ET.Element('connector', {'from':"gYcj0XjbgjSO", 'to':"4g9lOdPKmRUf"}),
+        ET.Element('node', {'id':"4g9lOdPKmRUf", 'class':"echo"}),
+        ET.Element('connector', {'from':"4g9lOdPKmRUf", 'to':"kV9UWSeA89IZ"}),
+        ET.Element('node', {'id':"kV9UWSeA89IZ", 'class':"end"}),
+    ]
+
+    for given, expected in zip(xmliter, expected_nodes):
+        assert given.tag == expected.tag
+        assert given.attrib == expected.attrib

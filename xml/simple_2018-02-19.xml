@@ -7,7 +7,7 @@
     <process>
         <node id="gYcj0XjbgjSO" class="start" />
         <connector from="gYcj0XjbgjSO" to="4g9lOdPKmRUf" />
-        <node id="4g9lOdPKmRUf" class="notify" />
+        <node id="4g9lOdPKmRUf" class="echo" />
         <connector from="4g9lOdPKmRUf" to="kV9UWSeA89IZ" />
         <node id="kV9UWSeA89IZ" class="end" />
     </process>

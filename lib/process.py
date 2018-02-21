@@ -14,7 +14,7 @@ def load(config, common_name:str) -> TextIO:
         raise ProcessNotFound('Could not find the requested process definition'
             ' file: {}'.format(common_name))
 
-def iter():
+def iter_nodes(xmlfile:TextIO) -> Iterator[ET.Element]:
     parser = ET.XMLPullParser(['end'])
 
     for line in xmlfile:

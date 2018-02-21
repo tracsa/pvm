@@ -44,22 +44,3 @@ def topological_sort(start_node:ET.Element, graph:'root ET.Element') -> ET.Eleme
         raise Exception('graph is cyclic')
 
     return etree_from_list(graph, sorted_elements)
-
-class XML:
-
-    def __init__(self, config: dict):
-        self.config = config
-
-    def find_next_element(xmlname: str, elem_id: str):
-        ''' finds an element pointed by an arrow by current's element id,
-        if this is an end node return None. If this is a parallel execution node
-        returns an array of the pointed elements.'''
-        parser = ET.XMLPullParser(['end'])
-
-        with open(xmlname) as xmlfile:
-            for line in xmlfile:
-                parser.feed(line)
-
-                for _, elem in parser.read_events():
-                    if 'id' in elem.attrib:
-                        print(elem, elem.attrib)

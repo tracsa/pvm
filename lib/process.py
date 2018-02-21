@@ -1,13 +1,27 @@
 import xml.etree.ElementTree as ET
+from typing import Iterator, TextIO
 import os
 
 from .errors import ProcessNotFound
 
-def load(config, common_name:str) -> ET.ElementTree:
+def load(config, common_name:str) -> TextIO:
     files = reversed(sorted(os.listdir(config['XML_PATH'])))
 
     for filename in files:
         if filename.startswith(common_name):
-            return ET.parse(os.path.join(config['XML_PATH'], filename))
+            return open(os.path.join(config['XML_PATH'], filename))
+    else:
+        raise ProcessNotFound('Could not find the requested process definition'
+            ' file: {}'.format(common_name))
 
-    raise ProcessNotFound('Could not find the requested process definition file: {}'.format(common_name))
+def iter():
+    parser = ET.XMLPullParser(['end'])
+
+    for line in xmlfile:
+        parser.feed(line)
+
+        for _, elem in parser.read_events():
+            if elem.tag in ('node', 'connector'):
+                yield elem
+
+    xmlfile.close()

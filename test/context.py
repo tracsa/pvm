@@ -9,6 +9,7 @@ import lib.xml
 import lib.process
 import lib.handler
 import lib.node
+import lib.errors
 
 def get_testing_config(overwrites:dict=None):
     config = Config(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))

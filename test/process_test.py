@@ -63,7 +63,7 @@ def test_make_iterator():
     expected_nodes = [
         ET.Element('node', {'id':"gYcj0XjbgjSO", 'class':"start"}),
         ET.Element('connector', {'from':"gYcj0XjbgjSO", 'to':"4g9lOdPKmRUf"}),
-        ET.Element('node', {'id':"4g9lOdPKmRUf", 'class':"echo"}),
+        ET.Element('node', {'id':"4g9lOdPKmRUf", 'class':"echo", 'msg':"cuca"}),
         ET.Element('connector', {'from':"4g9lOdPKmRUf", 'to':"kV9UWSeA89IZ"}),
         ET.Element('node', {'id':"kV9UWSeA89IZ", 'class':"end"}),
     ]

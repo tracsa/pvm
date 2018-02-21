@@ -23,6 +23,8 @@ def test_save_execution():
     assert exct.process == 'simple_2018-02-19'
     assert type(exct.pointers) == set
     assert len(exct.pointers) == 1
+    assert type(exct.docs) == set
+    assert len(exct.docs) == 0
 
 def test_recover_step():
     config = get_testing_config()

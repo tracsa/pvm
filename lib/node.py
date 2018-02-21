@@ -1,6 +1,11 @@
 """ Here is defined the node class and its subclasses, which define the kinds
 of directions that this virtual machine can follow """
 import case_conversion
+import xml.etree.ElementTree as ET
+from typing import Iterator
+
+from .process import find
+from .logger import log
 
 
 class Node:
@@ -21,7 +26,7 @@ class Node:
         execution of the script '''
         raise NotImplementedError('Should be implemented for subclasses')
 
-    def next(self) -> ['Node']:
+    def next(self, xmliter:Iterator[ET.Element]) -> ['Node']:
         ''' Gets the next node in the graph, if it fails raises an exception.
         Assumes that can_continue() has been called before '''
         raise NotImplementedError('Should be implemented for subclasses')
@@ -31,15 +36,32 @@ class Node:
         return False
 
 
-class StartNode(Node):
+class NonBlockingNode(Node):
+    ''' Nodes that don't wait for external info to execute '''
 
     def can_continue(self):
         ''' start nodes have everything they need to continue '''
         return True
 
-    def next(self):
+
+class SingleConnectedNode(Node):
+
+    def next(self, xmliter:Iterator[ET.Element]) -> ['Node']:
         ''' just find the next node in the graph '''
-        return []
+        conn = find(xmliter, lambda e:e.attrib['from'] == self.id)
+        return [make_node(find(xmliter, lambda e:e.attrib['id'] == conn.attrib['to']))]
+
+
+class StartNode(NonBlockingNode, SingleConnectedNode):
+    ''' Each process graph should contain one and only one start node which is
+    the head and trigger of everything. It only leads to the next step in the
+    execution '''
+
+
+class EchoNode(NonBlockingNode, SingleConnectedNode):
+
+    def __call__(self):
+        log.debug(self.attrib['msg'])
 
 
 def make_node(element):

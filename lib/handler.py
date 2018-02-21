@@ -1,7 +1,7 @@
 import json
 
 from .logger import log
-from .process import load as process_load
+from .process import load as process_load, iter_nodes, find
 from .errors import ProcessNotFound
 from .node import make_node
 
@@ -18,12 +18,14 @@ class Handler:
         message = self.parse_message(body)
 
         if message['command'] == 'start':
-            current_node = self.get_start(message)
+            xmliter, current_node = self.get_start(message)
+            log.debug('Fetched start node')
         elif message['command'] == 'step':
-            current_node = self.recover_step()
+            xmliter, current_node = self.recover_step()
+            log.debug('Recovered saved node')
 
         if current_node.can_continue():
-            next_nodes = current_node.next()
+            next_nodes = current_node.next(xmliter)
 
             for node in next_nodes:
                 node()
@@ -56,10 +58,10 @@ class Handler:
         if 'process' not in message:
             raise KeyError('Requested start without process name')
 
-        xml = process_load(self.config, message['process'])
-        start_point = xml.find(".//*[@class='start']")
+        xmliter = iter_nodes(process_load(self.config, message['process']))
+        start_point = find(xmliter, lambda e:e.attrib['class'] == 'start')
 
-        return make_node(start_point)
+        return xmliter, make_node(start_point)
 
     def save_execution(self):
         ''' persists the execution in the current state '''

@@ -65,7 +65,7 @@ def test_recover_step(config, models):
 
     assert node.id == '4g9lOdPKmRUf'
 
-def test_create_pointer():
+def test_create_pointer(config):
     handler = lib.handler.Handler(config)
 
     ele = ET.Element('node', {
@@ -73,25 +73,16 @@ def test_create_pointer():
         'id': 'chubaca',
     })
     node = lib.node.make_node(ele)
-    execution = lib.models.Execution().save()
-    exct_id = handler.create_pointer(node, execution)
+    exc = lib.models.Execution.validate(
+        process_name = 'simple_2018-02-19.xml',
+    ).save()
+    pointer = handler.create_pointer(node, exc)
+    execution = pointer.proxy.execution.get()
 
-    exct = lib.models.Execution.get(exct_id)
+    assert pointer.node_id == 'chubaca'
 
-    assert exct.process_name == 'simple_2018-02-19'
-    assert type(exct.pointers) == set
-    assert len(exct.pointers) == 1
-    assert type(exct.docs) == set
-    assert len(exct.docs) == 0
-    assert exct.pointers[0].node_id == 'chubaca'
-
-def test_delete_pointer():
-    handler = lib.handler.Handler(config)
-
-    step = handler.recover_step()
-
-    assert step is not None
-    assert isinstance(step, lib.node.Node)
+    assert execution.process_name == 'simple_2018-02-19.xml'
+    assert execution.proxy.pointers.count() == 1
 
 def test_call_start():
     assert False, 'execution and pointer were created'

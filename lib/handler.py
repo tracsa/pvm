@@ -78,11 +78,10 @@ class Handler:
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former
         create a persistent pointer to the current execution state '''
+        pointer =  Pointer.validate(node_id=node.id).save()
+        pointer.proxy.execution.set(execution)
 
-    def delete_pointer(self):
-        ''' given an execution pointer, delete the persistent storage asociated
-        to it. This means that such execution branch has ended or the asociated
-        process was killed '''
+        return pointer
 
     def recover_step(self, message):
         ''' given an execution id and a pointer from the persistent storage,
@@ -93,6 +92,9 @@ class Handler:
         pointer = Pointer.get_or_exception(message['pointer_id'])
         execution = pointer.proxy.execution.get()
         xmliter = iter_nodes(process_load(self.config, execution.process_name))
-        point = find(xmliter, lambda e:'id' in e.attrib and e.attrib['id'] == pointer.node_id)
+        point = find(
+            xmliter,
+            lambda e:'id' in e.attrib and e.attrib['id'] == pointer.node_id
+        )
 
         return execution, pointer, xmliter, make_node(point)

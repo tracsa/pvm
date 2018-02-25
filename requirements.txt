@@ -2,3 +2,4 @@ pytest==3.4.0
 itacate==1.0.3
 pika==0.11.2
 case_conversion==2.1.0
+coralillo==0.6.14

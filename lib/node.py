@@ -58,10 +58,21 @@ class StartNode(NonBlockingNode, SingleConnectedNode):
     execution '''
 
 
+class DummyNode(NonBlockingNode, SingleConnectedNode):
+    '''a node that does nothing but stand there... waiting for the appropiate
+    moment for... doing nothing '''
+
+
 class EchoNode(NonBlockingNode, SingleConnectedNode):
 
     def __call__(self):
         log.debug(self.attrib['msg'])
+
+
+class EndNode(Node):
+
+    def is_end(self):
+        return True
 
 
 def make_node(element):

@@ -2,26 +2,22 @@ import pytest
 import xml.etree.ElementTree as ET
 from io import TextIOWrapper
 
-from .context import lib, get_testing_config
+from .context import *
 
-def test_load_not_found():
+def test_load_not_found(config):
     ''' if a process file is not found, raise an exception '''
-    config = get_testing_config()
-
     with pytest.raises(lib.errors.ProcessNotFound):
         lib.process.load(config, 'notfound')
 
-def test_load_process():
+def test_load_process(config):
     '''  a process file can be found using only its prefix or common name '''
-    config = get_testing_config()
     xmlfile = lib.process.load(config, 'simple')
 
     assert type(xmlfile) == TextIOWrapper
 
-def test_load_last_matching_process():
+def test_load_last_matching_process(config):
     ''' a process is specified by its common name, but many versions may exist.
     when a process is requested for start we must use the last version of it '''
-    config = get_testing_config()
     xmlfile = lib.process.load(config, 'oldest')
 
     root = ET.fromstring(xmlfile.read())
@@ -36,10 +32,9 @@ def test_load_last_matching_process():
     assert root[0][2].text == 'Oldest process v2'
     assert root[1].tag == 'process'
 
-def test_load_specific_version():
+def test_load_specific_version(config):
     ''' one should be able to request a specific version of a process,
     thus overriding the process described by the previous test '''
-    config = get_testing_config()
     xmlfile = lib.process.load(config, 'oldest_2018-02-14')
 
     root = ET.fromstring(xmlfile.read())
@@ -54,10 +49,9 @@ def test_load_specific_version():
     assert root[0][2].text == 'Oldest process'
     assert root[1].tag == 'process'
 
-def test_make_iterator():
+def test_make_iterator(config):
     ''' test that the iter function actually returns an interator over the
     nodes and edges of the process '''
-    config = get_testing_config()
     xmliter = lib.process.iter_nodes(lib.process.load(config, 'simple'))
 
     expected_nodes = [
@@ -72,8 +66,7 @@ def test_make_iterator():
         assert given.tag == expected.tag
         assert given.attrib == expected.attrib
 
-def test_find():
-    config = get_testing_config()
+def test_find(config):
     xmliter = lib.process.iter_nodes(lib.process.load(config, 'simple'))
 
     start = lib.process.find(xmliter, lambda e:e.tag=='node')

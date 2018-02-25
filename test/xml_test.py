@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import os
 
-from .context import lib, get_testing_config
+from .context import *
 
 def test_etree_from_list_empty():
     nodes = []
@@ -34,8 +34,7 @@ def test_etree_from_list_withnodes():
     ch = root[2][0]
     assert ch.tag == 'sub'
 
-def test_nodes_from():
-    config = get_testing_config()
+def test_nodes_from(config):
     xml = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
 
     start_node = list(xml.getroot())[10]
@@ -55,8 +54,7 @@ def test_nodes_from():
         assert node.attrib['id'] == expct_node.attrib['id']
         assert edge.attrib['id'] == expct_edge.attrib['id']
 
-def test_has_no_incoming_sorted():
-    config = get_testing_config()
+def test_has_no_incoming_sorted(config):
     xml = ET.parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
 
     assert lib.xml.has_no_incoming(ET.Element('node', {'id':'A'}), xml.getroot()) == True
@@ -71,8 +69,7 @@ def test_has_no_incoming_sorted():
     assert lib.xml.has_no_incoming(ET.Element('node', {'id':'J'}), xml.getroot()) == False
     assert lib.xml.has_no_incoming(ET.Element('node', {'id':'K'}), xml.getroot()) == False
 
-def test_has_no_incoming_unsorted():
-    config = get_testing_config()
+def test_has_no_incoming_unsorted(config):
     xml = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
 
     assert lib.xml.has_no_incoming(ET.Element('node', {'id':'A'}), xml.getroot()) == True
@@ -87,8 +84,7 @@ def test_has_no_incoming_unsorted():
     assert lib.xml.has_no_incoming(ET.Element('node', {'id':'J'}), xml.getroot()) == False
     assert lib.xml.has_no_incoming(ET.Element('node', {'id':'K'}), xml.getroot()) == False
 
-def test_has_edges():
-    config = get_testing_config()
+def test_has_edges(config):
     sortedxml = ET.parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
     unsorted = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
     no_edges = ET.parse(os.path.join(config['XML_PATH'], 'no_edges.xml'))
@@ -97,9 +93,7 @@ def test_has_edges():
     assert lib.xml.has_edges(unsorted) == True
     assert lib.xml.has_edges(no_edges) == False
 
-def test_toposort():
-    config = get_testing_config()
-
+def test_toposort(config):
     xml = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
     new_xml = lib.xml.topological_sort(xml.find(".//*[@id='A']"), xml.getroot())
 

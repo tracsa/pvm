@@ -1,6 +1,8 @@
-import os
-import sys
+from coralillo import Engine
 from itacate import Config
+import os
+import pytest
+import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -10,12 +12,23 @@ import lib.process
 import lib.handler
 import lib.node
 import lib.errors
+import lib.models
 
-def get_testing_config(overwrites:dict=None):
-    config = Config(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
-    config.from_pyfile('settings.py')
+@pytest.fixture
+def config():
+    con = Config(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+    con.from_pyfile('settings.py')
+    con.from_envvar('PVM_SETTINGS', silent=False)
 
-    if overwrites is not None:
-        config.from_mapping(overwrites)
+    return con
 
-    return config
+@pytest.fixture
+def models():
+    con = config()
+    engine = Engine(
+        host=con['REDIS_HOST'],
+        port=con['REDIS_PORT'],
+        db=con['REDIS_DB'],
+    )
+    engine.lua.drop(args=['*'])
+    lib.models.bound_models(engine)

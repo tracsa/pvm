@@ -59,7 +59,9 @@ class Handler:
 
         if execution.proxy.pointers.count() == 0:
             execution.delete()
-            log.debug('Execution {exc} finished'.format(execution.id))
+            log.debug('Execution {exc} finished'.format(
+                exc = execution.id,
+            ))
 
         channel.basic_ack(delivery_tag = method.delivery_tag)
 

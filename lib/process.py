@@ -15,7 +15,7 @@ def load(config:dict, common_name:str) -> TextIO:
 
     for filename in files:
         if filename.startswith(common_name):
-            return open(os.path.join(config['XML_PATH'], filename))
+            return filename, open(os.path.join(config['XML_PATH'], filename))
     else:
         raise ProcessNotFound('Could not find the requested process definition'
             ' file: {}'.format(common_name))

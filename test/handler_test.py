@@ -37,6 +37,7 @@ def test_get_start_node(config, models):
     assert isinstance(start_node, lib.node.Node)
     assert isinstance(start_node, lib.node.StartNode)
 
+    assert execution.process_name == 'simple_2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
     assert pointer in execution.proxy.pointers
 

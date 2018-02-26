@@ -20,10 +20,15 @@ class Handler:
 
         if message['command'] == 'start':
             execution, pointer, xmliter, current_node = self.get_start(message)
-            log.debug('Fetched start node')
+            log.debug('Fetched start for {proc}'.format(
+                proc = execution.process_name,
+            ))
         elif message['command'] == 'step':
             execution, pointer, xmliter, current_node = self.recover_step(message)
-            log.debug('Recovered saved node')
+            log.debug('Recovered {proc} at nore {node}'.format(
+                proc = execution.process_name,
+                node = pointer.node_id,
+            ))
 
         if current_node.can_continue():
             pointer.delete()
@@ -34,9 +39,15 @@ class Handler:
 
                 if not node.is_end():
                     self.create_pointer(node, execution)
+                else:
+                    log.debug('Branch of {proc} ended at {node}'.format(
+                        proc = execution.process_name,
+                        node = node.id,
+                    ))
 
         if execution.proxy.pointers.count() == 0:
             execution.delete()
+            log.debug('Execution {exc} finished'.format(execution.id))
 
         channel.basic_ack(delivery_tag = method.delivery_tag)
 
@@ -63,10 +74,11 @@ class Handler:
         if 'process' not in message:
             raise KeyError('Requested start without process name')
 
-        xmliter = iter_nodes(process_load(self.config, message['process']))
+        filename, xmlfile = process_load(self.config, message['process'])
+        xmliter = iter_nodes(xmlfile)
         start_point = find(xmliter, lambda e:e.attrib['class'] == 'start')
         execution = Execution(
-            process_name = '',
+            process_name = filename,
         ).save()
         pointer = Pointer(
             node_id = start_point.attrib.get('id'),
@@ -91,7 +103,11 @@ class Handler:
 
         pointer = Pointer.get_or_exception(message['pointer_id'])
         execution = pointer.proxy.execution.get()
-        xmliter = iter_nodes(process_load(self.config, execution.process_name))
+        filename, xmlfile = process_load(self.config, execution.process_name)
+
+        assert execution.process_name == filename, 'Inconsisten pointer found'
+
+        xmliter = iter_nodes(xmlfile)
         point = find(
             xmliter,
             lambda e:'id' in e.attrib and e.attrib['id'] == pointer.node_id

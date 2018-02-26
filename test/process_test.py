@@ -11,17 +11,19 @@ def test_load_not_found(config):
 
 def test_load_process(config):
     '''  a process file can be found using only its prefix or common name '''
-    xmlfile = lib.process.load(config, 'simple')
+    name, xmlfile = lib.process.load(config, 'simple')
 
+    assert name == 'simple_2018-02-19.xml'
     assert type(xmlfile) == TextIOWrapper
 
 def test_load_last_matching_process(config):
     ''' a process is specified by its common name, but many versions may exist.
     when a process is requested for start we must use the last version of it '''
-    xmlfile = lib.process.load(config, 'oldest')
+    name, xmlfile = lib.process.load(config, 'oldest')
 
     root = ET.fromstring(xmlfile.read())
 
+    assert name == 'oldest_2018-02-17.xml'
     assert root.tag == 'process-spec'
     assert root[0].tag == 'process-info'
     assert root[0][0].tag == 'author'
@@ -35,10 +37,11 @@ def test_load_last_matching_process(config):
 def test_load_specific_version(config):
     ''' one should be able to request a specific version of a process,
     thus overriding the process described by the previous test '''
-    xmlfile = lib.process.load(config, 'oldest_2018-02-14')
+    name, xmlfile = lib.process.load(config, 'oldest_2018-02-14')
 
     root = ET.fromstring(xmlfile.read())
 
+    assert name == 'oldest_2018-02-14.xml'
     assert root.tag == 'process-spec'
     assert root[0].tag == 'process-info'
     assert root[0][0].tag == 'author'
@@ -52,7 +55,8 @@ def test_load_specific_version(config):
 def test_make_iterator(config):
     ''' test that the iter function actually returns an interator over the
     nodes and edges of the process '''
-    xmliter = lib.process.iter_nodes(lib.process.load(config, 'simple'))
+    name, xmlfile = lib.process.load(config, 'simple')
+    xmliter = lib.process.iter_nodes(xmlfile)
 
     expected_nodes = [
         ET.Element('node', {'id':"gYcj0XjbgjSO", 'class':"start"}),
@@ -67,7 +71,8 @@ def test_make_iterator(config):
         assert given.attrib == expected.attrib
 
 def test_find(config):
-    xmliter = lib.process.iter_nodes(lib.process.load(config, 'simple'))
+    name, xmlfile = lib.process.load(config, 'simple')
+    xmliter = lib.process.iter_nodes(xmlfile)
 
     start = lib.process.find(xmliter, lambda e:e.tag=='node')
 

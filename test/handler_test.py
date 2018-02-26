@@ -85,13 +85,37 @@ def test_create_pointer(config):
     assert execution.process_name == 'simple_2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
 
-def test_call_start():
-    assert False, 'execution and pointer were created'
+def test_call_start(config, models):
+    handler = lib.handler.Handler(config)
 
-def test_call_recover():
-    assert False, 'old pointer deleted, new one created'
-    assert False, 'execution remains valid, with one pointer'
+    ptrs = handler.call({
+        'command': 'start',
+        'process': 'simple',
+    })
 
-def test_call_recover_end():
-    assert False, 'no pointers left'
-    assert False, 'execution is deleted'
+    execution = lib.models.Execution.get_all()[0]
+    assert execution.process_name == 'simple_2018-02-19.xml'
+
+    pointer = execution.proxy.pointers.get()[0]
+    assert pointer.node_id == '4g9lOdPKmRUf'
+
+    assert ptrs[0].id == pointer.id
+
+def test_call_recover(config):
+    handler = lib.handler.Handler(config)
+    execution = lib.models.Execution(
+        process_name = 'simple_2018-02-19.xml',
+    ).save()
+    pointer = lib.models.Pointer(
+        node_id = '4g9lOdPKmRUf',
+    ).save()
+    pointer.proxy.execution.set(execution)
+
+    ptrs = handler.call({
+        'command': 'continue',
+        'pointer_id': pointer.id,
+    })
+
+    assert lib.models.Pointer.get(pointer.id) == None
+    assert lib.models.Execution.get(execution.id) == None
+    assert ptrs == []

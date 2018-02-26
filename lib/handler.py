@@ -1,4 +1,5 @@
 import json
+import pika
 
 from .logger import log
 from .process import load as process_load, iter_nodes, find
@@ -23,7 +24,7 @@ class Handler:
             log.debug('Fetched start for {proc}'.format(
                 proc = execution.process_name,
             ))
-        elif message['command'] == 'step':
+        elif message['command'] == 'continue':
             execution, pointer, xmliter, current_node = self.recover_step(message)
             log.debug('Recovered {proc} at nore {node}'.format(
                 proc = execution.process_name,
@@ -38,7 +39,18 @@ class Handler:
                 node()
 
                 if not node.is_end():
-                    self.create_pointer(node, execution)
+                    pointer = self.create_pointer(node, execution)
+                    channel.basic_publish(
+                        exchange = '',
+                        routing_key = self.config['RABBIT_QUEUE'],
+                        body = json.dumps({
+                            'command': 'continue',
+                            'pointer_id': pointer.id,
+                        }),
+                        properties = pika.BasicProperties(
+                            delivery_mode = 2, # make message persistent
+                        ),
+                    )
                 else:
                     log.debug('Branch of {proc} ended at {node}'.format(
                         proc = execution.process_name,

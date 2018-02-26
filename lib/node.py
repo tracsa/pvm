@@ -71,6 +71,8 @@ class EchoNode(NonBlockingNode, SingleConnectedNode):
 
 class EndNode(Node):
 
+    def __call__(self): pass
+
     def is_end(self):
         return True
 

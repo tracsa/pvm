@@ -19,6 +19,24 @@ class Handler:
         ''' the main callback of the PVM '''
         message = self.parse_message(body)
 
+        to_notify = self.call(message)
+
+        for pointer in to_notify:
+            channel.basic_publish(
+                exchange = '',
+                routing_key = self.config['RABBIT_QUEUE'],
+                body = json.dumps({
+                    'command': 'continue',
+                    'pointer_id': pointer.id,
+                }),
+                properties = pika.BasicProperties(
+                    delivery_mode = 2, # make message persistent
+                ),
+            )
+
+        channel.basic_ack(delivery_tag = method.delivery_tag)
+
+    def call(self, message:dict):
         if message['command'] == 'start':
             execution, pointer, xmliter, current_node = self.get_start(message)
             log.debug('Fetched start for {proc}'.format(
@@ -31,6 +49,8 @@ class Handler:
                 node = pointer.node_id,
             ))
 
+        pointers = [] # pointers to be notified back
+
         if current_node.can_continue():
             pointer.delete()
             next_nodes = current_node.next(xmliter)
@@ -40,17 +60,7 @@ class Handler:
 
                 if not node.is_end():
                     pointer = self.create_pointer(node, execution)
-                    channel.basic_publish(
-                        exchange = '',
-                        routing_key = self.config['RABBIT_QUEUE'],
-                        body = json.dumps({
-                            'command': 'continue',
-                            'pointer_id': pointer.id,
-                        }),
-                        properties = pika.BasicProperties(
-                            delivery_mode = 2, # make message persistent
-                        ),
-                    )
+                    pointers.append(pointer)
                 else:
                     log.debug('Branch of {proc} ended at {node}'.format(
                         proc = execution.process_name,
@@ -63,7 +73,7 @@ class Handler:
                 exc = execution.id,
             ))
 
-        channel.basic_ack(delivery_tag = method.delivery_tag)
+        return pointers
 
     def parse_message(self, body:bytes):
         ''' validates a received message against all possible needed fields

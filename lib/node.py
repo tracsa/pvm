@@ -26,7 +26,7 @@ class Node:
         execution of the script '''
         raise NotImplementedError('Should be implemented for subclasses')
 
-    def next(self, xmliter:Iterator[ET.Element]) -> ['Node']:
+    def next(self, xmliter:Iterator[ET.Element], data:dict) -> ['Node']:
         ''' Gets the next node in the graph, if it fails raises an exception.
         Assumes that can_continue() has been called before '''
         raise NotImplementedError('Should be implemented for subclasses')
@@ -46,7 +46,7 @@ class NonBlockingNode(Node):
 
 class SingleConnectedNode(Node):
 
-    def next(self, xmliter:Iterator[ET.Element]) -> ['Node']:
+    def next(self, xmliter:Iterator[ET.Element], data:dict) -> ['Node']:
         ''' just find the next node in the graph '''
         conn = find(xmliter, lambda e:e.attrib['from'] == self.id)
         return [make_node(find(
@@ -71,6 +71,23 @@ class EchoNode(NonBlockingNode, SingleConnectedNode):
 
     def __call__(self):
         log.debug(self.attrib['msg'])
+
+
+class DecisionNode(Node):
+
+    def __call__(self): pass
+
+    def next(self, xmliter:Iterator[ET.Element], data:dict) -> ['Node']:
+        ''' find node whose value corresponds to the answer '''
+        conn = find(
+            xmliter, 
+            lambda e:e.tag=='connector' and e.attrib['from']==self.id and 'value' in e.attrib and e.attrib['value'] == data['answer']
+        )
+
+        return [make_node(find(
+            xmliter,
+            lambda e:e.attrib['id'] == conn.attrib['to']
+        ))]
 
 
 class EndNode(Node):

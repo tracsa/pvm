@@ -53,7 +53,8 @@ class Handler:
 
         if current_node.can_continue():
             pointer.delete()
-            next_nodes = current_node.next(xmliter)
+            data = message['data'] if 'data' in message else dict()
+            next_nodes = current_node.next(xmliter, data)
 
             for node in next_nodes:
                 node()

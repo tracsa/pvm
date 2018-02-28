@@ -41,20 +41,48 @@ def test_find_next_element_normal(config):
         lambda e:e.tag=='node' and e.attrib['id']=='4g9lOdPKmRUf'
     ))
 
-    next_node = current_node.next(xmliter)[0]
+    next_node = current_node.next(xmliter, dict())[0]
 
     assert next_node.id == 'kV9UWSeA89IZ'
 
-@pytest.mark.skip(reason="no way of currently testing this")
-def test_find_next_element_if_true():
+def test_find_next_element_decision_yes(config):
     ''' given an if and asociated data, retrieves the next element '''
-    assert False
+    filename, xmlfile = lib.process.load(config, 'decision')
 
-@pytest.mark.skip(reason="no way of currently testing this")
-def test_find_next_element_if_false():
+    assert filename == 'decision_2018-02-27.xml'
+
+    xmliter = lib.process.iter_nodes(xmlfile)
+
+    current_node = lib.node.make_node(lib.process.find(
+        xmliter,
+        lambda e:e.tag=='node' and e.attrib['id']=='57TJ0V3nur6m7wvv'
+    ))
+
+    next_node = current_node.next(xmliter, {
+        'answer': 'yes',
+    })[0]
+
+    assert next_node.id == 'Cuptax0WTCL1ueCy'
+
+def test_find_next_element_decision_no(config):
     ''' given an if and asociated data, retrieves the next element, negative
     variant '''
-    assert False
+    filename, xmlfile = lib.process.load(config, 'decision')
+
+    assert filename == 'decision_2018-02-27.xml'
+
+    xmliter = lib.process.iter_nodes(xmlfile)
+
+    current_node = lib.node.make_node(lib.process.find(
+        xmliter,
+        lambda e:e.tag=='node' and e.attrib['id']=='57TJ0V3nur6m7wvv'
+    ))
+
+    next_node = current_node.next(xmliter, {
+        'answer': 'no',
+    })[0]
+
+    assert next_node.id == 'mj88CNZUaBdvLV83'
 
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_case():

@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import pytest
 
-from .context import lib
+from .context import *
 
 def test_make_node_requires_class():
     element = ET.Element('node', {})
@@ -27,12 +27,23 @@ def test_make_start_node():
     assert isinstance(node, lib.node.Node)
     assert isinstance(node, lib.node.StartNode)
 
-@pytest.mark.skip(reason="no way of currently testing this")
-def test_find_next_element_normal():
+def test_find_next_element_normal(config):
     ''' given a node, retrieves the next element in the graph, assumes that
     the element only has one outgoing edge '''
-    lib.xml.XML(config)
-    assert False
+    filename, xmlfile = lib.process.load(config, 'simple')
+
+    assert filename == 'simple_2018-02-19.xml'
+
+    xmliter = lib.process.iter_nodes(xmlfile)
+
+    current_node = lib.node.make_node(lib.process.find(
+        xmliter,
+        lambda e:e.tag=='node' and e.attrib['id']=='4g9lOdPKmRUf'
+    ))
+
+    next_node = current_node.next(xmliter)[0]
+
+    assert next_node.id == 'kV9UWSeA89IZ'
 
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_if_true():

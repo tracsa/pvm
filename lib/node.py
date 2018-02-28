@@ -49,7 +49,10 @@ class SingleConnectedNode(Node):
     def next(self, xmliter:Iterator[ET.Element]) -> ['Node']:
         ''' just find the next node in the graph '''
         conn = find(xmliter, lambda e:e.attrib['from'] == self.id)
-        return [make_node(find(xmliter, lambda e:e.attrib['id'] == conn.attrib['to']))]
+        return [make_node(find(
+            xmliter,
+            lambda e:e.attrib['id'] == conn.attrib['to']
+        ))]
 
 
 class StartNode(NonBlockingNode, SingleConnectedNode):
@@ -64,6 +67,7 @@ class DummyNode(NonBlockingNode, SingleConnectedNode):
 
 
 class EchoNode(NonBlockingNode, SingleConnectedNode):
+    ''' Prints to console the parameter contained in the attribute msg '''
 
     def __call__(self):
         log.debug(self.attrib['msg'])

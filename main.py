@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from lib.loop import Loop
 from lib.models import bound_models
 

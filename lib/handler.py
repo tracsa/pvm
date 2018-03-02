@@ -51,8 +51,9 @@ class Handler:
             ))
         elif message['command'] == 'step':
             execution, pointer, xmliter, current_node = self.recover_step(message)
-            log.debug('Recovered {proc} at node {node}'.format(
+            log.debug('Recovered {proc} at {cls} {node}'.format(
                 proc = execution.process_name,
+                cls = type(current_node).__name__,
                 node = pointer.node_id,
             ))
 
@@ -70,7 +71,10 @@ class Handler:
                     pointer = self.create_pointer(node, execution)
 
                     if isinstance(node, AsyncNode):
-                        log.debug('execution waiting for step command')
+                        log.debug('execution waiting at {cls} {node_id}'.format(
+                            cls = type(node).__name__,
+                            node_id = node.id,
+                        ))
                     else:
                         pointers.append(pointer)
                 else:

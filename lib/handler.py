@@ -1,5 +1,6 @@
 import json
 import pika
+from coralillo.errors import ModelNotFoundError
 
 from .logger import log
 from .process import load as process_load, iter_nodes, find
@@ -19,7 +20,10 @@ class Handler:
         ''' the main callback of the PVM '''
         message = self.parse_message(body)
 
-        to_notify = self.call(message)
+        try:
+            to_notify = self.call(message)
+        except ModelNotFoundError as e:
+            return log.error(str(e))
 
         for pointer in to_notify:
             channel.basic_publish(

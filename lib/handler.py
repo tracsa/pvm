@@ -34,7 +34,8 @@ class Handler:
                 ),
             )
 
-        channel.basic_ack(delivery_tag = method.delivery_tag)
+        if not self.config['RABBIT_NO_ACK']:
+            channel.basic_ack(delivery_tag = method.delivery_tag)
 
     def call(self, message:dict):
         if message['command'] == 'start':

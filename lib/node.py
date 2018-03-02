@@ -36,8 +36,12 @@ class Node:
         ''' tells if this node is the final node of the graph '''
         return False
 
+    def is_async(self) -> bool:
+        ''' returns true for nodes that require external output to continue '''
+        raise NotImplementedError('Should be implemented for subclasses')
 
-class NonBlockingNode(Node):
+
+class SyncNode(Node):
     ''' Nodes that don't wait for external info to execute '''
 
     def can_continue(self, data:dict):
@@ -45,29 +49,33 @@ class NonBlockingNode(Node):
         return True
 
 
+class AsyncNode(Node):
+    ''' Nodes that wait for external confirmation '''
+
+
 class SingleConnectedNode(Node):
 
     def next(self, xmliter:Iterator[ET.Element], data:dict) -> ['Node']:
         ''' just find the next node in the graph '''
-        conn = find(xmliter, lambda e:e.attrib['from'] == self.id)
+        conn = find(xmliter, lambda e:e.tag=='connector' and e.attrib['from'] == self.id)
         return [make_node(find(
             xmliter,
             lambda e:e.attrib['id'] == conn.attrib['to']
         ))]
 
 
-class StartNode(NonBlockingNode, SingleConnectedNode):
+class StartNode(SyncNode, SingleConnectedNode):
     ''' Each process graph should contain one and only one start node which is
     the head and trigger of everything. It only leads to the next step in the
     execution '''
 
 
-class DummyNode(NonBlockingNode, SingleConnectedNode):
+class DummyNode(SyncNode, SingleConnectedNode):
     '''a node that does nothing but stand there... waiting for the appropiate
     moment for... doing nothing '''
 
 
-class EchoNode(NonBlockingNode, SingleConnectedNode):
+class EchoNode(SyncNode, SingleConnectedNode):
     ''' Prints to console the parameter contained in the attribute msg '''
 
     def __call__(self):

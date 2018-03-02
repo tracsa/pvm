@@ -5,7 +5,7 @@ from coralillo.errors import ModelNotFoundError
 from .logger import log
 from .process import load as process_load, iter_nodes, find
 from .errors import ProcessNotFound, CannotMove
-from .node import make_node, Node
+from .node import make_node, Node, AsyncNode
 from .models import Execution, Pointer
 
 
@@ -68,7 +68,11 @@ class Handler:
 
                 if not node.is_end():
                     pointer = self.create_pointer(node, execution)
-                    pointers.append(pointer)
+
+                    if isinstance(node, AsyncNode):
+                        log.debug('execution waiting for step command')
+                    else:
+                        pointers.append(pointer)
                 else:
                     log.debug('Branch of {proc} ended at {node}'.format(
                         proc = execution.process_name,

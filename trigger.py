@@ -50,12 +50,21 @@ class Trigger:
             body = json.dumps({
                 'command': 'step',
                 'pointer_id': args.pointer_id,
+                'data': dict(args.data) if args.data is not None else dict(),
             }),
             properties = pika.BasicProperties(
                 delivery_mode = 2, # make message persistent
             ),
         )
 
+
+def make_tuple(arg:str):
+    value = tuple(arg.split('='))
+
+    if len(value) != 2:
+        raise argparse.ArgumentTypeError('must be of the form key=value')
+
+    return value
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Trigger a process')
@@ -68,6 +77,7 @@ if __name__ == '__main__':
 
     continue_parser = subparsers.add_parser('step', description='continues the execution of a process')
     continue_parser.add_argument('pointer_id', help='the id of the pointer to restore')
+    continue_parser.add_argument('-d', '--data', action='append', type=make_tuple)
     continue_parser.set_defaults(func=trigger.step)
 
     args = parser.parse_args()

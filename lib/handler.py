@@ -4,7 +4,7 @@ from coralillo.errors import ModelNotFoundError
 
 from .logger import log
 from .process import load as process_load, iter_nodes, find
-from .errors import ProcessNotFound
+from .errors import ProcessNotFound, CannotMove
 from .node import make_node, Node
 from .models import Execution, Pointer
 
@@ -23,6 +23,8 @@ class Handler:
         try:
             to_notify = self.call(message)
         except ModelNotFoundError as e:
+            return log.error(str(e))
+        except CannotMove as e:
             return log.error(str(e))
 
         for pointer in to_notify:
@@ -49,7 +51,7 @@ class Handler:
             ))
         elif message['command'] == 'step':
             execution, pointer, xmliter, current_node = self.recover_step(message)
-            log.debug('Recovered {proc} at nore {node}'.format(
+            log.debug('Recovered {proc} at node {node}'.format(
                 proc = execution.process_name,
                 node = pointer.node_id,
             ))

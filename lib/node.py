@@ -6,6 +6,7 @@ from typing import Iterator
 
 from .process import find
 from .logger import log
+from .errors import DataMissing, InvalidData
 
 
 class Node:
@@ -79,10 +80,10 @@ class DecisionNode(Node):
 
     def can_continue(self, data:dict):
         if 'answer'  not in data:
-            return False
+            raise DataMissing('answer')
 
         if data['answer'] not in ('yes', 'no'):
-            return False
+            raise InvalidData('answer', data['answer'])
 
         return True
 

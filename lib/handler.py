@@ -73,7 +73,7 @@ class Handler:
                     if isinstance(node, AsyncNode):
                         log.debug('execution waiting at {cls} {node_id}'.format(
                             cls = type(node).__name__,
-                            node_id = node.id,
+                            node_id = pointer.id,
                         ))
                     else:
                         pointers.append(pointer)

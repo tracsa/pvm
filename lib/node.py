@@ -82,7 +82,7 @@ class EchoNode(SyncNode, SingleConnectedNode):
         log.debug(self.attrib['msg'])
 
 
-class DecisionNode(Node):
+class DecisionNode(AsyncNode):
 
     def __call__(self): pass
 
@@ -108,7 +108,7 @@ class DecisionNode(Node):
         ))]
 
 
-class EndNode(Node):
+class EndNode(SyncNode):
 
     def __call__(self): pass
 

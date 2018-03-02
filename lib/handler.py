@@ -51,10 +51,10 @@ class Handler:
             ))
 
         pointers = [] # pointers to be notified back
+        data = message['data'] if 'data' in message else dict()
 
-        if current_node.can_continue():
+        if current_node.can_continue(data):
             pointer.delete()
-            data = message['data'] if 'data' in message else dict()
             next_nodes = current_node.next(xmliter, data)
 
             for node in next_nodes:

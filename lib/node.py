@@ -21,7 +21,7 @@ class Node:
         something similar '''
         raise NotImplementedError('Should be implemented for subclasses')
 
-    def can_continue(self):
+    def can_continue(self, data:dict):
         ''' Determines if this node has everything it needs to continue the
         execution of the script '''
         raise NotImplementedError('Should be implemented for subclasses')
@@ -39,7 +39,7 @@ class Node:
 class NonBlockingNode(Node):
     ''' Nodes that don't wait for external info to execute '''
 
-    def can_continue(self):
+    def can_continue(self, data:dict):
         ''' start nodes have everything they need to continue '''
         return True
 
@@ -76,6 +76,15 @@ class EchoNode(NonBlockingNode, SingleConnectedNode):
 class DecisionNode(Node):
 
     def __call__(self): pass
+
+    def can_continue(self, data:dict):
+        if 'answer'  not in data:
+            return False
+
+        if data['answer'] not in ('yes', 'no'):
+            return False
+
+        return True
 
     def next(self, xmliter:Iterator[ET.Element], data:dict) -> ['Node']:
         ''' find node whose value corresponds to the answer '''

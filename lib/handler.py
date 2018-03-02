@@ -26,7 +26,7 @@ class Handler:
                 exchange = '',
                 routing_key = self.config['RABBIT_QUEUE'],
                 body = json.dumps({
-                    'command': 'continue',
+                    'command': 'step',
                     'pointer_id': pointer.id,
                 }),
                 properties = pika.BasicProperties(
@@ -43,7 +43,7 @@ class Handler:
             log.debug('Fetched start for {proc}'.format(
                 proc = execution.process_name,
             ))
-        elif message['command'] == 'continue':
+        elif message['command'] == 'step':
             execution, pointer, xmliter, current_node = self.recover_step(message)
             log.debug('Recovered {proc} at nore {node}'.format(
                 proc = execution.process_name,
@@ -125,7 +125,7 @@ class Handler:
         ''' given an execution id and a pointer from the persistent storage,
         return the asociated process node to continue its execution '''
         if 'pointer_id' not in message:
-            raise KeyError('Requested continue without pointer id')
+            raise KeyError('Requested step without pointer id')
 
         pointer = Pointer.get_or_exception(message['pointer_id'])
         execution = pointer.proxy.execution.get()

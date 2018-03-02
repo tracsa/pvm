@@ -52,7 +52,7 @@ def test_recover_step(config, models):
     ptr.proxy.execution.set(exc)
 
     execution, pointer, xmliter, node = handler.recover_step({
-        'command': 'continue',
+        'command': 'step',
         'pointer_id': ptr.id,
     })
 
@@ -112,7 +112,7 @@ def test_call_recover(config):
     pointer.proxy.execution.set(execution)
 
     ptrs = handler.call({
-        'command': 'continue',
+        'command': 'step',
         'pointer_id': pointer.id,
     })
 

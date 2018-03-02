@@ -22,7 +22,7 @@ TIMEZONE = 'UTC'
 # Supported commands for the PVM
 COMMANDS = [
     'start',
-    'continue',
+    'step',
 ]
 
 REDIS_HOST = 'localhost'

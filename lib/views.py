@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, jsonify
 
 from pvm_api import app
 from lib.forms import ContinueProcess

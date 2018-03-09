@@ -9,14 +9,37 @@ def test_continue_process_requires(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': '',
-                'i18n': 'errors.missing_field',
+                'detail': 'execution_id is required',
+                'i18n': 'errors.execution_id.required',
                 'field': 'execution_id',
             },
             {
-                'detail': '',
-                'i18n': 'errors.missing_field',
+                'detail': 'node_id is required',
+                'i18n': 'errors.node_id.required',
+                'field': 'node_id',
+            },
+        ],
+    }
+
+def test_continue_process_asks_living_objects(client):
+    ''' the app must validate that the ids sent are real objects '''
+    res = client.post('/v1/pointer', data={
+        'node_id': 'nada',
+        'execution_id': 'verde',
+    })
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': 'execution_id is invalid',
+                'i18n': 'errors.execution_id.invalid',
                 'field': 'execution_id',
+            },
+            {
+                'detail': 'node_id is invalid',
+                'i18n': 'errors.node_id.invalid',
+                'field': 'node_id',
             },
         ],
     }

@@ -22,14 +22,14 @@ class Node:
         something similar '''
         raise NotImplementedError('Should be implemented for subclasses')
 
-    def can_continue(self, data:dict):
+    def validate(self, data:dict):
         ''' Determines if this node has everything it needs to continue the
         execution of the script '''
         raise NotImplementedError('Should be implemented for subclasses')
 
     def next(self, xmliter:Iterator[ET.Element], data:dict) -> ['Node']:
         ''' Gets the next node in the graph, if it fails raises an exception.
-        Assumes that can_continue() has been called before '''
+        Assumes that validate() has been called before '''
         raise NotImplementedError('Should be implemented for subclasses')
 
     def is_end(self) -> bool:
@@ -44,7 +44,7 @@ class Node:
 class SyncNode(Node):
     ''' Nodes that don't wait for external info to execute '''
 
-    def can_continue(self, data:dict):
+    def validate(self, data:dict):
         ''' start nodes have everything they need to continue '''
         return True
 
@@ -86,7 +86,7 @@ class DecisionNode(AsyncNode):
 
     def __call__(self): pass
 
-    def can_continue(self, data:dict):
+    def validate(self, data:dict):
         if 'answer'  not in data:
             raise DataMissing('answer')
 

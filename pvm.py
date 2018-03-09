@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from lib.loop import Loop
-from lib.models import bound_models
+from lib.models import bind_models
 
 from coralillo import Engine
 from itacate import Config
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         port = config['REDIS_PORT'],
         db = config['REDIS_DB'],
     )
-    bound_models(eng)
+    bind_models(eng)
 
     # start the loop
     loop = Loop(config)

@@ -60,28 +60,30 @@ class Handler:
         pointers = [] # pointers to be notified back
         data = message['data'] if 'data' in message else dict()
 
-        if current_node.can_continue(data):
-            pointer.delete()
-            next_nodes = current_node.next(xmliter, data)
+        # This call raises an exception if data doesn't have enough information
+        current_node.validate(data)
 
-            for node in next_nodes:
-                node()
+        pointer.delete()
+        next_nodes = current_node.next(xmliter, data)
 
-                if not node.is_end():
-                    pointer = self.create_pointer(node, execution)
+        for node in next_nodes:
+            node()
 
-                    if isinstance(node, AsyncNode):
-                        log.debug('execution waiting at {cls} {node_id}'.format(
-                            cls = type(node).__name__,
-                            node_id = pointer.id,
-                        ))
-                    else:
-                        pointers.append(pointer)
-                else:
-                    log.debug('Branch of {proc} ended at {node}'.format(
-                        proc = execution.process_name,
-                        node = node.id,
+            if not node.is_end():
+                pointer = self.create_pointer(node, execution)
+
+                if isinstance(node, AsyncNode):
+                    log.debug('execution waiting at {cls} {node_id}'.format(
+                        cls = type(node).__name__,
+                        node_id = pointer.id,
                     ))
+                else:
+                    pointers.append(pointer)
+            else:
+                log.debug('Branch of {proc} ended at {node}'.format(
+                    proc = execution.process_name,
+                    node = node.id,
+                ))
 
         if execution.proxy.pointers.count() == 0:
             execution.delete()

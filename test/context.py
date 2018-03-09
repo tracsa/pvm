@@ -31,4 +31,4 @@ def models():
         db=con['REDIS_DB'],
     )
     engine.lua.drop(args=['*'])
-    lib.models.bound_models(engine)
+    lib.models.bind_models(engine)

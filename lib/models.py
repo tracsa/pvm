@@ -11,6 +11,6 @@ class Pointer(Model):
     execution = fields.ForeignIdRelation(Execution, inverse='pointers')
 
 
-def bound_models(engine):
+def bind_models(engine):
     Execution.set_engine(engine)
     Pointer.set_engine(engine)

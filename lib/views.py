@@ -11,7 +11,7 @@ def index():
 
 @app.route('/v1/pointer', methods=['POST'])
 def continue_process():
-    data = ContinueProcess.validate(**request.form)
+    data = ContinueProcess.validate(**request.form.to_dict())
 
     return jsonify({
         'data': {},

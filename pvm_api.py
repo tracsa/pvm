@@ -3,7 +3,8 @@ from flask_coralillo import Coralillo
 import os
 import time
 
-from lib.forms import ContinueProcess, bind_forms
+from lib.forms import bind_forms
+from lib.models import bind_models
 
 # The flask application
 app = Flask(__name__)
@@ -17,6 +18,7 @@ time.tzset()
 # Bind the database
 cora = Coralillo(app)
 bind_forms(cora._engine)
+bind_models(cora._engine)
 
 # Views
 import lib.views

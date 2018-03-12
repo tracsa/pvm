@@ -24,28 +24,29 @@ def test_continue_process_requires(client):
 def test_continue_process_asks_living_objects(client):
     ''' the app must validate that the ids sent are real objects '''
     res = client.post('/v1/pointer', data={
-        'node_id': 'nada',
         'execution_id': 'verde',
+        'node_id': 'nada',
     })
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'execution_id is invalid',
+                'detail': 'execution_id is not valid',
                 'i18n': 'errors.execution_id.invalid',
                 'field': 'execution_id',
-            },
-            {
-                'detail': 'node_id is invalid',
-                'i18n': 'errors.node_id.invalid',
-                'field': 'node_id',
             },
         ],
     }
 
-def test_can_continue_process(client):
-    res = client.post('/v1/pointer')
+def test_can_continue_process(client, models):
+    exc = lib.models.Execution(
+        process_name = 'decision_2018-02-27',
+    ).save()
+    res = client.post('/v1/pointer', data={
+        'execution_id': exc.id,
+        'node_id': '57TJ0V3nur6m7wvv',
+    })
 
     assert res.status_code == 200
     assert json.loads(res.data) == {

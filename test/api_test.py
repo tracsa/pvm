@@ -39,6 +39,26 @@ def test_continue_process_asks_living_objects(client):
         ],
     }
 
+def test_continue_process_requires_living_pointer(client):
+    exc = lib.models.Execution(
+        process_name = 'decision_2018-02-27',
+    ).save()
+    res = client.post('/v1/pointer', data={
+        'execution_id': exc.id,
+        'node_id': '57TJ0V3nur6m7wvv',
+    })
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': 'node_id does not have a live pointer',
+                'i18n': 'errors.node_id.no_live_pointer',
+                'field': 'node_id',
+            },
+        ],
+    }
+
 def test_can_continue_process(client, models):
     exc = lib.models.Execution(
         process_name = 'decision_2018-02-27',
@@ -48,14 +68,12 @@ def test_can_continue_process(client, models):
         'node_id': '57TJ0V3nur6m7wvv',
     })
 
+    ptr = lib.models.Pointer.get_all()[0]
+
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
-            {
-                '_type': 'pointer',
-                'id': '',
-                'node_id': '',
-            },
+            ptr.to_json(),
         ]
     }
 

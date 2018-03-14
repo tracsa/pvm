@@ -63,18 +63,19 @@ def test_can_continue_process(client, models):
     exc = lib.models.Execution(
         process_name = 'decision_2018-02-27',
     ).save()
+    ptr = lib.models.Pointer(node_id='57TJ0V3nur6m7wvv').save()
+    ptr.proxy.execution.set(exc)
+
     res = client.post('/v1/pointer', data={
         'execution_id': exc.id,
         'node_id': '57TJ0V3nur6m7wvv',
     })
 
-    ptr = lib.models.Pointer.get_all()[0]
-
-    assert res.status_code == 200
+    assert res.status_code == 202
     assert json.loads(res.data) == {
-        'data': [
-            ptr.to_json(),
-        ]
+        'data': {
+            'detail': 'accepted',
+        },
     }
 
 def test_can_query_process_status(client):

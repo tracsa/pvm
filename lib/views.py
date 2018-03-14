@@ -13,6 +13,10 @@ def index():
 def continue_process():
     data = ContinueProcess.validate(**request.form.to_dict())
 
+# TODO validate specific data required for the node to continue
+
     return jsonify({
-        'data': {},
-    })
+        'data': {
+            'detail': 'accepted',
+        },
+    }), 202

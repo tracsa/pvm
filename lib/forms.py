@@ -42,9 +42,11 @@ class ContinueProcess(Form):
 
         # validates the existence of a pointer asociated to the node and execution
         ptrs = execution.proxy.pointers.get()
+        pointer = None
 
         for ptr in ptrs:
             if ptr.node_id == obj.node_id:
+                pointer = ptr
                 break
         else:
             raise NoPointerAlive(field='node_id')

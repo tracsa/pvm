@@ -1,5 +1,7 @@
 from flask import json
 import pytest
+import case_conversion
+import pika
 
 from pvm.models import Execution, Pointer
 
@@ -60,17 +62,21 @@ def test_continue_process_requires_living_pointer(client):
         ],
     }
 
-def test_can_continue_process(client, models):
+def test_can_continue_process(client, models, mocker):
     exc = Execution(
         process_name = 'decision_2018-02-27',
     ).save()
     ptr = Pointer(node_id='57TJ0V3nur6m7wvv').save()
     ptr.proxy.execution.set(exc)
 
+    mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
+
     res = client.post('/v1/pointer', data={
         'execution_id': exc.id,
         'node_id': '57TJ0V3nur6m7wvv',
     })
+
+    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
 
     assert res.status_code == 202
     assert json.loads(res.data) == {
@@ -78,6 +84,7 @@ def test_can_continue_process(client, models):
             'detail': 'accepted',
         },
     }
+
 
 @pytest.mark.skip(reason='not implemented yet')
 def test_can_query_process_status(client):

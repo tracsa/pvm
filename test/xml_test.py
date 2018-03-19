@@ -4,29 +4,28 @@ import pytest
 import xml.etree.ElementTree as ET
 
 from pvm.errors import ProcessNotFound
-from pvm.xml import load, iter_nodes, find, etree_from_list, nodes_from, \
-        has_no_incoming, has_edges, topological_sort
+from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, has_edges, topological_sort
 
 def test_load_not_found(config):
     ''' if a process file is not found, raise an exception '''
     with pytest.raises(ProcessNotFound):
-        load(config, 'notfound')
+        Xml.load(config, 'notfound')
 
 def test_load_process(config):
     '''  a process file can be found using only its prefix or common name '''
-    name, xmlfile = load(config, 'simple')
+    xml = Xml.load(config, 'simple')
 
-    assert name == 'simple_2018-02-19.xml'
-    assert type(xmlfile) == TextIOWrapper
+    assert xml.name == 'simple_2018-02-19.xml'
+    assert type(xml) == Xml
 
 def test_load_last_matching_process(config):
     ''' a process is specified by its common name, but many versions may exist.
     when a process is requested for start we must use the last version of it '''
-    name, xmlfile = load(config, 'oldest')
+    xml = Xml.load(config, 'oldest')
 
-    root = ET.fromstring(xmlfile.read())
+    root = ET.fromstring(xml.file.read())
 
-    assert name == 'oldest_2018-02-17.xml'
+    assert xml.name == 'oldest_2018-02-17.xml'
     assert root.tag == 'process-spec'
     assert root[0].tag == 'process-info'
     assert root[0][0].tag == 'author'
@@ -40,11 +39,11 @@ def test_load_last_matching_process(config):
 def test_load_specific_version(config):
     ''' one should be able to request a specific version of a process,
     thus overriding the process described by the previous test '''
-    name, xmlfile = load(config, 'oldest_2018-02-14')
+    xml = Xml.load(config, 'oldest_2018-02-14')
 
-    root = ET.fromstring(xmlfile.read())
+    root = ET.fromstring(xml.file.read())
 
-    assert name == 'oldest_2018-02-14.xml'
+    assert xml.name == 'oldest_2018-02-14.xml'
     assert root.tag == 'process-spec'
     assert root[0].tag == 'process-info'
     assert root[0][0].tag == 'author'
@@ -58,8 +57,7 @@ def test_load_specific_version(config):
 def test_make_iterator(config):
     ''' test that the iter function actually returns an interator over the
     nodes and edges of the process '''
-    name, xmlfile = load(config, 'simple')
-    xmliter = iter_nodes(xmlfile)
+    xml = Xml.load(config, 'simple')
 
     expected_nodes = [
         ET.Element('node', {'id':"gYcj0XjbgjSO", 'class':"start"}),
@@ -69,45 +67,40 @@ def test_make_iterator(config):
         ET.Element('node', {'id':"kV9UWSeA89IZ", 'class':"end"}),
     ]
 
-    for given, expected in zip(xmliter, expected_nodes):
+    for given, expected in zip(xml, expected_nodes):
         assert given.tag == expected.tag
         assert given.attrib == expected.attrib
 
 def test_find(config):
-    name, xmlfile = load(config, 'simple')
-    xmliter = iter_nodes(xmlfile)
+    xml = Xml.load(config, 'simple')
 
-    start = find(xmliter, lambda e:e.tag=='node')
+    start = xml.find(lambda e:e.tag=='node')
 
     assert start.tag == 'node'
     assert start.attrib['id'] == 'gYcj0XjbgjSO'
 
-    conn = find(
-        xmliter,
+    conn = xml.find(
         lambda e:e.tag=='connector' and e.attrib['from']==start.attrib['id']
     )
 
     assert conn.tag == 'connector'
     assert conn.attrib == { 'from':"gYcj0XjbgjSO", 'to':"4g9lOdPKmRUf" }
 
-    echo = find(
-        xmliter,
+    echo = xml.find(
         lambda e:e.attrib['id']==conn.attrib['to']
     )
 
     assert echo.tag == 'node'
     assert echo.attrib['id'] == '4g9lOdPKmRUf'
 
-    conn = find(
-        xmliter,
+    conn = xml.find(
         lambda e:e.tag=='connector' and e.attrib['from']==echo.attrib['id']
     )
 
     assert conn.tag == 'connector'
     assert conn.attrib == {'from':"4g9lOdPKmRUf", 'to':"kV9UWSeA89IZ"}
 
-    end = find(
-        xmliter,
+    end = xml.find(
         lambda e:e.attrib['id']==conn.attrib['to']
     )
 

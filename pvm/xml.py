@@ -4,45 +4,64 @@ import xml.etree.ElementTree as ET
 
 from .errors import ProcessNotFound, ElementNotFound
 
-def load(config:dict, common_name:str) -> TextIO:
-    ''' Loads an xml file and returns the corresponding TextIOWrapper for
-    further usage. The file might contain multiple versions so the latest one
-    is chosen.
 
-    common_name is the prefix of the file to find. If multiple files with the
-    same prefix are found the last in lexicographical order is returned.'''
-    files = reversed(sorted(os.listdir(config['XML_PATH'])))
+class Xml:
 
-    for filename in files:
-        if filename.startswith(common_name):
-            return filename, open(os.path.join(config['XML_PATH'], filename))
-    else:
-        raise ProcessNotFound('Could not find the requested process definition'
-            ' file: {}'.format(common_name))
+    def __init__(self, config):
+        self.config = config
+        self.file = None
+        self.name = None
+        self.parser = ET.XMLPullParser(['end'])
 
-def iter_nodes(xmlfile:TextIO) -> Iterator[ET.Element]:
-    ''' Returns an inerator over the nodes and edges of a process defined
-    by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed for
-    this task. '''
-    parser = ET.XMLPullParser(['end'])
+    @classmethod
+    def load(cls, config:dict, common_name:str) -> TextIO:
+        ''' Loads an xml file and returns the corresponding TextIOWrapper for
+        further usage. The file might contain multiple versions so the latest one
+        is chosen.
 
-    for line in xmlfile:
-        parser.feed(line)
+        common_name is the prefix of the file to find. If multiple files with the
+        same prefix are found the last in lexicographical order is returned.'''
+        files = reversed(sorted(os.listdir(config['XML_PATH'])))
 
-        for _, elem in parser.read_events():
-            if elem.tag in ('node', 'connector'):
-                yield elem
+        for filename in files:
+            if filename.startswith(common_name):
+                obj = Xml(config)
 
-    xmlfile.close()
+                obj.name = filename
+                obj.file = open(os.path.join(config['XML_PATH'], filename))
 
-def find(xmliter:Iterator[ET.Element], testfunc:Callable[[ET.Element], bool]) -> ET.Element:
-    ''' Given an interator returned by the previous function, tries to find the
-    first node matching the given condition '''
-    for element in xmliter:
-        if testfunc(element):
-            return element
+                return obj
+        else:
+            raise ProcessNotFound('Could not find the requested process definition'
+                ' file: {}'.format(common_name))
 
-    raise ElementNotFound('node or edge matching the given condition was not found')
+    def __next__(self):
+        ''' Returns an inerator over the nodes and edges of a process defined
+        by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed for
+        this task. '''
+
+        for line in self.file:
+            self.parser.feed(line)
+
+            for _, elem in self.parser.read_events():
+                if elem.tag in ('node', 'connector'):
+                    return elem
+
+        self.file.close()
+
+        raise StopIteration
+
+    def __iter__(self):
+        return self
+
+    def find(self, testfunc:Callable[[ET.Element], bool]) -> ET.Element:
+        ''' Given an interator returned by the previous function, tries to find the
+        first node matching the given condition '''
+        for element in self:
+            if testfunc(element):
+                return element
+
+        raise ElementNotFound('node or edge matching the given condition was not found')
 
 def etree_from_list(root:ET.Element, nodes:[ET.Element]) -> ET.ElementTree:
     ''' Returns a built ElementTree from the list of its members '''

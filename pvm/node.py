@@ -4,7 +4,7 @@ import case_conversion
 import xml.etree.ElementTree as ET
 from typing import Iterator
 
-from .xml import find
+from .xml import Xml
 from .logger import log
 from .errors import DataMissing, InvalidData
 
@@ -55,11 +55,11 @@ class AsyncNode(Node):
 
 class SingleConnectedNode(Node):
 
-    def next(self, xmliter:Iterator[ET.Element], data:dict) -> ['Node']:
+    def next(self, xml:Xml, data:dict) -> ['Node']:
         ''' just find the next node in the graph '''
-        conn = find(xmliter, lambda e:e.tag=='connector' and e.attrib['from'] == self.id)
-        return [make_node(find(
-            xmliter,
+        conn = xml.find(lambda e:e.tag=='connector' and e.attrib['from'] == self.id)
+
+        return [make_node(xml.find(
             lambda e:e.attrib['id'] == conn.attrib['to']
         ))]
 
@@ -95,15 +95,13 @@ class DecisionNode(AsyncNode):
 
         return True
 
-    def next(self, xmliter:Iterator[ET.Element], data:dict) -> ['Node']:
+    def next(self, xml:Xml, data:dict) -> ['Node']:
         ''' find node whose value corresponds to the answer '''
-        conn = find(
-            xmliter, 
+        conn = xml.find(
             lambda e:e.tag=='connector' and e.attrib['from']==self.id and 'value' in e.attrib and e.attrib['value'] == data['answer']
         )
 
-        return [make_node(find(
-            xmliter,
+        return [make_node(xml.find(
             lambda e:e.attrib['id'] == conn.attrib['to']
         ))]
 

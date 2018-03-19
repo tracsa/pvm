@@ -3,7 +3,7 @@ import pika
 from coralillo.errors import ModelNotFoundError
 
 from .logger import log
-from .xml import load as process_load, iter_nodes, find
+from .xml import Xml
 from .errors import ProcessNotFound, CannotMove
 from .node import make_node, Node, AsyncNode
 from .models import Execution, Pointer
@@ -116,18 +116,17 @@ class Handler:
         if 'process' not in message:
             raise KeyError('Requested start without process name')
 
-        filename, xmlfile = process_load(self.config, message['process'])
-        xmliter = iter_nodes(xmlfile)
-        start_point = find(xmliter, lambda e:e.attrib['class'] == 'start')
+        xml = Xml.load(self.config, message['process'])
+        start_point = xml.find(lambda e:e.attrib['class'] == 'start')
         execution = Execution(
-            process_name = filename,
+            process_name = xml.name,
         ).save()
         pointer = Pointer(
             node_id = start_point.attrib.get('id'),
         ).save()
         pointer.proxy.execution.set(execution)
 
-        return execution, pointer, xmliter, make_node(start_point)
+        return execution, pointer, xml, make_node(start_point)
 
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former
@@ -145,14 +144,12 @@ class Handler:
 
         pointer = Pointer.get_or_exception(message['pointer_id'])
         execution = pointer.proxy.execution.get()
-        filename, xmlfile = process_load(self.config, execution.process_name)
+        xml = Xml.load(self.config, execution.process_name)
 
-        assert execution.process_name == filename, 'Inconsisten pointer found'
+        assert execution.process_name == xml.name, 'Inconsisten pointer found'
 
-        xmliter = iter_nodes(xmlfile)
-        point = find(
-            xmliter,
+        point = xml.find(
             lambda e:'id' in e.attrib and e.attrib['id'] == pointer.node_id
         )
 
-        return execution, pointer, xmliter, make_node(point)
+        return execution, pointer, xml, make_node(point)

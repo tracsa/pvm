@@ -26,17 +26,16 @@ class ContinueProcess(Form):
             raise errors.InvalidFieldError(field='execution_id')
 
         # validates the existence of the node
-        from .xml import load, iter_nodes, find
+        from .xml import Xml
         from wsgi import app
 
-        name, xmlfile = load(app.config, execution.process_name)
-        xmliter = iter_nodes(xmlfile)
+        xml = Xml.load(app.config, execution.process_name)
 
         def testfunc(e):
             return 'id' in e.attrib and e.attrib['id'] == obj.node_id
 
         try:
-            find(xmliter, testfunc)
+            xml.find(testfunc)
         except ElementNotFound:
             raise errors.InvalidFieldError(field='node_id')
 

@@ -5,7 +5,7 @@ import os
 import argparse
 from itacate import Config
 
-from lib.logger import log
+from pvm.logger import log
 
 
 class Trigger:

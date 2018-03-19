@@ -1,11 +1,12 @@
 import xml.etree.ElementTree as ET
 import pytest
 
-from .context import *
-
+from pvm.handler import Handler
+from pvm.node import Node, StartNode, make_node
+from pvm.models import Execution, Pointer
 
 def test_parse_message(config):
-    handler = lib.handler.Handler(config)
+    handler = Handler(config)
 
     with pytest.raises(ValueError):
         handler.parse_message('not json')
@@ -23,7 +24,7 @@ def test_parse_message(config):
     }
 
 def test_get_start_node(config, models):
-    handler = lib.handler.Handler(config)
+    handler = Handler(config)
 
     execution, pointer, xmliter, start_node = handler.get_start({
         'process': 'simple',
@@ -34,19 +35,19 @@ def test_get_start_node(config, models):
     assert conn.tag == 'connector'
 
     assert start_node is not None
-    assert isinstance(start_node, lib.node.Node)
-    assert isinstance(start_node, lib.node.StartNode)
+    assert isinstance(start_node, Node)
+    assert isinstance(start_node, StartNode)
 
     assert execution.process_name == 'simple_2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
     assert pointer in execution.proxy.pointers
 
 def test_recover_step(config, models):
-    handler = lib.handler.Handler(config)
-    exc = lib.models.Execution.validate(
+    handler = Handler(config)
+    exc = Execution.validate(
         process_name = 'simple_2018-02-19.xml',
     ).save()
-    ptr = lib.models.Pointer.validate(
+    ptr = Pointer.validate(
         node_id = '4g9lOdPKmRUf',
     ).save()
     ptr.proxy.execution.set(exc)
@@ -67,14 +68,14 @@ def test_recover_step(config, models):
     assert node.id == '4g9lOdPKmRUf'
 
 def test_create_pointer(config):
-    handler = lib.handler.Handler(config)
+    handler = Handler(config)
 
     ele = ET.Element('node', {
         'class': 'dummy',
         'id': 'chubaca',
     })
-    node = lib.node.make_node(ele)
-    exc = lib.models.Execution.validate(
+    node = make_node(ele)
+    exc = Execution.validate(
         process_name = 'simple_2018-02-19.xml',
     ).save()
     pointer = handler.create_pointer(node, exc)
@@ -86,14 +87,14 @@ def test_create_pointer(config):
     assert execution.proxy.pointers.count() == 1
 
 def test_call_start(config, models):
-    handler = lib.handler.Handler(config)
+    handler = Handler(config)
 
     ptrs = handler.call({
         'command': 'start',
         'process': 'simple',
     })
 
-    execution = lib.models.Execution.get_all()[0]
+    execution = Execution.get_all()[0]
     assert execution.process_name == 'simple_2018-02-19.xml'
 
     pointer = execution.proxy.pointers.get()[0]
@@ -102,11 +103,11 @@ def test_call_start(config, models):
     assert ptrs[0].id == pointer.id
 
 def test_call_recover(config):
-    handler = lib.handler.Handler(config)
-    execution = lib.models.Execution(
+    handler = Handler(config)
+    execution = Execution(
         process_name = 'simple_2018-02-19.xml',
     ).save()
-    pointer = lib.models.Pointer(
+    pointer = Pointer(
         node_id = '4g9lOdPKmRUf',
     ).save()
     pointer.proxy.execution.set(execution)
@@ -116,6 +117,6 @@ def test_call_recover(config):
         'pointer_id': pointer.id,
     })
 
-    assert lib.models.Pointer.get(pointer.id) == None
-    assert lib.models.Execution.get(execution.id) == None
+    assert Pointer.get(pointer.id) == None
+    assert Execution.get(execution.id) == None
     assert ptrs == []

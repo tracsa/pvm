@@ -1,6 +1,7 @@
 from flask import json
+import pytest
 
-from .context import *
+from pvm.models import Execution, Pointer
 
 def test_continue_process_requires(client):
     res = client.post('/v1/pointer')
@@ -40,7 +41,7 @@ def test_continue_process_asks_living_objects(client):
     }
 
 def test_continue_process_requires_living_pointer(client):
-    exc = lib.models.Execution(
+    exc = Execution(
         process_name = 'decision_2018-02-27',
     ).save()
     res = client.post('/v1/pointer', data={
@@ -60,10 +61,10 @@ def test_continue_process_requires_living_pointer(client):
     }
 
 def test_can_continue_process(client, models):
-    exc = lib.models.Execution(
+    exc = Execution(
         process_name = 'decision_2018-02-27',
     ).save()
-    ptr = lib.models.Pointer(node_id='57TJ0V3nur6m7wvv').save()
+    ptr = Pointer(node_id='57TJ0V3nur6m7wvv').save()
     ptr.proxy.execution.set(exc)
 
     res = client.post('/v1/pointer', data={
@@ -95,8 +96,8 @@ def test_can_query_process_status(client):
 
 @pytest.mark.skip(reason='not implemented yet')
 def test_execution_start(client, models):
-    assert lib.models.Execution.count() == 0
-    assert lib.models.Pointer.count() == 0
+    assert Execution.count() == 0
+    assert Pointer.count() == 0
 
     res = client.post('/v1/execution')
 
@@ -109,5 +110,5 @@ def test_execution_start(client, models):
         },
     }
 
-    assert lib.models.Execution.count() == 1
-    assert lib.models.Pointer.count() == 1
+    assert Execution.count() == 1
+    assert Pointer.count() == 1

@@ -4,14 +4,7 @@ import os
 import pytest
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-import lib
-import lib.xml
-import lib.handler
-import lib.node
-import lib.errors
-import lib.models
+from pvm.models import bind_models
 
 @pytest.fixture
 def config():
@@ -32,11 +25,12 @@ def models():
         db=con['REDIS_DB'],
     )
     engine.lua.drop(args=['*'])
-    lib.models.bind_models(engine)
+
+    bind_models(engine)
 
 @pytest.fixture
 def client():
     ''' makes and returns a testclient for the flask application '''
-    from pvm_api import app
+    from wsgi import app
 
     return app.test_client()

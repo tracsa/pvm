@@ -1,7 +1,7 @@
 from flask import request, jsonify
 
-from pvm_api import app
-from lib.forms import ContinueProcess
+from wsgi import app
+from pvm.forms import ContinueProcess
 
 @app.route('/')
 def index():
@@ -14,6 +14,7 @@ def continue_process():
     data = ContinueProcess.validate(**request.form.to_dict())
 
 # TODO validate specific data required for the node to continue
+# TODO trigger continue process
 
     return jsonify({
         'data': {

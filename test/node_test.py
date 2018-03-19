@@ -1,13 +1,14 @@
 import xml.etree.ElementTree as ET
 import pytest
 
-from .context import *
+from pvm.node import make_node, Node, StartNode
+from pvm.xml import load, iter_nodes, find
 
 def test_make_node_requires_class():
     element = ET.Element('node', {})
 
     with pytest.raises(KeyError) as e:
-        lib.node.make_node(element)
+        make_node(element)
 
 def test_make_node_requires_existent_class():
     element = ET.Element('node', {
@@ -15,28 +16,28 @@ def test_make_node_requires_existent_class():
     })
 
     with pytest.raises(ValueError) as e:
-        lib.node.make_node(element)
+        make_node(element)
 
 def test_make_start_node():
     element = ET.Element('node', {
         'class': 'start',
     })
-    node = lib.node.make_node(element)
+    node = make_node(element)
 
     assert node is not None
-    assert isinstance(node, lib.node.Node)
-    assert isinstance(node, lib.node.StartNode)
+    assert isinstance(node, Node)
+    assert isinstance(node, StartNode)
 
 def test_find_next_element_normal(config):
     ''' given a node, retrieves the next element in the graph, assumes that
     the element only has one outgoing edge '''
-    filename, xmlfile = lib.xml.load(config, 'simple')
+    filename, xmlfile = load(config, 'simple')
 
     assert filename == 'simple_2018-02-19.xml'
 
-    xmliter = lib.xml.iter_nodes(xmlfile)
+    xmliter = iter_nodes(xmlfile)
 
-    current_node = lib.node.make_node(lib.xml.find(
+    current_node = make_node(find(
         xmliter,
         lambda e:e.tag=='node' and e.attrib['id']=='4g9lOdPKmRUf'
     ))
@@ -47,13 +48,13 @@ def test_find_next_element_normal(config):
 
 def test_find_next_element_decision_yes(config):
     ''' given an if and asociated data, retrieves the next element '''
-    filename, xmlfile = lib.xml.load(config, 'decision')
+    filename, xmlfile = load(config, 'decision')
 
     assert filename == 'decision_2018-02-27.xml'
 
-    xmliter = lib.xml.iter_nodes(xmlfile)
+    xmliter = iter_nodes(xmlfile)
 
-    current_node = lib.node.make_node(lib.xml.find(
+    current_node = make_node(find(
         xmliter,
         lambda e:e.tag=='node' and e.attrib['id']=='57TJ0V3nur6m7wvv'
     ))
@@ -67,13 +68,13 @@ def test_find_next_element_decision_yes(config):
 def test_find_next_element_decision_no(config):
     ''' given an if and asociated data, retrieves the next element, negative
     variant '''
-    filename, xmlfile = lib.xml.load(config, 'decision')
+    filename, xmlfile = load(config, 'decision')
 
     assert filename == 'decision_2018-02-27.xml'
 
-    xmliter = lib.xml.iter_nodes(xmlfile)
+    xmliter = iter_nodes(xmlfile)
 
-    current_node = lib.node.make_node(lib.xml.find(
+    current_node = make_node(find(
         xmliter,
         lambda e:e.tag=='node' and e.attrib['id']=='57TJ0V3nur6m7wvv'
     ))

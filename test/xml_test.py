@@ -3,16 +3,18 @@ import os
 import pytest
 import xml.etree.ElementTree as ET
 
-from .context import *
+from pvm.errors import ProcessNotFound
+from pvm.xml import load, iter_nodes, find, etree_from_list, nodes_from, \
+        has_no_incoming, has_edges, topological_sort
 
 def test_load_not_found(config):
     ''' if a process file is not found, raise an exception '''
-    with pytest.raises(lib.errors.ProcessNotFound):
-        lib.xml.load(config, 'notfound')
+    with pytest.raises(ProcessNotFound):
+        load(config, 'notfound')
 
 def test_load_process(config):
     '''  a process file can be found using only its prefix or common name '''
-    name, xmlfile = lib.xml.load(config, 'simple')
+    name, xmlfile = load(config, 'simple')
 
     assert name == 'simple_2018-02-19.xml'
     assert type(xmlfile) == TextIOWrapper
@@ -20,7 +22,7 @@ def test_load_process(config):
 def test_load_last_matching_process(config):
     ''' a process is specified by its common name, but many versions may exist.
     when a process is requested for start we must use the last version of it '''
-    name, xmlfile = lib.xml.load(config, 'oldest')
+    name, xmlfile = load(config, 'oldest')
 
     root = ET.fromstring(xmlfile.read())
 
@@ -38,7 +40,7 @@ def test_load_last_matching_process(config):
 def test_load_specific_version(config):
     ''' one should be able to request a specific version of a process,
     thus overriding the process described by the previous test '''
-    name, xmlfile = lib.xml.load(config, 'oldest_2018-02-14')
+    name, xmlfile = load(config, 'oldest_2018-02-14')
 
     root = ET.fromstring(xmlfile.read())
 
@@ -56,8 +58,8 @@ def test_load_specific_version(config):
 def test_make_iterator(config):
     ''' test that the iter function actually returns an interator over the
     nodes and edges of the process '''
-    name, xmlfile = lib.xml.load(config, 'simple')
-    xmliter = lib.xml.iter_nodes(xmlfile)
+    name, xmlfile = load(config, 'simple')
+    xmliter = iter_nodes(xmlfile)
 
     expected_nodes = [
         ET.Element('node', {'id':"gYcj0XjbgjSO", 'class':"start"}),
@@ -72,15 +74,15 @@ def test_make_iterator(config):
         assert given.attrib == expected.attrib
 
 def test_find(config):
-    name, xmlfile = lib.xml.load(config, 'simple')
-    xmliter = lib.xml.iter_nodes(xmlfile)
+    name, xmlfile = load(config, 'simple')
+    xmliter = iter_nodes(xmlfile)
 
-    start = lib.xml.find(xmliter, lambda e:e.tag=='node')
+    start = find(xmliter, lambda e:e.tag=='node')
 
     assert start.tag == 'node'
     assert start.attrib['id'] == 'gYcj0XjbgjSO'
 
-    conn = lib.xml.find(
+    conn = find(
         xmliter,
         lambda e:e.tag=='connector' and e.attrib['from']==start.attrib['id']
     )
@@ -88,7 +90,7 @@ def test_find(config):
     assert conn.tag == 'connector'
     assert conn.attrib == { 'from':"gYcj0XjbgjSO", 'to':"4g9lOdPKmRUf" }
 
-    echo = lib.xml.find(
+    echo = find(
         xmliter,
         lambda e:e.attrib['id']==conn.attrib['to']
     )
@@ -96,7 +98,7 @@ def test_find(config):
     assert echo.tag == 'node'
     assert echo.attrib['id'] == '4g9lOdPKmRUf'
 
-    conn = lib.xml.find(
+    conn = find(
         xmliter,
         lambda e:e.tag=='connector' and e.attrib['from']==echo.attrib['id']
     )
@@ -104,7 +106,7 @@ def test_find(config):
     assert conn.tag == 'connector'
     assert conn.attrib == {'from':"4g9lOdPKmRUf", 'to':"kV9UWSeA89IZ"}
 
-    end = lib.xml.find(
+    end = find(
         xmliter,
         lambda e:e.attrib['id']==conn.attrib['to']
     )
@@ -114,7 +116,7 @@ def test_find(config):
 
 def test_etree_from_list_empty():
     nodes = []
-    etree = lib.xml.etree_from_list(ET.Element('process'), nodes)
+    etree = etree_from_list(ET.Element('process'), nodes)
 
     root = etree.getroot()
     assert root.tag == 'process'
@@ -131,7 +133,7 @@ def test_etree_from_list_withnodes():
     ]
     nodes[2].append(ET.Element('sub'))
 
-    etree = lib.xml.etree_from_list(ET.Element('process'), nodes)
+    etree = etree_from_list(ET.Element('process'), nodes)
 
     root = etree.getroot()
     assert root.tag == 'process'
@@ -150,7 +152,7 @@ def test_nodes_from(config):
 
     assert start_node.attrib['id'] == 'B'
 
-    given = list(lib.xml.nodes_from(start_node, xml.getroot()))
+    given = list(nodes_from(start_node, xml.getroot()))
     expct = [
         (ET.Element('node', {'id':'D'}), ET.Element('connector', {'id':'B-D'})),
         (ET.Element('node', {'id':'C'}), ET.Element('connector', {'id':'B-C'})),
@@ -166,45 +168,45 @@ def test_nodes_from(config):
 def test_has_no_incoming_sorted(config):
     xml = ET.parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
 
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'A'}), xml.getroot()) == True
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'B'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'C'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'D'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'E'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'F'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'G'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'H'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'I'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'J'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'K'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'A'}), xml.getroot()) == True
+    assert has_no_incoming(ET.Element('node', {'id':'B'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'C'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'D'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'E'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'F'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'G'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'H'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'I'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'J'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'K'}), xml.getroot()) == False
 
 def test_has_no_incoming_unsorted(config):
     xml = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
 
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'A'}), xml.getroot()) == True
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'B'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'C'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'D'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'E'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'F'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'G'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'H'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'I'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'J'}), xml.getroot()) == False
-    assert lib.xml.has_no_incoming(ET.Element('node', {'id':'K'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'A'}), xml.getroot()) == True
+    assert has_no_incoming(ET.Element('node', {'id':'B'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'C'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'D'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'E'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'F'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'G'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'H'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'I'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'J'}), xml.getroot()) == False
+    assert has_no_incoming(ET.Element('node', {'id':'K'}), xml.getroot()) == False
 
 def test_has_edges(config):
     sortedxml = ET.parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
     unsorted = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
     no_edges = ET.parse(os.path.join(config['XML_PATH'], 'no_edges.xml'))
 
-    assert lib.xml.has_edges(sortedxml) == True
-    assert lib.xml.has_edges(unsorted) == True
-    assert lib.xml.has_edges(no_edges) == False
+    assert has_edges(sortedxml) == True
+    assert has_edges(unsorted) == True
+    assert has_edges(no_edges) == False
 
 def test_toposort(config):
     xml = ET.parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
-    new_xml = lib.xml.topological_sort(xml.find(".//*[@id='A']"), xml.getroot())
+    new_xml = topological_sort(xml.find(".//*[@id='A']"), xml.getroot())
 
     expct_tree = ET.parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
 

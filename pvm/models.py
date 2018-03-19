@@ -3,7 +3,7 @@ from coralillo import Model, fields
 
 class Execution(Model):
     process_name = fields.Text()
-    pointers     = fields.SetRelation('lib.models.Pointer', inverse='execution')
+    pointers     = fields.SetRelation('pvm.models.Pointer', inverse='execution')
 
 
 class Pointer(Model):

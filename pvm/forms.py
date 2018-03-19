@@ -27,7 +27,7 @@ class ContinueProcess(Form):
 
         # validates the existence of the node
         from .xml import load, iter_nodes, find
-        from pvm_api import app
+        from wsgi import app
 
         name, xmlfile = load(app.config, execution.process_name)
         xmliter = iter_nodes(xmlfile)

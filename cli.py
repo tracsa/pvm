@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from lib.loop import Loop
-from lib.models import bind_models
+from pvm.loop import Loop
+from pvm.models import bind_models
 
 from coralillo import Engine
 from itacate import Config
@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     # Logging stuff
     if not config['TESTING']:
-        from lib.logger import init_logging
+        from pvm.logger import init_logging
 
         init_logging(config)
 

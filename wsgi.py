@@ -3,8 +3,8 @@ from flask_coralillo import Coralillo
 import os
 import time
 
-from lib.forms import bind_forms
-from lib.models import bind_models
+from pvm.forms import bind_forms
+from pvm.models import bind_models
 
 # The flask application
 app = Flask(__name__)
@@ -21,7 +21,7 @@ bind_forms(cora._engine)
 bind_models(cora._engine)
 
 # Views
-import lib.views
+import pvm.views
 
 # Error handlers
-import lib.http.error_handlers
+import pvm.http.error_handlers

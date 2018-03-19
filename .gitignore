@@ -2,3 +2,5 @@
 __pycache__/
 .pytest_cache/
 settings_*.py
+*.egg-info/
+.eggs/

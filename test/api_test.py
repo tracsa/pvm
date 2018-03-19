@@ -78,6 +78,7 @@ def test_can_continue_process(client, models):
         },
     }
 
+@pytest.mark.skip(reason='not implemented yet')
 def test_can_query_process_status(client):
     res = client.get('/v1/node/{}')
 
@@ -92,6 +93,7 @@ def test_can_query_process_status(client):
         ]
     }
 
+@pytest.mark.skip(reason='not implemented yet')
 def test_execution_start(client, models):
     assert lib.models.Execution.count() == 0
     assert lib.models.Pointer.count() == 0

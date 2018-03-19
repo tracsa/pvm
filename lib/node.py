@@ -4,7 +4,7 @@ import case_conversion
 import xml.etree.ElementTree as ET
 from typing import Iterator
 
-from .process import find
+from .xml import find
 from .logger import log
 from .errors import DataMissing, InvalidData
 

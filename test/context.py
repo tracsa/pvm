@@ -8,7 +8,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import lib
 import lib.xml
-import lib.process
 import lib.handler
 import lib.node
 import lib.errors

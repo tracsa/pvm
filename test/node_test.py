@@ -30,13 +30,13 @@ def test_make_start_node():
 def test_find_next_element_normal(config):
     ''' given a node, retrieves the next element in the graph, assumes that
     the element only has one outgoing edge '''
-    filename, xmlfile = lib.process.load(config, 'simple')
+    filename, xmlfile = lib.xml.load(config, 'simple')
 
     assert filename == 'simple_2018-02-19.xml'
 
-    xmliter = lib.process.iter_nodes(xmlfile)
+    xmliter = lib.xml.iter_nodes(xmlfile)
 
-    current_node = lib.node.make_node(lib.process.find(
+    current_node = lib.node.make_node(lib.xml.find(
         xmliter,
         lambda e:e.tag=='node' and e.attrib['id']=='4g9lOdPKmRUf'
     ))
@@ -47,13 +47,13 @@ def test_find_next_element_normal(config):
 
 def test_find_next_element_decision_yes(config):
     ''' given an if and asociated data, retrieves the next element '''
-    filename, xmlfile = lib.process.load(config, 'decision')
+    filename, xmlfile = lib.xml.load(config, 'decision')
 
     assert filename == 'decision_2018-02-27.xml'
 
-    xmliter = lib.process.iter_nodes(xmlfile)
+    xmliter = lib.xml.iter_nodes(xmlfile)
 
-    current_node = lib.node.make_node(lib.process.find(
+    current_node = lib.node.make_node(lib.xml.find(
         xmliter,
         lambda e:e.tag=='node' and e.attrib['id']=='57TJ0V3nur6m7wvv'
     ))
@@ -67,13 +67,13 @@ def test_find_next_element_decision_yes(config):
 def test_find_next_element_decision_no(config):
     ''' given an if and asociated data, retrieves the next element, negative
     variant '''
-    filename, xmlfile = lib.process.load(config, 'decision')
+    filename, xmlfile = lib.xml.load(config, 'decision')
 
     assert filename == 'decision_2018-02-27.xml'
 
-    xmliter = lib.process.iter_nodes(xmlfile)
+    xmliter = lib.xml.iter_nodes(xmlfile)
 
-    current_node = lib.node.make_node(lib.process.find(
+    current_node = lib.node.make_node(lib.xml.find(
         xmliter,
         lambda e:e.tag=='node' and e.attrib['id']=='57TJ0V3nur6m7wvv'
     ))

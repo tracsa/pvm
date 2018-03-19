@@ -26,7 +26,7 @@ class ContinueProcess(Form):
             raise errors.InvalidFieldError(field='execution_id')
 
         # validates the existence of the node
-        from .process import load, iter_nodes, find
+        from .xml import load, iter_nodes, find
         from pvm_api import app
 
         name, xmlfile = load(app.config, execution.process_name)

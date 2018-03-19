@@ -3,7 +3,7 @@ import pika
 from coralillo.errors import ModelNotFoundError
 
 from .logger import log
-from .process import load as process_load, iter_nodes, find
+from .xml import load as process_load, iter_nodes, find
 from .errors import ProcessNotFound, CannotMove
 from .node import make_node, Node, AsyncNode
 from .models import Execution, Pointer

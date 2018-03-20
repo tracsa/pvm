@@ -19,4 +19,4 @@ api for controling the PVM.
 
 **How to run**
 
-* `FLASK_APP=pvm.wsgi flask run`
+* `FLASK_APP=pvm.http.wsgi flask run`

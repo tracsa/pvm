@@ -31,6 +31,6 @@ def models():
 @pytest.fixture
 def client():
     ''' makes and returns a testclient for the flask application '''
-    from pvm.wsgi import app
+    from pvm.http.wsgi import app
 
     return app.test_client()

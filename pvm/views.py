@@ -2,7 +2,7 @@ from flask import request, jsonify
 import json
 import pika
 
-from wsgi import app
+from pvm.wsgi import app
 from pvm.forms import ContinueProcess
 from pvm.rabbit import get_channel
 

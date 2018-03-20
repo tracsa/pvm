@@ -1,7 +1,7 @@
 import pika
 from flask import g
 
-from wsgi import app
+from pvm.wsgi import app
 
 def get_channel():
     channel = getattr(g, '_channel', None)

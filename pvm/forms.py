@@ -27,7 +27,7 @@ class ContinueProcess(Form):
 
         # validates the existence of the node
         from .xml import Xml
-        from wsgi import app
+        from pvm.wsgi import app
 
         xml = Xml.load(app.config, execution.process_name)
 

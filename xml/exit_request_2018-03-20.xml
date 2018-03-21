@@ -1,0 +1,65 @@
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-03-20</date>
+    <name>Petición de salida</name>
+    <description>
+      Este proceso es iniciado por un empleado que quiere salir temporalmente de
+      la empresa (e.g. a comer). La autorización llega a su supervisor, quien
+      autoriza o rechaza la salida, evento que es notificado de nuevo al
+      empleado y finalmente a los guardias, uno de los cuales notifica que el
+      empleado salió de la empresa.
+    </description>
+  </process-info>
+  <process>
+    <node id="employee-node" class="start">
+      <auth id="requester" backend="ldap"></auth>
+
+      <form id="exit-form">
+        <input type="text" name="reason" required />
+      </form>
+    </node>
+
+    <connector from="employee-node" to="manager-node" />
+
+    <node id="manager-node" class="decision">
+      <auth id="manager" backend="ldap">
+        <filter backend="ldap">
+          <param name="employee" source="#requester" />
+        </filter>
+      </auth>
+
+      <form id="auth-form">
+        <input type="radio" name="auth" value="yes" id="auth-form-yes" />
+        <label for="auth-form-yes">Sí autorizo salida</label>
+
+        <input type="radio" name="auth" value="no" id="auth-form-no" />
+        <label for="auth-form-no">No autorizo salida</label>
+      </form>
+    </node>
+
+    <connector from="manager-node" to="security-node" condition="auth-form.auth=yes" />
+
+    <node id="security-node" class="async">
+      <auth id="security" backend="ldap">
+        <filter backend="ldap">
+          <param name="ou">Security</param>
+        </filter>
+      </auth>
+
+      <form id="confirm-form">
+        <input type="checkbox" name="confirmed" />
+      </form>
+    </node>
+
+    <connector from="manager-node" to="noauth-node" condition="auth-form.auth=no" />
+
+    <node id="noauth-node" class="notify end">
+      <auth target="requester"></auth>
+    </node>
+
+    <connector from="seurity-node" to="end-node" />
+
+    <node id="end-node" class="end"></node>
+  </process>
+</process-spec>

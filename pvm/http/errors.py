@@ -1,10 +1,19 @@
-from werkzeug.exceptions import BadRequest
+class JsonReportedException(Exception):
+
+    def __init__(self, errors):
+        self.errors = errors
+
+    def to_json(self):
+        return { 'errors': self.errors, }
 
 # 400
-class NeedsJson(BadRequest): pass
+class BadRequest(JsonReportedException):
+    status_code = 400
 
-class MissingField(BadRequest):
+# 404
+class NotFound(JsonReportedException):
+    status_code = 404
 
-    def __init__(self, field):
-        super().__init__('{} is missing'.format(field))
-        self.field = field
+# 422
+class UnprocessableEntity(JsonReportedException):
+    status_code = 422

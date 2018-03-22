@@ -2,7 +2,7 @@
     <process-info>
         <author>categulario</author>
         <date>2018-03-21</date>
-        <name>aa process without start node</name>
+        <name>a process without start node</name>
     </process-info>
     <process>
         <node id="4g9lOdPKmRUf" class="echo" msg="cuca" />

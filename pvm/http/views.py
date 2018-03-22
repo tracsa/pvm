@@ -4,7 +4,8 @@ import pika
 from pvm.http.wsgi import app
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
-from pvm.http.errors import MissingField
+from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
+from pvm.errors import ProcessNotFound, ElementNotFound
 from pvm.rabbit import get_channel
 from pvm.xml import Xml
 
@@ -22,17 +23,26 @@ def index():
 @requires_json
 def start_process():
     if 'process_name' not in request.json:
-        raise MissingField('process_name')
+        raise BadRequest([{
+            'detail': 'process_name is required',
+            'where': 'request.body.process_name',
+        }])
 
     try:
         xml = Xml.load(app.config, request.json['process_name'])
-    except ProcessNotFound:
-        raise HttpProcessNotFound
+    except ProcessNotFound as e:
+        raise NotFound([{
+            'detail': '{} process does not exist'.format(request.json['process_name']),
+            'where': 'request.body.process_name',
+        }])
 
     try:
         start_point = xml.find(lambda e:'class' in e.attrib and e.attrib['class'] == 'start')
-    except ElementNotFound:
-        raise HttpElementNotFound
+    except ElementNotFound as e:
+        raise UnprocessableEntity([{
+            'detail': '{} process does not have a start node, thus cannot be started'.format(request.json['process_name']),
+            'where': 'request.body.process_name',
+        }])
 
     execution = Execution(
         process_name = xml.name,

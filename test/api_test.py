@@ -157,11 +157,11 @@ def test_process_start_simple_requires(client, models):
 def test_process_start_simple(client, models, mocker):
     mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
 
-    res = client.post('/v1/execution', data=json.dumps({
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
         'process_name': 'simple',
     }))
-
-    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
 
     assert res.status_code == 201
 
@@ -172,6 +172,8 @@ def test_process_start_simple(client, models, mocker):
     ptr = exc.proxy.pointers.get()[0]
 
     assert ptr.node_id == '4g9lOdPKmRUf'
+
+    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
 
 def test_exit_request_requirements(client, models):
     res = client.post('/v1/execution')

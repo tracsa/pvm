@@ -24,9 +24,15 @@ def start_process():
     if 'process_name' not in request.json:
         raise MissingField('process_name')
 
-    xml = Xml.load(app.config, request.json['process_name'])
+    try:
+        xml = Xml.load(app.config, request.json['process_name'])
+    except ProcessNotFound:
+        raise HttpProcessNotFound
 
-    start_point = xml.find(lambda e:'class' in e.attrib and e.attrib['class'] == 'start')
+    try:
+        start_point = xml.find(lambda e:'class' in e.attrib and e.attrib['class'] == 'start')
+    except ElementNotFound:
+        raise HttpElementNotFound
 
     execution = Execution(
         process_name = xml.name,
@@ -39,9 +45,7 @@ def start_process():
     pointer.proxy.execution.set(execution)
 
     return {
-        'data': {
-            'detail': 'accepted',
-        },
+        'data': execution.to_json(),
     }
 
 @app.route('/v1/pointer', methods=['POST'])

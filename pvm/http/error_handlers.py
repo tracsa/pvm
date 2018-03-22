@@ -25,3 +25,21 @@ def handle_missing_field(e):
             'where': 'request.body.{}'.format(e.field),
         }],
     }), 400
+
+@app.errorhandler(ProcessNotFound)
+def handle_proces_not_found(e):
+    return jsonify({
+        'errors': [{
+            'detail': '{} process does not exist'.format(str(e)),
+            'where': 'request.body.process_name',
+        }],
+    }), 404
+
+@app.errorhandler(ElementNotFound)
+def handle_element_not_found(e):
+    return jsonify({
+        'errors': [{
+            'detail': 'process_name process does not have a start node, thus cannot be started'.format(str(e)),
+            'where': 'request.body.process_name',
+        }],
+    }), 422

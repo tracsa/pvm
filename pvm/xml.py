@@ -32,8 +32,7 @@ class Xml:
 
                 return obj
         else:
-            raise ProcessNotFound('Could not find the requested process definition'
-                ' file: {}'.format(common_name))
+            raise ProcessNotFound(common_name)
 
     def __next__(self):
         ''' Returns an inerator over the nodes and edges of a process defined

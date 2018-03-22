@@ -44,12 +44,7 @@ class Handler:
             channel.basic_ack(delivery_tag = method.delivery_tag)
 
     def call(self, message:dict):
-        execution, pointer, xmliter, current_node = self.recover_step(message)
-        log.debug('Recovered {proc} at {cls} {node}'.format(
-            proc = execution.process_name,
-            cls = type(current_node).__name__,
-            node = pointer.node_id,
-        ))
+        execution, pointer, xml, current_node = self.recover_step(message)
 
         pointers = [] # pointers to be notified back
         data = message['data'] if 'data' in message else dict()
@@ -57,33 +52,24 @@ class Handler:
         # This call raises an exception if data doesn't have enough information
         current_node.validate(data)
 
+        # node's lifetime ends here
         pointer.delete()
-        next_nodes = current_node.next(xmliter, data)
+        next_nodes = current_node.next(xml, data)
 
         for node in next_nodes:
-            node()
+            # node's begining of life
+            node.wakeup()
 
             if not node.is_end():
+                # End nodes don't create pointers, their lifetime ends here
                 pointer = self.create_pointer(node, execution)
 
-                if isinstance(node, AsyncNode):
-                    log.debug('execution waiting at {cls} {node_id}'.format(
-                        cls = type(node).__name__,
-                        node_id = pointer.id,
-                    ))
-                else:
+                if not isinstance(node, AsyncNode):
+                    # Sync nodes trigger execution of the next node right away
                     pointers.append(pointer)
-            else:
-                log.debug('Branch of {proc} ended at {node}'.format(
-                    proc = execution.process_name,
-                    node = node.id,
-                ))
 
         if execution.proxy.pointers.count() == 0:
             execution.delete()
-            log.debug('Execution {exc} finished'.format(
-                exc = execution.id,
-            ))
 
         return pointers
 
@@ -113,7 +99,7 @@ class Handler:
 
         return pointer
 
-    def recover_step(self, message):
+    def recover_step(self, message:dict):
         ''' given an execution id and a pointer from the persistent storage,
         return the asociated process node to continue its execution '''
         if 'pointer_id' not in message:

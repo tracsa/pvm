@@ -6,6 +6,7 @@ from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
 from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
 from pvm.errors import ProcessNotFound, ElementNotFound
+from pvm.models import Execution, Pointer
 from pvm.rabbit import get_channel
 from pvm.xml import Xml
 
@@ -54,9 +55,23 @@ def start_process():
 
     pointer.proxy.execution.set(execution)
 
+    channel = get_channel()
+    channel.basic_publish(
+        exchange = '',
+        routing_key = app.config['RABBIT_QUEUE'],
+        body = json.dumps({
+            'command': 'step',
+            'process': execution.process_name,
+            'pointer_id': pointer.id,
+        }),
+        properties = pika.BasicProperties(
+            delivery_mode = 2, # make message persistent
+        ),
+    )
+
     return {
         'data': execution.to_json(),
-    }
+    }, 201
 
 @app.route('/v1/pointer', methods=['POST'])
 @requires_json

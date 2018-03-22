@@ -21,5 +21,11 @@ def requires_json(view):
                     'detail': 'request body is not valid json',
                     'where': 'request.body',
                 }])
-        return jsonify(view(*args, **kwargs))
+
+        res = view(*args, **kwargs)
+
+        if type(res) == tuple:
+            return tuple([jsonify(res[0])] + list(res[1:]))
+        else:
+            return jsonify(res)
     return wrapper

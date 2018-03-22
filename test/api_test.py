@@ -4,6 +4,7 @@ import case_conversion
 import pika
 
 from pvm.models import Execution, Pointer
+from pvm.handler import Handler
 
 @pytest.mark.skip
 def test_continue_process_requires(client):
@@ -80,7 +81,7 @@ def test_can_continue_process(client, models, mocker):
         'node_id': '57TJ0V3nur6m7wvv',
     })
 
-    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
+    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once_with()
 
     assert res.status_code == 202
     assert json.loads(res.data) == {
@@ -154,7 +155,7 @@ def test_process_start_simple_requires(client, models):
         ],
     }
 
-def test_process_start_simple(client, models, mocker):
+def test_process_start_simple(client, models, mocker, config):
     mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
 
     res = client.post('/v1/execution', headers={
@@ -171,9 +172,28 @@ def test_process_start_simple(client, models, mocker):
 
     ptr = exc.proxy.pointers.get()[0]
 
-    assert ptr.node_id == '4g9lOdPKmRUf'
+    assert ptr.node_id == 'gYcj0XjbgjSO'
 
     pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
+
+    args =  pika.adapters.blocking_connection.BlockingChannel.basic_publish.call_args[1]
+
+    json_message = {
+        'command': 'step',
+        'process': exc.process_name,
+        'pointer_id': ptr.id,
+    }
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == json_message
+
+    handler = Handler(config)
+
+    execution, pointer, xmliter, current_node = handler.recover_step(json_message)
+
+    assert execution.id == exc.id
+    assert pointer.id == ptr.id
 
 def test_exit_request_requirements(client, models):
     res = client.post('/v1/execution')

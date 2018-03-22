@@ -10,8 +10,8 @@ from .models import Execution, Pointer
 
 
 class Handler:
-    ''' Handles requests sent to this pvm, a request can be either a `start`
-    command or some kind of `step` '''
+    ''' The actual process machine, it is in charge of moving the pointers
+    among the graph of nodes '''
 
     def __init__(self, config):
         self.config = config
@@ -44,18 +44,12 @@ class Handler:
             channel.basic_ack(delivery_tag = method.delivery_tag)
 
     def call(self, message:dict):
-        if message['command'] == 'start':
-            execution, pointer, xmliter, current_node = self.get_start(message)
-            log.debug('Fetched start for {proc}'.format(
-                proc = execution.process_name,
-            ))
-        elif message['command'] == 'step':
-            execution, pointer, xmliter, current_node = self.recover_step(message)
-            log.debug('Recovered {proc} at {cls} {node}'.format(
-                proc = execution.process_name,
-                cls = type(current_node).__name__,
-                node = pointer.node_id,
-            ))
+        execution, pointer, xmliter, current_node = self.recover_step(message)
+        log.debug('Recovered {proc} at {cls} {node}'.format(
+            proc = execution.process_name,
+            cls = type(current_node).__name__,
+            node = pointer.node_id,
+        ))
 
         pointers = [] # pointers to be notified back
         data = message['data'] if 'data' in message else dict()
@@ -110,23 +104,6 @@ class Handler:
             ))
 
         return message
-
-    def get_start(self, message:dict):
-        ''' finds the start node of a given process '''
-        if 'process' not in message:
-            raise KeyError('Requested start without process name')
-
-        xml = Xml.load(self.config, message['process'])
-        start_point = xml.find(lambda e:e.attrib['class'] == 'start')
-        execution = Execution(
-            process_name = xml.name,
-        ).save()
-        pointer = Pointer(
-            node_id = start_point.attrib.get('id'),
-        ).save()
-        pointer.proxy.execution.set(execution)
-
-        return execution, pointer, xml, make_node(start_point)
 
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former

@@ -21,7 +21,6 @@ TIMEZONE = 'UTC'
 
 # Supported commands for the PVM
 COMMANDS = [
-    'start',
     'step',
 ]
 

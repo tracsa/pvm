@@ -105,6 +105,7 @@ def test_can_query_process_status(client):
     }
 
 def test_process_start_simple_requires(client, models):
+    # we need the name of the process to start
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
     }, data='{}')
@@ -114,6 +115,40 @@ def test_process_start_simple_requires(client, models):
         'errors': [
             {
                 'detail': 'process_name is required',
+                'where': 'request.body.process_name',
+            },
+        ],
+    }
+
+    # we need an existing process to start
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'foo',
+    }))
+
+    assert res.status_code == 404
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': 'foo process does not exist',
+                'where': 'request.body.process_name',
+            },
+        ],
+    }
+
+    # we need a process with a start node
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'nostart',
+    }))
+
+    assert res.status_code == 422
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': 'nostart process does not have a start node, thus cannot be started',
                 'where': 'request.body.process_name',
             },
         ],

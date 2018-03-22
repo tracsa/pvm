@@ -4,6 +4,7 @@ import pika
 from pvm.http.wsgi import app
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
+from pvm.http.errors import MissingField
 from pvm.rabbit import get_channel
 
 @app.route('/', methods=['GET', 'POST'])
@@ -19,11 +20,14 @@ def index():
 @app.route('/v1/execution', methods=['POST'])
 @requires_json
 def start_process():
-    return jsonify({
+    if 'process_name' not in request.json:
+        raise MissingField('process_name')
+
+    return {
         'data': {
             'detail': 'accepted',
         },
-    })
+    }
 
 @app.route('/v1/pointer', methods=['POST'])
 @requires_json
@@ -44,8 +48,8 @@ def continue_process():
         ),
     )
 
-    return jsonify({
+    return {
         'data': {
             'detail': 'accepted',
         },
-    }), 202
+    }, 202

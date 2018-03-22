@@ -1,18 +1,32 @@
-from flask import request, jsonify
-import json
+from flask import request, jsonify, json
 import pika
 
 from pvm.http.wsgi import app
 from pvm.http.forms import ContinueProcess
+from pvm.http.middleware import requires_json
 from pvm.rabbit import get_channel
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
+@requires_json
 def index():
+    if request.method == 'GET':
+        return {
+            'hello': 'world',
+        }
+    elif request.method == 'POST':
+        return request.json
+
+@app.route('/v1/execution', methods=['POST'])
+@requires_json
+def start_process():
     return jsonify({
-        'hello': 'world',
+        'data': {
+            'detail': 'accepted',
+        },
     })
 
 @app.route('/v1/pointer', methods=['POST'])
+@requires_json
 def continue_process():
     data = ContinueProcess.validate(**request.form.to_dict())
 

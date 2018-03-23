@@ -195,9 +195,7 @@ def test_process_start_simple(client, models, mocker, config):
     assert execution.id == exc.id
     assert pointer.id == ptr.id
 
-def test_exit_request_requirements(client, models, mocker):
-    mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
-
+def test_exit_request_requirements(client, models):
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
     }, data=json.dumps({
@@ -212,4 +210,21 @@ def test_exit_request_requirements(client, models, mocker):
             'detail': 'You must provide basic authorization headers',
             'where': 'request.authorization',
         }],
+    }
+
+@pytest.mark.skip
+def test_exit_request_start(client, models, mocker):
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+        'Authorization': '',
+    }, data=json.dumps({
+        'process_name': 'exit_request',
+    }))
+
+    assert res.status_code == 201
+    assert json.loads(res.data) == {
+        'data': {
+            'id': '',
+            'process_name': '',
+        },
     }

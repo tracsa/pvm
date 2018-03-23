@@ -6,4 +6,4 @@ from pvm.http.errors import JsonReportedException
 
 @app.errorhandler(JsonReportedException)
 def json_formatted_handler(e):
-    return jsonify(e.to_json()), e.status_code
+    return jsonify(e.to_json()), e.status_code, e.headers

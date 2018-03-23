@@ -38,7 +38,7 @@ def start_process():
         }])
 
     try:
-        start_point = xml.find(lambda e:'class' in e.attrib and e.attrib['class'] == 'start')
+        start_point = xml.find(lambda e:e.getAttribute('class') == 'start')
     except ElementNotFound as e:
         raise UnprocessableEntity([{
             'detail': '{} process does not have a start node, thus cannot be started'.format(request.json['process_name']),
@@ -46,9 +46,9 @@ def start_process():
         }])
 
     # Validate authentication
-    auth = start_point.find('auth')
+    auth = start_point.getElementsByTagName('auth')
 
-    if auth is not None:
+    if len(auth) > 0:
         # Validate provided authentication againts auth backend
         if request.authorization is None:
             raise Unauthorized([{
@@ -61,7 +61,7 @@ def start_process():
     ).save()
 
     pointer = Pointer(
-        node_id = start_point.attrib.get('id'),
+        node_id = start_point.getAttribute('id'),
     ).save()
 
     pointer.proxy.execution.set(execution)

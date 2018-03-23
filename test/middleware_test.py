@@ -12,8 +12,8 @@ def test_requires_json(client):
     assert res.headers['Content-Type'] == 'application/json'
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': 'request body must be json',
-            'where': 'request.body',
+            'detail': 'Content-Type must be application/json',
+            'where': 'request.headers.content_type',
         }],
     }
 
@@ -25,7 +25,7 @@ def test_requires_json(client):
     assert res.headers['Content-Type'] == 'application/json'
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': 'request body must be json',
+            'detail': 'request body is not valid json',
             'where': 'request.body',
         }],
     }

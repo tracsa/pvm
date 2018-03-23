@@ -164,9 +164,7 @@ def test_process_start_simple(client, models, mocker, config):
         'process_name': 'simple',
     }))
 
-    assert res.status_code == 401
-    assert 'WWW-Authenticate' in res.headers
-    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
+    assert res.status_code == 201
 
     exc = Execution.get_all()[0]
 
@@ -207,46 +205,11 @@ def test_exit_request_requirements(client, models, mocker):
     }))
 
     assert res.status_code == 401
+    assert 'WWW-Authenticate' in res.headers
+    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
     assert json.loads(res.data) == {
-        'errors': [{'detail': 'needs authentication'}],
+        'errors': [{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }],
     }
-
-    res = client.post('/v1/execution', headers={
-        'Authorization': 'Basic {}'.format(
-            b64encode(('{}:{}'.format('user@place', '123456')).encode()).decode('ascii')
-        ),
-    })
-
-    assert res.status_code == 400
-    assert json.loads(res.data) == {
-        'errors': [{'detail': 'request must be json'}],
-    }
-
-    res = client.post('/v1/execution', data=json.dums({
-        pas
-    }), content_type='application/json')
-
-    assert res.status_code == 400
-    assert json.loads(res.data) == {
-        'errors': [{'detail': 'request must be json'}],
-    }
-
-def test_execution_start(client, models):
-    assert Execution.count() == 0
-    assert Pointer.count() == 0
-
-    res = client.post('/v1/execution', data={
-        'process': 'exit_request',
-    })
-
-    assert res.status_code == 201
-    assert res.json() == {
-        'data': {
-            '_type': 'execution',
-            'id': '',
-            'process_name': 'simple',
-        },
-    }
-
-    assert Execution.count() == 1
-    assert Pointer.count() == 1

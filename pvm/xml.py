@@ -1,17 +1,18 @@
 from typing import Iterator, TextIO, Callable
 import os
-import xml.etree.ElementTree as ET
+from xml.dom import pulldom
+from xml.dom.minidom import Element
 
 from .errors import ProcessNotFound, ElementNotFound
+from .mark import comment
 
 
 class Xml:
 
-    def __init__(self, config):
+    def __init__(self, config, filename):
         self.config = config
-        self.file = None
-        self.name = None
-        self.parser = ET.XMLPullParser(['end'])
+        self.name = filename
+        self.parser = pulldom.parse(open(os.path.join(config['XML_PATH'], filename)))
 
     @classmethod
     def load(cls, config:dict, common_name:str) -> TextIO:
@@ -25,12 +26,7 @@ class Xml:
 
         for filename in files:
             if filename.startswith(common_name):
-                obj = Xml(config)
-
-                obj.name = filename
-                obj.file = open(os.path.join(config['XML_PATH'], filename))
-
-                return obj
+                return Xml(config, filename)
         else:
             raise ProcessNotFound(common_name)
 
@@ -39,21 +35,18 @@ class Xml:
         by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed for
         this task. '''
 
-        for line in self.file:
-            self.parser.feed(line)
+        for event, node in self.parser:
+            if event == pulldom.START_ELEMENT and node.tagName in ('node', 'connector'):
+                self.parser.expandNode(node)
 
-            for _, elem in self.parser.read_events():
-                if elem.tag in ('node', 'connector'):
-                    return elem
-
-        self.file.close()
+                return node
 
         raise StopIteration
 
     def __iter__(self):
         return self
 
-    def find(self, testfunc:Callable[[ET.Element], bool]) -> ET.Element:
+    def find(self, testfunc:Callable[[Element], bool]) -> Element:
         ''' Given an interator returned by the previous function, tries to find the
         first node matching the given condition '''
         for element in self:
@@ -62,28 +55,33 @@ class Xml:
 
         raise ElementNotFound('node or edge matching the given condition was not found')
 
-def etree_from_list(root:ET.Element, nodes:[ET.Element]) -> ET.ElementTree:
+@comment
+def etree_from_list(root:Element, nodes:[Element]) -> 'ElementTree':
     ''' Returns a built ElementTree from the list of its members '''
-    root = ET.Element(root.tag, attrib=root.attrib)
+    root = Element(root.tag, attrib=root.attrib)
     root.extend(nodes)
 
-    return ET.ElementTree(root)
+    return ElementTree(root)
 
-def nodes_from(node:ET.Element, graph):
+@comment
+def nodes_from(node:Element, graph):
     ''' returns an iterator over the (node, edge)s that can be reached from
     node '''
     for edge in graph.findall(".//*[@from='{}']".format(node.attrib['id'])):
         yield (graph.find(".//*[@id='{}']".format(edge.attrib['to'])), edge)
 
-def has_no_incoming(node:ET.Element, graph:'root ET.Element'):
+@comment
+def has_no_incoming(node:Element, graph:'root Element'):
     ''' returns true if this node has no edges pointing to it '''
     return len(graph.findall(".//*[@to='{}']".format(node.attrib['id']))) == 0
 
-def has_edges(graph:'root ET.Element'):
+@comment
+def has_edges(graph:'root Element'):
     ''' returns true if the graph still has edge elements '''
     return len(graph.findall("./connector")) > 0
 
-def topological_sort(start_node:ET.Element, graph:'root ET.Element') -> ET.ElementTree:
+@comment
+def topological_sort(start_node:Element, graph:'root Element') -> 'ElementTree':
     ''' sorts topologically the given xml element tree, source:
     https://en.wikipedia.org/wiki/Topological_sorting '''
     sorted_elements = [] # sorted_elements ← Empty list that will contain the sorted elements

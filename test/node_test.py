@@ -1,27 +1,26 @@
-import xml.etree.ElementTree as ET
+from xml.dom.minidom import Document
 import pytest
 
 from pvm.node import make_node, Node, StartNode
 from pvm.xml import Xml
 
 def test_make_node_requires_class():
-    element = ET.Element('node', {})
+    element = Document().createElement('node')
 
     with pytest.raises(KeyError) as e:
         make_node(element)
 
 def test_make_node_requires_existent_class():
-    element = ET.Element('node', {
-        'class': 'foo',
-    })
+    element = Document().createElement('node')
+    element.setAttribute('class', 'foo')
 
     with pytest.raises(ValueError) as e:
         make_node(element)
 
 def test_make_start_node():
-    element = ET.Element('node', {
-        'class': 'start',
-    })
+    element = Document().createElement('node')
+    element.setAttribute('class', 'start')
+
     node = make_node(element)
 
     assert node is not None
@@ -36,12 +35,12 @@ def test_find_next_element_normal(config):
     assert xml.name == 'simple_2018-02-19.xml'
 
     current_node = make_node(xml.find(
-        lambda e:e.tag=='node' and e.attrib['id']=='4g9lOdPKmRUf'
+        lambda e:e.tagName=='node' and e.getAttribute('id')=='4g9lOdPKmRUf'
     ))
 
     next_node = current_node.next(xml, dict())[0]
 
-    assert next_node.id == 'kV9UWSeA89IZ'
+    assert next_node.element.getAttribute('id') == 'kV9UWSeA89IZ'
 
 def test_find_next_element_decision_yes(config):
     ''' given an if and asociated data, retrieves the next element '''
@@ -50,14 +49,14 @@ def test_find_next_element_decision_yes(config):
     assert xml.name == 'decision_2018-02-27.xml'
 
     current_node = make_node(xml.find(
-        lambda e:e.tag=='node' and e.attrib['id']=='57TJ0V3nur6m7wvv'
+        lambda e:e.tagName=='node' and e.getAttribute('id')=='57TJ0V3nur6m7wvv'
     ))
 
     next_node = current_node.next(xml, {
         'answer': 'yes',
     })[0]
 
-    assert next_node.id == 'Cuptax0WTCL1ueCy'
+    assert next_node.element.getAttribute('id') == 'Cuptax0WTCL1ueCy'
 
 def test_find_next_element_decision_no(config):
     ''' given an if and asociated data, retrieves the next element, negative
@@ -67,14 +66,14 @@ def test_find_next_element_decision_no(config):
     assert xml.name == 'decision_2018-02-27.xml'
 
     current_node = make_node(xml.find(
-        lambda e:e.tag=='node' and e.attrib['id']=='57TJ0V3nur6m7wvv'
+        lambda e:e.tagName=='node' and e.getAttribute('id')=='57TJ0V3nur6m7wvv'
     ))
 
     next_node = current_node.next(xml, {
         'answer': 'no',
     })[0]
 
-    assert next_node.id == 'mj88CNZUaBdvLV83'
+    assert next_node.element.getAttribute('id') == 'mj88CNZUaBdvLV83'
 
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_case():

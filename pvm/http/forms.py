@@ -32,7 +32,7 @@ class ContinueProcess(Form):
         xml = Xml.load(app.config, execution.process_name)
 
         def testfunc(e):
-            return 'id' in e.attrib and e.attrib['id'] == obj.node_id
+            return e.getAttribute('id') == obj.node_id
 
         try:
             xml.find(testfunc)

@@ -94,7 +94,7 @@ class Handler:
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former
         create a persistent pointer to the current execution state '''
-        pointer =  Pointer.validate(node_id=node.id).save()
+        pointer =  Pointer.validate(node_id=node.element.getAttribute('id')).save()
         pointer.proxy.execution.set(execution)
 
         return pointer
@@ -112,7 +112,7 @@ class Handler:
         assert execution.process_name == xml.name, 'Inconsisten pointer found'
 
         point = xml.find(
-            lambda e:'id' in e.attrib and e.attrib['id'] == pointer.node_id
+            lambda e:e.getAttribute('id') == pointer.node_id
         )
 
         return execution, pointer, xml, make_node(point)

@@ -1,5 +1,5 @@
-import xml.etree.ElementTree as ET
 import pytest
+from xml.dom.minidom import Document
 
 from pvm.handler import Handler
 from pvm.node import Node, StartNode, make_node
@@ -17,30 +17,11 @@ def test_parse_message(config):
     with pytest.raises(ValueError):
         handler.parse_message('{"command":"foo"}')
 
-    msg = handler.parse_message('{"command":"start"}')
+    msg = handler.parse_message('{"command":"step"}')
 
     assert msg == {
-        'command': 'start',
+        'command': 'step',
     }
-
-def test_get_start_node(config, models):
-    handler = Handler(config)
-
-    execution, pointer, xmliter, start_node = handler.get_start({
-        'process': 'simple',
-    })
-
-    conn = next(xmliter)
-
-    assert conn.tag == 'connector'
-
-    assert start_node is not None
-    assert isinstance(start_node, Node)
-    assert isinstance(start_node, StartNode)
-
-    assert execution.process_name == 'simple_2018-02-19.xml'
-    assert execution.proxy.pointers.count() == 1
-    assert pointer in execution.proxy.pointers
 
 def test_recover_step(config, models):
     handler = Handler(config)
@@ -62,18 +43,19 @@ def test_recover_step(config, models):
     assert pointer in execution.proxy.pointers
 
     conn = next(xmliter)
-    assert conn.tag == 'connector'
-    assert conn.attrib == {'from':"4g9lOdPKmRUf", 'to':"kV9UWSeA89IZ"}
+    assert conn.tagName == 'connector'
+    assert conn.getAttribute('from') == '4g9lOdPKmRUf'
+    assert conn.getAttribute('to') == 'kV9UWSeA89IZ'
 
-    assert node.id == '4g9lOdPKmRUf'
+    assert node.element.getAttribute('id') == '4g9lOdPKmRUf'
 
 def test_create_pointer(config):
     handler = Handler(config)
 
-    ele = ET.Element('node', {
-        'class': 'dummy',
-        'id': 'chubaca',
-    })
+    ele = Document().createElement('node')
+    ele.setAttribute('class', 'dummy')
+    ele.setAttribute('id', 'chubaca')
+
     node = make_node(ele)
     exc = Execution.validate(
         process_name = 'simple_2018-02-19.xml',
@@ -85,22 +67,6 @@ def test_create_pointer(config):
 
     assert execution.process_name == 'simple_2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
-
-def test_call_start(config, models):
-    handler = Handler(config)
-
-    ptrs = handler.call({
-        'command': 'start',
-        'process': 'simple',
-    })
-
-    execution = Execution.get_all()[0]
-    assert execution.process_name == 'simple_2018-02-19.xml'
-
-    pointer = execution.proxy.pointers.get()[0]
-    assert pointer.node_id == '4g9lOdPKmRUf'
-
-    assert ptrs[0].id == pointer.id
 
 def test_call_recover(config):
     handler = Handler(config)

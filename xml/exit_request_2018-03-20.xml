@@ -16,7 +16,7 @@
       <auth id="requester" backend="ldap"></auth>
 
       <form id="exit-form">
-        <input type="text" name="reason" required />
+        <input type="text" name="reason" required="required" />
       </form>
     </node>
 

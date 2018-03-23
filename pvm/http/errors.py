@@ -1,7 +1,8 @@
 class JsonReportedException(Exception):
 
-    def __init__(self, errors):
+    def __init__(self, errors, headers=None):
         self.errors = errors
+        self.headers = headers if headers else {}
 
     def to_json(self):
         return { 'errors': self.errors, }
@@ -9,6 +10,15 @@ class JsonReportedException(Exception):
 # 400
 class BadRequest(JsonReportedException):
     status_code = 400
+
+# 401
+class Unauthorized(JsonReportedException):
+    status_code = 401
+
+    def __init__(self, errors):
+        super().__init__(errors, {
+            'WWW-Authenticate': 'Basic realm="User Visible Realm"',
+        })
 
 # 404
 class NotFound(JsonReportedException):

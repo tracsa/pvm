@@ -164,7 +164,9 @@ def test_process_start_simple(client, models, mocker, config):
         'process_name': 'simple',
     }))
 
-    assert res.status_code == 201
+    assert res.status_code == 401
+    assert 'WWW-Authenticate' in res.headers
+    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
 
     exc = Execution.get_all()[0]
 
@@ -195,8 +197,14 @@ def test_process_start_simple(client, models, mocker, config):
     assert execution.id == exc.id
     assert pointer.id == ptr.id
 
-def test_exit_request_requirements(client, models):
-    res = client.post('/v1/execution')
+def test_exit_request_requirements(client, models, mocker):
+    mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
+
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'exit_request',
+    }))
 
     assert res.status_code == 401
     assert json.loads(res.data) == {

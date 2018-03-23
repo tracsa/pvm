@@ -4,7 +4,7 @@ import pika
 from pvm.http.wsgi import app
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
-from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
+from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity, Unauthorized
 from pvm.errors import ProcessNotFound, ElementNotFound
 from pvm.models import Execution, Pointer
 from pvm.rabbit import get_channel
@@ -44,6 +44,17 @@ def start_process():
             'detail': '{} process does not have a start node, thus cannot be started'.format(request.json['process_name']),
             'where': 'request.body.process_name',
         }])
+
+    # Validate authentication
+    auth = start_point.find('auth')
+
+    if auth is not None:
+        # Validate provided authentication againts auth backend
+        if request.authorization is None:
+            raise Unauthorized([{
+                'detail': 'You must provide basic authorization headers',
+                'where': 'request.authorization',
+            }])
 
     execution = Execution(
         process_name = xml.name,

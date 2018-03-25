@@ -6,7 +6,7 @@ from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
 from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity, Unauthorized
 from pvm.errors import ProcessNotFound, ElementNotFound
-from pvm.models import Execution, Pointer
+from pvm.models import Execution, Pointer, User, Token
 from pvm.rabbit import get_channel
 from pvm.xml import Xml
 
@@ -45,14 +45,26 @@ def start_process():
             'where': 'request.body.process_name',
         }])
 
-    # Validate authentication
+    # Check if auth node is present
     auth = start_point.getElementsByTagName('auth')
 
     if len(auth) > 0:
-        # Validate provided authentication againts auth backend
+        # Authorization required but not provided, notify
         if request.authorization is None:
             raise Unauthorized([{
                 'detail': 'You must provide basic authorization headers',
+                'where': 'request.authorization',
+            }])
+
+        identifier = request.authorization['username']
+        token = request.authorization['password']
+
+        user = User.get_by('identifier', identifier)
+        token = Token.get_by('token', token)
+
+        if user is None or token is None or token.proxy.user.get().id != user.id:
+            raise Unauthorized([{
+                'detail': 'Your credentials are invalid, sorry',
                 'where': 'request.authorization',
             }])
 

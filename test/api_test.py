@@ -2,8 +2,9 @@ from flask import json
 import pytest
 import case_conversion
 import pika
+from base64 import b64encode
 
-from pvm.models import Execution, Pointer
+from pvm.models import Execution, Pointer, User, Token
 from pvm.handler import Handler
 
 @pytest.mark.skip
@@ -212,19 +213,26 @@ def test_exit_request_requirements(client, models):
         }],
     }
 
-@pytest.mark.skip
 def test_exit_request_start(client, models, mocker):
+    user = User(identifier='juan').save()
+    token = Token(token='123456').save()
+    token.proxy.user.set(user)
+
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
-        'Authorization': '',
+        'Authorization': 'Basic {}'.format(
+            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+        ),
     }, data=json.dumps({
         'process_name': 'exit_request',
     }))
 
     assert res.status_code == 201
+
+    exc = Execution.get_all()[0]
+
     assert json.loads(res.data) == {
-        'data': {
-            'id': '',
-            'process_name': '',
-        },
+        'data': exc.to_json(),
     }
+
+    assert False, 'user is attached to execution'

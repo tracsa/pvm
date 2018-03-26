@@ -216,6 +216,25 @@ def test_exit_request_requirements(client, models):
     assert Execution.count() == 0
     assert Activity.count() == 0
 
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'exit_request',
+    }))
+
+    assert res.status_code == 401
+    assert 'WWW-Authenticate' in res.headers
+    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }],
+    }
+
+    assert Execution.count() == 0
+    assert Activity.count() == 0
+
 def test_exit_request_start(client, models, mocker):
     user = User(identifier='juan').save()
     token = Token(token='123456').save()

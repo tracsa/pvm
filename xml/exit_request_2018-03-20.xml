@@ -13,7 +13,7 @@
   </process-info>
   <process>
     <node id="employee-node" class="start">
-      <auth id="requester" backend="ldap"></auth>
+      <auth id="requester"></auth>
 
       <form id="exit-form">
         <input type="text" name="reason" required="required" />
@@ -23,8 +23,8 @@
     <connector from="employee-node" to="manager-node" />
 
     <node id="manager-node" class="decision">
-      <auth id="manager" backend="ldap">
-        <filter backend="ldap">
+      <auth id="manager">
+        <filter>
           <param name="employee" source="#requester" />
         </filter>
       </auth>
@@ -41,8 +41,8 @@
     <connector from="manager-node" to="security-node" condition="auth-form.auth=yes" />
 
     <node id="security-node" class="async">
-      <auth id="security" backend="ldap">
-        <filter backend="ldap">
+      <auth id="security">
+        <filter>
           <param name="ou">Security</param>
         </filter>
       </auth>

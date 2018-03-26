@@ -6,7 +6,7 @@ from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
 from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity, Unauthorized
 from pvm.errors import ProcessNotFound, ElementNotFound
-from pvm.models import Execution, Pointer, User, Token
+from pvm.models import Execution, Pointer, User, Token, Activity
 from pvm.rabbit import get_channel
 from pvm.xml import Xml
 
@@ -48,7 +48,9 @@ def start_process():
     # Check if auth node is present
     auth = start_point.getElementsByTagName('auth')
 
-    if len(auth) > 0:
+    if len(auth) == 1:
+        auth_node = auth[0]
+
         # Authorization required but not provided, notify
         if request.authorization is None:
             raise Unauthorized([{
@@ -68,6 +70,16 @@ def start_process():
                 'where': 'request.authorization',
             }])
 
+        if auth_node.getAttribute('id'):
+            ref = '#' + auth_node.getAttribute('id')
+        else:
+            ref = None
+
+        activity = Activity(ref=ref).save()
+        activity.proxy.user.set(user)
+    else:
+        activity = None
+
     execution = Execution(
         process_name = xml.name,
     ).save()
@@ -77,6 +89,9 @@ def start_process():
     ).save()
 
     pointer.proxy.execution.set(execution)
+
+    if activity is not None:
+        activity.proxy.execution.set(execution)
 
     channel = get_channel()
     channel.basic_publish(

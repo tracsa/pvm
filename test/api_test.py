@@ -4,7 +4,7 @@ import case_conversion
 import pika
 from base64 import b64encode
 
-from pvm.models import Execution, Pointer, User, Token
+from pvm.models import Execution, Pointer, User, Token, Activity
 from pvm.handler import Handler
 
 @pytest.mark.skip
@@ -218,6 +218,9 @@ def test_exit_request_start(client, models, mocker):
     token = Token(token='123456').save()
     token.proxy.user.set(user)
 
+    assert Execution.count() == 0
+    assert Activity.count() == 0
+
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
@@ -235,4 +238,11 @@ def test_exit_request_start(client, models, mocker):
         'data': exc.to_json(),
     }
 
-    assert False, 'user is attached to execution'
+    actors = exc.proxy.actors.get()
+
+    assert len(actors) == 1
+
+    activity = actors[0]
+
+    assert activity.ref == '#requester'
+    assert activity.proxy.user.get() == user

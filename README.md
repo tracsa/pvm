@@ -6,7 +6,7 @@ the process.
 
 ## Develop
 
-You will need the redis database, and rabbitmq for this to work.
+You will need the redis database, and rabbitmq for this to work
 
 * `git clone https://github.com/tracsa/pvm.git && cd pvm`
 * `virtualenv -p /usr/bin/python3 .env`

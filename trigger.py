@@ -13,7 +13,7 @@ class Trigger:
     def __init__(self):
         config = Config(os.path.dirname(os.path.realpath(__file__)))
         config.from_pyfile('settings.py')
-        config.from_envvar('PVM_SETTINGS', silent=False)
+        config.from_envvar('PVM_SETTINGS')
 
         connection = pika.BlockingConnection(pika.ConnectionParameters(
             host = config['RABBIT_HOST'],

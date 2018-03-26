@@ -9,7 +9,7 @@ from pvm.models import bind_models
 # The flask application
 app = Flask(__name__)
 app.config.from_object('settings')
-app.config.from_envvar('PVM_SETTINGS', silent=False)
+app.config.from_envvar('PVM_SETTINGS')
 
 # Timezone
 os.environ['TZ'] = app.config.get('TIMEZONE', 'UTC')

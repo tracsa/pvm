@@ -11,7 +11,7 @@ def config():
     ''' Returns a fully loaded configuration dict '''
     con = Config(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
     con.from_pyfile('settings.py')
-    con.from_envvar('PVM_SETTINGS', silent=False)
+    con.from_envvar('PVM_SETTINGS')
 
     return con
 

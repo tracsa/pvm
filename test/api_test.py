@@ -213,6 +213,9 @@ def test_exit_request_requirements(client, models):
         }],
     }
 
+    assert Execution.count() == 0
+    assert Activity.count() == 0
+
 def test_exit_request_start(client, models, mocker):
     user = User(identifier='juan').save()
     token = Token(token='123456').save()

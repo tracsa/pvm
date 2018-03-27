@@ -27,3 +27,7 @@ COMMANDS = [
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB = 0
+
+LDAP_URI = "ldap://localhost:389"
+LDAP_SSL = True
+LDAP_DOMAIN = "local"

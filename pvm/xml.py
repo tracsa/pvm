@@ -55,6 +55,14 @@ class Xml:
 
         raise ElementNotFound('node or edge matching the given condition was not found')
 
+def get_ref(el:Element):
+    if el.getAttribute('id'):
+        return '#' + el.getAttribute('id')
+    elif el.getAttribute('class'):
+        return '.' + el.getAttribute('class')
+
+    return None
+
 @comment
 def etree_from_list(root:Element, nodes:[Element]) -> 'ElementTree':
     ''' Returns a built ElementTree from the list of its members '''

@@ -197,6 +197,7 @@ def test_process_start_simple(client, models, mocker, config):
     assert pointer.id == ptr.id
 
 def test_exit_request_requirements(client, models):
+    # first requirement is to have authentication
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
     }, data=json.dumps({
@@ -216,19 +217,25 @@ def test_exit_request_requirements(client, models):
     assert Execution.count() == 0
     assert Activity.count() == 0
 
+    # next, validate the form data
+    user = User(identifier='juan').save()
+    token = Token(token='123456').save()
+    token.proxy.user.set(user)
+
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
+        'Authorization': 'Basic {}'.format(
+            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+        ),
     }, data=json.dumps({
         'process_name': 'exit_request',
     }))
 
-    assert res.status_code == 401
-    assert 'WWW-Authenticate' in res.headers
-    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
+    assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': 'You must provide basic authorization headers',
-            'where': 'request.authorization',
+            'detail': 'some parameters are needed',
+            'where': 'request.body.reason',
         }],
     }
 
@@ -250,6 +257,13 @@ def test_exit_request_start(client, models, mocker):
         ),
     }, data=json.dumps({
         'process_name': 'exit_request',
+        'form-array': [
+            {
+                'ref': '#exit-form',
+                'data': {
+                },
+            },
+        ],
     }))
 
     assert res.status_code == 201
@@ -260,6 +274,7 @@ def test_exit_request_start(client, models, mocker):
         'data': exc.to_json(),
     }
 
+    # user is attached
     actors = exc.proxy.actors.get()
 
     assert len(actors) == 1
@@ -268,3 +283,6 @@ def test_exit_request_start(client, models, mocker):
 
     assert activity.ref == '#requester'
     assert activity.proxy.user.get() == user
+
+    # form is attached
+    assert False, 'form is attached and has value'

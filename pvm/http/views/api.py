@@ -8,7 +8,8 @@ from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity, Unauthori
 from pvm.errors import ProcessNotFound, ElementNotFound
 from pvm.models import Execution, Pointer, User, Token, Activity
 from pvm.rabbit import get_channel
-from pvm.xml import Xml
+from pvm.xml import Xml, get_ref
+from pvm.validation import validate_form
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
@@ -70,15 +71,21 @@ def start_process():
                 'where': 'request.authorization',
             }])
 
-        if auth_node.getAttribute('id'):
-            ref = '#' + auth_node.getAttribute('id')
-        else:
-            ref = None
+        ref = get_ref(auth_node)
 
         activity = Activity(ref=ref).save()
         activity.proxy.user.set(user)
     else:
         activity = None
+
+    # check if there are any forms present
+    form_array = start_point.getElementsByTagName('form-array')
+
+    if len(form_array) == 1:
+        form_array_node = form_array[0]
+
+        for form in form_array_node.getElementsByTagName('form'):
+            data = validate_form(form, request.json)
 
     execution = Execution(
         process_name = xml.name,

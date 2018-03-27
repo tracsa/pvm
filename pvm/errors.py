@@ -1,5 +1,7 @@
 from coralillo.errors import BadField
 
+class AuthenticationError(Exception): pass
+
 class ProcessNotFound(Exception): pass
 
 class ElementNotFound(Exception): pass

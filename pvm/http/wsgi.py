@@ -20,8 +20,12 @@ cora = Coralillo(app)
 bind_forms(cora._engine)
 bind_models(cora._engine)
 
+# Url converters
+import pvm.http.converters
+
 # Views
-import pvm.http.views
+import pvm.http.views.api
+import pvm.http.views.auth
 
 # Error handlers
 import pvm.http.error_handlers

@@ -5,7 +5,7 @@ from pvm.http.wsgi import app
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
 from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity, Unauthorized
-from pvm.errors import ProcessNotFound, ElementNotFound
+from pvm.errors import ProcessNotFound, ElementNotFound, ValidationErrors
 from pvm.models import Execution, Pointer, User, Token, Activity
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, get_ref
@@ -85,7 +85,10 @@ def start_process():
         form_array_node = form_array[0]
 
         for form in form_array_node.getElementsByTagName('form'):
-            data = validate_form(form, request.json)
+            try:
+                data = validate_form(form, request.json)
+            except ValidationErrors as e:
+                raise BadRequest(e.to_json())
 
     execution = Execution(
         process_name = xml.name,

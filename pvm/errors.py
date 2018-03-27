@@ -21,3 +21,27 @@ class InvalidData(CannotMove):
 class NoPointerAlive(BadField):
     message = '{field} does not have a live pointer'
     errorcode = 'no_live_pointer'
+
+class InputError(Exception):
+
+    def __init__(self, problem):
+        super().__init__()
+        self.problem = problem
+
+    def to_json(self):
+        return {
+            'detail': self.problem,
+            'where': 'request.body.form_array',
+        }
+
+class ValidationErrors(Exception):
+
+    def __init__(self, errors):
+        super().__init__()
+        self.errors = errors
+
+    def to_json(self):
+        return list(map(
+            lambda e:e.to_json(),
+            self.errors
+        ))

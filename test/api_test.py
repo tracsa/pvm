@@ -234,8 +234,8 @@ def test_exit_request_requirements(client, models):
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': 'some parameters are needed',
-            'where': 'request.body.reason',
+            'detail': 'reason input is required',
+            'where': 'request.body.form_array.0.reason',
         }],
     }
 

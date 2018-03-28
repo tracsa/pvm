@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_coralillo import Coralillo
+from flask_cors import CORS
 import os
 import time
 
@@ -10,6 +11,9 @@ from pvm.models import bind_models
 app = Flask(__name__)
 app.config.from_object('settings')
 app.config.from_envvar('PVM_SETTINGS', silent=True)
+
+# Enalble cross origin
+CORS(app)
 
 # Timezone
 os.environ['TZ'] = app.config.get('TIMEZONE', 'UTC')

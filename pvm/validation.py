@@ -4,7 +4,7 @@ from pvm.errors import ValidationErrors, InputError, RequiredInputError
 
 def get_associated_data(ref:str, data:dict) -> dict:
     ''' given a reference returns its asociated data in the data dictionary '''
-    if 'form-array' not in data:
+    if 'form_array' not in data:
         return {}
 
     for form in data['form_array']:
@@ -15,7 +15,7 @@ def get_associated_data(ref:str, data:dict) -> dict:
             continue
 
         if form['ref'] == ref:
-            return form['ref']
+            return form['data']
 
     return {}
 

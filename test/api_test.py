@@ -258,10 +258,11 @@ def test_exit_request_start(client, models, mocker):
         ),
     }, data=json.dumps({
         'process_name': 'exit_request',
-        'form-array': [
+        'form_array': [
             {
                 'ref': '#exit-form',
                 'data': {
+                    'reason': 'tenía que salir al baño',
                 },
             },
         ],

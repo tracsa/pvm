@@ -72,11 +72,8 @@ def start_process():
             }])
 
         ref = get_ref(auth_node)
-
-        activity = Activity(ref=ref).save()
-        activity.proxy.user.set(user)
     else:
-        activity = None
+        ref = None
 
     # check if there are any forms present
     form_array = start_point.getElementsByTagName('form-array')
@@ -95,6 +92,7 @@ def start_process():
         if len(errors) > 0:
             raise BadRequest(ValidationErrors(errors).to_json())
 
+    # Now we can save the data
     execution = Execution(
         process_name = xml.name,
     ).save()
@@ -105,7 +103,9 @@ def start_process():
 
     pointer.proxy.execution.set(execution)
 
-    if activity is not None:
+    if ref is not None:
+        activity = Activity(ref=ref).save()
+        activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
 
     channel = get_channel()

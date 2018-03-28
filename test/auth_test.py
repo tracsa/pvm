@@ -1,4 +1,8 @@
+from base64 import b64encode
+from coralillo import Engine
 from flask import json
+from itacate import Config
+from pvm.models import bind_models, Token
 from random import choice
 from string import ascii_letters
 import pytest
@@ -7,9 +11,6 @@ from coralillo import Engine
 from itacate import Config
 import os
 import pytest
-
-from pvm.models import bind_models, Token
-from base64 import b64encode
 
 @pytest.fixture
 def config():

@@ -287,4 +287,13 @@ def test_exit_request_start(client, models, mocker):
     assert activity.proxy.user.get() == user
 
     # form is attached
-    assert False, 'form is attached and has value'
+    forms = exc.proxy.forms.get()
+
+    assert len(forms) == 1
+
+    form = forms[0]
+
+    assert form.ref == '#exit-form'
+    assert form.data == {
+        'reason': 'tenía que salir al baño',
+    }

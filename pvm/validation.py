@@ -22,9 +22,10 @@ def get_associated_data(ref:str, data:dict) -> dict:
 def validate_input(form_index:int, input:Element, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
-    if input.getAttribute('type') == 'text':
-        if input.getAttribute('required') and not value:
-            raise RequiredInputError(form_index, input.getAttribute('name'))
+    if input.getAttribute('required') and (value=='' or value is None):
+        raise RequiredInputError(form_index, input.getAttribute('name'))
+
+    return value
 
 def validate_form(index:int, form:Element, data:dict) -> dict:
     ''' Validates the given data against the spec contained in form. In case of

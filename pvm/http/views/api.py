@@ -6,7 +6,7 @@ from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
 from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity, Unauthorized
 from pvm.errors import ProcessNotFound, ElementNotFound, ValidationErrors
-from pvm.models import Execution, Pointer, User, Token, Activity
+from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, get_ref
 from pvm.validation import validate_form
@@ -48,6 +48,7 @@ def start_process():
 
     # Check if auth node is present
     auth = start_point.getElementsByTagName('auth')
+    auth_ref = None
 
     if len(auth) == 1:
         auth_node = auth[0]
@@ -71,12 +72,11 @@ def start_process():
                 'where': 'request.authorization',
             }])
 
-        ref = get_ref(auth_node)
-    else:
-        ref = None
+        auth_ref = get_ref(auth_node)
 
     # check if there are any forms present
     form_array = start_point.getElementsByTagName('form-array')
+    collected_forms = []
 
     if len(form_array) == 1:
         form_array_node = form_array[0]
@@ -86,6 +86,7 @@ def start_process():
         for index, form in enumerate(form_array_node.getElementsByTagName('form')):
             try:
                 data = validate_form(index, form, request.json)
+                collected_forms.append((get_ref(form), data))
             except ValidationErrors as e:
                 errors += e.errors
 
@@ -103,10 +104,15 @@ def start_process():
 
     pointer.proxy.execution.set(execution)
 
-    if ref is not None:
-        activity = Activity(ref=ref).save()
+    if auth_ref is not None:
+        activity = Activity(ref=auth_ref).save()
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
+
+    if len(collected_forms) > 0:
+        for ref, form_data in collected_forms:
+            ques = Questionaire(ref=ref, data=form_data).save()
+            ques.proxy.execution.set(execution)
 
     channel = get_channel()
     channel.basic_publish(

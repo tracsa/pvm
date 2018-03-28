@@ -1,6 +1,6 @@
 from xml.dom.minidom import Element
 from pvm.xml import get_ref
-from pvm.errors import ValidationErrors, InputError
+from pvm.errors import ValidationErrors, InputError, RequiredInputError
 
 def get_associated_data(ref:str, data:dict) -> dict:
     ''' given a reference returns its asociated data in the data dictionary '''
@@ -19,14 +19,14 @@ def get_associated_data(ref:str, data:dict) -> dict:
 
     return {}
 
-def validate_input(input:Element, value):
+def validate_input(form_index:int, input:Element, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
     if input.getAttribute('type') == 'text':
         if input.getAttribute('required') and not value:
-            raise InputError('required')
+            raise RequiredInputError(form_index, input.getAttribute('name'))
 
-def validate_form(form:Element, data:dict) -> dict:
+def validate_form(index:int, form:Element, data:dict) -> dict:
     ''' Validates the given data against the spec contained in form. In case of
     failure raises an exception. In case of success returns the validated data.
     '''
@@ -40,7 +40,7 @@ def validate_form(form:Element, data:dict) -> dict:
         name = input.getAttribute('name')
 
         try:
-            collected_data[name] = validate_input(input, given_data.get(name))
+            collected_data[name] = validate_input(index, input, given_data.get(name))
         except InputError as e:
             errors.append(e)
 

@@ -84,11 +84,16 @@ def start_process():
     if len(form_array) == 1:
         form_array_node = form_array[0]
 
-        for form in form_array_node.getElementsByTagName('form'):
+        errors = []
+
+        for index, form in enumerate(form_array_node.getElementsByTagName('form')):
             try:
-                data = validate_form(form, request.json)
+                data = validate_form(index, form, request.json)
             except ValidationErrors as e:
-                raise BadRequest(e.to_json())
+                errors += e.errors
+
+        if len(errors) > 0:
+            raise BadRequest(ValidationErrors(errors).to_json())
 
     execution = Execution(
         process_name = xml.name,

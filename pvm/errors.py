@@ -24,15 +24,28 @@ class NoPointerAlive(BadField):
 
 class InputError(Exception):
 
-    def __init__(self, problem):
-        super().__init__()
-        self.problem = problem
+    detail = None
+    code = None
+    form_index = 0
+
+    def __init__(self, form_index, input):
+        self.input = input
+        self.form_index = form_index
 
     def to_json(self):
         return {
-            'detail': self.problem,
-            'where': 'request.body.form_array',
+            'detail': self.detail.format(input=self.input),
+            'where': 'request.body.form_array.{}.{}'.format(
+                self.form_index,
+                self.input,
+            ),
+            'code': self.code,
         }
+
+class RequiredInputError(InputError):
+
+    detail = "'{input}' input is required"
+    code = 'validation.required'
 
 class ValidationErrors(Exception):
 

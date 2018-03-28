@@ -4,12 +4,13 @@ from pvm.errors import AuthenticationError
 
 class HardcodedAuthProvider(BaseAuthProvider):
 
-    def authenticate(self, username=None, password=None):
-        if username == 'juan' and password == '123456':
-            return {
-                'username': 'juan',
-                'password': '123456',
-                'email': 'juan@hardcoded.com',
-            }
+    def check_credentials(self):
+        if 'username' not in self.credentials or \
+           'password' not in self.credentials:
+            raise AuthenticationError
 
-        raise AuthenticationError
+        username = self.credentials['username']
+        password = self.credentials['password']
+
+        if username != 'juan' or password != '123456':
+            raise AuthenticationError

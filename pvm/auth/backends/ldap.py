@@ -8,7 +8,26 @@ import sys
 
 class LdapAuthProvider(BaseAuthProvider):
 
-    def authenticate(self, username=None, password=None, domain=app.config['LDAP_DOMAIN']):
+    @property
+    def username(self):
+        username = self.credentials['username']
+
+        domain = app.config['LDAP_DOMAIN']
+        if 'domain' not in self.credentials:
+            domain = self.credentials['domain']
+
+        return '{domain}\\{username}'.format(
+            domain=domain,
+            username=username,
+        )
+
+    def check_credentials(self):
+        if 'username' not in self.credentials or \
+           'password' not in self.credentials:
+            raise AuthenticationError
+
+        password = self.credentials['password']
+
         server = Server(
             app.config['LDAP_URI'],
             get_info=ALL,
@@ -18,7 +37,7 @@ class LdapAuthProvider(BaseAuthProvider):
         try:
             conn = Connection(
                 server,
-                user='\\'.join((domain, username)),
+                user=self.username,
                 password=password,
                 auto_bind=True,
                 authentication=NTLM,
@@ -28,7 +47,3 @@ class LdapAuthProvider(BaseAuthProvider):
         except:
             print("ldap", sys.exc_info()[0])
             raise AuthenticationError
-
-        return {
-            'user': conn.extend.standard.who_am_i()
-        }

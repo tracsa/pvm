@@ -15,13 +15,6 @@ def signin(backend):
         abort(401, 'Provided user credentials are invalid')
 
     return jsonify(auth)
-    '''
-        'data': {
-            'token': 'de',
-            'expires_at': datetime.now().isoformat(),
-        },
-    })
-    '''
 
 @app.route('/v1/auth/whoami')
 def whoami():

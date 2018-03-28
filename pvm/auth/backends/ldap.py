@@ -13,7 +13,7 @@ class LdapAuthProvider(BaseAuthProvider):
         username = self.credentials['username']
 
         domain = app.config['LDAP_DOMAIN']
-        if 'domain' not in self.credentials:
+        if 'domain' in self.credentials:
             domain = self.credentials['domain']
 
         return '{domain}\\{username}'.format(

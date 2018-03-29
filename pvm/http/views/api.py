@@ -44,12 +44,12 @@ def start_process():
         }])
 
     # Check for authorization
-    auth_ref = validate_auth(start_point, request)
+    auth_ref, user = validate_auth(start_point, request)
 
     # check if there are any forms present
     collected_forms = validate_forms(start_point, request)
 
-    # Now we can save the data
+    # save the data
     execution = Execution(
         process_name = xml.name,
     ).save()
@@ -70,6 +70,7 @@ def start_process():
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
 
+    # trigger rabbit
     channel = get_channel()
     channel.basic_publish(
         exchange = '',
@@ -97,7 +98,7 @@ def continue_process():
     node_id = request.json['node_id']
 
     try:
-        exc = Execution.get_or_exception(execution_id)
+        execution = Execution.get_or_exception(execution_id)
     except ModelNotFoundError:
         raise BadRequest([{
             'detail': 'execution_id is not valid',
@@ -105,7 +106,7 @@ def continue_process():
             'where': 'request.body.execution_id',
         }])
 
-    xml = Xml.load(app.config, exc.process_name)
+    xml = Xml.load(app.config, execution.process_name)
 
     try:
         continue_point = xml.find(lambda e:e.getAttribute('id') == node_id)
@@ -117,7 +118,7 @@ def continue_process():
         }])
 
     try:
-        pointer = next(exc.proxy.pointers.q().filter(node_id=node_id))
+        pointer = next(execution.proxy.pointers.q().filter(node_id=node_id))
     except StopIteration:
         raise BadRequest([{
             'detail': 'node_id does not have a live pointer',
@@ -126,18 +127,31 @@ def continue_process():
         }])
 
     # Check for authorization
-    auth_ref = validate_auth(continue_point, request)
+    auth_ref, user = validate_auth(continue_point, request)
 
     # Validate asociated forms
     collected_forms = validate_forms(continue_point, request)
 
+    # save the data
+    if auth_ref is not None:
+        activity = Activity(ref=auth_ref).save()
+        activity.proxy.user.set(user)
+        activity.proxy.execution.set(execution)
+
+    if len(collected_forms) > 0:
+        for ref, form_data in collected_forms:
+            ques = Questionaire(ref=ref, data=form_data).save()
+            ques.proxy.execution.set(execution)
+
+    # trigger rabbit
     channel = get_channel()
     channel.basic_publish(
         exchange = '',
         routing_key = app.config['RABBIT_QUEUE'],
         body = json.dumps({
             'command': 'step',
-            'process': exc.process_name,
+            'process': execution.process_name,
+            'pointer_id': pointer.id,
         }),
         properties = pika.BasicProperties(
             delivery_mode = 2, # make message persistent
@@ -145,7 +159,5 @@ def continue_process():
     )
 
     return {
-        'data': {
-            'detail': 'accepted',
-        },
+        'data': 'accepted',
     }, 202

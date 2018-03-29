@@ -158,28 +158,86 @@ def test_continue_process_asks_for_data(client, models):
         }],
     }
 
-def test_can_continue_process(client, models, mocker):
-    exc = Execution(
-        process_name = 'decision_2018-02-27',
-    ).save()
-    ptr = Pointer(node_id='57TJ0V3nur6m7wvv').save()
-    ptr.proxy.execution.set(exc)
-
+def test_can_continue_process(client, models, mocker, config):
     mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
 
-    res = client.post('/v1/pointer', data={
+    user = User(identifier='juan').save()
+    token = Token(token='123456').save()
+    token.proxy.user.set(user)
+    exc = Execution(
+        process_name = 'exit_request_2018-03-20.xml',
+    ).save()
+    ptr = Pointer(
+        node_id = 'manager-node',
+    ).save()
+    ptr.proxy.execution.set(exc)
+
+    res = client.post('/v1/pointer', headers={
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic {}'.format(
+            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+        ),
+    }, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': '57TJ0V3nur6m7wvv',
-    })
+        'node_id': ptr.node_id,
+        'form_array': [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'auth': 'yes',
+                },
+            },
+        ],
+    }))
 
     assert res.status_code == 202
     assert json.loads(res.data) == {
-        'data': {
-            'detail': 'accepted',
-        },
+        'data': 'accepted',
     }
 
-    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once_with()
+    # user is attached
+    actors = exc.proxy.actors.get()
+
+    assert len(actors) == 1
+
+    activity = actors[0]
+
+    assert activity.ref == '#manager'
+    assert activity.proxy.user.get() == user
+
+    # form is attached
+    forms = exc.proxy.forms.get()
+
+    assert len(forms) == 1
+
+    form = forms[0]
+
+    assert form.ref == '#auth-form'
+    assert form.data == {
+        'auth': 'yes',
+    }
+
+    # rabbit is called
+    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
+
+    args =  pika.adapters.blocking_connection.BlockingChannel.basic_publish.call_args[1]
+
+    json_message = {
+        'command': 'step',
+        'process': exc.process_name,
+        'pointer_id': ptr.id,
+    }
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == json_message
+
+    handler = Handler(config)
+
+    execution, pointer, xmliter, current_node = handler.recover_step(json_message)
+
+    assert execution.id == exc.id
+    assert pointer.id == ptr.id
 
 @pytest.mark.skip
 def test_can_query_process_status(client):
@@ -195,6 +253,10 @@ def test_can_query_process_status(client):
             },
         ]
     }
+
+@pytest.mark.skip
+def test_can_list_activities_for_user():
+    assert False, 'can list them'
 
 def test_process_start_simple_requires(client, models):
     # we need the name of the process to start

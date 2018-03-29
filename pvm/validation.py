@@ -70,7 +70,7 @@ def validate_auth(node, request):
     auth = node.getElementsByTagName('auth')
 
     if len(auth) == 0:
-        return None
+        return None, None
 
     auth_node = auth[0]
 
@@ -93,7 +93,7 @@ def validate_auth(node, request):
             'where': 'request.authorization',
         }])
 
-    return get_ref(auth_node)
+    return get_ref(auth_node), user
 
 def validate_forms(node, request):
     form_array = node.getElementsByTagName('form-array')

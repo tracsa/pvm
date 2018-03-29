@@ -35,47 +35,129 @@ def test_continue_process_requires(client):
         ],
     }
 
-@pytest.mark.skip
 def test_continue_process_asks_living_objects(client):
     ''' the app must validate that the ids sent are real objects '''
-    res = client.post('/v1/pointer', data={
+    res = client.post('/v1/pointer', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
         'execution_id': 'verde',
         'node_id': 'nada',
-    })
+    }))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [
             {
                 'detail': 'execution_id is not valid',
-                'i18n': 'errors.execution_id.invalid',
-                'field': 'execution_id',
+                'code': 'validation.invalid',
+                'where': 'request.body.execution_id',
             },
         ],
     }
 
-@pytest.mark.skip
-def test_continue_process_requires_living_pointer(client):
+def test_continue_process_requires_valid_node(client, models):
     exc = Execution(
         process_name = 'decision_2018-02-27',
     ).save()
-    res = client.post('/v1/pointer', data={
+
+    res = client.post('/v1/pointer', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'notarealnode',
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': 'node_id is not a valid node',
+                'code': 'validation.invalid_node',
+                'where': 'request.body.node_id',
+            },
+        ],
+    }
+
+def test_continue_process_requires_living_pointer(client, models):
+    exc = Execution(
+        process_name = 'decision_2018-02-27',
+    ).save()
+
+    res = client.post('/v1/pointer', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
         'execution_id': exc.id,
         'node_id': '57TJ0V3nur6m7wvv',
-    })
+    }))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [
             {
                 'detail': 'node_id does not have a live pointer',
-                'i18n': 'errors.node_id.no_live_pointer',
-                'field': 'node_id',
+                'code': 'validation.no_live_pointer',
+                'where': 'request.body.node_id',
             },
         ],
     }
 
-@pytest.mark.skip
+def test_continue_process_asks_for_user(client, models):
+    exc = Execution(
+        process_name = 'exit_request_2018-03-20.xml',
+    ).save()
+    ptr = Pointer(
+        node_id = 'manager-node',
+    ).save()
+    ptr.proxy.execution.set(exc)
+
+    res = client.post('/v1/pointer', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': ptr.node_id,
+    }))
+
+    assert res.status_code == 401
+    assert 'WWW-Authenticate' in res.headers
+    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }],
+    }
+
+def test_continue_process_asks_for_data(client, models):
+    user = User(identifier='juan').save()
+    token = Token(token='123456').save()
+    token.proxy.user.set(user)
+    exc = Execution(
+        process_name = 'exit_request_2018-03-20.xml',
+    ).save()
+    ptr = Pointer(
+        node_id = 'manager-node',
+    ).save()
+    ptr.proxy.execution.set(exc)
+
+    res = client.post('/v1/pointer', headers={
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic {}'.format(
+            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+        ),
+    }, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': ptr.node_id,
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': "'auth' input is required",
+            'where': 'request.body.form_array.0.auth',
+            'code': 'validation.required',
+        }],
+    }
+
 def test_can_continue_process(client, models, mocker):
     exc = Execution(
         process_name = 'decision_2018-02-27',
@@ -90,14 +172,14 @@ def test_can_continue_process(client, models, mocker):
         'node_id': '57TJ0V3nur6m7wvv',
     })
 
-    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once_with()
-
     assert res.status_code == 202
     assert json.loads(res.data) == {
         'data': {
             'detail': 'accepted',
         },
     }
+
+    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once_with()
 
 @pytest.mark.skip
 def test_can_query_process_status(client):

@@ -1,15 +1,16 @@
+from coralillo.errors import ModelNotFoundError
 from flask import request, jsonify, json
 import pika
 
 from pvm.http.wsgi import app
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
-from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity, Unauthorized
+from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
 from pvm.errors import ProcessNotFound, ElementNotFound, ValidationErrors
 from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, get_ref
-from pvm.validation import validate_form, validate_json
+from pvm.validation import validate_forms, validate_json, validate_auth
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
@@ -42,52 +43,11 @@ def start_process():
             'where': 'request.body.process_name',
         }])
 
-    # Check if auth node is present
-    auth = start_point.getElementsByTagName('auth')
-    auth_ref = None
-
-    if len(auth) == 1:
-        auth_node = auth[0]
-
-        # Authorization required but not provided, notify
-        if request.authorization is None:
-            raise Unauthorized([{
-                'detail': 'You must provide basic authorization headers',
-                'where': 'request.authorization',
-            }])
-
-        identifier = request.authorization['username']
-        token = request.authorization['password']
-
-        user = User.get_by('identifier', identifier)
-        token = Token.get_by('token', token)
-
-        if user is None or token is None or token.proxy.user.get().id != user.id:
-            raise Unauthorized([{
-                'detail': 'Your credentials are invalid, sorry',
-                'where': 'request.authorization',
-            }])
-
-        auth_ref = get_ref(auth_node)
+    # Check for authorization
+    auth_ref = validate_auth(start_point, request)
 
     # check if there are any forms present
-    form_array = start_point.getElementsByTagName('form-array')
-    collected_forms = []
-
-    if len(form_array) == 1:
-        form_array_node = form_array[0]
-
-        errors = []
-
-        for index, form in enumerate(form_array_node.getElementsByTagName('form')):
-            try:
-                data = validate_form(index, form, request.json)
-                collected_forms.append((get_ref(form), data))
-            except ValidationErrors as e:
-                errors += e.errors
-
-        if len(errors) > 0:
-            raise BadRequest(ValidationErrors(errors).to_json())
+    collected_forms = validate_forms(start_point, request)
 
     # Now we can save the data
     execution = Execution(
@@ -133,14 +93,51 @@ def start_process():
 def continue_process():
     validate_json(request.json, ['execution_id', 'node_id'])
 
-# TODO validate specific data required for the node to continue
+    execution_id = request.json['execution_id']
+    node_id = request.json['node_id']
+
+    try:
+        exc = Execution.get_or_exception(execution_id)
+    except ModelNotFoundError:
+        raise BadRequest([{
+            'detail': 'execution_id is not valid',
+            'code': 'validation.invalid',
+            'where': 'request.body.execution_id',
+        }])
+
+    xml = Xml.load(app.config, exc.process_name)
+
+    try:
+        continue_point = xml.find(lambda e:e.getAttribute('id') == node_id)
+    except ElementNotFound as e:
+        raise BadRequest([{
+            'detail': 'node_id is not a valid node',
+            'code': 'validation.invalid_node',
+            'where': 'request.body.node_id',
+        }])
+
+    try:
+        pointer = next(exc.proxy.pointers.q().filter(node_id=node_id))
+    except StopIteration:
+        raise BadRequest([{
+            'detail': 'node_id does not have a live pointer',
+            'code': 'validation.no_live_pointer',
+            'where': 'request.body.node_id',
+        }])
+
+    # Check for authorization
+    auth_ref = validate_auth(continue_point, request)
+
+    # Validate asociated forms
+    collected_forms = validate_forms(continue_point, request)
+
     channel = get_channel()
     channel.basic_publish(
         exchange = '',
         routing_key = app.config['RABBIT_QUEUE'],
         body = json.dumps({
             'command': 'step',
-            'process': data.execution.process_name,
+            'process': exc.process_name,
         }),
         properties = pika.BasicProperties(
             delivery_mode = 2, # make message persistent

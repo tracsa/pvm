@@ -33,11 +33,10 @@
 
       <form-array>
         <form id="auth-form">
-          <input type="radio" name="auth" value="yes" id="auth-form-yes" />
-          <label for="auth-form-yes">Sí autorizo salida</label>
-
-          <input type="radio" name="auth" value="no" id="auth-form-no" />
-          <label for="auth-form-no">No autorizo salida</label>
+          <input type="radio" name="auth" required="required">
+            <option value="yes">Ándale mijito, ve</option>
+            <option value="no">Ni madres</option>
+          </input>
         </form>
       </form-array>
     </node>

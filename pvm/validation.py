@@ -1,6 +1,7 @@
 from xml.dom.minidom import Element
 from pvm.xml import get_ref
 from pvm.errors import ValidationErrors, InputError, RequiredInputError
+from pvm.http.errors import BadRequest
 
 def get_associated_data(ref:str, data:dict) -> dict:
     ''' given a reference returns its asociated data in the data dictionary '''
@@ -51,8 +52,15 @@ def validate_form(index:int, form:Element, data:dict) -> dict:
     return collected_data
 
 def validate_json(json_data:dict, req:list):
-    if 'process_name' not in json_data:
-        raise BadRequest([{
-            'detail': 'process_name is required',
-            'where': 'request.body.process_name',
-        }])
+    errors = []
+
+    for item in req:
+        if item not in json_data:
+            errors.append({
+                'detail': '{} is required'.format(item),
+                'where': 'request.body.{}'.format(item),
+                'code': 'validation.required',
+            })
+
+    if errors:
+        raise BadRequest(errors)

@@ -9,7 +9,7 @@ from pvm.errors import ProcessNotFound, ElementNotFound, ValidationErrors
 from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, get_ref
-from pvm.validation import validate_form
+from pvm.validation import validate_form, validate_json
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json

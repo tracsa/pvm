@@ -25,7 +25,7 @@ def test_continue_process_requires(client):
             {
                 'detail': 'execution_id is required',
                 'code': 'validation.required',
-                'where': 'request.data.execution_id',
+                'where': 'request.body.execution_id',
             },
             {
                 'detail': 'node_id is required',
@@ -126,6 +126,7 @@ def test_process_start_simple_requires(client, models):
             {
                 'detail': 'process_name is required',
                 'where': 'request.body.process_name',
+                'code': 'validation.required',
             },
         ],
     }

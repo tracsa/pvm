@@ -7,22 +7,30 @@ from base64 import b64encode
 from pvm.models import Execution, Pointer, User, Token, Activity
 from pvm.handler import Handler
 
-@pytest.mark.skip
 def test_continue_process_requires(client):
-    res = client.post('/v1/pointer')
+    user = User(identifier='juan').save()
+    token = Token(token='123456').save()
+    token.proxy.user.set(user)
+
+    res = client.post('/v1/pointer', headers={
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic {}'.format(
+            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+        ),
+    }, data=json.dumps({}))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [
             {
                 'detail': 'execution_id is required',
-                'i18n': 'errors.execution_id.required',
-                'field': 'execution_id',
+                'code': 'validation.required',
+                'where': 'request.data.execution_id',
             },
             {
                 'detail': 'node_id is required',
-                'i18n': 'errors.node_id.required',
-                'field': 'node_id',
+                'code': 'validation.required',
+                'where': 'request.body.node_id',
             },
         ],
     }

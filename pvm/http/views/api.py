@@ -24,11 +24,7 @@ def index():
 @app.route('/v1/execution', methods=['POST'])
 @requires_json
 def start_process():
-    if 'process_name' not in request.json:
-        raise BadRequest([{
-            'detail': 'process_name is required',
-            'where': 'request.body.process_name',
-        }])
+    validate_json(request.json, ['process_name'])
 
     try:
         xml = Xml.load(app.config, request.json['process_name'])
@@ -135,7 +131,7 @@ def start_process():
 @app.route('/v1/pointer', methods=['POST'])
 @requires_json
 def continue_process():
-    data = ContinueProcess.validate(**request.form.to_dict())
+    validate_json(request.json, ['execution_id', 'node_id'])
 
 # TODO validate specific data required for the node to continue
     channel = get_channel()

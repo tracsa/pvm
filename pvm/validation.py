@@ -49,3 +49,10 @@ def validate_form(index:int, form:Element, data:dict) -> dict:
         raise ValidationErrors(errors)
 
     return collected_data
+
+def validate_json(json_data:dict, req:list):
+    if 'process_name' not in json_data:
+        raise BadRequest([{
+            'detail': 'process_name is required',
+            'where': 'request.body.process_name',
+        }])

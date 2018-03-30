@@ -86,3 +86,8 @@ def test_call_recover(config):
     assert Pointer.get(pointer.id) == None
     assert Execution.get(execution.id) == None
     assert ptrs == []
+
+def test_wakeup_notifies_manager():
+    ''' a node whose auth has a filter must notify the people matching the
+    filter '''
+    assert False

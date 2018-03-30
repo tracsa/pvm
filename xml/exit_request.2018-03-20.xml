@@ -21,7 +21,7 @@
 
     <node id="manager-node" class="decision">
       <auth id="manager">
-        <filter>
+        <filter backend="hardcoded">
           <param name="employee" source="#requester" />
         </filter>
       </auth>
@@ -40,7 +40,7 @@
 
     <node id="security-node" class="async">
       <auth id="security">
-        <filter>
+        <filter backend="hardcoded">
           <param name="ou">Security</param>
         </filter>
       </auth>

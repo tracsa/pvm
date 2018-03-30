@@ -1,8 +1,11 @@
+from importlib import import_module
 from xml.dom.minidom import Element
-from pvm.xml import get_ref
+from case_conversion import pascalcase
+
 from pvm.errors import ValidationErrors, InputError, RequiredInputError
-from pvm.http.errors import BadRequest, Unauthorized
+from pvm.http.errors import BadRequest, Unauthorized, ServerError
 from pvm.models import User, Token
+from pvm.xml import get_ref
 
 def get_associated_data(ref:str, data:dict) -> dict:
     ''' given a reference returns its asociated data in the data dictionary '''
@@ -92,6 +95,26 @@ def validate_auth(node, request):
             'detail': 'Your credentials are invalid, sorry',
             'where': 'request.authorization',
         }])
+
+    # check for filters for this user
+    filter_q = auth_node.getElementsByTagName('filter')
+
+    if len(filter_q) == 1:
+        filter_node = filter_q[0]
+        backend = filter_node.getAttribute('backend')
+
+        mod = import_module('pvm.auth.hierarchy.{}'.format(backend))
+        HiPro = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
+
+        hipro = HiPro(app.config)
+
+        try:
+            hipro.validate_user(user, **resolve_params(filter_node))
+        except HierarchyError:
+            raise Unauthorized([{
+                'detail': 'Your credentials are invalid, sorry',
+                'where': 'request.authorization',
+            }])
 
     return get_ref(auth_node), user
 

@@ -127,6 +127,40 @@ def test_continue_process_asks_for_user(client, models):
         }],
     }
 
+def test_continue_process_asks_for_user_by_hierarchy(client, models):
+    ''' a node whose auth has a filter must be completed by a person matching
+    the filter '''
+    user = User(identifier='juan').save()
+    token = Token(token='123456').save()
+    token.proxy.user.set(user)
+    exc = Execution(
+        process_name = 'exit_request_2018-03-20.xml',
+    ).save()
+    ptr = Pointer(
+        node_id = 'manager-node',
+    ).save()
+    ptr.proxy.execution.set(exc)
+
+    res = client.post('/v1/pointer', headers={
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic {}'.format(
+            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+        ),
+    }, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': ptr.node_id,
+    }))
+
+    assert res.status_code == 401
+    assert 'WWW-Authenticate' in res.headers
+    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': 'The provided credentials do not match the specified hierarchy',
+            'where': 'request.authorization',
+        }],
+    }
+
 def test_continue_process_asks_for_data(client, models):
     user = User(identifier='juan').save()
     token = Token(token='123456').save()

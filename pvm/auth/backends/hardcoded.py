@@ -4,7 +4,7 @@ from pvm.errors import AuthenticationError
 
 class HardcodedAuthProvider(BaseAuthProvider):
 
-    def authenticate(self, credentials):
+    def authenticate(self, **credentials):
         if 'username' not in credentials or \
            'password' not in credentials:
             raise AuthenticationError

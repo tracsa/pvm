@@ -11,7 +11,7 @@ from string import ascii_letters
 @app.route('/v1/auth/signin/<AuthProvider:backend>', methods=['POST'])
 def signin(backend):
     try:
-        auth = backend.authenticate(request.form.to_dict())
+        auth = backend.authenticate(**request.form.to_dict())
     except AuthenticationError:
         abort(401, 'Provided user credentials are invalid')
 

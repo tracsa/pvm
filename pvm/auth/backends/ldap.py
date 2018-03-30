@@ -8,7 +8,7 @@ import sys
 
 class LdapAuthProvider(BaseAuthProvider):
 
-    def authenticate(self, credentials):
+    def authenticate(self, **credentials):
         if 'username' not in credentials or \
            'password' not in credentials:
             raise AuthenticationError
@@ -30,9 +30,6 @@ class LdapAuthProvider(BaseAuthProvider):
             use_ssl=app.config['LDAP_SSL'],
         )
 
-        print(username)
-        print(password)
-
         try:
             conn = Connection(
                 server,
@@ -42,13 +39,10 @@ class LdapAuthProvider(BaseAuthProvider):
                 authentication=NTLM,
             )
         except LDAPBindError:
-            print("ldap", "wrong credentials")
             raise AuthenticationError
         except LDAPSocketOpenError:
-            print("ldap", "connection error")
             raise AuthenticationError
         except:
-            print("ldap", sys.exc_info()[0])
             raise AuthenticationError
 
         return {

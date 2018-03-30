@@ -10,6 +10,6 @@ def test_condition(models):
 
     con = Condition(exc)
 
-    assert con.parse("form#form1.answer==\"yes\"")
-    assert not con.parse("form#form1.answer == \"no\"")
-    assert con.parse("form#form1.answer ==\"yes\"")
+    assert con.parse('form#form1[answer]=="yes"')
+    assert not con.parse('form#form1[answer] == "no"')
+    assert con.parse('form#form2[answer] =="no"')

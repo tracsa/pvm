@@ -21,7 +21,7 @@ class Node:
         something similar '''
         raise NotImplementedError('Should be implemented for subclasses')
 
-    def next(self, xmliter:Iterator[Element]) -> ['Node']:
+    def next(self, xmliter:Iterator[Element], execution) -> ['Node']:
         ''' Gets the next node in the graph, if it fails raises an exception.'''
         raise NotImplementedError('Should be implemented for subclasses')
 
@@ -44,7 +44,7 @@ class AsyncNode(Node):
 
 class SingleConnectedNode(Node):
 
-    def next(self, xml:Xml) -> ['Node']:
+    def next(self, xml:Xml, execution) -> ['Node']:
         ''' just find the next node in the graph '''
         conn = xml.find(lambda e:e.tagName=='connector' and e.getAttribute('from') == self.element.getAttribute('id'))
 
@@ -75,7 +75,7 @@ class DecisionNode(AsyncNode):
 
     def wakeup(self): pass
 
-    def next(self, xml:Xml) -> ['Node']:
+    def next(self, xml:Xml, execution) -> ['Node']:
         ''' find node whose value corresponds to the answer '''
         def find_node(el):
             if el.tagName != 'connector':
@@ -84,7 +84,14 @@ class DecisionNode(AsyncNode):
             if el.getAttribute('from') != self.element.getAttribute('id'):
                 return False
 
-            return Condition().parse(el.getAttribute('condition'))
+            cons = el.getElementsByTagName('condition')
+
+            if len(cons) != 1:
+                return False
+
+            con = cons[0]
+
+            return Condition(execution).parse(con.firstChild.nodeValue)
 
         conn = xml.find(find_node)
 

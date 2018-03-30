@@ -50,7 +50,7 @@ class Handler:
 
         # node's lifetime ends here
         pointer.delete()
-        next_nodes = current_node.next(xml)
+        next_nodes = current_node.next(xml, execution)
 
         for node in next_nodes:
             # node's begining of life

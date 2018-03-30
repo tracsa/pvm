@@ -4,9 +4,9 @@ import case_conversion
 from typing import Iterator
 from xml.dom.minidom import Element
 
-from .xml import Xml
-from .logger import log
-from .errors import DataMissing, InvalidData
+from pvm.xml import Xml
+from pvm.logger import log
+from pvm.grammar import Condition
 
 
 class Node:
@@ -21,14 +21,8 @@ class Node:
         something similar '''
         raise NotImplementedError('Should be implemented for subclasses')
 
-    def validate(self, data:dict):
-        ''' Determines if this node has everything it needs to continue the
-        execution of the script '''
-        raise NotImplementedError('Should be implemented for subclasses')
-
-    def next(self, xmliter:Iterator[Element], data:dict) -> ['Node']:
-        ''' Gets the next node in the graph, if it fails raises an exception.
-        Assumes that validate() has been called before '''
+    def next(self, xmliter:Iterator[Element], execution) -> ['Node']:
+        ''' Gets the next node in the graph, if it fails raises an exception.'''
         raise NotImplementedError('Should be implemented for subclasses')
 
     def is_end(self) -> bool:
@@ -43,10 +37,6 @@ class Node:
 class SyncNode(Node):
     ''' Nodes that don't wait for external info to execute '''
 
-    def validate(self, data:dict):
-        ''' start nodes have everything they need to continue '''
-        return True
-
 
 class AsyncNode(Node):
     ''' Nodes that wait for external confirmation '''
@@ -54,7 +44,7 @@ class AsyncNode(Node):
 
 class SingleConnectedNode(Node):
 
-    def next(self, xml:Xml, data:dict) -> ['Node']:
+    def next(self, xml:Xml, execution) -> ['Node']:
         ''' just find the next node in the graph '''
         conn = xml.find(lambda e:e.tagName=='connector' and e.getAttribute('from') == self.element.getAttribute('id'))
 
@@ -85,20 +75,25 @@ class DecisionNode(AsyncNode):
 
     def wakeup(self): pass
 
-    def validate(self, data:dict):
-        if 'answer'  not in data:
-            raise DataMissing('answer')
-
-        if data['answer'] not in ('yes', 'no'):
-            raise InvalidData('answer', data['answer'])
-
-        return True
-
-    def next(self, xml:Xml, data:dict) -> ['Node']:
+    def next(self, xml:Xml, execution) -> ['Node']:
         ''' find node whose value corresponds to the answer '''
-        conn = xml.find(
-            lambda e:e.tagName=='connector' and e.getAttribute('from')==self.element.getAttribute('id') and e.getAttribute('value') == data['answer']
-        )
+        def find_node(el):
+            if el.tagName != 'connector':
+                return False
+
+            if el.getAttribute('from') != self.element.getAttribute('id'):
+                return False
+
+            cons = el.getElementsByTagName('condition')
+
+            if len(cons) != 1:
+                return False
+
+            con = cons[0]
+
+            return Condition(execution).parse(con.firstChild.nodeValue)
+
+        conn = xml.find(find_node)
 
         return [make_node(xml.find(
             lambda e:e.getAttribute('id') == conn.getAttribute('to')

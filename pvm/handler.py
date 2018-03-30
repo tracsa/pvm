@@ -47,14 +47,10 @@ class Handler:
         execution, pointer, xml, current_node = self.recover_step(message)
 
         pointers = [] # pointers to be notified back
-        data = message['data'] if 'data' in message else dict()
-
-        # This call raises an exception if data doesn't have enough information
-        current_node.validate(data)
 
         # node's lifetime ends here
         pointer.delete()
-        next_nodes = current_node.next(xml, data)
+        next_nodes = current_node.next(xml, execution)
 
         for node in next_nodes:
             # node's begining of life

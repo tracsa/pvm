@@ -38,7 +38,7 @@ def test_find_next_element_normal(config):
         lambda e:e.tagName=='node' and e.getAttribute('id')=='4g9lOdPKmRUf'
     ))
 
-    next_node = current_node.next(xml, dict())[0]
+    next_node = current_node.next(xml)[0]
 
     assert next_node.element.getAttribute('id') == 'kV9UWSeA89IZ'
 
@@ -52,9 +52,7 @@ def test_find_next_element_decision_yes(config):
         lambda e:e.tagName=='node' and e.getAttribute('id')=='57TJ0V3nur6m7wvv'
     ))
 
-    next_node = current_node.next(xml, {
-        'answer': 'yes',
-    })[0]
+    next_node = current_node.next(xml)[0]
 
     assert next_node.element.getAttribute('id') == 'Cuptax0WTCL1ueCy'
 
@@ -69,9 +67,7 @@ def test_find_next_element_decision_no(config):
         lambda e:e.tagName=='node' and e.getAttribute('id')=='57TJ0V3nur6m7wvv'
     ))
 
-    next_node = current_node.next(xml, {
-        'answer': 'no',
-    })[0]
+    next_node = current_node.next(xml)[0]
 
     assert next_node.element.getAttribute('id') == 'mj88CNZUaBdvLV83'
 

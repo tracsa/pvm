@@ -4,8 +4,9 @@ import case_conversion
 from typing import Iterator
 from xml.dom.minidom import Element
 
-from .xml import Xml
-from .logger import log
+from pvm.xml import Xml
+from pvm.logger import log
+from pvm.grammar import Condition
 
 
 class Node:
@@ -76,9 +77,16 @@ class DecisionNode(AsyncNode):
 
     def next(self, xml:Xml) -> ['Node']:
         ''' find node whose value corresponds to the answer '''
-        conn = xml.find(
-            lambda e:e.tagName=='connector' and e.getAttribute('from')==self.element.getAttribute('id')
-        )
+        def find_node(el):
+            if el.tagName != 'connector':
+                return False
+
+            if el.getAttribute('from') != self.element.getAttribute('id'):
+                return False
+
+            return Condition().parse(el.getAttribute('condition'))
+
+        conn = xml.find(find_node)
 
         return [make_node(xml.find(
             lambda e:e.getAttribute('id') == conn.getAttribute('to')

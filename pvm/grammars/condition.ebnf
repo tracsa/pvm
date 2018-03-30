@@ -1,0 +1,5 @@
+condition: expr op expr
+
+expr: "true" | "false"
+
+op: "==" | "!="

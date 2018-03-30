@@ -17,13 +17,13 @@
       </form-array>
     </node>
 
-    <connector from="57TJ0V3nur6m7wvv" to="Cuptax0WTCL1ueCy" condition="#fork.proceed==yes" />
+    <connector from="57TJ0V3nur6m7wvv" to="Cuptax0WTCL1ueCy" condition="#fork.proceed=='yes'" />
 
     <node id="Cuptax0WTCL1ueCy" class="echo" msg="Option yes selected" />
     <connector from="Cuptax0WTCL1ueCy" to="tMdkDIZkDW7GkmDT" />
     <node id="tMdkDIZkDW7GkmDT" class="end" />
 
-    <connector from="57TJ0V3nur6m7wvv" to="mj88CNZUaBdvLV83" value="#fork.proceed==no" />
+    <connector from="57TJ0V3nur6m7wvv" to="mj88CNZUaBdvLV83" value="#fork.proceed=='no'" />
     <node id="mj88CNZUaBdvLV83" class="echo" msg="Option no selected" />
     <connector from="mj88CNZUaBdvLV83" to="BCUHAjo4OxtA31NR" />
     <node id="BCUHAjo4OxtA31NR" class="end" />

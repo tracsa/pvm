@@ -1,5 +1,10 @@
 condition: expr op expr
 
-expr: "true" | "false"
+expr: "true" -> true
+    | "false" -> false
 
-op: "==" | "!="
+op: "==" -> op_eq
+  | "!=" -> op_ne
+
+%import common.WS
+%ignore WS

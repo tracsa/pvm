@@ -8,9 +8,9 @@ def test_condition():
     })
 
     assert con.parse("true==false") == False
-    assert con.parse("true==true") == True
-    assert con.parse("false==false") == True
-    assert con.parse("false==true") == True
+    assert con.parse("true ==true") == True
+    assert con.parse("false == false") == True
+    assert con.parse("false== true") == False
 
     # assert con.parse("#form_id.input_name=='yes'")
     # assert not con.parse('#form_id.input_name == no')

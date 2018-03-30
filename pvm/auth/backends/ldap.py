@@ -40,10 +40,6 @@ class LdapAuthProvider(BaseAuthProvider):
             )
         except LDAPBindError:
             raise AuthenticationError
-        except LDAPSocketOpenError:
-            raise AuthenticationError
-        except:
-            raise AuthenticationError
 
         return {
             'identifier': 'ldap/' + username,

@@ -25,3 +25,12 @@ def handle_401(e):
             'where': 'request.body',
         }],
     }), e.code
+
+@app.errorhandler(500)
+def handle_500(e):
+    return jsonify({
+        'errors': [{
+            'detail': 'The server has failed its mission',
+            'where': 'server',
+        }],
+    })

@@ -1,38 +1,7 @@
 from base64 import b64encode
-from coralillo import Engine
 from flask import json
-from itacate import Config
-from pvm.models import bind_models, Token
 from random import choice
 from string import ascii_letters
-import pytest
-
-from coralillo import Engine
-from itacate import Config
-import os
-import pytest
-
-@pytest.fixture
-def config():
-    ''' Returns a fully loaded configuration dict '''
-    con = Config(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
-    con.from_pyfile('settings.py')
-    con.from_envvar('PVM_SETTINGS', silent=True)
-
-    return con
-
-@pytest.fixture
-def models():
-    ''' Binds the models to a coralillo engine, returns nothing '''
-    con = config()
-    engine = Engine(
-        host=con['REDIS_HOST'],
-        port=con['REDIS_PORT'],
-        db=con['REDIS_DB'],
-    )
-    engine.lua.drop(args=['*'])
-
-    bind_models(engine)
 
 def test_unexistent_backend(client):
     mth = ''.join(choice(ascii_letters) for _ in range(6))
@@ -59,7 +28,6 @@ def test_login_wrong_user(client):
         ],
     }
 
-@pytest.mark.skip
 def test_login(client):
     res = client.post('/v1/auth/signin/hardcoded', data={
         'username': 'juan',

@@ -8,25 +8,21 @@ import sys
 
 class LdapAuthProvider(BaseAuthProvider):
 
-    @property
-    def username(self):
-        username = self.credentials['username']
-
-        domain = app.config['LDAP_DOMAIN']
-        if 'domain' in self.credentials:
-            domain = self.credentials['domain']
-
-        return '{domain}\\{username}'.format(
-            domain=domain,
-            username=username,
-        )
-
-    def check_credentials(self):
-        if 'username' not in self.credentials or \
-           'password' not in self.credentials:
+    def authenticate(self, credentials):
+        if 'username' not in credentials or \
+           'password' not in credentials:
             raise AuthenticationError
 
-        password = self.credentials['password']
+        domain = app.config['LDAP_DOMAIN']
+        if 'domain' in credentials:
+            domain = credentials['domain']
+
+        username = '{domain}\\{username}'.format(
+            domain=domain,
+            username=credentials['username'],
+        )
+
+        password = credentials['password']
 
         server = Server(
             app.config['LDAP_URI'],
@@ -34,16 +30,27 @@ class LdapAuthProvider(BaseAuthProvider):
             use_ssl=app.config['LDAP_SSL'],
         )
 
+        print(username)
+        print(password)
+
         try:
             conn = Connection(
                 server,
-                user=self.username,
+                user=username,
                 password=password,
                 auto_bind=True,
                 authentication=NTLM,
             )
-        except (LDAPBindError, LDAPSocketOpenError):
+        except LDAPBindError:
+            print("ldap", "wrong credentials")
+            raise AuthenticationError
+        except LDAPSocketOpenError:
+            print("ldap", "connection error")
             raise AuthenticationError
         except:
             print("ldap", sys.exc_info()[0])
             raise AuthenticationError
+
+        return {
+            'identifier': 'ldap/' + username,
+        }

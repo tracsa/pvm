@@ -1,10 +1,11 @@
-from flask import request, jsonify, abort
-from pvm.http.wsgi import app
-from pvm.errors import AuthenticationError
 from datetime import datetime
-
+from flask import request, jsonify, abort
+from pvm.errors import AuthenticationError
 from pvm.http.errors import Unauthorized
+from pvm.http.wsgi import app
 from pvm.models import User, Token
+from random import choice
+from string import ascii_letters
 
 
 @app.route('/v1/auth/signin/<AuthProvider:backend>', methods=['POST'])
@@ -14,7 +15,28 @@ def signin(backend):
     except AuthenticationError:
         abort(401, 'Provided user credentials are invalid')
 
-    return jsonify(auth)
+    identifier = auth['identifier']
+
+    # fetchs redis mirror user if there is None then creates one
+    user = User.get_by('identifier', identifier)
+    if user is None:
+        user = User(identifier=identifier).save()
+
+    # creates auth token
+    user.proxy.tokens.fill()
+    if len(user.tokens) > 0:
+        token = user.tokens[0]
+    else:
+        token = ''.join(choice(ascii_letters) for _ in range(32))
+        token = Token(token=token).save()
+        token.proxy.user.set(user)
+
+    return jsonify({
+        'data': {
+            'username': user.identifier,
+            'token': token.token,
+        }
+    })
 
 @app.route('/v1/auth/whoami')
 def whoami():

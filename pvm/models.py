@@ -9,6 +9,7 @@ class Execution(Model):
     process_name = fields.Text()
     pointers     = fields.SetRelation('pvm.models.Pointer', inverse='execution')
     actors       = fields.SetRelation('pvm.models.Activity', inverse='execution')
+    forms        = fields.SetRelation('pvm.models.Questionaire', inverse='execution')
 
 
 class Activity(Model):
@@ -17,6 +18,12 @@ class Activity(Model):
     user      = fields.ForeignIdRelation('pvm.models.User', inverse='activities')
     ref       = fields.Text()
 
+
+class Questionaire(Model):
+    ''' Represents filled forms and their data '''
+    ref         = fields.Text()
+    data        = fields.Dict()
+    execution   = fields.ForeignIdRelation(Execution, inverse='forms')
 
 class Pointer(Model):
     ''' marks a node and a execution so it can continue from there '''

@@ -1,14 +1,16 @@
+from coralillo.errors import ModelNotFoundError
 from flask import request, jsonify, json
 import pika
 
 from pvm.http.wsgi import app
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
-from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity, Unauthorized
-from pvm.errors import ProcessNotFound, ElementNotFound
-from pvm.models import Execution, Pointer, User, Token, Activity
+from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
+from pvm.errors import ProcessNotFound, ElementNotFound, ValidationErrors
+from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
-from pvm.xml import Xml
+from pvm.xml import Xml, get_ref
+from pvm.validation import validate_forms, validate_json, validate_auth
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
@@ -23,11 +25,7 @@ def index():
 @app.route('/v1/execution', methods=['POST'])
 @requires_json
 def start_process():
-    if 'process_name' not in request.json:
-        raise BadRequest([{
-            'detail': 'process_name is required',
-            'where': 'request.body.process_name',
-        }])
+    validate_json(request.json, ['process_name'])
 
     try:
         xml = Xml.load(app.config, request.json['process_name'])
@@ -45,41 +43,13 @@ def start_process():
             'where': 'request.body.process_name',
         }])
 
-    # Check if auth node is present
-    auth = start_point.getElementsByTagName('auth')
+    # Check for authorization
+    auth_ref, user = validate_auth(start_point, request)
 
-    if len(auth) == 1:
-        auth_node = auth[0]
+    # check if there are any forms present
+    collected_forms = validate_forms(start_point, request)
 
-        # Authorization required but not provided, notify
-        if request.authorization is None:
-            raise Unauthorized([{
-                'detail': 'You must provide basic authorization headers',
-                'where': 'request.authorization',
-            }])
-
-        identifier = request.authorization['username']
-        token = request.authorization['password']
-
-        user = User.get_by('identifier', identifier)
-        token = Token.get_by('token', token)
-
-        if user is None or token is None or token.proxy.user.get().id != user.id:
-            raise Unauthorized([{
-                'detail': 'Your credentials are invalid, sorry',
-                'where': 'request.authorization',
-            }])
-
-        if auth_node.getAttribute('id'):
-            ref = '#' + auth_node.getAttribute('id')
-        else:
-            ref = None
-
-        activity = Activity(ref=ref).save()
-        activity.proxy.user.set(user)
-    else:
-        activity = None
-
+    # save the data
     execution = Execution(
         process_name = xml.name,
     ).save()
@@ -90,9 +60,17 @@ def start_process():
 
     pointer.proxy.execution.set(execution)
 
-    if activity is not None:
+    if auth_ref is not None:
+        activity = Activity(ref=auth_ref).save()
+        activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
 
+    if len(collected_forms) > 0:
+        for ref, form_data in collected_forms:
+            ques = Questionaire(ref=ref, data=form_data).save()
+            ques.proxy.execution.set(execution)
+
+    # trigger rabbit
     channel = get_channel()
     channel.basic_publish(
         exchange = '',
@@ -114,16 +92,66 @@ def start_process():
 @app.route('/v1/pointer', methods=['POST'])
 @requires_json
 def continue_process():
-    data = ContinueProcess.validate(**request.form.to_dict())
+    validate_json(request.json, ['execution_id', 'node_id'])
 
-# TODO validate specific data required for the node to continue
+    execution_id = request.json['execution_id']
+    node_id = request.json['node_id']
+
+    try:
+        execution = Execution.get_or_exception(execution_id)
+    except ModelNotFoundError:
+        raise BadRequest([{
+            'detail': 'execution_id is not valid',
+            'code': 'validation.invalid',
+            'where': 'request.body.execution_id',
+        }])
+
+    xml = Xml.load(app.config, execution.process_name)
+
+    try:
+        continue_point = xml.find(lambda e:e.getAttribute('id') == node_id)
+    except ElementNotFound as e:
+        raise BadRequest([{
+            'detail': 'node_id is not a valid node',
+            'code': 'validation.invalid_node',
+            'where': 'request.body.node_id',
+        }])
+
+    try:
+        pointer = next(execution.proxy.pointers.q().filter(node_id=node_id))
+    except StopIteration:
+        raise BadRequest([{
+            'detail': 'node_id does not have a live pointer',
+            'code': 'validation.no_live_pointer',
+            'where': 'request.body.node_id',
+        }])
+
+    # Check for authorization
+    auth_ref, user = validate_auth(continue_point, request)
+
+    # Validate asociated forms
+    collected_forms = validate_forms(continue_point, request)
+
+    # save the data
+    if auth_ref is not None:
+        activity = Activity(ref=auth_ref).save()
+        activity.proxy.user.set(user)
+        activity.proxy.execution.set(execution)
+
+    if len(collected_forms) > 0:
+        for ref, form_data in collected_forms:
+            ques = Questionaire(ref=ref, data=form_data).save()
+            ques.proxy.execution.set(execution)
+
+    # trigger rabbit
     channel = get_channel()
     channel.basic_publish(
         exchange = '',
         routing_key = app.config['RABBIT_QUEUE'],
         body = json.dumps({
             'command': 'step',
-            'process': data.execution.process_name,
+            'process': execution.process_name,
+            'pointer_id': pointer.id,
         }),
         properties = pika.BasicProperties(
             delivery_mode = 2, # make message persistent
@@ -131,7 +159,5 @@ def continue_process():
     )
 
     return {
-        'data': {
-            'detail': 'accepted',
-        },
+        'data': 'accepted',
     }, 202

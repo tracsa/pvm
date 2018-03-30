@@ -57,7 +57,7 @@ def test_continue_process_asks_living_objects(client):
 
 def test_continue_process_requires_valid_node(client, models):
     exc = Execution(
-        process_name = 'decision_2018-02-27',
+        process_name = 'decision.2018-02-27',
     ).save()
 
     res = client.post('/v1/pointer', headers={
@@ -80,7 +80,7 @@ def test_continue_process_requires_valid_node(client, models):
 
 def test_continue_process_requires_living_pointer(client, models):
     exc = Execution(
-        process_name = 'decision_2018-02-27',
+        process_name = 'decision.2018-02-27',
     ).save()
 
     res = client.post('/v1/pointer', headers={
@@ -103,7 +103,7 @@ def test_continue_process_requires_living_pointer(client, models):
 
 def test_continue_process_asks_for_user(client, models):
     exc = Execution(
-        process_name = 'exit_request_2018-03-20.xml',
+        process_name = 'exit_request.2018-03-20.xml',
     ).save()
     ptr = Pointer(
         node_id = 'manager-node',
@@ -132,7 +132,7 @@ def test_continue_process_asks_for_data(client, models):
     token = Token(token='123456').save()
     token.proxy.user.set(user)
     exc = Execution(
-        process_name = 'exit_request_2018-03-20.xml',
+        process_name = 'exit_request.2018-03-20.xml',
     ).save()
     ptr = Pointer(
         node_id = 'manager-node',
@@ -165,7 +165,7 @@ def test_can_continue_process(client, models, mocker, config):
     token = Token(token='123456').save()
     token.proxy.user.set(user)
     exc = Execution(
-        process_name = 'exit_request_2018-03-20.xml',
+        process_name = 'exit_request.2018-03-20.xml',
     ).save()
     ptr = Pointer(
         node_id = 'manager-node',
@@ -322,7 +322,7 @@ def test_process_start_simple(client, models, mocker, config):
 
     exc = Execution.get_all()[0]
 
-    assert exc.process_name == 'simple_2018-02-19.xml'
+    assert exc.process_name == 'simple.2018-02-19.xml'
 
     ptr = exc.proxy.pointers.get()[0]
 

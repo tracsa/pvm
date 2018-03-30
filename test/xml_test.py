@@ -14,7 +14,7 @@ def test_load_process(config):
     '''  a process file can be found using only its prefix or common name '''
     xml = Xml.load(config, 'simple')
 
-    assert xml.name == 'simple_2018-02-19.xml'
+    assert xml.name == 'simple.2018-02-19.xml'
     assert type(xml) == Xml
 
 def test_load_last_matching_process(config):
@@ -22,14 +22,14 @@ def test_load_last_matching_process(config):
     when a process is requested for start we must use the last version of it '''
     xml = Xml.load(config, 'oldest')
 
-    assert xml.name == 'oldest_2018-02-17.xml'
+    assert xml.name == 'oldest.2018-02-17.xml'
 
 def test_load_specific_version(config):
     ''' one should be able to request a specific version of a process,
     thus overriding the process described by the previous test '''
-    xml = Xml.load(config, 'oldest_2018-02-14')
+    xml = Xml.load(config, 'oldest.2018-02-14')
 
-    assert xml.name == 'oldest_2018-02-14.xml'
+    assert xml.name == 'oldest.2018-02-14.xml'
 
 def test_make_iterator(config):
     ''' test that the iter function actually returns an interator over the

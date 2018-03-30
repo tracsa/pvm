@@ -1,17 +1,15 @@
 from pvm.grammar import Condition
+from pvm.models import Execution, Questionaire
 
-def test_condition():
-    con = Condition({
-        'forms': [
-            {
-                'ref': '#form_id',
-                'data': {
-                    'input_name': 'yes',
-                },
-            },
-        ],
-    })
+def test_condition(models):
+    exc = Execution().save()
+    form1 = Questionaire(ref='#form1', data={'answer':'yes'}).save()
+    form2 = Questionaire(ref='#form2', data={'answer':'no'}).save()
+    form1.proxy.execution.set(exc)
+    form2.proxy.execution.set(exc)
 
-    assert con.parse("form#form_id.input_name==\"yes\"")
-    assert not con.parse("form#form_id.input_name == \"no\"")
-    assert con.parse("form#form_id.input_name ==\"yes\"")
+    con = Condition(exc)
+
+    assert con.parse("form#form1.answer==\"yes\"")
+    assert not con.parse("form#form1.answer == \"no\"")
+    assert con.parse("form#form1.answer ==\"yes\"")

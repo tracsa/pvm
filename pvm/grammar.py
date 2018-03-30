@@ -8,7 +8,7 @@ class Condition:
     def __init__(self, data):
         self.data = data
 
-        filename = os.path.join(os.path.dirname(__file__), 'grammars/condition.ebnf')
+        filename = os.path.join(os.path.dirname(__file__), 'grammars/condition.g')
 
         with open(filename) as grammar_file:
             self.parser = Lark(
@@ -25,8 +25,14 @@ class Condition:
         op_eq = lambda self, _: operator.eq
         op_ne = lambda self, _: operator.ne
 
-        true = lambda self, _: True
-        false = lambda self, _: False
+        type_form = lambda self, _: 'form'
+
+        def ref(self, args):
+            obj_type, obj_id, member = args
+            print(obj_id)
+
+        def string(self, args):
+            return args[0][1:-1]
 
         def condition(self, args):
             left, op, right = args

@@ -1,10 +1,21 @@
 condition: expr op expr
 
-expr: "true" -> true
-    | "false" -> false
-
 op: "==" -> op_eq
   | "!=" -> op_ne
 
+expr: ref
+    | string
+
+ref: obj_type "#" obj_id "." member
+
+obj_type: "form" -> type_form
+
+obj_id: VARIABLE
+member: VARIABLE
+
+string : ESCAPED_STRING
+VARIABLE: /[a-zA-Z0-9_-]+/
+
+%import common.ESCAPED_STRING
 %import common.WS
 %ignore WS

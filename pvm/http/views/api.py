@@ -165,55 +165,9 @@ def continue_process():
 
 @app.route('/v1/process', methods=['GET'])
 def list_process():
-    # Get all processes
-    files = reversed(sorted(os.listdir(app.config['XML_PATH'])))
-
-    # Load only the oldest processes
-    processes = {}
-    for filename in files:
-        process_name = filename.split('.')[0]
-        if not process_name in processes:
-            processes[process_name] = {
-                'name': process_name,
-                'xml': Xml(app.config, filename),
-            }
-
-    # Get first nodes
-    def get_start_point(xml):
-        try:
-            start_point = xml.find(lambda e:e.getAttribute('class') == 'start')
-        except ElementNotFound:
-            start_point = None
-
-        return start_point
-
-    processes = list(filter(
-        lambda p:p['start_node'] != None,
-        map(
-            lambda p:{
-                'name': p['name'],
-                'xml': p['xml'],
-                'start_node': get_start_point(p['xml']),
-            },
-            processes.values()
-        )
-    ))
-
-    for process in processes:
-        process['form'] = list(map(
-            form_to_dict,
-            process['start_node'].getElementsByTagName('form'),
-        ))
-
-        process['name'] = 'test'
-        process['description'] = 'test'
-
-        del process['xml']
-        del process['start_node']
-
-    print(json.dumps(processes, indent=4))
-
-    return jsonify(processes)
+    return jsonify({
+        'data': Xml.list(app.config),
+    })
 
 @app.route('/v1/activity', methods=['GET'])
 def list_activities():

@@ -16,22 +16,24 @@ def test_load_process(config):
     '''  a process file can be found using only its prefix or common name '''
     xml = Xml.load(config, 'simple')
 
-    assert xml.name == 'simple.2018-02-19.xml'
-    assert type(xml) == Xml
+    assert xml.filename == 'simple.2018-02-19.xml'
+    assert xml.public == False
 
 def test_load_last_matching_process(config):
     ''' a process is specified by its common name, but many versions may exist.
     when a process is requested for start we must use the last version of it '''
     xml = Xml.load(config, 'oldest')
 
-    assert xml.name == 'oldest.2018-02-17.xml'
+    assert xml.filename == 'oldest.2018-02-17.xml'
+    assert xml.public == False
 
 def test_load_specific_version(config):
     ''' one should be able to request a specific version of a process,
     thus overriding the process described by the previous test '''
     xml = Xml.load(config, 'oldest.2018-02-14')
 
-    assert xml.name == 'oldest.2018-02-14.xml'
+    assert xml.filename == 'oldest.2018-02-14.xml'
+    assert xml.public == False
 
 def test_make_iterator(config):
     ''' test that the iter function actually returns an interator over the
@@ -86,6 +88,21 @@ def test_find(config):
 
     assert end.tagName == 'node'
     assert end.getAttribute('id') == 'kV9UWSeA89IZ'
+
+def test_list_processes(config):
+    processes = Xml.list(config)
+
+    assert processes == [
+        {
+            'id': 'exit_request',
+            'version': '2018-03-20',
+            'author': 'categulario',
+            'date': '2018-03-20',
+            'name': 'Petición de salida',
+            'description': 'Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.',
+            'versions': ['2018-03-20'],
+        },
+    ]
 
 @pytest.mark.skip
 def test_etree_from_list_empty():
@@ -238,7 +255,7 @@ def test_form_to_dict(config):
             {
                 "type": "radio",
                 "name": "auth",
-                "required": "required",
+                "required": True,
                 "label": "Le das chance?",
                 "options": [
                     {

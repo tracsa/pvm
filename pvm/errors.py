@@ -10,6 +10,8 @@ class CannotMove(Exception): pass
 
 class RefNotFound(Exception): pass
 
+class MalformedProcess(Exception): pass
+
 class NoPointerAlive(BadField):
     message = '{field} does not have a live pointer'
     errorcode = 'no_live_pointer'

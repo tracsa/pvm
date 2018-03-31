@@ -452,18 +452,38 @@ def test_exit_request_start(client, models, mocker):
     }
 
 def test_list_processes(client):
-    user = User(identifier='juan').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(user)
+    res = client.get('/v1/process')
 
-    res = client.get('/v1/process', headers={
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
-        ),
-    })
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': [
+            {
+                'id': 'exit_request',
+                'version': '2018-03-20',
+                'author': 'categulario',
+                'date': '2018-03-20',
+                'name': 'Petición de salida',
+                'description': 'Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.',
+                'versions': ['2018-03-20'],
+            },
+        ],
+    }
 
-    body = json.loads(res.data)
-    print(body)
+def test_read_process(client):
+    res = client.get('/v1/process/exit_request')
 
-    assert False
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': {
+            'name': 'exit_request.2018-03-20',
+        },
+    }
+
+    res = client.get('/v1/process/oldest?v=2018-02-14')
+
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': {
+            'name': 'exit_request.2018-03-20',
+        },
+    }

@@ -3,13 +3,8 @@
     <author>categulario</author>
     <date>2018-03-20</date>
     <name>Petición de salida</name>
-    <description>
-      Este proceso es iniciado por un empleado que quiere salir temporalmente de
-      la empresa (e.g. a comer). La autorización llega a su supervisor, quien
-      autoriza o rechaza la salida, evento que es notificado de nuevo al
-      empleado y finalmente a los guardias, uno de los cuales notifica que el
-      empleado salió de la empresa.
-    </description>
+    <description>Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.</description>
+    <public>true</public>
   </process-info>
   <process>
     <node id="employee-node" class="start">

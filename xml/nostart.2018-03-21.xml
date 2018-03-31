@@ -3,6 +3,8 @@
         <author>categulario</author>
         <date>2018-03-21</date>
         <name>a process without start node</name>
+        <public>false</public>
+        <description>A process without start node</description>
     </process-info>
     <process>
         <node id="4g9lOdPKmRUf" class="echo" msg="cuca" />

@@ -3,6 +3,8 @@
         <author>categulario</author>
         <date>2018-02-19</date>
         <name>Simplest process ever</name>
+        <public>false</public>
+        <description>A simple process that does nothing</description>
     </process-info>
     <process>
         <node id="gYcj0XjbgjSO" class="start" />

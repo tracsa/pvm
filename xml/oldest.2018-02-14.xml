@@ -3,6 +3,8 @@
         <author>categulario</author>
         <date>2018-02-14</date>
         <name>Oldest process</name>
+        <public>false</public>
+        <description>A process for testing loading</description>
     </process-info>
     <process>
     </process>

@@ -105,7 +105,7 @@ class Handler:
         execution = pointer.proxy.execution.get()
         xml = Xml.load(self.config, execution.process_name)
 
-        assert execution.process_name == xml.name, 'Inconsisten pointer found'
+        assert execution.process_name == xml.filename, 'Inconsisten pointer found'
 
         point = xml.find(
             lambda e:e.getAttribute('id') == pointer.node_id

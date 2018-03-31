@@ -1,0 +1,33 @@
+<form-array>
+  <form id="text-input">
+    <input
+      type="text"
+      name="ccn"
+      label="credit card number"
+      regex="[0-9]{16}"
+    />
+  </form>
+
+  <form id="two-inputs">
+    <input
+      type="text"
+      name="firstname"
+    />
+
+    <input
+      type="text"
+      name="surname"
+    />
+  </form>
+
+  <form id="select">
+    <input
+      type="radio"
+      name="auth"
+      required="required"
+      label="Le das chance?">
+      <option value="yes">Ándale mijito, ve</option>
+      <option value="no">Ni madres</option>
+    </input>
+  </form>
+</form-array>

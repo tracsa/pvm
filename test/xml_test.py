@@ -1,9 +1,11 @@
 from io import TextIOWrapper
 import os
 import pytest
+import json
 
 from pvm.errors import ProcessNotFound
-from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, has_edges, topological_sort
+from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, has_edges, topological_sort, form_to_dict
+from xml.dom.minidom import parse
 
 def test_load_not_found(config):
     ''' if a process file is not found, raise an exception '''
@@ -14,22 +16,24 @@ def test_load_process(config):
     '''  a process file can be found using only its prefix or common name '''
     xml = Xml.load(config, 'simple')
 
-    assert xml.name == 'simple_2018-02-19.xml'
-    assert type(xml) == Xml
+    assert xml.filename == 'simple.2018-02-19.xml'
+    assert xml.public == False
 
 def test_load_last_matching_process(config):
     ''' a process is specified by its common name, but many versions may exist.
     when a process is requested for start we must use the last version of it '''
     xml = Xml.load(config, 'oldest')
 
-    assert xml.name == 'oldest_2018-02-17.xml'
+    assert xml.filename == 'oldest.2018-02-17.xml'
+    assert xml.public == False
 
 def test_load_specific_version(config):
     ''' one should be able to request a specific version of a process,
     thus overriding the process described by the previous test '''
-    xml = Xml.load(config, 'oldest_2018-02-14')
+    xml = Xml.load(config, 'oldest.2018-02-14')
 
-    assert xml.name == 'oldest_2018-02-14.xml'
+    assert xml.filename == 'oldest.2018-02-14.xml'
+    assert xml.public == False
 
 def test_make_iterator(config):
     ''' test that the iter function actually returns an interator over the
@@ -194,3 +198,60 @@ def test_toposort(config):
     for elem, expct in zip(new_xml.iter(), expct_tree.iter()):
         assert elem.tagName == expct.tagName
         assert elem.attrib == expct.attrib
+
+def test_form_to_dict(config):
+    xml = parse(os.path.join(config['XML_PATH'], 'testing_forms.xml'))
+    forms = xml.getElementsByTagName('form')
+
+    dict_forms = list(map(
+        form_to_dict,
+        forms,
+    ))
+
+    assert dict_forms[0] == {
+        'ref': '#text-input',
+        'inputs': [
+            {
+                'type': 'text',
+                'name': 'ccn',
+                'regex': '[0-9]{16}',
+                'label': 'credit card number',
+            },
+        ],
+    }
+
+    assert dict_forms[1] == {
+        "ref": "#two-inputs",
+        "inputs": [
+            {
+                "type": "text",
+                "name": "firstname"
+            },
+            {
+                "type": "text",
+                "name": "surname"
+            }
+        ]
+    }
+
+    assert dict_forms[2] == {
+        "ref": "#select",
+        "inputs": [
+            {
+                "type": "radio",
+                "name": "auth",
+                "required": True,
+                "label": "Le das chance?",
+                "options": [
+                    {
+                        "value": "yes",
+                        "label": "Ándale mijito, ve",
+                    },
+                    {
+                        "value": "no",
+                        "label": "Ni madres",
+                    },
+                ],
+            },
+        ]
+    }

@@ -26,7 +26,7 @@ def test_parse_message(config):
 def test_recover_step(config, models):
     handler = Handler(config)
     exc = Execution.validate(
-        process_name = 'simple_2018-02-19.xml',
+        process_name = 'simple.2018-02-19.xml',
     ).save()
     ptr = Pointer.validate(
         node_id = '4g9lOdPKmRUf',
@@ -58,20 +58,20 @@ def test_create_pointer(config):
 
     node = make_node(ele)
     exc = Execution.validate(
-        process_name = 'simple_2018-02-19.xml',
+        process_name = 'simple.2018-02-19.xml',
     ).save()
     pointer = handler.create_pointer(node, exc)
     execution = pointer.proxy.execution.get()
 
     assert pointer.node_id == 'chubaca'
 
-    assert execution.process_name == 'simple_2018-02-19.xml'
+    assert execution.process_name == 'simple.2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
 
 def test_call_recover(config):
     handler = Handler(config)
     execution = Execution(
-        process_name = 'simple_2018-02-19.xml',
+        process_name = 'simple.2018-02-19.xml',
     ).save()
     pointer = Pointer(
         node_id = '4g9lOdPKmRUf',

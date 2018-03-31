@@ -205,8 +205,6 @@ def list_process():
             process['start_node'].getElementsByTagName('form'),
         ))
 
-        print(process['xml'].parser.getElement)
-
         process['name'] = 'test'
         process['description'] = 'test'
 

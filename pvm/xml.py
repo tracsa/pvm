@@ -112,3 +112,48 @@ def topological_sort(start_node:Element, graph:'root Element') -> 'ElementTree':
         raise Exception('graph is cyclic')
 
     return etree_from_list(graph, sorted_elements)
+
+def attr(el, attr):
+    if not el.hasAttribute(attr):
+        return None
+
+    return el.getAttribute(attr)
+
+def form_to_dict(form):
+    inputs = form.getElementsByTagName('input')
+    form_dict = {
+        'ref': get_ref(form),
+        'inputs': [],
+    }
+
+    for input in inputs:
+        input_attrs = [
+            ( 'type', attr(input, 'type') ),
+            ( 'name', attr(input, 'name') ),
+            ( 'required', attr(input, 'required') ),
+            ( 'regex', attr(input, 'regex') ),
+            ( 'label', attr(input, 'label') ),
+            ( 'placeholder', attr(input, 'placeholder') ),
+            ( 'default', attr(input, 'default') ),
+        ]
+
+        options = input.getElementsByTagName('option')
+        options = list(map(
+            lambda e: {
+                'value': attr(e, 'value'),
+                'label': e.firstChild.nodeValue,
+            },
+            options,
+        ))
+
+        if len(options):
+            input_attrs.append((
+                'options',
+                options
+            ))
+
+        input_dict = dict(filter(lambda a: a[1] != None, input_attrs))
+
+        form_dict['inputs'].append(input_dict)
+
+    return form_dict

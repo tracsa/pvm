@@ -1,9 +1,11 @@
 from io import TextIOWrapper
 import os
 import pytest
+import json
 
 from pvm.errors import ProcessNotFound
-from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, has_edges, topological_sort
+from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, has_edges, topological_sort, form_to_dict
+from xml.dom.minidom import parse
 
 def test_load_not_found(config):
     ''' if a process file is not found, raise an exception '''
@@ -194,3 +196,60 @@ def test_toposort(config):
     for elem, expct in zip(new_xml.iter(), expct_tree.iter()):
         assert elem.tagName == expct.tagName
         assert elem.attrib == expct.attrib
+
+def test_form_to_dict(config):
+    xml = parse(os.path.join(config['XML_PATH'], 'testing_forms.xml'))
+    forms = xml.getElementsByTagName('form')
+
+    dict_forms = list(map(
+        form_to_dict,
+        forms,
+    ))
+
+    assert dict_forms[0] == {
+        'ref': '#text-input',
+        'inputs': [
+            {
+                'type': 'text',
+                'name': 'ccn',
+                'regex': '[0-9]{16}',
+                'label': 'credit card number',
+            },
+        ],
+    }
+
+    assert dict_forms[1] == {
+        "ref": "#two-inputs",
+        "inputs": [
+            {
+                "type": "text",
+                "name": "firstname"
+            },
+            {
+                "type": "text",
+                "name": "surname"
+            }
+        ]
+    }
+
+    assert dict_forms[2] == {
+        "ref": "#select",
+        "inputs": [
+            {
+                "type": "radio",
+                "name": "auth",
+                "required": "required",
+                "label": "Le das chance?",
+                "options": [
+                    {
+                        "value": "yes",
+                        "label": "Ándale mijito, ve",
+                    },
+                    {
+                        "value": "no",
+                        "label": "Ni madres",
+                    },
+                ],
+            },
+        ]
+    }

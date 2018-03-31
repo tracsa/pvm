@@ -482,6 +482,18 @@ def test_list_processes(client):
                 'name': 'Petición de salida',
                 'description': 'Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.',
                 'versions': ['2018-03-20'],
+                'form_array': [
+                    {
+                        'ref': '#exit-form',
+                        'inputs': [
+                            {
+                                'type': 'text',
+                                'name': 'reason',
+                                'required': True,
+                            },
+                        ],
+                    },
+                ],
             },
         ],
     }

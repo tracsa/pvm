@@ -170,8 +170,30 @@ def continue_process():
 
 @app.route('/v1/process', methods=['GET'])
 def list_process():
+    def add_form(xml):
+        try:
+            start_node = xml.find(lambda e: e.getAttribute('class')=='start')
+        except ElementNotFound:
+            return None
+
+        json_xml = xml.to_json()
+        forms = []
+
+        for form in start_node.getElementsByTagName('form'):
+            forms.append(form_to_dict(form))
+
+        json_xml['form_array'] = forms
+
+        return json_xml
+
     return jsonify({
-        'data': Xml.list(app.config),
+        'data': list(filter(
+            lambda x:x,
+            map(
+                add_form,
+                Xml.list(app.config),
+            )
+        ))
     })
 
 @app.route('/v1/activity', methods=['GET'])

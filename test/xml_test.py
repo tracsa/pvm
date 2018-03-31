@@ -89,21 +89,6 @@ def test_find(config):
     assert end.tagName == 'node'
     assert end.getAttribute('id') == 'kV9UWSeA89IZ'
 
-def test_list_processes(config):
-    processes = Xml.list(config)
-
-    assert processes == [
-        {
-            'id': 'exit_request',
-            'version': '2018-03-20',
-            'author': 'categulario',
-            'date': '2018-03-20',
-            'name': 'Petición de salida',
-            'description': 'Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.',
-            'versions': ['2018-03-20'],
-        },
-    ]
-
 @pytest.mark.skip
 def test_etree_from_list_empty():
     nodes = []

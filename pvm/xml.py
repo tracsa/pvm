@@ -23,6 +23,7 @@ class Xml:
         except ValueError:
             raise MalformedProcess('Name of process is invalid, must be name.version.xml')
 
+        self.versions = [self.version]
         self.filename = filename
         self.config = config
         self.parser = pulldom.parse(open(os.path.join(config['XML_PATH'], filename)))
@@ -114,9 +115,9 @@ class Xml:
                 continue
 
             if len(processes) == 0 or processes[-1]['id'] != id:
-                processes.append(xml.to_json())
+                processes.append(xml)
             else:
-                processes[-1]['versions'].append(version)
+                processes[-1].versions.append(version)
 
         return processes
 
@@ -128,7 +129,7 @@ class Xml:
             'date': self.date,
             'name': self.name,
             'description': self.description,
-            'versions': [self.version],
+            'versions': self.versions,
         }
 
 def get_ref(el:Element):

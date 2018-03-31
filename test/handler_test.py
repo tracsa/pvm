@@ -1,5 +1,6 @@
 import pytest
 from xml.dom.minidom import Document
+import pika
 
 from pvm.handler import Handler
 from pvm.node import Node, StartNode, make_node
@@ -49,7 +50,7 @@ def test_recover_step(config, models):
 
     assert node.element.getAttribute('id') == '4g9lOdPKmRUf'
 
-def test_create_pointer(config):
+def test_create_pointer(config, models):
     handler = Handler(config)
 
     ele = Document().createElement('node')
@@ -68,7 +69,7 @@ def test_create_pointer(config):
     assert execution.process_name == 'simple.2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
 
-def test_call_recover(config):
+def test_call_recover(config, models):
     handler = Handler(config)
     execution = Execution(
         process_name = 'simple.2018-02-19.xml',
@@ -87,7 +88,39 @@ def test_call_recover(config):
     assert Execution.get(execution.id) == None
     assert ptrs == []
 
-def test_wakeup_notifies_manager():
+def test_wakeup_notifies_manager(config, models, mocker):
     ''' a node whose auth has a filter must notify the people matching the
     filter '''
-    assert False
+    # setup stuff
+    mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
+
+    handler = Handler(config)
+
+    execution = Execution(
+        process_name = 'exit_request_2018-03-20.xml',
+    ).save()
+    pointer = Pointer(
+        node_id = 'employee-node',
+    ).save()
+    pointer.proxy.execution.set(execution)
+
+    # this is what we test
+    ptrs = handler.call({
+        'command': 'step',
+        'pointer_id': pointer.id,
+    })
+
+    # the actual tests
+    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.BlockingChannel.basic_publish.call_args[1]
+
+    json_message = {
+        'command': 'step',
+        'process': exc.process_name,
+        'pointer_id': ptr.id,
+    }
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_NOTIFY_QUEUE']
+    assert json.loads(args['body']) == json_message

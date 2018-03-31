@@ -273,6 +273,7 @@ def test_can_continue_process(client, models, mocker, config):
     assert args['routing_key'] == config['RABBIT_QUEUE']
     assert json.loads(args['body']) == json_message
 
+    # makes a useful call for the handler
     handler = Handler(config)
 
     execution, pointer, xmliter, current_node = handler.recover_step(json_message)

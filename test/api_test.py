@@ -450,3 +450,20 @@ def test_exit_request_start(client, models, mocker):
     assert form.data == {
         'reason': 'tenía que salir al baño',
     }
+
+def test_list_processes(client):
+    user = User(identifier='juan').save()
+    token = Token(token='123456').save()
+    token.proxy.user.set(user)
+
+    res = client.get('/v1/process', headers={
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic {}'.format(
+            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+        ),
+    })
+
+    body = json.loads(res.data)
+    print(body)
+
+    assert False

@@ -1,6 +1,7 @@
 from coralillo.errors import ModelNotFoundError
 from flask import request, jsonify, json
 import pika
+import os
 
 from pvm.http.wsgi import app
 from pvm.http.forms import ContinueProcess
@@ -9,7 +10,7 @@ from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
 from pvm.errors import ProcessNotFound, ElementNotFound, ValidationErrors
 from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
-from pvm.xml import Xml, get_ref
+from pvm.xml import Xml, get_ref, form_to_dict
 from pvm.validation import validate_forms, validate_json, validate_auth
 
 @app.route('/', methods=['GET', 'POST'])
@@ -161,3 +162,61 @@ def continue_process():
     return {
         'data': 'accepted',
     }, 202
+
+@app.route('/v1/process', methods=['GET'])
+def list_process():
+    # Get all processes
+    files = reversed(sorted(os.listdir(app.config['XML_PATH'])))
+
+    # Load only the oldest processes
+    processes = {}
+    for filename in files:
+        process_name = filename.split('.')[0]
+        if not process_name in processes:
+            processes[process_name] = {
+                'name': process_name,
+                'xml': Xml(app.config, filename),
+            }
+
+    # Get first nodes
+    def get_start_point(xml):
+        try:
+            start_point = xml.find(lambda e:e.getAttribute('class') == 'start')
+        except ElementNotFound:
+            start_point = None
+
+        return start_point
+
+    processes = list(filter(
+        lambda p:p['start_node'] != None,
+        map(
+            lambda p:{
+                'name': p['name'],
+                'xml': p['xml'],
+                'start_node': get_start_point(p['xml']),
+            },
+            processes.values()
+        )
+    ))
+
+    for process in processes:
+        process['form'] = list(map(
+            form_to_dict,
+            process['start_node'].getElementsByTagName('form'),
+        ))
+
+        print(process['xml'].parser.getElement)
+
+        process['name'] = 'test'
+        process['description'] = 'test'
+
+        del process['xml']
+        del process['start_node']
+
+    print(json.dumps(processes, indent=4))
+
+    return jsonify(processes)
+
+@app.route('/v1/activity', methods=['GET'])
+def list_activities():
+    pass

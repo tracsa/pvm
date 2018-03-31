@@ -140,6 +140,26 @@ def get_ref(el:Element):
 
     return None
 
+def resolve_params(filter_node, execution=None):
+    computed_params = {}
+
+    for param in filter_node.getElementsByTagName('param'):
+        if execution is not None and param.getAttribute('type') == 'ref':
+            user_ref = param.firstChild.nodeValue.split('#')[1].strip()
+
+            try:
+                actor = next(execution.proxy.actors.q().filter(ref='#'+user_ref))
+
+                value = actor.proxy.user.get().identifier
+            except StopIteration:
+                value = None
+        else:
+            value = param.firstChild.nodeValue
+
+        computed_params[param.getAttribute('name')] = value
+
+    return computed_params
+
 @comment
 def etree_from_list(root:Element, nodes:[Element]) -> 'ElementTree':
     ''' Returns a built ElementTree from the list of its members '''

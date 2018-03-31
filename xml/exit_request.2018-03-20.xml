@@ -22,7 +22,8 @@
     <node id="manager-node" class="decision">
       <auth id="manager">
         <filter backend="hardcoded">
-          <param name="employee" source="#requester" />
+          <param name="employee" type="ref">user#requester</param>
+          <param name="relation">manager</param>
         </filter>
       </auth>
 

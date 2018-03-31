@@ -3,15 +3,15 @@ from flask import request, jsonify, json
 import pika
 import os
 
-from pvm.http.wsgi import app
+from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
+from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
-from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
-from pvm.errors import ProcessNotFound, ElementNotFound, ValidationErrors, MalformedProcess
+from pvm.http.validation import validate_forms, validate_json, validate_auth
+from pvm.http.wsgi import app
 from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
-from pvm.xml import Xml, get_ref, form_to_dict
-from pvm.validation import validate_forms, validate_json, validate_auth
+from pvm.xml import Xml, form_to_dict
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
@@ -50,10 +50,10 @@ def start_process():
         }])
 
     # Check for authorization
-    auth_ref, user = validate_auth(start_point, request)
+    auth_ref, user = validate_auth(start_point)
 
     # check if there are any forms present
-    collected_forms = validate_forms(start_point, request)
+    collected_forms = validate_forms(start_point)
 
     # save the data
     execution = Execution(
@@ -133,10 +133,10 @@ def continue_process():
         }])
 
     # Check for authorization
-    auth_ref, user = validate_auth(continue_point, request)
+    auth_ref, user = validate_auth(continue_point, execution)
 
     # Validate asociated forms
-    collected_forms = validate_forms(continue_point, request)
+    collected_forms = validate_forms(continue_point)
 
     # save the data
     if auth_ref is not None:

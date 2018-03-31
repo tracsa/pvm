@@ -12,6 +12,8 @@ class RefNotFound(Exception): pass
 
 class MalformedProcess(Exception): pass
 
+class HierarchyError(Exception): pass
+
 class NoPointerAlive(BadField):
     message = '{field} does not have a live pointer'
     errorcode = 'no_live_pointer'

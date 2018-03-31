@@ -20,6 +20,10 @@ class Unauthorized(JsonReportedException):
             'WWW-Authenticate': 'Basic realm="User Visible Realm"',
         })
 
+# 403
+class Forbidden(JsonReportedException):
+    status_code = 403
+
 # 404
 class NotFound(JsonReportedException):
     status_code = 404

@@ -16,11 +16,6 @@ class Node:
     def __init__(self, element):
         self.element = element
 
-    def wakeup(self):
-        ''' Executes this node's action. Can be triggering a message or
-        something similar '''
-        raise NotImplementedError('Should be implemented for subclasses')
-
     def next(self, xmliter:Iterator[Element], execution) -> ['Node']:
         ''' Gets the next node in the graph, if it fails raises an exception.'''
         raise NotImplementedError('Should be implemented for subclasses')
@@ -67,13 +62,8 @@ class DummyNode(SyncNode, SingleConnectedNode):
 class EchoNode(SyncNode, SingleConnectedNode):
     ''' Prints to console the parameter contained in the attribute msg '''
 
-    def wakeup(self):
-        log.debug(self.getAttribute('msg'))
-
 
 class DecisionNode(AsyncNode):
-
-    def wakeup(self): pass
 
     def next(self, xml:Xml, execution) -> ['Node']:
         ''' find node whose value corresponds to the answer '''
@@ -101,8 +91,6 @@ class DecisionNode(AsyncNode):
 
 
 class EndNode(SyncNode):
-
-    def wakeup(self): pass
 
     def is_end(self):
         return True

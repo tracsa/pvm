@@ -54,7 +54,7 @@ class Handler:
 
         for node in next_nodes:
             # node's begining of life
-            node.wakeup()
+            self.wakeup(node)
 
             if not node.is_end():
                 # End nodes don't create pointers, their lifetime ends here
@@ -86,6 +86,10 @@ class Handler:
             ))
 
         return message
+
+    def wakeup(self, node):
+        ''' Waking up a node often means to notify someone or something about
+        the execution '''
 
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former

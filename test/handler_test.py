@@ -97,7 +97,7 @@ def test_wakeup_notifies_manager(config, models, mocker):
     handler = Handler(config)
 
     execution = Execution(
-        process_name = 'exit_request_2018-03-20.xml',
+        process_name = 'exit_request.2018-03-20.xml',
     ).save()
     pointer = Pointer(
         node_id = 'employee-node',

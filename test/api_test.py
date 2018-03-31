@@ -134,7 +134,7 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
     token = Token(token='123456').save()
     token.proxy.user.set(user)
     exc = Execution(
-        process_name = 'exit_request_2018-03-20.xml',
+        process_name = 'exit_request.2018-03-20.xml',
     ).save()
     ptr = Pointer(
         node_id = 'manager-node',

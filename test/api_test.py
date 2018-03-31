@@ -292,6 +292,23 @@ def test_process_start_simple_requires(client, models):
         ],
     }
 
+    # we need a process able to load
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'sorted',
+    }))
+
+    assert res.status_code == 422
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': 'sorted process lacks important nodes and structure',
+                'where': 'request.body.process_name',
+            },
+        ],
+    }
+
     # we need a process with a start node
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
@@ -469,6 +486,7 @@ def test_list_processes(client):
         ],
     }
 
+@pytest.mark.skip
 def test_read_process(client):
     res = client.get('/v1/process/exit_request')
 

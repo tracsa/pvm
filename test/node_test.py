@@ -33,7 +33,7 @@ def test_find_next_element_normal(config):
     the element only has one outgoing edge '''
     xml = Xml.load(config, 'simple')
 
-    assert xml.name == 'simple.2018-02-19.xml'
+    assert xml.filename == 'simple.2018-02-19.xml'
 
     current_node = make_node(xml.find(
         lambda e:e.tagName=='node' and e.getAttribute('id')=='4g9lOdPKmRUf'
@@ -50,7 +50,7 @@ def test_find_next_element_decision_yes(config):
     form = Questionaire(ref="#fork", data={'proceed':'yes'}).save()
     form.proxy.execution.set(exc)
 
-    assert xml.name == 'decision.2018-02-27.xml'
+    assert xml.filename == 'decision.2018-02-27.xml'
 
     current_node = make_node(xml.find(
         lambda e:e.tagName=='node' and e.getAttribute('id')=='57TJ0V3nur6m7wvv'
@@ -69,7 +69,7 @@ def test_find_next_element_decision_no(config):
     form = Questionaire(ref="#fork", data={'proceed':'no'}).save()
     form.proxy.execution.set(exc)
 
-    assert xml.name == 'decision.2018-02-27.xml'
+    assert xml.filename == 'decision.2018-02-27.xml'
 
     current_node = make_node(xml.find(
         lambda e:e.tagName=='node' and e.getAttribute('id')=='57TJ0V3nur6m7wvv'

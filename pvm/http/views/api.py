@@ -7,7 +7,7 @@ from pvm.http.wsgi import app
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
 from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
-from pvm.errors import ProcessNotFound, ElementNotFound, ValidationErrors
+from pvm.errors import ProcessNotFound, ElementNotFound, ValidationErrors, MalformedProcess
 from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, get_ref, form_to_dict
@@ -35,6 +35,11 @@ def start_process():
             'detail': '{} process does not exist'.format(request.json['process_name']),
             'where': 'request.body.process_name',
         }])
+    except MalformedProcess as e:
+        raise UnprocessableEntity([{
+            'detail': '{} process lacks important nodes and structure'.format(request.json['process_name']),
+            'where': 'request.body.process_name',
+        }])
 
     try:
         start_point = xml.find(lambda e:e.getAttribute('class') == 'start')
@@ -52,7 +57,7 @@ def start_process():
 
     # save the data
     execution = Execution(
-        process_name = xml.name,
+        process_name = xml.filename,
     ).save()
 
     pointer = Pointer(

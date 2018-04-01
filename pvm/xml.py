@@ -114,7 +114,7 @@ class Xml:
             if not xml.public:
                 continue
 
-            if len(processes) == 0 or processes[-1]['id'] != id:
+            if len(processes) == 0 or processes[-1].id != id:
                 processes.append(xml)
             else:
                 processes[-1].versions.append(version)

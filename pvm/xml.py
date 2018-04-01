@@ -198,6 +198,7 @@ SUPPORTED_ATTRS = {
     'label': str,
     'placeholder': str,
     'default': str,
+    'helper': str,
 }
 
 def form_to_dict(form):

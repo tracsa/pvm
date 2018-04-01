@@ -255,3 +255,14 @@ def test_form_to_dict(config):
             },
         ]
     }
+
+    assert dict_forms[3] == {
+        "ref": "#with-helper",
+        "inputs": [
+            {
+                "type": "password",
+                "name": "password",
+                "helper": "10 alfanumeric chars",
+            },
+        ]
+    }

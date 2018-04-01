@@ -30,4 +30,12 @@
       <option value="no">Ni madres</option>
     </input>
   </form>
+
+  <form id="with-helper">
+    <input
+      type="password"
+      name="password"
+      helper="10 alfanumeric chars"
+    />
+  </form>
 </form-array>

@@ -1,10 +1,11 @@
-import pytest
 from xml.dom.minidom import Document
+import json
 import pika
+import pytest
 
 from pvm.handler import Handler
 from pvm.node import Node, StartNode, make_node
-from pvm.models import Execution, Pointer
+from pvm.models import Execution, Pointer, User, Activity
 
 def test_parse_message(config):
     handler = Handler(config)
@@ -82,7 +83,7 @@ def test_call_recover(config, models):
     ptrs = handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
-    })
+    }, None)
 
     assert Pointer.get(pointer.id) == None
     assert Execution.get(execution.id) == None
@@ -92,8 +93,6 @@ def test_wakeup_notifies_manager(config, models, mocker):
     ''' a node whose auth has a filter must notify the people matching the
     filter '''
     # setup stuff
-    mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
-
     handler = Handler(config)
 
     execution = Execution(
@@ -103,24 +102,29 @@ def test_wakeup_notifies_manager(config, models, mocker):
         node_id = 'employee-node',
     ).save()
     pointer.proxy.execution.set(execution)
+    juan = User(identifier='juan').save()
+    manager = User(identifier='juan_manager').save()
+    act = Activity(ref='#requester').save()
+    act.proxy.user.set(juan)
+    act.proxy.execution.set(execution)
+
+    class Channel:
+
+        def basic_publish(self, **kwargs):
+            self.kwargs = kwargs
+
+    channel = Channel()
 
     # this is what we test
     ptrs = handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
-    })
+    }, channel)
 
     # the actual tests
-    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
 
-    args = pika.adapters.blocking_connection.BlockingChannel.basic_publish.call_args[1]
-
-    json_message = {
-        'command': 'step',
-        'process': exc.process_name,
-        'pointer_id': ptr.id,
-    }
+    args = channel.kwargs
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_NOTIFY_QUEUE']
-    assert json.loads(args['body']) == json_message
+    assert json.loads(args['body']) == {}

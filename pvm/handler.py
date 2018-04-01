@@ -1,12 +1,14 @@
+from case_conversion import pascalcase
+from coralillo.errors import ModelNotFoundError
+from importlib import import_module
 import json
 import pika
-from coralillo.errors import ModelNotFoundError
 
-from .logger import log
-from .xml import Xml
-from .errors import ProcessNotFound, CannotMove
-from .node import make_node, Node, AsyncNode
-from .models import Execution, Pointer
+from pvm.errors import ProcessNotFound, CannotMove
+from pvm.logger import log
+from pvm.models import Execution, Pointer
+from pvm.node import make_node, Node, AsyncNode
+from pvm.xml import Xml, resolve_params
 
 
 class Handler:
@@ -21,7 +23,7 @@ class Handler:
         message = self.parse_message(body)
 
         try:
-            to_notify = self.call(message)
+            to_notify = self.call(message, channel)
         except ModelNotFoundError as e:
             return log.error(str(e))
         except CannotMove as e:
@@ -43,7 +45,7 @@ class Handler:
         if not self.config['RABBIT_NO_ACK']:
             channel.basic_ack(delivery_tag = method.delivery_tag)
 
-    def call(self, message:dict):
+    def call(self, message:dict, channel):
         execution, pointer, xml, current_node = self.recover_step(message)
 
         pointers = [] # pointers to be notified back
@@ -54,7 +56,7 @@ class Handler:
 
         for node in next_nodes:
             # node's begining of life
-            self.wakeup(node)
+            self.wakeup(node, execution, channel)
 
             if not node.is_end():
                 # End nodes don't create pointers, their lifetime ends here
@@ -87,9 +89,33 @@ class Handler:
 
         return message
 
-    def wakeup(self, node):
+    def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about
         the execution '''
+        filter_q = node.element.getElementsByTagName('filter')
+
+        if len(filter_q) == 0:
+            return
+
+        filter_node = filter_q[0]
+        backend = filter_node.getAttribute('backend')
+
+        mod = import_module('pvm.auth.hierarchy.{}'.format(backend))
+        HiPro = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
+
+        hipro = HiPro(self.config)
+        users = hipro.find_users(**resolve_params(filter_node, execution))
+
+        for user in users:
+            channel.basic_publish(
+                exchange='',
+                routing_key=self.config['RABBIT_NOTIFY_QUEUE'],
+                body=json.dumps({
+                }),
+                properties=pika.BasicProperties(
+                    delivery_mode=2, # make message persistent
+                ),
+            )
 
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former

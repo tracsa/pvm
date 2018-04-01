@@ -19,4 +19,9 @@ class HardcodedHierarchyProvider(BaseHierarchyProvider):
             raise HierarchyError
 
     def find_users(self, **params):
-        pass
+        employee = params.get('employee')
+        relation = params.get('relation')
+
+        return list(User.q().filter(
+            identifier='{}_{}'.format(employee, relation)
+        ))

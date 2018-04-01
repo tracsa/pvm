@@ -89,7 +89,7 @@ def test_call_recover(config, models):
     assert Execution.get(execution.id) == None
     assert ptrs == []
 
-def test_wakeup_notifies_manager(config, models, mocker):
+def test_wakeup_notifies_manager(config, models):
     ''' a node whose auth has a filter must notify the people matching the
     filter '''
     # setup stuff

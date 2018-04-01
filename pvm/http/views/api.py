@@ -4,7 +4,7 @@ import pika
 import os
 
 from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
+from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity,Unauthorized
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json
 from pvm.http.validation import validate_forms, validate_json, validate_auth
@@ -197,6 +197,33 @@ def list_process():
     })
 
 @app.route('/v1/activity', methods=['GET'])
-@requires_auth
+#@requires_auth
 def list_activities():
-    pass
+
+    # Authorization required but not provided, notify
+    if request.authorization is None:
+        raise Unauthorized([{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }])
+
+    identifier = request.authorization['username']
+    token = request.authorization['password']
+
+    user = User.get_by('identifier', identifier)
+    token = Token.get_by('token', token)
+
+    if user is None or token is None or token.proxy.user.get().id != user.id:
+        raise Unauthorized([{
+            'detail': 'Your credentials are invalid, sorry',
+            'where': 'request.authorization',
+        }])
+
+
+    activities = user.proxy.activities.get()
+
+    return {
+        'data': activities.to_json(),
+    }, 200
+
+

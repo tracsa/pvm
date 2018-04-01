@@ -559,3 +559,9 @@ def test_read_process(client):
             'name': 'exit_request.2018-03-20',
         },
     }
+
+def test_list_activities_requires(client):
+    assert False, 'Listing activities without user info fails'
+
+def test_list_activities(client, models):
+    assert False, 'Given 4 activities, two for the current user and two for another, list only the two belonging to him or her'

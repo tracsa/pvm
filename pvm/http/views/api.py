@@ -197,5 +197,6 @@ def list_process():
     })
 
 @app.route('/v1/activity', methods=['GET'])
+@requires_auth
 def list_activities():
     pass

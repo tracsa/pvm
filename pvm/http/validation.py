@@ -1,8 +1,13 @@
+from importlib import import_module
 from xml.dom.minidom import Element
-from pvm.xml import get_ref
-from pvm.errors import ValidationErrors, InputError, RequiredInputError
-from pvm.http.errors import BadRequest, Unauthorized
+from case_conversion import pascalcase
+from flask import request
+
+from pvm.errors import ValidationErrors, InputError, RequiredInputError, HierarchyError
+from pvm.http.errors import BadRequest, Unauthorized, Forbidden
 from pvm.models import User, Token
+from pvm.xml import get_ref, resolve_params
+from pvm.http.wsgi import app
 
 def get_associated_data(ref:str, data:dict) -> dict:
     ''' given a reference returns its asociated data in the data dictionary '''
@@ -66,7 +71,7 @@ def validate_json(json_data:dict, req:list):
     if errors:
         raise BadRequest(errors)
 
-def validate_auth(node, request):
+def validate_auth(node, execution=None):
     auth = node.getElementsByTagName('auth')
 
     if len(auth) == 0:
@@ -93,9 +98,29 @@ def validate_auth(node, request):
             'where': 'request.authorization',
         }])
 
+    # check for filters for this user
+    filter_q = auth_node.getElementsByTagName('filter')
+
+    if len(filter_q) == 1:
+        filter_node = filter_q[0]
+        backend = filter_node.getAttribute('backend')
+
+        mod = import_module('pvm.auth.hierarchy.{}'.format(backend))
+        HiPro = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
+
+        hipro = HiPro(app.config)
+
+        try:
+            hipro.validate_user(user, **resolve_params(filter_node, execution))
+        except HierarchyError:
+            raise Forbidden([{
+                'detail': 'The provided credentials do not match the specified hierarchy',
+                'where': 'request.authorization',
+            }])
+
     return get_ref(auth_node), user
 
-def validate_forms(node, request):
+def validate_forms(node):
     form_array = node.getElementsByTagName('form-array')
     collected_forms = []
 

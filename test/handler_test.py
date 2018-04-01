@@ -1,9 +1,11 @@
-import pytest
 from xml.dom.minidom import Document
+import json
+import pika
+import pytest
 
 from pvm.handler import Handler
 from pvm.node import Node, StartNode, make_node
-from pvm.models import Execution, Pointer
+from pvm.models import Execution, Pointer, User, Activity
 
 def test_parse_message(config):
     handler = Handler(config)
@@ -49,7 +51,7 @@ def test_recover_step(config, models):
 
     assert node.element.getAttribute('id') == '4g9lOdPKmRUf'
 
-def test_create_pointer(config):
+def test_create_pointer(config, models):
     handler = Handler(config)
 
     ele = Document().createElement('node')
@@ -68,7 +70,7 @@ def test_create_pointer(config):
     assert execution.process_name == 'simple.2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
 
-def test_call_recover(config):
+def test_call_recover(config, models):
     handler = Handler(config)
     execution = Execution(
         process_name = 'simple.2018-02-19.xml',
@@ -81,8 +83,48 @@ def test_call_recover(config):
     ptrs = handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
-    })
+    }, None)
 
     assert Pointer.get(pointer.id) == None
     assert Execution.get(execution.id) == None
     assert ptrs == []
+
+def test_wakeup_notifies_manager(config, models):
+    ''' a node whose auth has a filter must notify the people matching the
+    filter '''
+    # setup stuff
+    handler = Handler(config)
+
+    execution = Execution(
+        process_name = 'exit_request.2018-03-20.xml',
+    ).save()
+    pointer = Pointer(
+        node_id = 'employee-node',
+    ).save()
+    pointer.proxy.execution.set(execution)
+    juan = User(identifier='juan').save()
+    manager = User(identifier='juan_manager').save()
+    act = Activity(ref='#requester').save()
+    act.proxy.user.set(juan)
+    act.proxy.execution.set(execution)
+
+    class Channel:
+
+        def basic_publish(self, **kwargs):
+            self.kwargs = kwargs
+
+    channel = Channel()
+
+    # this is what we test
+    ptrs = handler.call({
+        'command': 'step',
+        'pointer_id': pointer.id,
+    }, channel)
+
+    # the actual tests
+
+    args = channel.kwargs
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_NOTIFY_QUEUE']
+    assert json.loads(args['body']) == {}

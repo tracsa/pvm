@@ -127,7 +127,9 @@ def test_continue_process_asks_for_user(client, models):
         }],
     }
 
-def test_continue_process_asks_for_data(client, models):
+def test_continue_process_asks_for_user_by_hierarchy(client, models):
+    ''' a node whose auth has a filter must be completed by a person matching
+    the filter '''
     user = User(identifier='juan').save()
     token = Token(token='123456').save()
     token.proxy.user.set(user)
@@ -149,6 +151,41 @@ def test_continue_process_asks_for_data(client, models):
         'node_id': ptr.node_id,
     }))
 
+    assert res.status_code == 403
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': 'The provided credentials do not match the specified hierarchy',
+            'where': 'request.authorization',
+        }],
+    }
+
+def test_continue_process_asks_for_data(client, models):
+    juan = User(identifier='juan').save()
+    act = Activity(ref='#requester').save()
+    act.proxy.user.set(juan)
+
+    manager = User(identifier='juan_manager').save()
+    token = Token(token='123456').save()
+    token.proxy.user.set(manager)
+    exc = Execution(
+        process_name = 'exit_request.2018-03-20.xml',
+    ).save()
+    act.proxy.execution.set(exc)
+    ptr = Pointer(
+        node_id = 'manager-node',
+    ).save()
+    ptr.proxy.execution.set(exc)
+
+    res = client.post('/v1/pointer', headers={
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic {}'.format(
+            b64encode('{}:{}'.format(manager.identifier, token.token).encode()).decode()
+        ),
+    }, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': ptr.node_id,
+    }))
+
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
@@ -161,12 +198,17 @@ def test_continue_process_asks_for_data(client, models):
 def test_can_continue_process(client, models, mocker, config):
     mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
 
-    user = User(identifier='juan').save()
+    juan = User(identifier='juan').save()
+    act = Activity(ref='#requester').save()
+    act.proxy.user.set(juan)
+
+    manager = User(identifier='juan_manager').save()
     token = Token(token='123456').save()
-    token.proxy.user.set(user)
+    token.proxy.user.set(manager)
     exc = Execution(
         process_name = 'exit_request.2018-03-20.xml',
     ).save()
+    act.proxy.execution.set(exc)
     ptr = Pointer(
         node_id = 'manager-node',
     ).save()
@@ -175,7 +217,7 @@ def test_can_continue_process(client, models, mocker, config):
     res = client.post('/v1/pointer', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+            b64encode('{}:{}'.format(manager.identifier, token.token).encode()).decode()
         ),
     }, data=json.dumps({
         'execution_id': exc.id,
@@ -196,14 +238,13 @@ def test_can_continue_process(client, models, mocker, config):
     }
 
     # user is attached
-    actors = exc.proxy.actors.get()
 
-    assert len(actors) == 1
+    assert exc.proxy.actors.count() == 2
 
-    activity = actors[0]
+    activity = next(exc.proxy.actors.q().filter(ref='#manager'))
 
     assert activity.ref == '#manager'
-    assert activity.proxy.user.get() == user
+    assert activity.proxy.user.get() == manager
 
     # form is attached
     forms = exc.proxy.forms.get()
@@ -232,6 +273,7 @@ def test_can_continue_process(client, models, mocker, config):
     assert args['routing_key'] == config['RABBIT_QUEUE']
     assert json.loads(args['body']) == json_message
 
+    # makes a useful call for the handler
     handler = Handler(config)
 
     execution, pointer, xmliter, current_node = handler.recover_step(json_message)

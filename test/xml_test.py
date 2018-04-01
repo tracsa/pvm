@@ -4,8 +4,9 @@ import pytest
 import json
 
 from pvm.errors import ProcessNotFound
-from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, has_edges, topological_sort, form_to_dict
 from xml.dom.minidom import parse
+from pvm.models import Execution, User, Activity
+from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, has_edges, topological_sort, resolve_params, form_to_dict
 
 def test_load_not_found(config):
     ''' if a process file is not found, raise an exception '''
@@ -265,4 +266,21 @@ def test_form_to_dict(config):
                 "helper": "10 alfanumeric chars",
             },
         ]
+    }
+
+def test_resolve_params(config, models):
+    xml = Xml.load(config, 'exit_request.2018-03-20.xml')
+
+    el = xml.find(lambda e: e.getAttribute('id')=='manager-node')
+    filter_node = el.getElementsByTagName('filter')[0]
+
+    execution = Execution().save()
+    juan = User(identifier='juan').save()
+    act = Activity(ref='#requester').save()
+    act.proxy.user.set(juan)
+    act.proxy.execution.set(execution)
+
+    assert resolve_params(filter_node, execution) == {
+        'employee': 'juan',
+        'relation': 'manager',
     }

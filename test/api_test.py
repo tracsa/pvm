@@ -290,7 +290,6 @@ def test_can_continue_process(client, models, mocker, config):
     assert execution.id == exc.id
     assert pointer.id == ptr.id
 
-@pytest.mark.skip
 def test_can_query_process_status(client):
     res = client.get('/v1/node/{}')
 

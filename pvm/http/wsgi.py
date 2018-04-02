@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_coralillo import Coralillo
 from flask_cors import CORS
+from flask_pymongo import PyMongo
 import os
 import time
 
@@ -8,7 +9,7 @@ from pvm.http.forms import bind_forms
 from pvm.models import bind_models
 
 # The flask application
-app = Flask(__name__)
+app = Flask('pvm')
 app.config.from_object('settings')
 app.config.from_envvar('PVM_SETTINGS', silent=True)
 
@@ -23,6 +24,9 @@ time.tzset()
 cora = Coralillo(app)
 bind_forms(cora._engine)
 bind_models(cora._engine)
+
+# The database
+mongo = PyMongo(app)
 
 # Url converters
 import pvm.http.converters

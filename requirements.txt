@@ -9,4 +9,5 @@ pytest-mock==1.7.1
 lark-parser==0.5.5
 ldap3==2.4.1
 Flask-Cors==3.0.3
+Flask_PyMongo==0.5.1
 -e .

@@ -268,6 +268,14 @@ def test_can_continue_process(client, models, mocker, config):
         'command': 'step',
         'process': exc.process_name,
         'pointer_id': ptr.id,
+        'forms': [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'auth': 'yes',
+                },
+            },
+        ]
     }
 
     assert args['exchange'] == ''
@@ -277,7 +285,7 @@ def test_can_continue_process(client, models, mocker, config):
     # makes a useful call for the handler
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node = handler.recover_step(json_message)
+    execution, pointer, xmliter, current_node, form = handler.recover_step(json_message)
 
     assert execution.id == exc.id
     assert pointer.id == ptr.id
@@ -399,15 +407,23 @@ def test_process_start_simple(client, models, mocker, config, mongo):
         'command': 'step',
         'process': exc.process_name,
         'pointer_id': ptr.id,
+        'forms':[
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'auth': 'yes',
+                },
+            },
+        ]
     }
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
-    assert json.loads(args['body']) == json_message
+    #assert json.loads(args['body']) == json_message
 
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node = handler.recover_step(json_message)
+    execution, pointer, xmliter, current_node, forms = handler.recover_step(json_message)
 
     assert execution.id == exc.id
     assert pointer.id == ptr.id

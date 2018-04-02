@@ -37,7 +37,7 @@ class Handler:
                 exchange = '',
                 routing_key = self.config['RABBIT_QUEUE'],
                 body = json.dumps({
-                    'command': 'step',
+                    'command': 'stepppppp',
                     'pointer_id': pointer.id,
                 }),
                 properties = pika.BasicProperties(
@@ -49,7 +49,9 @@ class Handler:
             channel.basic_ack(delivery_tag = method.delivery_tag)
 
     def call(self, message:dict, channel):
-        execution, pointer, xml, current_node = self.recover_step(message)
+        # print ("prueba ", message)
+        # assert False
+        execution, pointer, xml, current_node, forms = self.recover_step(message)
 
         pointers = [] # pointers to be notified back
 
@@ -59,7 +61,7 @@ class Handler:
 
         for node in next_nodes:
             # node's begining of life
-            self.wakeup(node, execution, channel)
+            self.wakeup(node, execution, channel, forms)
 
             if not node.is_end():
                 # End nodes don't create pointers, their lifetime ends here
@@ -71,6 +73,7 @@ class Handler:
 
         if execution.proxy.pointers.count() == 0:
             execution.delete()
+
 
         return pointers
 
@@ -101,7 +104,8 @@ class Handler:
 
         return self.mongo
 
-    def wakeup(self, node, execution, channel):
+    def wakeup(self, node, execution, channel, forms):
+
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
         filter_q = node.element.getElementsByTagName('filter')
@@ -117,6 +121,8 @@ class Handler:
 
         hipro = HiPro(self.config)
         users = hipro.find_users(**resolve_params(filter_node, execution))
+
+        print ("execucioon ",execution.process_name)
 
         for user in users:
             channel.basic_publish(
@@ -137,6 +143,7 @@ class Handler:
             'user_identifier': None,
             'execution_id': execution.id,
             'node_id': node.element.getAttribute('id'),
+            'form_array':forms
         })
 
     def teardown(self, pointer):
@@ -177,5 +184,5 @@ class Handler:
         point = xml.find(
             lambda e:e.getAttribute('id') == pointer.node_id
         )
-
-        return execution, pointer, xml, make_node(point)
+        print (message)
+        return execution, pointer, xml, make_node(point), message['forms']

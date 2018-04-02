@@ -6,12 +6,13 @@ import os
 from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
 from pvm.http.forms import ContinueProcess
-from pvm.http.middleware import requires_json
+from pvm.http.middleware import requires_json, requires_auth
 from pvm.http.validation import validate_forms, validate_json, validate_auth
 from pvm.http.wsgi import app
 from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, form_to_dict
+from flask import g
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
@@ -197,5 +198,13 @@ def list_process():
     })
 
 @app.route('/v1/activity', methods=['GET'])
+@requires_auth
 def list_activities():
-    pass
+
+    activities = g.user.proxy.activities.get()
+
+    return {
+        'data': activities.to_json(),
+    }, 200
+
+

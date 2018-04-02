@@ -1,8 +1,8 @@
 from flask import jsonify, request
 from functools import wraps
 from werkzeug.exceptions import BadRequest as WBadRequest
-
-from pvm.http.errors import BadRequest
+from flask import g
+from pvm.http.errors import BadRequest, Unauthorized
 
 def requires_json(view):
     @wraps(view)
@@ -28,4 +28,28 @@ def requires_json(view):
             return tuple([jsonify(res[0])] + list(res[1:]))
         else:
             return jsonify(res)
+    return wrapper
+
+def requires_auth(view):
+    @wraps(view)
+    def wrapper(*args, **kwargs):  
+        if request.authorization is None:
+            raise Unauthorized([{
+                'detail': 'You must provide basic authorization headers',
+                'where': 'request.authorization',
+            }])
+
+        identifier = request.authorization['username']
+        token = request.authorization['password']
+
+        user = User.get_by('identifier', identifier)
+        token = Token.get_by('token', token)
+
+        if user is None or token is None or token.proxy.user.get().id != user.id:
+            raise Unauthorized([{
+                'detail': 'Your credentials are invalid, sorry',
+                'where': 'request.authorization',
+            }])
+
+        g.user = user
     return wrapper

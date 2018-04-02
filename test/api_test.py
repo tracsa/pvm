@@ -585,17 +585,27 @@ def test_list_activities(client, models):
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
 
-    manager = User(identifier='juan_manager').save()
+    other = User(identifier='other').save()
+    act2 = Activity(ref='#some').save()
+    act2.proxy.user.set(other)
+
     token = Token(token='123456').save()
-    token.proxy.user.set(manager)
+    token.proxy.user.set(juan)
     exc = Execution(
         process_name = 'exit_request.2018-03-20.xml',
     ).save()
     act.proxy.execution.set(exc)
+    act2.proxy.execution.set(exc)
 
     res = client.get('/v1/activity', headers={
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(manager.identifier, token.token).encode()).decode()
+            b64encode('{}:{}'.format(juan.identifier, token.token).encode()).decode()
         ),
     })
+
     assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': [
+            act.to_json(),
+        ],
+    }

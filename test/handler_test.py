@@ -1,3 +1,4 @@
+from datetime import datetime
 from xml.dom.minidom import Document
 import json
 import pika
@@ -70,7 +71,8 @@ def test_create_pointer(config, models):
     assert execution.process_name == 'simple.2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
 
-def test_call_recover(config, models):
+def test_finish_node(config, models, mongo):
+    ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
     execution = Execution(
         process_name = 'simple.2018-02-19.xml',
@@ -79,6 +81,14 @@ def test_call_recover(config, models):
         node_id = '4g9lOdPKmRUf',
     ).save()
     pointer.proxy.execution.set(execution)
+
+    mongo.insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'user_identifier': None,
+        'execution_id': execution.id,
+        'node_id': '4g9lOdPKmRUf',
+    })
 
     ptrs = handler.call({
         'command': 'step',
@@ -89,9 +99,19 @@ def test_call_recover(config, models):
     assert Execution.get(execution.id) == None
     assert ptrs == []
 
-def test_wakeup_notifies_manager(config, models):
-    ''' a node whose auth has a filter must notify the people matching the
-    filter '''
+    # mongo has a registry
+    reg = next(mongo.find())
+
+    del reg['_id']
+
+    assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert reg['user_identifier'] == None
+    assert reg['execution_id'] == execution.id
+    assert reg['node_id'] == '4g9lOdPKmRUf'
+
+def test_wakeup(config, models, mongo):
+    ''' the first stage in a node's lifecycle '''
     # setup stuff
     handler = Handler(config)
 
@@ -129,8 +149,13 @@ def test_wakeup_notifies_manager(config, models):
     assert args['routing_key'] == config['RABBIT_NOTIFY_QUEUE']
     assert json.loads(args['body']) == {}
 
-def test_wakeup_inserts_log(mongo):
-    assert False
+    # mongo has a registry
+    reg = next(mongo.find())
 
-def test_finish_completes_log(mongo):
-    assert False
+    del reg['_id']
+
+    assert (reg['started_at'] - datetime.now()).total_seconds() < 2
+    assert reg['finished_at'] == None
+    assert reg['user_identifier'] == None
+    assert reg['execution_id'] == execution.id
+    assert reg['node_id'] == 'manager-node'

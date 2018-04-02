@@ -1,6 +1,8 @@
 from case_conversion import pascalcase
 from coralillo.errors import ModelNotFoundError
+from datetime import datetime
 from importlib import import_module
+from pymongo import MongoClient
 import json
 import pika
 
@@ -51,7 +53,7 @@ class Handler:
         pointers = [] # pointers to be notified back
 
         # node's lifetime ends here
-        pointer.delete()
+        self.teardown(pointer)
         next_nodes = current_node.next(xml, execution)
 
         for node in next_nodes:
@@ -89,9 +91,15 @@ class Handler:
 
         return message
 
+    def get_mongo(self):
+        client = MongoClient()
+        db = client[self.config['MONGO_DBNAME']]
+
+        return db[self.config['MONGO_HISTORY_COLLECTION']]
+
     def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about
-        the execution '''
+        the execution, this is the first step in node's lifecycle '''
         filter_q = node.element.getElementsByTagName('filter')
 
         if len(filter_q) == 0:
@@ -116,6 +124,31 @@ class Handler:
                     delivery_mode=2, # make message persistent
                 ),
             )
+
+        collection = self.get_mongo()
+
+        collection.insert_one({
+            'started_at': datetime.now(),
+            'finished_at': None,
+            'user_identifier': None,
+            'execution_id': execution.id,
+            'node_id': node.element.getAttribute('id'),
+        })
+
+    def teardown(self, pointer):
+        ''' finishes the node's lifecycle '''
+        collection = self.get_mongo()
+
+        collection.update_one({
+            'execution_id': pointer.proxy.execution.get().id,
+            'node_id': pointer.node_id,
+        }, {
+            '$set': {
+                'finished_at': datetime.now(),
+            },
+        })
+
+        pointer.delete()
 
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former

@@ -26,6 +26,8 @@ def test_parse_message(config):
         'command': 'step',
     }
 
+    assert False, 'process finished deletes activities'
+
 def test_recover_step(config, models):
     handler = Handler(config)
     exc = Execution.validate(

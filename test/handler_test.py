@@ -26,8 +26,6 @@ def test_parse_message(config):
         'command': 'step',
     }
 
-    assert False, 'process finished deletes activities'
-
 def test_recover_step(config, models):
     handler = Handler(config)
     exc = Execution.validate(
@@ -191,3 +189,6 @@ def test_wakeup(config, models, mongo):
     assert reg['user_identifier'] == None
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == 'manager-node'
+
+def test_finish_process():
+    assert False, 'process finished deletes activities, forms, and documents'

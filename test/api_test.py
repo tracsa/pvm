@@ -223,7 +223,7 @@ def test_can_continue_process(client, models, mocker, config):
     }, data=json.dumps({
         'execution_id': exc.id,
         'node_id': ptr.node_id,
-        'forms': [
+        'form_array': [
             {
                 'ref': '#auth-form',
                 'data': {

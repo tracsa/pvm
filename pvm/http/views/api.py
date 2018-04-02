@@ -6,7 +6,7 @@ import os
 import pika
 
 from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
+from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity,Forbidden
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json, requires_auth
 from pvm.http.validation import validate_forms, validate_json, validate_auth
@@ -219,4 +219,34 @@ def list_activities():
             lambda a:a.to_json(),
             activities
         )),
+    })
+
+
+@app.route('/v1/activity/<id>', methods=['GET'])
+@requires_auth
+def one_activity(id):
+
+    try:
+        activity = Activity.get_or_exception(id)
+    except ModelNotFoundError:
+        raise BadRequest([{
+            'detail': 'activity_id is not valid',
+            'code': 'validation.invalid',
+            'where': 'request.body.execution_id',
+        }])
+
+    print (activity.user)
+    user_activity = User.get_or_exception(activity.user)
+    print (user_activity.identifier)
+    print (g.user.identifier)
+   
+    if not g.user == user_activity:
+        raise Forbidden([{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }])
+
+
+    return jsonify({
+        'data': activity.to_json(),
     })

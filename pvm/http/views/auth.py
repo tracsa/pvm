@@ -11,11 +11,11 @@ from string import ascii_letters
 @app.route('/v1/auth/signin/<AuthProvider:backend>', methods=['POST'])
 def signin(backend):
     try:
-        auth = backend.authenticate(**request.form.to_dict())
+        backend_user = backend.authenticate(**request.form.to_dict())
     except AuthenticationError:
         abort(401, 'Provided user credentials are invalid')
 
-    identifier = auth['identifier']
+    identifier = backend_user.get_identifier()
 
     # fetchs redis mirror user if there is None then creates one
     user = User.get_by('identifier', identifier)

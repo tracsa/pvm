@@ -46,4 +46,4 @@ class LdapAuthProvider(BaseAuthProvider):
         except LDAPBindError:
             raise AuthenticationError
 
-        return BaseUser()
+        return LdapUser()

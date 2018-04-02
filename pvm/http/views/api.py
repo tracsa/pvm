@@ -6,7 +6,7 @@ import os
 from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity,Unauthorized
 from pvm.http.forms import ContinueProcess
-from pvm.http.middleware import requires_json
+from pvm.http.middleware import requires_json, requires_auth
 from pvm.http.validation import validate_forms, validate_json, validate_auth
 from pvm.http.wsgi import app
 from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
@@ -197,11 +197,11 @@ def list_process():
     })
 
 @app.route('/v1/activity', methods=['GET'])
-#@requires_auth
+@requires_auth
 def list_activities():
 
     # Authorization required but not provided, notify
-    if request.authorization is None:
+    '''if request.authorization is None:
         raise Unauthorized([{
             'detail': 'You must provide basic authorization headers',
             'where': 'request.authorization',
@@ -218,7 +218,10 @@ def list_activities():
             'detail': 'Your credentials are invalid, sorry',
             'where': 'request.authorization',
         }])
+    '''
 
+    identifier = request.authorization['username']
+    user = User.get_by('identifier', identifier)
 
     activities = user.proxy.activities.get()
 

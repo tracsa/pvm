@@ -563,9 +563,9 @@ def test_read_process(client):
 def test_list_activities_requires(client):
     res = client.get('/v1/activity')
     assert res.status_code == 401
-    #assert False, 'Listing activities without user info fails'
 
 def test_list_activities(client, models):
+    '''Given 4 activities, two for the current user and two for another, list only the two belonging to him or her'''
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
@@ -577,16 +577,10 @@ def test_list_activities(client, models):
         process_name = 'exit_request.2018-03-20.xml',
     ).save()
     act.proxy.execution.set(exc)
-    ptr = Pointer(
-        node_id = 'manager-node',
-    ).save()
-    ptr.proxy.execution.set(exc)
 
     res = client.get('/v1/activity', headers={
         'Authorization': 'Basic {}'.format(
             b64encode('{}:{}'.format(manager.identifier, token.token).encode()).decode()
         ),
     })
-
     assert res.status_code == 200
-    #assert False, 'Given 4 activities, two for the current user and two for another, list only the two belonging to him or her'

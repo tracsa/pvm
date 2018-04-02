@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from functools import wraps
 from werkzeug.exceptions import BadRequest as WBadRequest
-
+from flask import g
 from pvm.http.errors import BadRequest, Unauthorized
 
 def requires_json(view):
@@ -30,7 +30,6 @@ def requires_json(view):
             return jsonify(res)
     return wrapper
 
-
 def requires_auth(view):
     @wraps(view)
     def wrapper(*args, **kwargs):  
@@ -51,4 +50,6 @@ def requires_auth(view):
                 'detail': 'Your credentials are invalid, sorry',
                 'where': 'request.authorization',
             }])
+
+        g.user = user
     return wrapper

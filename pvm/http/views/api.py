@@ -4,7 +4,7 @@ import pika
 import os
 
 from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity,Unauthorized
+from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json, requires_auth
 from pvm.http.validation import validate_forms, validate_json, validate_auth
@@ -12,6 +12,7 @@ from pvm.http.wsgi import app
 from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, form_to_dict
+from flask import g
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
@@ -200,30 +201,7 @@ def list_process():
 @requires_auth
 def list_activities():
 
-    # Authorization required but not provided, notify
-    '''if request.authorization is None:
-        raise Unauthorized([{
-            'detail': 'You must provide basic authorization headers',
-            'where': 'request.authorization',
-        }])
-
-    identifier = request.authorization['username']
-    token = request.authorization['password']
-
-    user = User.get_by('identifier', identifier)
-    token = Token.get_by('token', token)
-
-    if user is None or token is None or token.proxy.user.get().id != user.id:
-        raise Unauthorized([{
-            'detail': 'Your credentials are invalid, sorry',
-            'where': 'request.authorization',
-        }])
-    '''
-
-    identifier = request.authorization['username']
-    user = User.get_by('identifier', identifier)
-
-    activities = user.proxy.activities.get()
+    activities = g.user.proxy.activities.get()
 
     return {
         'data': activities.to_json(),

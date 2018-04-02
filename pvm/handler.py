@@ -19,6 +19,7 @@ class Handler:
 
     def __init__(self, config):
         self.config = config
+        self.mongo = None
 
     def __call__(self, channel, method, properties, body:bytes):
         ''' the main callback of the PVM '''
@@ -92,10 +93,13 @@ class Handler:
         return message
 
     def get_mongo(self):
-        client = MongoClient()
-        db = client[self.config['MONGO_DBNAME']]
+        if self.mongo is None:
+            client = MongoClient()
+            db = client[self.config['MONGO_DBNAME']]
 
-        return db[self.config['MONGO_HISTORY_COLLECTION']]
+            self.mongo = db[self.config['MONGO_HISTORY_COLLECTION']]
+
+        return self.mongo
 
     def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about

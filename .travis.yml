@@ -5,6 +5,7 @@ python:
 services:
   - redis-server
   - rabbitmq
+  - mongodb
 install:
   - pip install -r requirements.txt
 script: "pytest -vv"

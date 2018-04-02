@@ -712,10 +712,9 @@ def test_logs_activity( mongo, client ):
     ans = json.loads(res.data)
     del ans['data'][0]['_id']
 
-    ans['data'][0]['started_at'] = ans['data'][0]['started_at'].replace(':00+00:',':')
     assert res.status_code == 200
     assert ans == { "data": [{
-        'started_at': datetime(2018, 4, 1, 21, 45).replace(microsecond=0).isoformat()+'Z',
+        'started_at': '2018-04-01T21:45:00Z',
         'finished_at': None,
         'user_identifier': None,
         'execution_id': "15asbs",

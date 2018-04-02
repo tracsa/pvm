@@ -609,3 +609,55 @@ def test_list_activities(client, models):
             act.to_json(),
         ],
     }
+
+def test_activity_requires(client):
+    #validate user authentication wrong
+    res = client.get('/v1/activity/1')
+    assert res.status_code == 401
+
+def test_activity_wrong_activity(client, models):
+    #validate user authentication correct but bad activity
+    juan = User(identifier='juan').save()
+    act = Activity(ref='#requester').save()
+    act.proxy.user.set(juan)
+
+    other = User(identifier='other').save()
+    act2 = Activity(ref='#some').save()
+    act2.proxy.user.set(other)
+
+    token = Token(token='123456').save()
+    token.proxy.user.set(juan)
+    exc = Execution(
+        process_name = 'exit_request.2018-03-20.xml',
+    ).save()
+    act.proxy.execution.set(exc)
+    act2.proxy.execution.set(exc)
+
+    res = client.get('/v1/activity/{}'.format(act2.id), headers={
+        'Authorization': 'Basic {}'.format(
+            b64encode('{}:{}'.format(juan.identifier, token.token).encode()).decode()
+        ),
+    })
+
+    assert res.status_code == 403
+
+def test_activity(client, models):
+    #validate user authentication correct with correct activity
+    juan = User(identifier='juan').save()
+    act = Activity(ref='#requester').save()
+    act.proxy.user.set(juan)
+
+    token = Token(token='123456').save()
+    token.proxy.user.set(juan)
+
+    res2 = client.get('/v1/activity/{}'.format(act.id), headers={
+        'Authorization': 'Basic {}'.format(
+            b64encode('{}:{}'.format(juan.identifier, token.token).encode()).decode()
+        ),
+    })
+
+    assert res2.status_code == 200
+    assert json.loads(res2.data) == {
+        'data': 
+            act.to_json(),  
+    }

@@ -1,18 +1,19 @@
 from coralillo.errors import ModelNotFoundError
+from datetime import datetime
+from flask import g
 from flask import request, jsonify, json
-import pika
 import os
+import pika
 
 from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json, requires_auth
 from pvm.http.validation import validate_forms, validate_json, validate_auth
-from pvm.http.wsgi import app
+from pvm.http.wsgi import app, mongo
 from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, form_to_dict
-from flask import g
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
@@ -76,6 +77,17 @@ def start_process():
         for ref, form_data in collected_forms:
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
+
+    # log to mongo
+    collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
+
+    collection.insert_one({
+        'started_at': datetime.now(),
+        'finished_at': datetime.now(),
+        'user_identifier': user.identifier if user is not None else None,
+        'execution_id': execution.id,
+        'node_id': start_point.getAttribute('id'),
+    })
 
     # trigger rabbit
     channel = get_channel()

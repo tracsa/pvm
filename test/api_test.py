@@ -1,11 +1,12 @@
+from base64 import b64encode
+from datetime import datetime
 from flask import json
-import pytest
 import case_conversion
 import pika
-from base64 import b64encode
+import pytest
 
-from pvm.models import Execution, Pointer, User, Token, Activity
 from pvm.handler import Handler
+from pvm.models import Execution, Pointer, User, Token, Activity
 
 def test_continue_process_requires(client):
     user = User(identifier='juan').save()
@@ -300,7 +301,7 @@ def test_can_query_process_status(client):
 def test_can_list_activities_for_user():
     assert False, 'can list them'
 
-def test_process_start_simple_requires(client, models):
+def test_process_start_simple_requires(client, models, mongo):
     # we need the name of the process to start
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
@@ -368,9 +369,10 @@ def test_process_start_simple_requires(client, models):
         ],
     }
 
-    assert False, 'no mongo logs are created'
+    # no registry should be created yet
+    assert mongo.count() == 0
 
-def test_process_start_simple(client, models, mocker, config):
+def test_process_start_simple(client, models, mocker, config, mongo):
     mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
 
     res = client.post('/v1/execution', headers={
@@ -410,7 +412,16 @@ def test_process_start_simple(client, models, mocker, config):
     assert execution.id == exc.id
     assert pointer.id == ptr.id
 
-    assert False, 'registry is created in mongo'
+    # mongo has a registry
+    reg = next(mongo.find())
+
+    del reg['_id']
+
+    assert (reg['started_at'] - datetime.now()).total_seconds() < 2
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert reg['user_identifier'] == None
+    assert reg['execution_id'] == exc.id
+    assert reg['node_id'] == ptr.node_id
 
 def test_exit_request_requirements(client, models):
     # first requirement is to have authentication

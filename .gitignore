@@ -5,3 +5,5 @@ settings_*.py
 *.egg-info/
 .eggs/
 .tox/
+build/
+dist/

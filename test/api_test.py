@@ -223,7 +223,7 @@ def test_can_continue_process(client, models, mocker, config):
     }, data=json.dumps({
         'execution_id': exc.id,
         'node_id': ptr.node_id,
-        'form_array': [
+        'forms': [
             {
                 'ref': '#auth-form',
                 'data': {
@@ -285,7 +285,7 @@ def test_can_continue_process(client, models, mocker, config):
     # makes a useful call for the handler
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, form = handler.recover_step(json_message)
+    execution, pointer, xmliter, current_node, forms = handler.recover_step(json_message)
 
     assert execution.id == exc.id
     assert pointer.id == ptr.id

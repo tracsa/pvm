@@ -73,13 +73,13 @@ def start_process():
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
 
-    formularios = []
+    forms = []
 
     if len(collected_forms) > 0:
         for ref, form_data in collected_forms:
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
-            formularios.append({'ref':ref,'data':form_data})
+            forms.append({'ref':ref,'data':form_data})
 
     # log to mongo
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
@@ -90,7 +90,7 @@ def start_process():
         'user_identifier': user.identifier if user is not None else None,
         'execution_id': execution.id,
         'node_id': start_point.getAttribute('id'),
-        'form_array':formularios
+        'forms':forms
     })
 
     # trigger rabbit
@@ -161,12 +161,12 @@ def continue_process():
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
 
-    formularios = []
+    forms = []
     if len(collected_forms) > 0:
         for ref, form_data in collected_forms:
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
-            formularios.append({'ref':ref, 'data':form_data})
+            forms.append({'ref':ref, 'data':form_data})
 
     # trigger rabbit
     channel = get_channel()
@@ -177,7 +177,7 @@ def continue_process():
             'command': 'step',
             'process': execution.process_name,
             'pointer_id': pointer.id,
-            'forms':formularios
+            'forms':forms
 
         }),
         properties = pika.BasicProperties(

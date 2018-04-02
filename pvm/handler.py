@@ -37,7 +37,7 @@ class Handler:
                 exchange = '',
                 routing_key = self.config['RABBIT_QUEUE'],
                 body = json.dumps({
-                    'command': 'stepppppp',
+                    'command': 'step',
                     'pointer_id': pointer.id,
                 }),
                 properties = pika.BasicProperties(
@@ -49,8 +49,6 @@ class Handler:
             channel.basic_ack(delivery_tag = method.delivery_tag)
 
     def call(self, message:dict, channel):
-        # print ("prueba ", message)
-        # assert False
         execution, pointer, xml, current_node, forms = self.recover_step(message)
 
         pointers = [] # pointers to be notified back
@@ -122,8 +120,6 @@ class Handler:
         hipro = HiPro(self.config)
         users = hipro.find_users(**resolve_params(filter_node, execution))
 
-        print ("execucioon ",execution.process_name)
-
         for user in users:
             channel.basic_publish(
                 exchange='',
@@ -143,7 +139,7 @@ class Handler:
             'user_identifier': None,
             'execution_id': execution.id,
             'node_id': node.element.getAttribute('id'),
-            'form_array':forms
+            'forms':forms
         })
 
     def teardown(self, pointer):
@@ -184,5 +180,5 @@ class Handler:
         point = xml.find(
             lambda e:e.getAttribute('id') == pointer.node_id
         )
-        print (message)
+
         return execution, pointer, xml, make_node(point), message['forms']

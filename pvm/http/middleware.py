@@ -3,6 +3,7 @@ from functools import wraps
 from werkzeug.exceptions import BadRequest as WBadRequest
 from flask import g
 from pvm.http.errors import BadRequest, Unauthorized
+from pvm.models import User, Token
 
 def requires_json(view):
     @wraps(view)
@@ -52,4 +53,6 @@ def requires_auth(view):
             }])
 
         g.user = user
+
+        return view(*args, **kwargs)
     return wrapper

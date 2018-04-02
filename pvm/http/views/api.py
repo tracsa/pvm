@@ -200,11 +200,11 @@ def list_process():
 @app.route('/v1/activity', methods=['GET'])
 @requires_auth
 def list_activities():
-
     activities = g.user.proxy.activities.get()
 
-    return {
-        'data': activities.to_json(),
-    }, 200
-
-
+    return jsonify({
+        'data': list(map(
+            lambda a:a.to_json(),
+            activities
+        )),
+    })

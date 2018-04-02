@@ -290,23 +290,63 @@ def test_can_continue_process(client, models, mocker, config):
     assert execution.id == exc.id
     assert pointer.id == ptr.id
 
-def test_can_query_process_status(client):
-    res = client.get('/v1/node/{}')
+def test_query_process_status_noexecution(client):
+    res = client.get('/v1/pointer/{}:{}'.format(execution_id, node_id))
 
-    assert res.status_code == 200
-    assert res.data == {
-        'data': [
+    assert res.status_code == 404
+    assert json.loads(res.data) == {
+        'errors': [
             {
-                '_type': 'node',
-                'id': '',
-                'data': {},
+                'code': 'http.404',
+                'detail': 'the given execution never existed, and never will',
+                'where': 'request.url',
             },
-        ]
+        ],
     }
 
-@pytest.mark.skip
-def test_can_list_activities_for_user():
-    assert False, 'can list them'
+def test_query_process_status_wrong_node(client):
+    res = client.get('/v1/pointer/{}.{}'.format(execution_id, node_id))
+
+    assert res.status_code == 404
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'code': 'http.404',
+                'detail': 'the given node does not exist in this process',
+                'where': 'request.url',
+            },
+        ],
+    }
+
+def test_query_process_status_before_wakeup(client):
+    res = client.get('/v1/pointer/{}.{}'.format(execution_id, node_id))
+
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': None,
+        'status': 'pending',
+    }
+
+def test_query_process_status_after_wakeup(client):
+    res = client.get('/v1/pointer/{}.{}'.format(execution_id, node_id))
+
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': pointer.to_json(),
+        'status': 'pending',
+    }
+    assert False, 'slots for forms are empty'
+
+def test_query_process_status_after_teardown(client):
+    res = client.get('/v1/pointer/{}.{}'.format(execution_id, node_id))
+
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': pointer.to_json(),
+        'status': 'completed',
+    }
+
+    assert False, 'slots for forms are full'
 
 def test_process_start_simple_requires(client, models, mongo):
     # we need the name of the process to start

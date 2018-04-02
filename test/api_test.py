@@ -633,7 +633,6 @@ def test_activity_wrong_activity(client, models):
     act.proxy.execution.set(exc)
     act2.proxy.execution.set(exc)
 
-
     res = client.get('/v1/activity/{}'.format(act2.id), headers={
         'Authorization': 'Basic {}'.format(
             b64encode('{}:{}'.format(juan.identifier, token.token).encode()).decode()
@@ -643,7 +642,7 @@ def test_activity_wrong_activity(client, models):
     assert res.status_code == 403
 
 def test_activity(client, models):
-    #validate user authentication correct but bad activity
+    #validate user authentication correct with correct activity
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)

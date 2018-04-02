@@ -225,7 +225,6 @@ def list_activities():
 @app.route('/v1/activity/<id>', methods=['GET'])
 @requires_auth
 def one_activity(id):
-
     try:
         activity = Activity.get_or_exception(id)
     except ModelNotFoundError:
@@ -235,11 +234,7 @@ def one_activity(id):
             'where': 'request.body.execution_id',
         }])
 
-    print (activity.user)
     user_activity = User.get_or_exception(activity.user)
-    print (user_activity.identifier)
-    print (g.user.identifier)
-   
     if not g.user == user_activity:
         raise Forbidden([{
             'detail': 'You must provide basic authorization headers',

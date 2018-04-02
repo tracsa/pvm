@@ -128,3 +128,9 @@ def test_wakeup_notifies_manager(config, models):
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_NOTIFY_QUEUE']
     assert json.loads(args['body']) == {}
+
+def test_wakeup_inserts_log(mongo):
+    assert False
+
+def test_finish_completes_log(mongo):
+    assert False

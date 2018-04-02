@@ -3,6 +3,7 @@ from itacate import Config
 import os
 import pytest
 import sys
+from pymongo import MongoClient
 
 from pvm.models import bind_models
 
@@ -34,3 +35,14 @@ def client():
     from pvm.http.wsgi import app
 
     return app.test_client()
+
+@pytest.fixture
+def mongo():
+    con = config()
+    client = MongoClient()
+    db = client[con['MONGO_DBNAME']]
+
+    collection = db[con['MONGO_HISTORY_COLLECTION']]
+    collection.drop()
+
+    return collection

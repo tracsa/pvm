@@ -368,6 +368,8 @@ def test_process_start_simple_requires(client, models):
         ],
     }
 
+    assert False, 'no mongo logs are created'
+
 def test_process_start_simple(client, models, mocker, config):
     mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
 
@@ -407,6 +409,8 @@ def test_process_start_simple(client, models, mocker, config):
 
     assert execution.id == exc.id
     assert pointer.id == ptr.id
+
+    assert False, 'registry is created in mongo'
 
 def test_exit_request_requirements(client, models):
     # first requirement is to have authentication

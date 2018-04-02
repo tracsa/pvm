@@ -19,6 +19,7 @@ RABBIT_NO_ACK = True
 
 # Mongodb
 MONGO_DBNAME = 'pvm'
+MONGO_HISTORY_COLLECTION = 'history'
 
 # Time stuff
 TIMEZONE = 'UTC'

@@ -1,9 +1,14 @@
-from .base import BaseAuthProvider
+from .base import BaseAuthProvider, BaseUser
 from ldap3 import Server, Connection, ALL, NTLM, core
 from ldap3.core.exceptions import LDAPBindError, LDAPSocketOpenError
 from pvm.errors import AuthenticationError
 from pvm.http.wsgi import app
 import sys
+
+
+class LdapUser(BaseUser):
+
+    pass
 
 
 class LdapAuthProvider(BaseAuthProvider):
@@ -41,6 +46,4 @@ class LdapAuthProvider(BaseAuthProvider):
         except LDAPBindError:
             raise AuthenticationError
 
-        return {
-            'identifier': 'ldap/' + username,
-        }
+        return BaseUser()

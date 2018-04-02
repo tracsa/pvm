@@ -1,5 +1,14 @@
-from .base import BaseAuthProvider
+from .base import BaseAuthProvider, BaseUser
 from pvm.errors import AuthenticationError
+
+class HardcodedUser(BaseUser):
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def get_identifier(self):
+        return self.username
 
 
 class HardcodedAuthProvider(BaseAuthProvider):
@@ -15,6 +24,7 @@ class HardcodedAuthProvider(BaseAuthProvider):
         if username != 'juan' or password != '123456':
             raise AuthenticationError
 
-        return {
-            'identifier': 'harcoded/' + username,
-        }
+        return HardcodedUser(
+            username=username,
+            password=password,
+        )

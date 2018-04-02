@@ -24,7 +24,6 @@ def trans_date(obj):
     obj['finished_at'] = obj['finished_at'].isoformat()+'Z' if obj['finished_at'] is not None else None
     return obj
 
-
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
 def index():
@@ -239,7 +238,6 @@ def list_activities():
         )),
     })
 
-
 @app.route('/v1/activity/<id>', methods=['GET'])
 @requires_auth
 def one_activity(id):
@@ -259,7 +257,6 @@ def one_activity(id):
             'where': 'request.authorization',
         }])
 
-
     return jsonify({
         'data': activity.to_json(),
     })
@@ -269,5 +266,11 @@ def list_logs(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
 
     return jsonify({
-        "data": list(map( trans_date, map(trans_id, collection.find({'execution_id': id})) )),
-    }), 200    
+        "data": list(map(
+            trans_date,
+            map(
+                trans_id,
+                collection.find({'execution_id': id})
+            )
+        )),
+    }), 200

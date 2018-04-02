@@ -678,10 +678,6 @@ def test_activity(client, models):
             act.to_json(),  
     }
 
-def trans_id(obj):
-    obj['_id'] = str(obj['_id'])
-    return obj
-
 def test_logs_activity( mongo, client ):
     mongo.insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),

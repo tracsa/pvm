@@ -103,7 +103,6 @@ class Handler:
         return self.mongo
 
     def wakeup(self, node, execution, channel, forms):
-
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
         filter_q = node.element.getElementsByTagName('filter')
@@ -139,7 +138,7 @@ class Handler:
             'user_identifier': None,
             'execution_id': execution.id,
             'node_id': node.element.getAttribute('id'),
-            'forms':forms
+            'forms': forms
         })
 
     def teardown(self, pointer):
@@ -175,10 +174,10 @@ class Handler:
         execution = pointer.proxy.execution.get()
         xml = Xml.load(self.config, execution.process_name)
 
-        assert execution.process_name == xml.filename, 'Inconsisten pointer found'
+        assert execution.process_name == xml.filename, 'Inconsistent pointer found'
 
         point = xml.find(
             lambda e:e.getAttribute('id') == pointer.node_id
         )
 
-        return execution, pointer, xml, make_node(point), message['forms']
+        return execution, pointer, xml, make_node(point), message.get('forms', [])

@@ -90,7 +90,7 @@ def start_process():
         'user_identifier': user.identifier if user is not None else None,
         'execution_id': execution.id,
         'node_id': start_point.getAttribute('id'),
-        'forms':forms
+        'forms': forms,
     })
 
     # trigger rabbit

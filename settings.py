@@ -17,6 +17,9 @@ RABBIT_NOTIFY_QUEUE = 'pvm_notify'
 RABBIT_CONSUMER_TAG = 'pvm_consumer_1'
 RABBIT_NO_ACK = True
 
+# Mongodb
+MONGO_DBNAME = 'pvm'
+
 # Time stuff
 TIMEZONE = 'UTC'
 

@@ -1,6 +1,6 @@
 from base64 import b64encode
 from datetime import datetime
-from flask import json
+from flask import json, jsonify
 import case_conversion
 import pika
 import pytest
@@ -677,3 +677,48 @@ def test_activity(client, models):
         'data': 
             act.to_json(),  
     }
+
+def trans_id(obj):
+    obj['_id'] = str(obj['_id'])
+    return obj
+
+def test_logs_activity( mongo, client ):
+    mongo.insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'user_identifier': None,
+        'execution_id': "15asbs",
+        'node_id': '4g9lOdPKmRUf',
+    })
+
+    mongo.insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 50),
+        'finished_at': None,
+        'user_identifier': None,
+        'execution_id': "15asbs2",
+        'node_id': '4g9lOdPKmRUf',
+    })
+
+    res = client.get('/v1/log/15asbs')
+    ap = { "data": [{
+        'started_at': datetime(2018, 4, 1, 21, 45).replace(microsecond=0).isoformat()+'Z',
+        'finished_at': None,
+        'user_identifier': None,
+        'execution_id': "15asbs",
+        'node_id': '4g9lOdPKmRUf',
+    }
+    ] }
+    
+    ans = json.loads(res.data)
+    del ans['data'][0]['_id']
+
+    ans['data'][0]['started_at'] = ans['data'][0]['started_at'].replace(':00+00:',':')
+    assert res.status_code == 200
+    assert ans == { "data": [{
+        'started_at': datetime(2018, 4, 1, 21, 45).replace(microsecond=0).isoformat()+'Z',
+        'finished_at': None,
+        'user_identifier': None,
+        'execution_id': "15asbs",
+        'node_id': '4g9lOdPKmRUf',
+    }
+    ] }

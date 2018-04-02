@@ -15,6 +15,16 @@ from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, form_to_dict
 
+def trans_id(obj):
+    obj['_id'] = str(obj['_id'])
+    return obj
+
+def trans_date(obj):
+    obj['started_at'] = obj['started_at'].replace(microsecond=0).isoformat()+'Z' if obj['started_at'] is not None else None
+    obj['finished_at'] = obj['finished_at'].replace(microsecond=0).isoformat()+'Z' if obj['finished_at'] is not None else None
+    return obj
+
+
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
 def index():
@@ -253,3 +263,11 @@ def one_activity(id):
     return jsonify({
         'data': activity.to_json(),
     })
+
+@app.route('/v1/log/<id>', methods=['GET'])
+def list_logs(id):
+    collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
+
+    return jsonify({
+        "data": list(map( trans_date, map(trans_id, collection.find({'execution_id': id})) )),
+    }), 200    

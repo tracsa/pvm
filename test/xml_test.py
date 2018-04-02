@@ -257,6 +257,17 @@ def test_form_to_dict(config):
         ]
     }
 
+    assert dict_forms[3] == {
+        "ref": "#with-helper",
+        "inputs": [
+            {
+                "type": "password",
+                "name": "password",
+                "helper": "10 alfanumeric chars",
+            },
+        ]
+    }
+
 def test_resolve_params(config, models):
     xml = Xml.load(config, 'exit_request.2018-03-20.xml')
 

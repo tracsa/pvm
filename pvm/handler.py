@@ -52,7 +52,7 @@ class Handler:
     def call(self, message:dict, channel):
         execution, pointer, xml, current_node, forms = self.recover_step(message)
 
-        pointers = [] # pointers to be notified back
+        pointers = [] # pointers to be created
 
         # node's lifetime ends here
         self.teardown(pointer)
@@ -104,7 +104,9 @@ class Handler:
         return self.mongo
 
     def get_contact_channels(self, user:BaseUser):
-        return []
+        return [{
+            'medium': 'email',
+        }]
 
     def wakeup(self, node, execution, channel, forms):
         ''' Waking up a node often means to notify someone or something about
@@ -130,10 +132,7 @@ class Handler:
                 channel.basic_publish(
                     exchange='',
                     routing_key=self.config['RABBIT_NOTIFY_QUEUE'],
-                    body=json.dumps({
-                        'medium': medium,
-                        'data': data,
-                    }),
+                    body=json.dumps(medium),
                     properties=pika.BasicProperties(
                         delivery_mode=2, # make message persistent
                     ),

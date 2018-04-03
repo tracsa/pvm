@@ -79,6 +79,78 @@ def test_create_pointer(config, models):
     assert execution.process_name == 'simple.2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
 
+def test_wakeup(config, models, mongo):
+    ''' the first stage in a node's lifecycle '''
+    # setup stuff
+    handler = Handler(config)
+
+    execution = Execution(
+        process_name = 'exit_request.2018-03-20.xml',
+    ).save()
+    juan = User(identifier='juan').save()
+    manager = User(identifier='juan_manager').save()
+    # this is needed in order to resolve the manager
+    act = Activity(ref='#requester').save()
+    act.proxy.user.set(juan)
+    act.proxy.execution.set(execution)
+    pointer = Pointer(
+        node_id = 'employee-node',
+    ).save()
+    pointer.proxy.execution.set(execution)
+
+    class Channel:
+
+        def basic_publish(self, **kwargs):
+            self.kwargs = kwargs
+
+    channel = Channel()
+
+    # this is what we test
+    ptrs = handler.call({
+        'command': 'step',
+        'pointer_id': pointer.id,
+        'forms':[
+            {
+                'ref': '#exit-form',
+                'data': {
+                    'reason': 'yes',
+                },
+            },
+        ]
+    }, channel)
+
+    # test manager is notified
+    assert hasattr(channel, 'kwargs'), 'Publish was not called'
+
+    args = channel.kwargs
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_NOTIFY_QUEUE']
+    assert json.loads(args['body']) == {
+        'medium': 'email',
+    }
+
+    # mongo has a registry
+    reg = next(mongo.find())
+
+    del reg['_id']
+
+    assert (reg['started_at'] - datetime.now()).total_seconds() < 2
+    assert reg['finished_at'] == None
+    assert reg['user_identifier'] == None
+    assert reg['execution_id'] == execution.id
+    assert reg['node_id'] == 'manager-node'
+    assert reg['forms'] == [
+        {
+            'ref': '#exit-form',
+            'data': {
+                'reason': 'yes',
+            },
+        },
+    ]
+
+    # tasks where asigned
+
 def test_finish_node(config, models, mongo):
     ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
@@ -135,65 +207,6 @@ def test_finish_node(config, models, mongo):
     # tasks where deleted from user
     assert False, 'no tasks present'
     assert False, 'event tasks for other users and same pointer are deleted'
-
-def test_wakeup(config, models, mongo):
-    ''' the first stage in a node's lifecycle '''
-    # setup stuff
-    handler = Handler(config)
-
-    execution = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
-    ).save()
-    pointer = Pointer(
-        node_id = 'employee-node',
-    ).save()
-    pointer.proxy.execution.set(execution)
-    juan = User(identifier='juan').save()
-    manager = User(identifier='juan_manager').save()
-    act = Activity(ref='#requester').save()
-    act.proxy.user.set(juan)
-    act.proxy.execution.set(execution)
-
-    class Channel:
-
-        def basic_publish(self, **kwargs):
-            self.kwargs = kwargs
-
-    channel = Channel()
-
-    # this is what we test
-    ptrs = handler.call({
-        'command': 'step',
-        'pointer_id': pointer.id,
-        'forms':[
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'auth': 'yes',
-                },
-            },
-        ]
-    }, channel)
-
-    # the actual tests
-    assert hasattr(channel, 'kwargs'), 'Publish was not called'
-
-    args = channel.kwargs
-
-    assert args['exchange'] == ''
-    assert args['routing_key'] == config['RABBIT_NOTIFY_QUEUE']
-    assert json.loads(args['body']) == {}
-
-    # mongo has a registry
-    reg = next(mongo.find())
-
-    del reg['_id']
-
-    assert (reg['started_at'] - datetime.now()).total_seconds() < 2
-    assert reg['finished_at'] == None
-    assert reg['user_identifier'] == None
-    assert reg['execution_id'] == execution.id
-    assert reg['node_id'] == 'manager-node'
 
 def test_finish_process():
     assert False, 'execution, pointers, forms, activities and documents are deleted'

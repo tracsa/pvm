@@ -97,7 +97,6 @@ class Xml:
 
     def start_node(self) -> Element:
         ''' Returns the starting node '''
-        print(getattr(self, 'start-node'))
         start_node_id = getattr(self, 'start-node')
         start_node = self.find(lambda e:e.getAttribute('id') == start_node_id)
 

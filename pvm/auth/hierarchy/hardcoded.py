@@ -1,4 +1,5 @@
 from pvm.auth.base import BaseHierarchyProvider
+from pvm.auth.backends.hardcoded import HardcodedUser
 from pvm.errors import HierarchyError
 from pvm.models import User
 
@@ -22,6 +23,9 @@ class HardcodedHierarchyProvider(BaseHierarchyProvider):
         employee = params.get('employee')
         relation = params.get('relation')
 
-        return list(User.q().filter(
-            identifier='{}_{}'.format(employee, relation)
+        return list(map(
+            lambda u:HardcodedUser(username=u.identifier),
+            User.q().filter(
+                identifier='{}_{}'.format(employee, relation)
+            )
         ))

@@ -28,8 +28,9 @@ class Questionaire(Model):
 
 class Pointer(Model):
     ''' marks a node and a execution so it can continue from there '''
-    node_id   = fields.Text()
-    execution = fields.ForeignIdRelation(Execution, inverse='pointers')
+    node_id    = fields.Text()
+    execution  = fields.ForeignIdRelation(Execution, inverse='pointers')
+    candidates = fields.SetRelation('pvm.models.User', inverse='tasks')
 
 
 class User(Model):
@@ -39,7 +40,7 @@ class User(Model):
     # processes I'm participating in
     activities = fields.SetRelation('pvm.models.Activity', inverse='user')
     # pending tasks to solve
-    tasks      = fields.SetRelation('pvm.models.Pointer', inverse='users')
+    tasks      = fields.SetRelation('pvm.models.Pointer', inverse='candidates')
 
 
 class Token(Model):

@@ -6,7 +6,7 @@ import pytest
 
 from pvm.handler import Handler
 from pvm.node import Node, StartNode, make_node
-from pvm.models import Execution, Pointer, User, Activity
+from pvm.models import Execution, Pointer, User, Activity, Questionaire
 
 def test_parse_message(config):
     handler = Handler(config)
@@ -135,7 +135,6 @@ def test_wakeup(config, models, mongo):
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert reg['finished_at'] == None
-    assert reg['user_identifier'] == None
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == 'manager-node'
     assert reg['forms'] == [
@@ -154,49 +153,43 @@ def test_wakeup(config, models, mongo):
 
     assert isinstance(task, Pointer)
     assert task.node_id == 'manager-node'
-    assert task.proxy.execution.id == execution.id
+    assert task.proxy.execution.get().id == execution.id
 
 def test_finish_node(config, models, mongo):
     ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
     execution = Execution(
-        process_name = 'simple.2018-02-19.xml',
+        process_name = 'exit_request.2018-03-20.xml',
     ).save()
-    pointer = Pointer(
-        node_id = '4g9lOdPKmRUf',
+    p_0 = Pointer(
+        node_id = 'manager-node',
     ).save()
-    pointer.proxy.execution.set(execution)
+    p_0.proxy.execution.set(execution)
+    manager = User(identifier='manager').save()
+    act = Activity(ref='#manager').save()
+    act.proxy.user.set(manager)
+    act.proxy.execution.set(execution)
+    manager.proxy.tasks.set([p_0])
+    form = Questionaire(ref='#auth-form', data={
+        'auth' : 'yes',
+    }).save()
+    form.proxy.execution.set(execution)
 
     mongo.insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
-        'user_identifier': None,
         'execution_id': execution.id,
-        'node_id': '4g9lOdPKmRUf',
+        'node_id': p_0.node_id,
     })
 
     ptrs = handler.call({
         'command': 'step',
-        'pointer_id': pointer.id,
-        'forms': [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'auth': 'yes',
-                },
-            },
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'auth': 'yes',
-                },
-            },
-        ]
+        'pointer_id': p_0.id,
     }, None)
 
-    assert Pointer.get(pointer.id) == None
-    assert Execution.get(execution.id) == None
-    assert ptrs == []
+    assert Pointer.get(p_0.id) == None
+    assert len(ptrs) == 1
+    assert ptrs[0].node_id == 'security-node'
 
     # mongo has a registry
     reg = next(mongo.find())
@@ -205,9 +198,14 @@ def test_finish_node(config, models, mongo):
 
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
-    assert reg['user_identifier'] == None
     assert reg['execution_id'] == execution.id
-    assert reg['node_id'] == '4g9lOdPKmRUf'
+    assert reg['node_id'] == p_0.node_id
+    assert reg['forms'] == [{
+        'ref': '',
+        'data': {
+            'auth': 'yes',
+        },
+    }]
 
     # tasks where deleted from user
     assert False, 'no tasks present'

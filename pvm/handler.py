@@ -55,12 +55,12 @@ class Handler:
         pointers = [] # pointers to be created
 
         # node's lifetime ends here
-        self.teardown(pointer)
+        self.teardown(pointer, forms)
         next_nodes = current_node.next(xml, execution)
 
         for node in next_nodes:
             # node's begining of life
-            pointer = self.wakeup(node, execution, channel, forms)
+            pointer = self.wakeup(node, execution, channel)
 
             if pointer:
                 pointers.append(pointer)
@@ -101,12 +101,14 @@ class Handler:
     def get_contact_channels(self, user:BaseUser):
         return [('email', {})]
 
-    def wakeup(self, node, execution, channel, forms):
+    def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
         if not node.is_end():
             # End nodes don't create pointers, their lifetime ends here
             pointer = self.create_pointer(node, execution)
+        else:
+            pointer = None
 
         filter_q = node.element.getElementsByTagName('filter')
 
@@ -117,12 +119,17 @@ class Handler:
         backend = filter_node.getAttribute('backend')
 
         mod = import_module('pvm.auth.hierarchy.{}'.format(backend))
-        HiPro = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
+        HierarchyProvider = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
 
-        hipro = HiPro(self.config)
-        users = hipro.find_users(**resolve_params(filter_node, execution))
+        hierarchy_provider = HierarchyProvider(self.config)
+        husers = hierarchy_provider.find_users(**resolve_params(filter_node, execution))
 
-        for user in users:
+        for huser in husers:
+            user = huser.get_user()
+
+            if pointer:
+                user.proxy.tasks.add(pointer)
+
             mediums = self.get_contact_channels(user)
 
             for medium, params in mediums:
@@ -140,19 +147,20 @@ class Handler:
         collection.insert_one({
             'started_at': datetime.now(),
             'finished_at': None,
-            'user_identifier': None,
             'execution_id': execution.id,
             'node_id': node.element.getAttribute('id'),
-            'forms': forms
         })
 
-    def teardown(self, pointer):
+        return pointer
+
+    def teardown(self, pointer, forms):
         ''' finishes the node's lifecycle '''
         collection = self.get_mongo()
 
         collection.update_one({
             'execution_id': pointer.proxy.execution.get().id,
             'node_id': pointer.node_id,
+            'forms': forms,
         }, {
             '$set': {
                 'finished_at': datetime.now(),

@@ -1,4 +1,18 @@
+from pvm.models import User
+
+
 class BaseUser:
+
+    def get_user(self):
+        identifier = self.get_identifier()
+
+        # fetchs redis mirror user if there is None then creates one
+        user = User.get_by('identifier', identifier)
+
+        if user is None:
+            user = User(identifier=identifier).save()
+
+        return user
 
     def get_identifier(self):
         raise NotImplementedError('Must be implemented in subclasses')

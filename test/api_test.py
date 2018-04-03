@@ -695,35 +695,3 @@ def test_logs_activity( mongo, client ):
     ] }
 
 
-
-# def test_logs_activity( mongo, client ):
-#     mongo.insert_one({
-#         'started_at': datetime(2018, 4, 1, 21, 45),
-#         'finished_at': None,
-#         'user_identifier': None,
-#         'execution_id': "15asbs",
-#         'node_id': '4g9lOdPKmRUf',
-#     })
-
-#     mongo.insert_one({
-#         'started_at': datetime(2018, 4, 1, 21, 50),
-#         'finished_at': None,
-#         'user_identifier': None,
-#         'execution_id': "15asbs",
-#         'node_id': '4g9lOdPKmRUfhfghhgfg',
-#     })
-
-#     res = client.get('/v1/log/15asbs?node_id')
-
-#     ans = json.loads(res.data)
-#     del ans['data'][0]['_id']
-
-#     assert res.status_code == 200
-#     assert ans == { "data": [{
-#         'started_at': '2018-04-01T21:45:00+00:00Z',
-#         'finished_at': None,
-#         'user_identifier': None,
-#         'execution_id': "15asbs",
-#         'node_id': '4g9lOdPKmRUf',
-#     }
-#     ] }

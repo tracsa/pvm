@@ -150,6 +150,13 @@ def test_wakeup(config, models, mongo):
     ]
 
     # tasks where asigned
+    assert manager.proxy.tasks.count() == 1
+
+    task = manager.proxy.tasks.get()[0]
+
+    assert isinstance(task, Pointer)
+    assert task.node_id == 'manager-node'
+    assert task.proxy.execution.id == execution.id
 
 def test_finish_node(config, models, mongo):
     ''' second and last stage of a node's lifecycle '''

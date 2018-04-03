@@ -60,15 +60,10 @@ class Handler:
 
         for node in next_nodes:
             # node's begining of life
-            self.wakeup(node, execution, channel, forms)
+            pointer = self.wakeup(node, execution, channel, forms)
 
-            if not node.is_end():
-                # End nodes don't create pointers, their lifetime ends here
-                pointer = self.create_pointer(node, execution)
-
-                if not isinstance(node, AsyncNode):
-                    # Sync nodes trigger execution of the next node right away
-                    pointers.append(pointer)
+            if pointer:
+                pointers.append(pointer)
 
         if execution.proxy.pointers.count() == 0:
             execution.delete()
@@ -111,6 +106,10 @@ class Handler:
     def wakeup(self, node, execution, channel, forms):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
+        if not node.is_end():
+            # End nodes don't create pointers, their lifetime ends here
+            pointer = self.create_pointer(node, execution)
+
         filter_q = node.element.getElementsByTagName('filter')
 
         if len(filter_q) == 0:

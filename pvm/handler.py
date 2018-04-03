@@ -68,38 +68,7 @@ class Handler:
         if execution.proxy.pointers.count() == 0:
             execution.delete()
 
-
         return pointers
-
-    def parse_message(self, body:bytes):
-        ''' validates a received message against all possible needed fields
-        and structure '''
-        try:
-            message = json.loads(body)
-        except json.decoder.JSONDecodeError:
-            raise ValueError('Message is not json')
-
-        if 'command' not in message:
-            raise KeyError('Malformed message: must contain command keyword')
-
-        if message['command'] not in self.config['COMMANDS']:
-            raise ValueError('Command not supported: {}'.format(
-                message['command']
-            ))
-
-        return message
-
-    def get_mongo(self):
-        if self.mongo is None:
-            client = MongoClient()
-            db = client[self.config['MONGO_DBNAME']]
-
-            self.mongo = db[self.config['MONGO_HISTORY_COLLECTION']]
-
-        return self.mongo
-
-    def get_contact_channels(self, user:BaseUser):
-        return [('email', {})]
 
     def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about
@@ -149,6 +118,9 @@ class Handler:
             'finished_at': None,
             'execution_id': execution.id,
             'node_id': node.element.getAttribute('id'),
+            'forms': [],
+            'docs': [],
+            'actors': [],
         })
 
         return pointer
@@ -160,14 +132,44 @@ class Handler:
         collection.update_one({
             'execution_id': pointer.proxy.execution.get().id,
             'node_id': pointer.node_id,
-            'forms': forms,
         }, {
             '$set': {
                 'finished_at': datetime.now(),
+                'forms': forms,
             },
         })
 
         pointer.delete()
+
+    def parse_message(self, body:bytes):
+        ''' validates a received message against all possible needed fields
+        and structure '''
+        try:
+            message = json.loads(body)
+        except json.decoder.JSONDecodeError:
+            raise ValueError('Message is not json')
+
+        if 'command' not in message:
+            raise KeyError('Malformed message: must contain command keyword')
+
+        if message['command'] not in self.config['COMMANDS']:
+            raise ValueError('Command not supported: {}'.format(
+                message['command']
+            ))
+
+        return message
+
+    def get_mongo(self):
+        if self.mongo is None:
+            client = MongoClient()
+            db = client[self.config['MONGO_DBNAME']]
+
+            self.mongo = db[self.config['MONGO_HISTORY_COLLECTION']]
+
+        return self.mongo
+
+    def get_contact_channels(self, user:BaseUser):
+        return [('email', {})]
 
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former

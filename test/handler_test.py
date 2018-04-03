@@ -109,14 +109,6 @@ def test_wakeup(config, models, mongo):
     ptrs = handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
-        'forms':[
-            {
-                'ref': '#exit-form',
-                'data': {
-                    'reason': 'yes',
-                },
-            },
-        ]
     }, channel)
 
     # test manager is notified
@@ -137,14 +129,9 @@ def test_wakeup(config, models, mongo):
     assert reg['finished_at'] == None
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == 'manager-node'
-    assert reg['forms'] == [
-        {
-            'ref': '#exit-form',
-            'data': {
-                'reason': 'yes',
-            },
-        },
-    ]
+    assert reg['forms'] == []
+    assert reg['docs'] == []
+    assert reg['actors'] == []
 
     # tasks where asigned
     assert manager.proxy.tasks.count() == 1
@@ -180,11 +167,18 @@ def test_finish_node(config, models, mongo):
         'finished_at': None,
         'execution_id': execution.id,
         'node_id': p_0.node_id,
+        'forms': [],
+        'docs': [],
+        'actors': [],
     })
 
     ptrs = handler.call({
         'command': 'step',
         'pointer_id': p_0.id,
+        'forms': [{
+            'ref': form.ref,
+            'data': form.data,
+        }],
     }, None)
 
     assert Pointer.get(p_0.id) == None
@@ -201,7 +195,7 @@ def test_finish_node(config, models, mongo):
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == p_0.node_id
     assert reg['forms'] == [{
-        'ref': '',
+        'ref': '#auth-form',
         'data': {
             'auth': 'yes',
         },

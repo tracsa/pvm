@@ -99,9 +99,7 @@ class Handler:
         return self.mongo
 
     def get_contact_channels(self, user:BaseUser):
-        return [{
-            'medium': 'email',
-        }]
+        return [('email', {})]
 
     def wakeup(self, node, execution, channel, forms):
         ''' Waking up a node often means to notify someone or something about
@@ -127,11 +125,11 @@ class Handler:
         for user in users:
             mediums = self.get_contact_channels(user)
 
-            for medium in mediums:
+            for medium, params in mediums:
                 channel.basic_publish(
-                    exchange='',
-                    routing_key=self.config['RABBIT_NOTIFY_QUEUE'],
-                    body=json.dumps(medium),
+                    exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
+                    routing_key=medium,
+                    body=json.dumps(params),
                     properties=pika.BasicProperties(
                         delivery_mode=2, # make message persistent
                     ),

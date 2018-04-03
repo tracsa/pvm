@@ -124,11 +124,9 @@ def test_wakeup(config, models, mongo):
 
     args = channel.kwargs
 
-    assert args['exchange'] == ''
-    assert args['routing_key'] == config['RABBIT_NOTIFY_QUEUE']
-    assert json.loads(args['body']) == {
-        'medium': 'email',
-    }
+    assert args['exchange'] == config['RABBIT_NOTIFY_EXCHANGE']
+    assert args['routing_key'] == 'email'
+    assert json.loads(args['body']) == {}
 
     # mongo has a registry
     reg = next(mongo.find())

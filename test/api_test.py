@@ -354,7 +354,7 @@ def test_process_start_simple_requires(client, models, mongo):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'nostart process does not have a start node, thus cannot be started',
+                'detail': 'nostart process lacks important nodes and structure',
                 'where': 'request.body.process_name',
             },
         ],

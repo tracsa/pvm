@@ -53,7 +53,7 @@ def start_process():
         }])
 
     try:
-        start_point = xml.find(lambda e:e.getAttribute('class') == 'start')
+        start_point = xml.start_node()
     except ElementNotFound as e:
         raise UnprocessableEntity([{
             'detail': '{} process does not have a start node, thus cannot be started'.format(request.json['process_name']),
@@ -202,7 +202,7 @@ def continue_process():
 def list_process():
     def add_form(xml):
         try:
-            start_node = xml.find(lambda e: e.getAttribute('class')=='start')
+            start_node = xml.start_node()
         except ElementNotFound:
             return None
 

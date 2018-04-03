@@ -195,4 +195,5 @@ def test_wakeup(config, models, mongo):
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == 'manager-node'
 
-    # tasks were assigned to users
+def test_finish_process():
+    assert False, 'execution, pointers, forms, activities and documents are deleted'

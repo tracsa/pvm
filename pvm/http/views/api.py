@@ -96,7 +96,6 @@ def start_process():
     collection.insert_one({
         'started_at': datetime.now(),
         'finished_at': datetime.now(),
-        'user_identifier': user.identifier if user is not None else None,
         'execution_id': execution.id,
         'node_id': start_point.getAttribute('id'),
         'forms': forms,
@@ -187,7 +186,6 @@ def continue_process():
             'process': execution.process_name,
             'pointer_id': pointer.id,
             'forms':forms
-
         }),
         properties = pika.BasicProperties(
             delivery_mode = 2, # make message persistent

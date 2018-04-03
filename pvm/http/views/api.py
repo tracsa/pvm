@@ -233,7 +233,7 @@ def list_activities():
 
     return jsonify({
         'data': list(map(
-            lambda a:a.to_json(),
+            lambda a:a.to_json(embed=['execution']),
             activities
         )),
     })

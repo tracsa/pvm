@@ -290,24 +290,7 @@ def test_can_continue_process(client, models, mocker, config):
     assert execution.id == exc.id
     assert pointer.id == ptr.id
 
-@pytest.mark.skip
-def test_can_query_process_status(client):
-    res = client.get('/v1/node/{}')
 
-    assert res.status_code == 200
-    assert res.data == {
-        'data': [
-            {
-                '_type': 'node',
-                'id': '',
-                'data': {},
-            },
-        ]
-    }
-
-@pytest.mark.skip
-def test_can_list_activities_for_user():
-    assert False, 'can list them'
 
 def test_process_start_simple_requires(client, models, mongo):
     # we need the name of the process to start
@@ -674,11 +657,12 @@ def test_activity(client, models):
 
     assert res2.status_code == 200
     assert json.loads(res2.data) == {
-        'data': 
-            act.to_json(),  
+        'data':
+            act.to_json(),
     }
 
 def test_logs_activity( mongo, client ):
+
     mongo.insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
@@ -691,12 +675,12 @@ def test_logs_activity( mongo, client ):
         'started_at': datetime(2018, 4, 1, 21, 50),
         'finished_at': None,
         'user_identifier': None,
-        'execution_id': "15asbs2",
-        'node_id': '4g9lOdPKmRUf',
+        'execution_id': "15asbs",
+        'node_id': '4g9lOdPKmRUf2',
     })
 
-    res = client.get('/v1/log/15asbs')
-    
+    res = client.get('/v1/log/15asbs?node_id=4g9lOdPKmRUf')
+
     ans = json.loads(res.data)
     del ans['data'][0]['_id']
 
@@ -709,3 +693,5 @@ def test_logs_activity( mongo, client ):
         'node_id': '4g9lOdPKmRUf',
     }
     ] }
+
+

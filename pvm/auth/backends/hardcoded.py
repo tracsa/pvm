@@ -1,4 +1,4 @@
-from .base import BaseAuthProvider, BaseUser
+from pvm.auth.base import BaseAuthProvider, BaseUser
 from pvm.errors import AuthenticationError
 
 class HardcodedUser(BaseUser):

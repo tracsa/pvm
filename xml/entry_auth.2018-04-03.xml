@@ -1,19 +1,25 @@
 <process-spec>
   <process-info>
-    <author>categulario</author>
-    <date>2018-03-20</date>
-    <name>Petición de salida</name>
+    <author>ogastorga</author>
+    <date>2018-04-02</date>
+    <name>Autorización de entrada de personal</name>
     <description>Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.</description>
     <public>true</public>
     <start-node>employee-node</start-node>
   </process-info>
   <process>
-    <node id="employee-node" class="start">
+    <node id="employee-node" class="sync">
       <auth id="requester"></auth>
 
       <form-array>
         <form id="exit-form">
-          <input type="text" name="reason" required="required" />
+          <input
+            type="text"
+            name="reason"
+            required="required"
+            label="Motivo del pase"
+            regex="\w{3}"
+          />
         </form>
       </form-array>
     </node>
@@ -22,9 +28,8 @@
 
     <node id="manager-node" class="decision">
       <auth id="manager">
-        <filter backend="hardcoded">
-          <param name="employee" type="ref">user#requester</param>
-          <param name="relation">manager</param>
+        <filter>
+          <param name="employee" source="#requester" />
         </filter>
       </auth>
 
@@ -38,13 +43,11 @@
       </form-array>
     </node>
 
-    <connector from="manager-node" to="security-node">
-      <condition>form#auth-form[auth]=="yes"</condition>
-    </connector>
+    <connector from="manager-node" to="security-node" condition="#auth-form.auth=='yes'" />
 
     <node id="security-node" class="async">
       <auth id="security">
-        <filter backend="hardcoded">
+        <filter>
           <param name="ou">Security</param>
         </filter>
       </auth>
@@ -56,9 +59,7 @@
       </form-array>
     </node>
 
-    <connector from="manager-node" to="noauth-node">
-      <condition>form#auth-form[auth]=="no"</condition>
-    </connector>
+    <connector from="manager-node" to="noauth-node" condition="#auth-form.auth=='no'" />
 
     <node id="noauth-node" class="notify end">
       <auth target="requester"></auth>

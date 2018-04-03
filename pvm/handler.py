@@ -11,6 +11,7 @@ from pvm.logger import log
 from pvm.models import Execution, Pointer
 from pvm.node import make_node, Node, AsyncNode
 from pvm.xml import Xml, resolve_params
+from pvm.auth.base import BaseUser
 
 
 class Handler:
@@ -51,29 +52,94 @@ class Handler:
     def call(self, message:dict, channel):
         execution, pointer, xml, current_node, forms, actors, documents = self.recover_step(message)
 
-        pointers = [] # pointers to be notified back
+        pointers = [] # pointers to be created
 
         # node's lifetime ends here
-        self.teardown(pointer)
+        self.teardown(pointer, forms, actors, documents)
         next_nodes = current_node.next(xml, execution)
 
         for node in next_nodes:
             # node's begining of life
-            self.wakeup(node, execution, channel, forms, actors, documents)
+            pointer = self.wakeup(node, execution, channel)
 
-            if not node.is_end():
-                # End nodes don't create pointers, their lifetime ends here
-                pointer = self.create_pointer(node, execution)
-
-                if not isinstance(node, AsyncNode):
-                    # Sync nodes trigger execution of the next node right away
-                    pointers.append(pointer)
+            if pointer:
+                pointers.append(pointer)
 
         if execution.proxy.pointers.count() == 0:
             execution.delete()
 
-
         return pointers
+
+    def wakeup(self, node, execution, channel):
+        ''' Waking up a node often means to notify someone or something about
+        the execution, this is the first step in node's lifecycle '''
+        if not node.is_end():
+            # End nodes don't create pointers, their lifetime ends here
+            pointer = self.create_pointer(node, execution)
+        else:
+            pointer = None
+
+        filter_q = node.element.getElementsByTagName('filter')
+
+        if len(filter_q) == 0:
+            return
+
+        filter_node = filter_q[0]
+        backend = filter_node.getAttribute('backend')
+
+        mod = import_module('pvm.auth.hierarchy.{}'.format(backend))
+        HierarchyProvider = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
+
+        hierarchy_provider = HierarchyProvider(self.config)
+        husers = hierarchy_provider.find_users(**resolve_params(filter_node, execution))
+
+        for huser in husers:
+            user = huser.get_user()
+
+            if pointer:
+                user.proxy.tasks.add(pointer)
+
+            mediums = self.get_contact_channels(user)
+
+            for medium, params in mediums:
+                channel.basic_publish(
+                    exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
+                    routing_key=medium,
+                    body=json.dumps(params),
+                    properties=pika.BasicProperties(
+                        delivery_mode=2, # make message persistent
+                    ),
+                )
+
+        collection = self.get_mongo()
+
+        collection.insert_one({
+            'started_at': datetime.now(),
+            'finished_at': None,
+            'execution_id': execution.id,
+            'node_id': node.element.getAttribute('id'),
+            'forms': [],
+            'docs': [],
+            'actors': [],
+        })
+
+        return pointer
+
+    def teardown(self, pointer, forms, actors, documents):
+        ''' finishes the node's lifecycle '''
+        collection = self.get_mongo()
+
+        collection.update_one({
+            'execution_id': pointer.proxy.execution.get().id,
+            'node_id': pointer.node_id,
+        }, {
+            '$set': {
+                'finished_at': datetime.now(),
+                'forms': forms,
+            },
+        })
+
+        pointer.delete()
 
     def parse_message(self, body:bytes):
         ''' validates a received message against all possible needed fields
@@ -102,61 +168,8 @@ class Handler:
 
         return self.mongo
 
-    def wakeup(self, node, execution, channel, forms, actors, documents):
-        ''' Waking up a node often means to notify someone or something about
-        the execution, this is the first step in node's lifecycle '''
-        filter_q = node.element.getElementsByTagName('filter')
-
-        if len(filter_q) == 0:
-            return
-
-        filter_node = filter_q[0]
-        backend = filter_node.getAttribute('backend')
-
-        mod = import_module('pvm.auth.hierarchy.{}'.format(backend))
-        HiPro = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
-
-        hipro = HiPro(self.config)
-        users = hipro.find_users(**resolve_params(filter_node, execution))
-
-        for user in users:
-            channel.basic_publish(
-                exchange='',
-                routing_key=self.config['RABBIT_NOTIFY_QUEUE'],
-                body=json.dumps({
-                }),
-                properties=pika.BasicProperties(
-                    delivery_mode=2, # make message persistent
-                ),
-            )
-
-        collection = self.get_mongo()
-
-        collection.insert_one({
-            'started_at': datetime.now(),
-            'finished_at': None,
-            'user_identifier': None,
-            'execution_id': execution.id,
-            'node_id': node.element.getAttribute('id'),
-            'forms': forms,
-            'actors': actors,
-            'document': documents
-        })
-
-    def teardown(self, pointer):
-        ''' finishes the node's lifecycle '''
-        collection = self.get_mongo()
-
-        collection.update_one({
-            'execution_id': pointer.proxy.execution.get().id,
-            'node_id': pointer.node_id,
-        }, {
-            '$set': {
-                'finished_at': datetime.now(),
-            },
-        })
-
-        pointer.delete()
+    def get_contact_channels(self, user:BaseUser):
+        return [('email', {})]
 
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former

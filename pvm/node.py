@@ -7,6 +7,7 @@ from xml.dom.minidom import Element
 from pvm.xml import Xml
 from pvm.logger import log
 from pvm.grammar import Condition
+from pvm.errors import ElementNotFound, IncompleteBranch
 
 
 class Node:
@@ -80,10 +81,17 @@ class DecisionNode(AsyncNode):
                 return False
 
             con = cons[0]
+            con.normalize()
 
             return Condition(execution).parse(con.firstChild.nodeValue)
 
-        conn = xml.find(find_node)
+        try:
+            conn = xml.find(find_node)
+        except ElementNotFound:
+            raise IncompleteBranch(
+                'Either not all branches for this desition are defined or '
+                'there is not enough information in the asociated data'
+            )
 
         return [make_node(xml.find(
             lambda e:e.getAttribute('id') == conn.getAttribute('to')

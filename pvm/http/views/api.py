@@ -53,7 +53,7 @@ def start_process():
         }])
 
     try:
-        start_point = xml.find(lambda e:e.getAttribute('class') == 'start')
+        start_point = xml.start_node()
     except ElementNotFound as e:
         raise UnprocessableEntity([{
             'detail': '{} process does not have a start node, thus cannot be started'.format(request.json['process_name']),
@@ -97,7 +97,6 @@ def start_process():
     collection.insert_one({
         'started_at': datetime.now(),
         'finished_at': datetime.now(),
-        'user_identifier': user.identifier if user is not None else None,
         'execution_id': execution.id,
         'node_id': start_point.getAttribute('id'),
         'forms': forms,
@@ -177,7 +176,6 @@ def continue_process():
 
         actors.append( {'ref': auth_ref, 'user': user.to_json() } )
 
-
     forms = []
     if len(collected_forms) > 0:
         for ref, form_data in collected_forms:
@@ -194,10 +192,9 @@ def continue_process():
             'command': 'step',
             'process': execution.process_name,
             'pointer_id': pointer.id,
-            'forms':forms,
+            'forms': forms,
             'actors':  actors,
             'documents': []
-
         }),
         properties = pika.BasicProperties(
             delivery_mode = 2, # make message persistent
@@ -212,7 +209,7 @@ def continue_process():
 def list_process():
     def add_form(xml):
         try:
-            start_node = xml.find(lambda e: e.getAttribute('class')=='start')
+            start_node = xml.start_node()
         except ElementNotFound:
             return None
 
@@ -243,7 +240,7 @@ def list_activities():
 
     return jsonify({
         'data': list(map(
-            lambda a:a.to_json(),
+            lambda a:a.to_json(embed=['execution']),
             activities
         )),
     })

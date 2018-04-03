@@ -8,7 +8,11 @@ import sys
 
 class LdapUser(BaseUser):
 
-    pass
+    def __init__(self, username):
+        self.username = username
+
+    def get_username(self, username):
+        return self.username
 
 
 class LdapAuthProvider(BaseAuthProvider):
@@ -46,4 +50,4 @@ class LdapAuthProvider(BaseAuthProvider):
         except LDAPBindError:
             raise AuthenticationError
 
-        return LdapUser()
+        return LdapUser(username)

@@ -1,4 +1,4 @@
-from .base import BaseHierarchyProvider
+from pvm.auth.base import BaseHierarchyProvider
 from pvm.errors import HierarchyError
 from pvm.models import User
 

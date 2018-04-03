@@ -11,6 +11,7 @@ from pvm.logger import log
 from pvm.models import Execution, Pointer
 from pvm.node import make_node, Node, AsyncNode
 from pvm.xml import Xml, resolve_params
+from pvm.auth.base import BaseUser
 
 
 class Handler:
@@ -102,6 +103,9 @@ class Handler:
 
         return self.mongo
 
+    def get_contact_channels(self, user:BaseUser):
+        return []
+
     def wakeup(self, node, execution, channel, forms):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
@@ -120,15 +124,20 @@ class Handler:
         users = hipro.find_users(**resolve_params(filter_node, execution))
 
         for user in users:
-            channel.basic_publish(
-                exchange='',
-                routing_key=self.config['RABBIT_NOTIFY_QUEUE'],
-                body=json.dumps({
-                }),
-                properties=pika.BasicProperties(
-                    delivery_mode=2, # make message persistent
-                ),
-            )
+            mediums = self.get_contact_channels(user)
+
+            for medium in mediums:
+                channel.basic_publish(
+                    exchange='',
+                    routing_key=self.config['RABBIT_NOTIFY_QUEUE'],
+                    body=json.dumps({
+                        'medium': medium,
+                        'data': data,
+                    }),
+                    properties=pika.BasicProperties(
+                        delivery_mode=2, # make message persistent
+                    ),
+                )
 
         collection = self.get_mongo()
 

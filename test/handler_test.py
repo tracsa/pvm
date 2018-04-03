@@ -173,6 +173,8 @@ def test_wakeup(config, models, mongo):
 
     # the actual tests
 
+    assert hasattr(channel, 'kwargs'), 'Publish was not called'
+
     args = channel.kwargs
 
     assert args['exchange'] == ''

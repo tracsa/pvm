@@ -143,6 +143,9 @@ class Handler:
             'document': documents
         })
 
+        print (actors)
+        assert False
+
     def teardown(self, pointer):
         ''' finishes the node's lifecycle '''
         collection = self.get_mongo()
@@ -169,6 +172,7 @@ class Handler:
     def recover_step(self, message:dict):
         ''' given an execution id and a pointer from the persistent storage,
         return the asociated process node to continue its execution '''
+        print (message)
         if 'pointer_id' not in message:
             raise KeyError('Requested step without pointer id')
 
@@ -181,5 +185,4 @@ class Handler:
         point = xml.find(
             lambda e:e.getAttribute('id') == pointer.node_id
         )
-
         return execution, pointer, xml, make_node(point), message.get('forms', []), message.get('actors', []), message.get('documents', [])

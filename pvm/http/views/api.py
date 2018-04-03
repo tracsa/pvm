@@ -82,7 +82,7 @@ def start_process():
         activity = Activity(ref=auth_ref).save()
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
-        actors.append( {'ref': auth_ref, 'user': {'identifier':user.identifier} } )
+        actors.append( {'ref': auth_ref, 'user': user.to_json() } )
     forms = []
 
     if len(collected_forms) > 0:
@@ -175,7 +175,7 @@ def continue_process():
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
 
-        actors.append( {'ref': auth_ref, 'user': {'identifier':user.identifier } } )
+        actors.append( {'ref': auth_ref, 'user': user.to_json() } )
 
 
     forms = []

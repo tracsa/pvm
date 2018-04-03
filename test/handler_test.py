@@ -187,7 +187,7 @@ def test_wakeup(config, models, mongo):
         'actors':  [
             {
                 'ref': act.ref,
-                'user': manager.identifier
+                'user': manager.to_json()
             },
 
         ],

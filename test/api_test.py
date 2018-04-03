@@ -203,7 +203,7 @@ def test_can_continue_process(client, models, mocker, config):
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
     actors = []
-    actors.append( {'ref': act.ref, 'user': {'identifier':juan.identifier } } )
+    actors.append( {'ref': act.ref, 'user': juan.to_json() } )
     manager = User(identifier='juan_manager').save()
     token = Token(token='123456').save()
     token.proxy.user.set(manager)
@@ -282,7 +282,7 @@ def test_can_continue_process(client, models, mocker, config):
         'actors':  [
             {
                 'ref': '#manager',
-                 'user': {'identifier': 'juan_manager'}
+                'user': manager.to_json()
             }
 
         ],

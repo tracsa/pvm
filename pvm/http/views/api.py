@@ -268,7 +268,6 @@ def list_logs(id):
     query = {'execution_id': id}
     if node_id:
         query['node_id'] = node_id
-
     return jsonify({
         "data": list(map(
             trans_date,

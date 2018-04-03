@@ -15,17 +15,11 @@ def signin(backend):
     except AuthenticationError:
         abort(401, 'Provided user credentials are invalid')
 
-    identifier = backend_user.get_identifier()
-
-    # fetchs redis mirror user if there is None then creates one
-    user = User.get_by('identifier', identifier)
-    if user is None:
-        user = User(identifier=identifier).save()
+    user = backend_user.get_user()
 
     # creates auth token
-    user.proxy.tokens.fill()
-    if len(user.tokens) > 0:
-        token = user.tokens[0]
+    if user.proxy.tokens.count() > 0:
+        token = user.proxy.tokens.get()[0]
     else:
         token = ''.join(choice(ascii_letters) for _ in range(32))
         token = Token(token=token).save()

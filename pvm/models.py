@@ -25,17 +25,22 @@ class Questionaire(Model):
     data        = fields.Dict()
     execution   = fields.ForeignIdRelation(Execution, inverse='forms')
 
+
 class Pointer(Model):
     ''' marks a node and a execution so it can continue from there '''
-    node_id   = fields.Text()
-    execution = fields.ForeignIdRelation(Execution, inverse='pointers')
+    node_id    = fields.Text()
+    execution  = fields.ForeignIdRelation(Execution, inverse='pointers')
+    candidates = fields.SetRelation('pvm.models.User', inverse='tasks')
 
 
 class User(Model):
     ''' those humans who can execute actions '''
     identifier = fields.Text(index=True)
     tokens     = fields.SetRelation('pvm.models.Token', inverse='user')
+    # processes I'm participating in
     activities = fields.SetRelation('pvm.models.Activity', inverse='user')
+    # pending tasks to solve
+    tasks      = fields.SetRelation('pvm.models.Pointer', inverse='candidates')
 
 
 class Token(Model):

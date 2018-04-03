@@ -290,8 +290,6 @@ def test_can_continue_process(client, models, mocker, config):
     assert execution.id == exc.id
     assert pointer.id == ptr.id
 
-
-
 def test_process_start_simple_requires(client, models, mongo):
     # we need the name of the process to start
     res = client.post('/v1/execution', headers={
@@ -390,14 +388,6 @@ def test_process_start_simple(client, models, mocker, config, mongo):
         'command': 'step',
         'process': exc.process_name,
         'pointer_id': ptr.id,
-        'forms':[
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'auth': 'yes',
-                },
-            },
-        ]
     }
 
     assert args['exchange'] == ''

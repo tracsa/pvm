@@ -605,7 +605,7 @@ def test_list_activities(client, models):
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
-            act.to_json(),
+            act.to_json(embed=['execution']),
         ],
     }
 

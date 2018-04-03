@@ -5,10 +5,10 @@
     <name>A process that asks a question</name>
     <public>false</public>
     <description>The simplest decision</description>
-    <start-node ref="vhK8ZcR4Z260T3pz" />
+    <start-node>vhK8ZcR4Z260T3pz</start-node>
   </process-info>
   <process>
-    <node id="vhK8ZcR4Z260T3pz" />
+    <node id="vhK8ZcR4Z260T3pz" class="sync" />
 
     <connector from="vhK8ZcR4Z260T3pz" to="57TJ0V3nur6m7wvv" />
 

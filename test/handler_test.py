@@ -132,6 +132,10 @@ def test_finish_node(config, models, mongo):
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == '4g9lOdPKmRUf'
 
+    # tasks where deleted from user
+    assert False, 'no tasks present'
+    assert False, 'event tasks for other users and same pointer are deleted'
+
 def test_wakeup(config, models, mongo):
     ''' the first stage in a node's lifecycle '''
     # setup stuff
@@ -172,7 +176,6 @@ def test_wakeup(config, models, mongo):
     }, channel)
 
     # the actual tests
-
     assert hasattr(channel, 'kwargs'), 'Publish was not called'
 
     args = channel.kwargs
@@ -191,3 +194,5 @@ def test_wakeup(config, models, mongo):
     assert reg['user_identifier'] == None
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == 'manager-node'
+
+    # tasks were assigned to users

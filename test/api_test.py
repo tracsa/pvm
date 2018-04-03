@@ -290,8 +290,6 @@ def test_can_continue_process(client, models, mocker, config):
     assert execution.id == exc.id
     assert pointer.id == ptr.id
 
-
-
 def test_process_start_simple_requires(client, models, mongo):
     # we need the name of the process to start
     res = client.post('/v1/execution', headers={
@@ -390,14 +388,6 @@ def test_process_start_simple(client, models, mocker, config, mongo):
         'command': 'step',
         'process': exc.process_name,
         'pointer_id': ptr.id,
-        'forms':[
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'auth': 'yes',
-                },
-            },
-        ]
     }
 
     assert args['exchange'] == ''
@@ -418,7 +408,6 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
-    assert reg['user_identifier'] == None
     assert reg['execution_id'] == exc.id
     assert reg['node_id'] == ptr.node_id
 
@@ -604,7 +593,7 @@ def test_list_activities(client, models):
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
-            act.to_json(),
+            act.to_json(embed=['execution']),
         ],
     }
 
@@ -665,7 +654,6 @@ def test_logs_activity( mongo, client ):
     mongo.insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
-        'user_identifier': None,
         'execution_id': "15asbs",
         'node_id': '4g9lOdPKmRUf',
     })
@@ -673,7 +661,6 @@ def test_logs_activity( mongo, client ):
     mongo.insert_one({
         'started_at': datetime(2018, 4, 1, 21, 50),
         'finished_at': None,
-        'user_identifier': None,
         'execution_id': "15asbs",
         'node_id': '4g9lOdPKmRUf2',
     })
@@ -684,13 +671,11 @@ def test_logs_activity( mongo, client ):
     del ans['data'][0]['_id']
 
     assert res.status_code == 200
-    assert ans == { "data": [{
-        'started_at': '2018-04-01T21:45:00+00:00Z',
-        'finished_at': None,
-        'user_identifier': None,
-        'execution_id': "15asbs",
-        'node_id': '4g9lOdPKmRUf',
+    assert ans == {
+        "data": [{
+            'started_at': '2018-04-01T21:45:00+00:00Z',
+            'finished_at': None,
+            'execution_id': "15asbs",
+            'node_id': '4g9lOdPKmRUf',
+        }],
     }
-    ] }
-
-

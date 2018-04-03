@@ -1,17 +1,18 @@
-from .base import BaseAuthProvider, BaseUser
 from ldap3 import Server, Connection, ALL, NTLM, core
 from ldap3.core.exceptions import LDAPBindError, LDAPSocketOpenError
+
+from pvm.auth.base import BaseAuthProvider, BaseUser
 from pvm.errors import AuthenticationError
 from pvm.http.wsgi import app
-import sys
 
 
 class LdapUser(BaseUser):
 
-    def __init__(self, username):
-        self.username = username
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
-    def get_username(self, username):
+    def get_identifier(self):
         return self.username
 
 
@@ -50,4 +51,6 @@ class LdapAuthProvider(BaseAuthProvider):
         except LDAPBindError:
             raise AuthenticationError
 
-        return LdapUser(username)
+        return LdapUser(
+            username=username
+        )

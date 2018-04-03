@@ -14,6 +14,8 @@ class MalformedProcess(Exception): pass
 
 class HierarchyError(Exception): pass
 
+class IncompleteBranch(Exception): pass
+
 class NoPointerAlive(BadField):
     message = '{field} does not have a live pointer'
     errorcode = 'no_live_pointer'

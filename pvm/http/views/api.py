@@ -6,7 +6,7 @@ import os
 import pika
 
 from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity
+from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity,Forbidden
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json, requires_auth
 from pvm.http.validation import validate_forms, validate_json, validate_auth
@@ -14,6 +14,15 @@ from pvm.http.wsgi import app, mongo
 from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, form_to_dict
+
+def trans_id(obj):
+    obj['_id'] = str(obj['_id'])
+    return obj
+
+def trans_date(obj):
+    obj['started_at'] = obj['started_at'].isoformat()+'Z' if obj['started_at'] is not None else None
+    obj['finished_at'] = obj['finished_at'].isoformat()+'Z' if obj['finished_at'] is not None else None
+    return obj
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
@@ -73,10 +82,13 @@ def start_process():
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
 
+    forms = []
+
     if len(collected_forms) > 0:
         for ref, form_data in collected_forms:
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
+            forms.append({'ref':ref,'data':form_data})
 
     # log to mongo
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
@@ -87,6 +99,7 @@ def start_process():
         'user_identifier': user.identifier if user is not None else None,
         'execution_id': execution.id,
         'node_id': start_point.getAttribute('id'),
+        'forms': forms,
     })
 
     # trigger rabbit
@@ -157,10 +170,12 @@ def continue_process():
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
 
+    forms = []
     if len(collected_forms) > 0:
         for ref, form_data in collected_forms:
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
+            forms.append({'ref':ref, 'data':form_data})
 
     # trigger rabbit
     channel = get_channel()
@@ -171,6 +186,8 @@ def continue_process():
             'command': 'step',
             'process': execution.process_name,
             'pointer_id': pointer.id,
+            'forms':forms
+
         }),
         properties = pika.BasicProperties(
             delivery_mode = 2, # make message persistent
@@ -220,3 +237,40 @@ def list_activities():
             activities
         )),
     })
+
+@app.route('/v1/activity/<id>', methods=['GET'])
+@requires_auth
+def one_activity(id):
+    try:
+        activity = Activity.get_or_exception(id)
+    except ModelNotFoundError:
+        raise BadRequest([{
+            'detail': 'activity_id is not valid',
+            'code': 'validation.invalid',
+            'where': 'request.body.execution_id',
+        }])
+
+    user_activity = User.get_or_exception(activity.user)
+    if not g.user == user_activity:
+        raise Forbidden([{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }])
+
+    return jsonify({
+        'data': activity.to_json(),
+    })
+
+@app.route('/v1/log/<id>', methods=['GET'])
+def list_logs(id):
+    collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
+
+    return jsonify({
+        "data": list(map(
+            trans_date,
+            map(
+                trans_id,
+                collection.find({'execution_id': id})
+            )
+        )),
+    }), 200

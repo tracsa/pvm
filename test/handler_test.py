@@ -36,9 +36,17 @@ def test_recover_step(config, models):
     ).save()
     ptr.proxy.execution.set(exc)
 
-    execution, pointer, xmliter, node = handler.recover_step({
+    execution, pointer, xmliter, node, forms = handler.recover_step({
         'command': 'step',
         'pointer_id': ptr.id,
+        'forms':[
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'auth': 'yes',
+                },
+            },
+        ]
     })
 
     assert execution.id == exc.id
@@ -93,6 +101,20 @@ def test_finish_node(config, models, mongo):
     ptrs = handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
+        'forms': [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'auth': 'yes',
+                },
+            },
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'auth': 'yes',
+                },
+            },
+        ]
     }, None)
 
     assert Pointer.get(pointer.id) == None
@@ -139,6 +161,14 @@ def test_wakeup(config, models, mongo):
     ptrs = handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
+        'forms':[
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'auth': 'yes',
+                },
+            },
+        ]
     }, channel)
 
     # the actual tests

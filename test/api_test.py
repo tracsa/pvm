@@ -676,7 +676,7 @@ def test_logs_activity( mongo, client ):
         'finished_at': None,
         'user_identifier': None,
         'execution_id': "15asbs",
-        'node_id': '4g9lOdPKmRUfe',
+        'node_id': '4g9lOdPKmRUf2',
     })
 
     res = client.get('/v1/log/15asbs?node_id=4g9lOdPKmRUf')
@@ -690,9 +690,10 @@ def test_logs_activity( mongo, client ):
         'finished_at': None,
         'user_identifier': None,
         'execution_id': "15asbs",
-        'node_id': '4g9lOdPKmRUf3',
+        'node_id': '4g9lOdPKmRUf',
     }
     ] }
+
 
 
 # def test_logs_activity( mongo, client ):

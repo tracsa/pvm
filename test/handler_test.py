@@ -36,7 +36,7 @@ def test_recover_step(config, models):
     ).save()
     ptr.proxy.execution.set(exc)
 
-    execution, pointer, xmliter, node, forms = handler.recover_step({
+    execution, pointer, xmliter, node, forms, actors, documents = handler.recover_step({
         'command': 'step',
         'pointer_id': ptr.id,
         'forms':[
@@ -114,6 +114,22 @@ def test_finish_node(config, models, mongo):
                     'auth': 'yes',
                 },
             },
+        ],
+        'actors':  [
+            {
+                'ref': 'ref_actor',
+                'user': 'jhon'
+            },
+            {
+                'ref': 'ref_actor',
+                'user': 'catherine'
+            }
+        ],
+        'documents': [
+            {
+                'ref': 'ref_document',
+                'file': 'path/file'
+            }
         ]
     }, None)
 
@@ -168,6 +184,22 @@ def test_wakeup(config, models, mongo):
                     'auth': 'yes',
                 },
             },
+        ],
+        'actors':  [
+            {
+                'ref': 'ref_actor',
+                'user': 'jhon'
+            },
+            {
+                'ref': 'ref_actor',
+                'user': 'catherine'
+            }
+        ],
+        'documents': [
+            {
+                'ref': 'ref_document',
+                'file': 'path/file'
+            }
         ]
     }, channel)
 

@@ -180,4 +180,4 @@ class Handler:
             lambda e:e.getAttribute('id') == pointer.node_id
         )
 
-        return execution, pointer, xml, make_node(point), message.get('forms', [])
+        return execution, pointer, xml, make_node(point), message.get('forms', []), message.get('actors',[]), message.get('documents',[])

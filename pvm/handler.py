@@ -119,7 +119,7 @@ class Handler:
             'execution_id': execution.id,
             'node_id': node.element.getAttribute('id'),
             'forms': [],
-            'docs': [],
+            'documents': [],
             'actors': [],
         })
 
@@ -136,6 +136,8 @@ class Handler:
             '$set': {
                 'finished_at': datetime.now(),
                 'forms': forms,
+                'actors': actors,
+                'documents': documents,
             },
         })
 

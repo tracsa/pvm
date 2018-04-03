@@ -137,7 +137,7 @@ def test_wakeup(config, models, mongo):
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == 'manager-node'
     assert reg['forms'] == []
-    assert reg['docs'] == []
+    assert reg['documents'] == []
     assert reg['actors'] == []
 
     # tasks where asigned
@@ -149,7 +149,7 @@ def test_wakeup(config, models, mongo):
     assert task.node_id == 'manager-node'
     assert task.proxy.execution.get().id == execution.id
 
-def test_finish_node(config, models, mongo):
+def test_teardown(config, models, mongo):
     ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
     execution = Execution(
@@ -177,7 +177,7 @@ def test_finish_node(config, models, mongo):
         'execution_id': execution.id,
         'node_id': p_0.node_id,
         'forms': [],
-        'docs': [],
+        'documents': [],
         'actors': [],
     })
 
@@ -187,6 +187,12 @@ def test_finish_node(config, models, mongo):
         'forms': [{
             'ref': form.ref,
             'data': form.data,
+        }],
+        'actors': [{
+            'ref': '#a',
+        }],
+        'documents': [{
+            'ref': '#b',
         }],
     }, None)
 
@@ -209,6 +215,8 @@ def test_finish_node(config, models, mongo):
             'auth': 'yes',
         },
     }]
+    assert reg['actors'] == [{'ref': '#a'}]
+    assert reg['documents'] == [{'ref': '#b'}]
 
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0

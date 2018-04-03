@@ -527,27 +527,26 @@ def test_exit_request_start(client, models, mocker):
 def test_list_processes(client):
     res = client.get('/v1/process')
 
+    body = json.loads(res.data)
+    exit_req = list(filter(lambda xml: xml['id'] == 'exit_request', body['data']))[0]
+
     assert res.status_code == 200
-    assert json.loads(res.data) == {
-        'data': [
+    assert exit_req == {
+        'id': 'exit_request',
+        'version': '2018-03-20',
+        'author': 'categulario',
+        'date': '2018-03-20',
+        'name': 'Petición de salida',
+        'description': 'Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.',
+        'versions': ['2018-03-20'],
+        'form_array': [
             {
-                'id': 'exit_request',
-                'version': '2018-03-20',
-                'author': 'categulario',
-                'date': '2018-03-20',
-                'name': 'Petición de salida',
-                'description': 'Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.',
-                'versions': ['2018-03-20'],
-                'form_array': [
+                'ref': '#exit-form',
+                'inputs': [
                     {
-                        'ref': '#exit-form',
-                        'inputs': [
-                            {
-                                'type': 'text',
-                                'name': 'reason',
-                                'required': True,
-                            },
-                        ],
+                        'type': 'text',
+                        'name': 'reason',
+                        'required': True,
                     },
                 ],
             },

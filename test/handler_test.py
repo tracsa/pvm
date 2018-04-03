@@ -153,10 +153,12 @@ def test_finish_node(config, models, mongo):
     ).save()
     p_0.proxy.execution.set(execution)
     manager = User(identifier='manager').save()
+    manager2 = User(identifier='manager2').save()
     act = Activity(ref='#manager').save()
     act.proxy.user.set(manager)
     act.proxy.execution.set(execution)
     manager.proxy.tasks.set([p_0])
+    manager2.proxy.tasks.set([p_0])
     form = Questionaire(ref='#auth-form', data={
         'auth' : 'yes',
     }).save()
@@ -202,8 +204,5 @@ def test_finish_node(config, models, mongo):
     }]
 
     # tasks where deleted from user
-    assert False, 'no tasks present'
-    assert False, 'event tasks for other users and same pointer are deleted'
-
-def test_finish_process():
-    assert False, 'execution, pointers, forms, activities and documents are deleted'
+    assert manager.proxy.tasks.count() == 0
+    assert manager2.proxy.tasks.count() == 0

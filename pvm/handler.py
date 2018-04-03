@@ -49,7 +49,7 @@ class Handler:
             channel.basic_ack(delivery_tag = method.delivery_tag)
 
     def call(self, message:dict, channel):
-        execution, pointer, xml, current_node, forms = self.recover_step(message)
+        execution, pointer, xml, current_node, forms, actors, documents = self.recover_step(message)
 
         pointers = [] # pointers to be notified back
 
@@ -59,7 +59,7 @@ class Handler:
 
         for node in next_nodes:
             # node's begining of life
-            self.wakeup(node, execution, channel, forms)
+            self.wakeup(node, execution, channel, forms, actors, documents)
 
             if not node.is_end():
                 # End nodes don't create pointers, their lifetime ends here
@@ -102,7 +102,7 @@ class Handler:
 
         return self.mongo
 
-    def wakeup(self, node, execution, channel, forms):
+    def wakeup(self, node, execution, channel, forms, actors, documents):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
         filter_q = node.element.getElementsByTagName('filter')
@@ -138,7 +138,9 @@ class Handler:
             'user_identifier': None,
             'execution_id': execution.id,
             'node_id': node.element.getAttribute('id'),
-            'forms': forms
+            'forms': forms,
+            'actors': actors,
+            'document': documents
         })
 
     def teardown(self, pointer):
@@ -180,4 +182,4 @@ class Handler:
             lambda e:e.getAttribute('id') == pointer.node_id
         )
 
-        return execution, pointer, xml, make_node(point), message.get('forms', []), message.get('actors',[]), message.get('documents',[])
+        return execution, pointer, xml, make_node(point), message.get('forms', []), message.get('actors', []), message.get('documents', [])

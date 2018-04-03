@@ -77,11 +77,12 @@ def start_process():
 
     pointer.proxy.execution.set(execution)
 
+    actors = []
     if auth_ref is not None:
         activity = Activity(ref=auth_ref).save()
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
-
+        actors.append( {'ref': auth_ref, 'user': {'identifier':user.identifier} } )
     forms = []
 
     if len(collected_forms) > 0:
@@ -100,6 +101,8 @@ def start_process():
         'execution_id': execution.id,
         'node_id': start_point.getAttribute('id'),
         'forms': forms,
+        'actors': actors,
+        'documents':[]
     })
 
     # trigger rabbit
@@ -165,10 +168,15 @@ def continue_process():
     collected_forms = validate_forms(continue_point)
 
     # save the data
+    actors = []
+
     if auth_ref is not None:
         activity = Activity(ref=auth_ref).save()
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
+
+        actors.append( {'ref': auth_ref, 'user': {'identifier':user.identifier } } )
+
 
     forms = []
     if len(collected_forms) > 0:
@@ -186,7 +194,9 @@ def continue_process():
             'command': 'step',
             'process': execution.process_name,
             'pointer_id': pointer.id,
-            'forms':forms
+            'forms':forms,
+            'actors':  actors,
+            'documents': []
 
         }),
         properties = pika.BasicProperties(

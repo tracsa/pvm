@@ -46,7 +46,14 @@ def test_recover_step(config, models):
                     'auth': 'yes',
                 },
             },
-        ]
+        ],
+        'actors':  [
+            {
+                'ref': '#requester',
+                'user': {'identifier':'juan_manager'}
+            }
+        ],
+        'documents': []
     })
 
     assert execution.id == exc.id
@@ -117,19 +124,11 @@ def test_finish_node(config, models, mongo):
         ],
         'actors':  [
             {
-                'ref': 'ref_actor',
-                'user': 'jhon'
-            },
-            {
-                'ref': 'ref_actor',
-                'user': 'catherine'
+                'ref': '#requester',
+                'user': {'identifier':'juan'}
             }
         ],
         'documents': [
-            {
-                'ref': 'ref_document',
-                'file': 'path/file'
-            }
         ]
     }, None)
 
@@ -187,19 +186,12 @@ def test_wakeup(config, models, mongo):
         ],
         'actors':  [
             {
-                'ref': 'ref_actor',
-                'user': 'jhon'
+                'ref': act.ref,
+                'user': manager.identifier
             },
-            {
-                'ref': 'ref_actor',
-                'user': 'catherine'
-            }
+
         ],
         'documents': [
-            {
-                'ref': 'ref_document',
-                'file': 'path/file'
-            }
         ]
     }, channel)
 

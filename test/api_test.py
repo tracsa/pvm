@@ -202,7 +202,8 @@ def test_can_continue_process(client, models, mocker, config):
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
-
+    actors = []
+    actors.append( {'ref': act.ref, 'user': {'identifier':juan.identifier } } )
     manager = User(identifier='juan_manager').save()
     token = Token(token='123456').save()
     token.proxy.user.set(manager)
@@ -231,6 +232,8 @@ def test_can_continue_process(client, models, mocker, config):
                 },
             },
         ],
+        'actors': actors,
+        'documents': []
     }))
 
     assert res.status_code == 202
@@ -275,11 +278,21 @@ def test_can_continue_process(client, models, mocker, config):
                     'auth': 'yes',
                 },
             },
-        ]
+        ],
+        'actors':  [
+            {
+                'ref': '#manager',
+                 'user': {'identifier': 'juan_manager'}
+            }
+
+        ],
+        'documents': []
+
     }
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
+
     assert json.loads(args['body']) == json_message
 
     # makes a useful call for the handler
@@ -390,13 +403,21 @@ def test_process_start_simple(client, models, mocker, config, mongo):
         'command': 'step',
         'process': exc.process_name,
         'pointer_id': ptr.id,
-        'forms':[
+        'forms': [
             {
                 'ref': '#auth-form',
                 'data': {
                     'auth': 'yes',
                 },
             },
+        ],
+        'actors':  [
+            {
+                'ref': 'ref_actor',
+                'user': {'identifier':'juan'}
+            }
+        ],
+        'documents': [
         ]
     }
 

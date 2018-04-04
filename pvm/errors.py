@@ -1,24 +1,51 @@
 from coralillo.errors import BadField
 
-class AuthenticationError(Exception): pass
 
-class ProcessNotFound(Exception): pass
+class AuthenticationError(Exception):
 
-class ElementNotFound(Exception): pass
+    pass
 
-class CannotMove(Exception): pass
 
-class RefNotFound(Exception): pass
+class ProcessNotFound(Exception):
 
-class MalformedProcess(Exception): pass
+    pass
 
-class HierarchyError(Exception): pass
 
-class IncompleteBranch(Exception): pass
+class ElementNotFound(Exception):
+
+    pass
+
+
+class CannotMove(Exception):
+
+    pass
+
+
+class RefNotFound(Exception):
+
+    pass
+
+
+class MalformedProcess(Exception):
+
+    pass
+
+
+class HierarchyError(Exception):
+
+    pass
+
+
+class IncompleteBranch(Exception):
+
+    pass
+
 
 class NoPointerAlive(BadField):
+
     message = '{field} does not have a live pointer'
     errorcode = 'no_live_pointer'
+
 
 class InputError(Exception):
 
@@ -40,10 +67,12 @@ class InputError(Exception):
             'code': self.code,
         }
 
+
 class RequiredInputError(InputError):
 
     detail = "'{input}' input is required"
     code = 'validation.required'
+
 
 class ValidationErrors(Exception):
 
@@ -53,6 +82,6 @@ class ValidationErrors(Exception):
 
     def to_json(self):
         return list(map(
-            lambda e:e.to_json(),
+            lambda e: e.to_json(),
             self.errors
         ))

@@ -13,7 +13,7 @@ XML_PATH = os.path.join(base_dir, 'xml')
 # Rabbitmq
 RABBIT_HOST = 'localhost'
 RABBIT_QUEUE = 'pvm_process'
-RABBIT_NOTIFY_EXCHANGE= 'pvm_notify'
+RABBIT_NOTIFY_EXCHANGE = 'pvm_notify'
 RABBIT_CONSUMER_TAG = 'pvm_consumer_1'
 RABBIT_NO_ACK = True
 

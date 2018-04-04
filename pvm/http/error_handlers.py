@@ -4,9 +4,11 @@ from flask import jsonify
 from pvm.http.wsgi import app
 from pvm.http.errors import JsonReportedException
 
+
 @app.errorhandler(JsonReportedException)
 def json_formatted_handler(e):
     return jsonify(e.to_json()), e.status_code, e.headers
+
 
 @app.errorhandler(404)
 def handle_404(e):
@@ -17,6 +19,7 @@ def handle_404(e):
         }],
     }), e.code
 
+
 @app.errorhandler(401)
 def handle_401(e):
     return jsonify({
@@ -25,6 +28,7 @@ def handle_401(e):
             'where': 'request.body',
         }],
     }), e.code
+
 
 @app.errorhandler(500)
 def handle_500(e):

@@ -3,6 +3,7 @@ from flask import json
 from random import choice
 from string import ascii_letters
 
+
 def test_unexistent_backend(client):
     mth = ''.join(choice(ascii_letters) for _ in range(6))
     res = client.post('/v1/auth/signin/{}'.format(mth))
@@ -14,6 +15,7 @@ def test_unexistent_backend(client):
             'where': 'request.url',
         }],
     }
+
 
 def test_login_wrong_user(client):
     res = client.post('/v1/auth/signin/hardcoded')
@@ -28,6 +30,7 @@ def test_login_wrong_user(client):
         ],
     }
 
+
 def test_login(client):
     res = client.post('/v1/auth/signin/hardcoded', data={
         'username': 'juan',
@@ -40,6 +43,7 @@ def test_login(client):
 
     assert 'data' in data
     assert 'token' in data['data']
+
 
 def test_login_token(client, models):
     res = client.post('/v1/auth/signin/hardcoded', data={

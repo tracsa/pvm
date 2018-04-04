@@ -1,6 +1,7 @@
 from pvm.auth.base import BaseAuthProvider, BaseUser
 from pvm.errors import AuthenticationError
 
+
 class HardcodedUser(BaseUser):
 
     def __init__(self, **kwargs):

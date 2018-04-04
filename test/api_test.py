@@ -705,7 +705,7 @@ def test_logs_activity( mongo, client ):
     assert res.status_code == 200
     assert ans == {
         "data": [{
-            'started_at': '2018-04-01T21:45:00+00:00Z',
+            'started_at': '2018-04-01T21:45:00+00:00',
             'finished_at': None,
             'execution_id': "15asbs",
             'node_id': '4g9lOdPKmRUf',

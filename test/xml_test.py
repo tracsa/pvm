@@ -133,9 +133,9 @@ def test_nodes_from(config):
 
     given = list(nodes_from(start_node, xml.getroot()))
     expct = [
-        (Element('node', {'id':'D'}), Element('connector', {'id':'B-D'})),
-        (Element('node', {'id':'C'}), Element('connector', {'id':'B-C'})),
-        (Element('node', {'id':'E'}), Element('connector', {'id':'B-E'})),
+        (Element('node', {'id': 'D'}), Element('connector', {'id': 'B-D'})),
+        (Element('node', {'id': 'C'}), Element('connector', {'id': 'B-C'})),
+        (Element('node', {'id': 'E'}), Element('connector', {'id': 'B-E'})),
     ]
 
     assert len(given) == len(expct)
@@ -148,33 +148,33 @@ def test_nodes_from(config):
 def test_has_no_incoming_sorted(config):
     xml = parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
 
-    assert has_no_incoming(Element('node', {'id':'A'}), xml.getroot()) == True
-    assert has_no_incoming(Element('node', {'id':'B'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'C'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'D'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'E'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'F'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'G'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'H'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'I'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'J'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'K'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'A'}), xml.getroot()) == True
+    assert has_no_incoming(Element('node', {'id': 'B'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'C'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'D'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'E'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'F'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'G'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'H'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'I'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'J'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'K'}), xml.getroot()) == False
 
 @pytest.mark.skip
 def test_has_no_incoming_unsorted(config):
     xml = parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
 
-    assert has_no_incoming(Element('node', {'id':'A'}), xml.getroot()) == True
-    assert has_no_incoming(Element('node', {'id':'B'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'C'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'D'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'E'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'F'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'G'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'H'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'I'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'J'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id':'K'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'A'}), xml.getroot()) == True
+    assert has_no_incoming(Element('node', {'id': 'B'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'C'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'D'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'E'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'F'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'G'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'H'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'I'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'J'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'K'}), xml.getroot()) == False
 
 @pytest.mark.skip
 def test_has_edges(config):

@@ -39,7 +39,7 @@ def test_recover_step(config, models):
     execution, pointer, xmliter, node, forms, actors, documents = handler.recover_step({
         'command': 'step',
         'pointer_id': ptr.id,
-        'forms':[
+        'forms': [
             {
                 'ref': '#auth-form',
                 'data': {
@@ -47,10 +47,10 @@ def test_recover_step(config, models):
                 },
             },
         ],
-        'actors':  [
+        'actors': [
             {
                 'ref': '#requester',
-                'user': {'identifier':'juan_manager'}
+                'user': {'identifier': 'juan_manager'}
             }
         ],
         'documents': []

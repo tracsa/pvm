@@ -32,7 +32,7 @@ def test_requires_json(client):
 
     res = client.post('/', headers={
         'Content-Type': 'application/json',
-    }, data=json.dumps({'a':1}))
+    }, data=json.dumps({'a': 1}))
 
     assert res.status_code == 200
     assert res.headers['Content-Type'] == 'application/json'

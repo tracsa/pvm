@@ -42,7 +42,7 @@ class Handler:
                     'pointer_id': pointer.id,
                 }),
                 properties=pika.BasicProperties(
-                    delivery_mode=2, # make message persistent
+                    delivery_mode=2,
                 ),
             )
 
@@ -107,7 +107,7 @@ class Handler:
                     routing_key=medium,
                     body=json.dumps(params),
                     properties=pika.BasicProperties(
-                        delivery_mode=2, # make message persistent
+                        delivery_mode=2,
                     ),
                 )
 

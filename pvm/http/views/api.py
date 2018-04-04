@@ -84,14 +84,14 @@ def start_process():
         activity = Activity(ref=auth_ref).save()
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
-        actors.append( {'ref': auth_ref, 'user': user.to_json() } )
+        actors.append({'ref': auth_ref, 'user': user.to_json()})
     forms = []
 
     if len(collected_forms) > 0:
         for ref, form_data in collected_forms:
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
-            forms.append({'ref':ref,'data':form_data})
+            forms.append({'ref': ref, 'data': form_data})
 
     # log to mongo
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
@@ -103,7 +103,7 @@ def start_process():
         'node_id': start_point.getAttribute('id'),
         'forms': forms,
         'actors': actors,
-        'documents':[]
+        'documents': []
     })
 
     # trigger rabbit
@@ -117,7 +117,7 @@ def start_process():
             'pointer_id': pointer.id,
         }),
         properties=pika.BasicProperties(
-            delivery_mode=2, # make message persistent
+            delivery_mode=2,
         ),
     )
 
@@ -177,14 +177,14 @@ def continue_process():
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
 
-        actors.append( {'ref': auth_ref, 'user': user.to_json() } )
+        actors.append({'ref': auth_ref, 'user': user.to_json()})
 
     forms = []
     if len(collected_forms) > 0:
         for ref, form_data in collected_forms:
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
-            forms.append({'ref':ref, 'data':form_data})
+            forms.append({'ref': ref, 'data': form_data})
 
     # trigger rabbit
     channel = get_channel()
@@ -200,7 +200,7 @@ def continue_process():
             'documents': []
         }),
         properties=pika.BasicProperties(
-            delivery_mode=2, # make message persistent
+            delivery_mode=2,
         ),
     )
 

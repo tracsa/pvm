@@ -37,7 +37,7 @@ class Trigger:
                 'process': args.process,
             }),
             properties=pika.BasicProperties(
-                delivery_mode=2, # make message persistent
+                delivery_mode=2,
             ),
         )
 
@@ -53,7 +53,7 @@ class Trigger:
                 'data': dict(args.data) if args.data is not None else dict(),
             }),
             properties=pika.BasicProperties(
-                delivery_mode=2, # make message persistent
+                delivery_mode=2,
             ),
         )
 

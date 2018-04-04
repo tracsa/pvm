@@ -12,9 +12,9 @@ class Condition:
         with open(filename) as grammar_file:
             self.parser = Lark(
                 grammar_file.read(),
-                start = 'condition',
-                parser = 'lalr',
-                transformer = self.ConditionTransformer(execution),
+                start='condition',
+                parser='lalr',
+                transformer=self.ConditionTransformer(execution),
             )
 
     def parse(self, string):

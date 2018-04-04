@@ -35,19 +35,19 @@ class Handler:
 
         for pointer in to_notify:
             channel.basic_publish(
-                exchange = '',
-                routing_key = self.config['RABBIT_QUEUE'],
-                body = json.dumps({
+                exchange='',
+                routing_key=self.config['RABBIT_QUEUE'],
+                body=json.dumps({
                     'command': 'step',
                     'pointer_id': pointer.id,
                 }),
-                properties = pika.BasicProperties(
-                    delivery_mode = 2, # make message persistent
+                properties=pika.BasicProperties(
+                    delivery_mode=2, # make message persistent
                 ),
             )
 
         if not self.config['RABBIT_NO_ACK']:
-            channel.basic_ack(delivery_tag = method.delivery_tag)
+            channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, message:dict, channel):
         execution, pointer, xml, current_node, forms, actors, documents = self.recover_step(message)
@@ -194,6 +194,6 @@ class Handler:
         assert execution.process_name == xml.filename, 'Inconsistent pointer found'
 
         point = xml.find(
-            lambda e:e.getAttribute('id') == pointer.node_id
+            lambda e: e.getAttribute('id') == pointer.node_id
         )
         return execution, pointer, xml, make_node(point), message.get('forms', []), message.get('actors', []), message.get('documents', [])

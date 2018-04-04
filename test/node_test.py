@@ -36,7 +36,7 @@ def test_find_next_element_normal(config):
     assert xml.filename == 'simple.2018-02-19.xml'
 
     current_node = make_node(xml.find(
-        lambda e:e.tagName=='node' and e.getAttribute('id')=='4g9lOdPKmRUf'
+        lambda e: e.tagName=='node' and e.getAttribute('id')=='4g9lOdPKmRUf'
     ))
 
     next_node = current_node.next(xml, None)[0]
@@ -53,7 +53,7 @@ def test_find_next_element_decision_yes(config):
     assert xml.filename == 'decision.2018-02-27.xml'
 
     current_node = make_node(xml.find(
-        lambda e:e.tagName=='node' and e.getAttribute('id')=='57TJ0V3nur6m7wvv'
+        lambda e: e.tagName=='node' and e.getAttribute('id')=='57TJ0V3nur6m7wvv'
     ))
 
     next_node = current_node.next(xml, exc)[0]
@@ -72,7 +72,7 @@ def test_find_next_element_decision_no(config):
     assert xml.filename == 'decision.2018-02-27.xml'
 
     current_node = make_node(xml.find(
-        lambda e:e.tagName=='node' and e.getAttribute('id')=='57TJ0V3nur6m7wvv'
+        lambda e: e.tagName=='node' and e.getAttribute('id')=='57TJ0V3nur6m7wvv'
     ))
 
     next_node = current_node.next(xml, exc)[0]

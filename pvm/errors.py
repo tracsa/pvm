@@ -53,6 +53,6 @@ class ValidationErrors(Exception):
 
     def to_json(self):
         return list(map(
-            lambda e:e.to_json(),
+            lambda e: e.to_json(),
             self.errors
         ))

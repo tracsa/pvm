@@ -7,12 +7,12 @@ from .errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from .mark import comment
 
 XML_ATTRIBUTES = {
-    'public': lambda a:a=='true',
+    'public': lambda a: a=='true',
     'author': str,
     'date': str,
     'name': str,
-    'description': lambda x:x,
-    'start-node': lambda x:x,
+    'description': lambda x: x,
+    'start-node': lambda x: x,
 }
 
 
@@ -98,7 +98,7 @@ class Xml:
     def start_node(self) -> Element:
         ''' Returns the starting node '''
         start_node_id = getattr(self, 'start-node')
-        start_node = self.find(lambda e:e.getAttribute('id') == start_node_id)
+        start_node = self.find(lambda e: e.getAttribute('id') == start_node_id)
 
         return start_node
 

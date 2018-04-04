@@ -42,10 +42,10 @@ class SingleConnectedNode(Node):
 
     def next(self, xml:Xml, execution) -> ['Node']:
         ''' just find the next node in the graph '''
-        conn = xml.find(lambda e:e.tagName=='connector' and e.getAttribute('from') == self.element.getAttribute('id'))
+        conn = xml.find(lambda e: e.tagName=='connector' and e.getAttribute('from') == self.element.getAttribute('id'))
 
         return [make_node(xml.find(
-            lambda e:e.getAttribute('id') == conn.getAttribute('to')
+            lambda e: e.getAttribute('id') == conn.getAttribute('to')
         ))]
 
 
@@ -94,7 +94,7 @@ class DecisionNode(AsyncNode):
             )
 
         return [make_node(xml.find(
-            lambda e:e.getAttribute('id') == conn.getAttribute('to')
+            lambda e: e.getAttribute('id') == conn.getAttribute('to')
         ))]
 
 

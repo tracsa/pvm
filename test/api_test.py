@@ -58,7 +58,7 @@ def test_continue_process_asks_living_objects(client):
 
 def test_continue_process_requires_valid_node(client, models):
     exc = Execution(
-        process_name = 'decision.2018-02-27',
+        process_name='decision.2018-02-27',
     ).save()
 
     res = client.post('/v1/pointer', headers={
@@ -81,7 +81,7 @@ def test_continue_process_requires_valid_node(client, models):
 
 def test_continue_process_requires_living_pointer(client, models):
     exc = Execution(
-        process_name = 'decision.2018-02-27',
+        process_name='decision.2018-02-27',
     ).save()
 
     res = client.post('/v1/pointer', headers={
@@ -104,10 +104,10 @@ def test_continue_process_requires_living_pointer(client, models):
 
 def test_continue_process_asks_for_user(client, models):
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     ptr = Pointer(
-        node_id = 'manager-node',
+        node_id='manager-node',
     ).save()
     ptr.proxy.execution.set(exc)
 
@@ -135,10 +135,10 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
     token = Token(token='123456').save()
     token.proxy.user.set(user)
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     ptr = Pointer(
-        node_id = 'manager-node',
+        node_id='manager-node',
     ).save()
     ptr.proxy.execution.set(exc)
 
@@ -169,11 +169,11 @@ def test_continue_process_asks_for_data(client, models):
     token = Token(token='123456').save()
     token.proxy.user.set(manager)
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     act.proxy.execution.set(exc)
     ptr = Pointer(
-        node_id = 'manager-node',
+        node_id='manager-node',
     ).save()
     ptr.proxy.execution.set(exc)
 
@@ -208,11 +208,11 @@ def test_can_continue_process(client, models, mocker, config):
     token = Token(token='123456').save()
     token.proxy.user.set(manager)
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     act.proxy.execution.set(exc)
     ptr = Pointer(
-        node_id = 'manager-node',
+        node_id='manager-node',
     ).save()
     ptr.proxy.execution.set(exc)
 
@@ -592,7 +592,7 @@ def test_list_activities(client, models):
     token = Token(token='123456').save()
     token.proxy.user.set(juan)
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     act.proxy.execution.set(exc)
     act2.proxy.execution.set(exc)
@@ -628,7 +628,7 @@ def test_activity_wrong_activity(client, models):
     token = Token(token='123456').save()
     token.proxy.user.set(juan)
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     act.proxy.execution.set(exc)
     act2.proxy.execution.set(exc)

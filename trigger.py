@@ -16,13 +16,13 @@ class Trigger:
         config.from_envvar('PVM_SETTINGS', silent=True)
 
         connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host = config['RABBIT_HOST'],
+            host=config['RABBIT_HOST'],
         ))
         channel = connection.channel()
 
         channel.queue_declare(
-            queue = config['RABBIT_QUEUE'],
-            durable = True,
+            queue=config['RABBIT_QUEUE'],
+            durable=True,
         )
 
         self.config = config
@@ -30,14 +30,14 @@ class Trigger:
 
     def start(self, args):
         self.channel.basic_publish(
-            exchange = '',
-            routing_key = self.config['RABBIT_QUEUE'],
-            body = json.dumps({
+            exchange='',
+            routing_key=self.config['RABBIT_QUEUE'],
+            body=json.dumps({
                 'command': 'start',
                 'process': args.process,
             }),
-            properties = pika.BasicProperties(
-                delivery_mode = 2, # make message persistent
+            properties=pika.BasicProperties(
+                delivery_mode=2, # make message persistent
             ),
         )
 
@@ -45,15 +45,15 @@ class Trigger:
 
     def step(self, args):
         self.channel.basic_publish(
-            exchange = '',
-            routing_key = self.config['RABBIT_QUEUE'],
-            body = json.dumps({
+            exchange='',
+            routing_key=self.config['RABBIT_QUEUE'],
+            body=json.dumps({
                 'command': 'step',
                 'pointer_id': args.pointer_id,
                 'data': dict(args.data) if args.data is not None else dict(),
             }),
-            properties = pika.BasicProperties(
-                delivery_mode = 2, # make message persistent
+            properties=pika.BasicProperties(
+                delivery_mode=2, # make message persistent
             ),
         )
 

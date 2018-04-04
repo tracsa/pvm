@@ -55,13 +55,13 @@ def test_make_iterator(config):
 def test_find(config):
     xml = Xml.load(config, 'simple')
 
-    start = xml.find(lambda e:e.tagName=='node')
+    start = xml.find(lambda e: e.tagName=='node')
 
     assert start.tagName == 'node'
     assert start.getAttribute('id') == 'gYcj0XjbgjSO'
 
     conn = xml.find(
-        lambda e:e.tagName=='connector' and e.getAttribute('from')==start.getAttribute('id')
+        lambda e: e.tagName=='connector' and e.getAttribute('from')==start.getAttribute('id')
     )
 
     assert conn.tagName == 'connector'
@@ -69,14 +69,14 @@ def test_find(config):
     assert conn.getAttribute('to') == '4g9lOdPKmRUf'
 
     echo = xml.find(
-        lambda e:e.getAttribute('id')==conn.getAttribute('to')
+        lambda e: e.getAttribute('id')==conn.getAttribute('to')
     )
 
     assert echo.tagName == 'node'
     assert echo.getAttribute('id') == '4g9lOdPKmRUf'
 
     conn = xml.find(
-        lambda e:e.tagName=='connector' and e.getAttribute('from')==echo.getAttribute('id')
+        lambda e: e.tagName=='connector' and e.getAttribute('from')==echo.getAttribute('id')
     )
 
     assert conn.tagName == 'connector'
@@ -84,7 +84,7 @@ def test_find(config):
     assert conn.getAttribute('to') == 'kV9UWSeA89IZ'
 
     end = xml.find(
-        lambda e:e.getAttribute('id')==conn.getAttribute('to')
+        lambda e: e.getAttribute('id')==conn.getAttribute('to')
     )
 
     assert end.tagName == 'node'

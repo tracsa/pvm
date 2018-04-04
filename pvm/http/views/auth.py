@@ -32,6 +32,7 @@ def signin(backend):
         }
     })
 
+
 @app.route('/v1/auth/whoami')
 def whoami():
     identifier = request.authorization['username']

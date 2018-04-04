@@ -25,9 +25,9 @@ if __name__ == '__main__':
 
     # Load the models
     eng = Engine(
-        host = config['REDIS_HOST'],
-        port = config['REDIS_PORT'],
-        db = config['REDIS_DB'],
+        host=config['REDIS_HOST'],
+        port=config['REDIS_PORT'],
+        db=config['REDIS_DB'],
     )
     bind_models(eng)
 

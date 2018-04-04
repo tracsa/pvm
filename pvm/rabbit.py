@@ -8,13 +8,13 @@ def get_channel():
 
     if channel is None:
         connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host = app.config['RABBIT_HOST'],
+            host=app.config['RABBIT_HOST'],
         ))
         channel = connection.channel()
 
         channel.queue_declare(
-            queue = app.config['RABBIT_QUEUE'],
-            durable = True,
+            queue=app.config['RABBIT_QUEUE'],
+            durable=True,
         )
 
         g._channel = channel

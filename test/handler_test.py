@@ -29,10 +29,10 @@ def test_parse_message(config):
 def test_recover_step(config, models):
     handler = Handler(config)
     exc = Execution.validate(
-        process_name = 'simple.2018-02-19.xml',
+        process_name='simple.2018-02-19.xml',
     ).save()
     ptr = Pointer.validate(
-        node_id = '4g9lOdPKmRUf',
+        node_id='4g9lOdPKmRUf',
     ).save()
     ptr.proxy.execution.set(exc)
 
@@ -76,7 +76,7 @@ def test_create_pointer(config, models):
 
     node = make_node(ele)
     exc = Execution.validate(
-        process_name = 'simple.2018-02-19.xml',
+        process_name='simple.2018-02-19.xml',
     ).save()
     pointer = handler.create_pointer(node, exc)
     execution = pointer.proxy.execution.get()
@@ -92,7 +92,7 @@ def test_wakeup(config, models, mongo):
     handler = Handler(config)
 
     execution = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     juan = User(identifier='juan').save()
     manager = User(identifier='juan_manager').save()
@@ -101,7 +101,7 @@ def test_wakeup(config, models, mongo):
     act.proxy.user.set(juan)
     act.proxy.execution.set(execution)
     pointer = Pointer(
-        node_id = 'employee-node',
+        node_id='employee-node',
     ).save()
     pointer.proxy.execution.set(execution)
 
@@ -153,10 +153,10 @@ def test_teardown(config, models, mongo):
     ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
     execution = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     p_0 = Pointer(
-        node_id = 'manager-node',
+        node_id='manager-node',
     ).save()
     p_0.proxy.execution.set(execution)
     manager = User(identifier='manager').save()

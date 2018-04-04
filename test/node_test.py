@@ -85,11 +85,13 @@ def test_find_next_element_decision_no(config):
 
     assert next_node.element.getAttribute('id') == 'mj88CNZUaBdvLV83'
 
+
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_case():
     ''' given a case clause and asociated data, retrieves the next selected
     branch '''
     assert False
+
 
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_multithread():
@@ -97,11 +99,13 @@ def test_find_next_element_multithread():
     thread '''
     assert False
 
+
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_join_noready():
     ''' given a multithread join element that has not collected all of its
     pointers, return a wait signal '''
     assert False
+
 
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_join_ready():
@@ -109,20 +113,24 @@ def test_find_next_element_join_ready():
     pointer to the next element '''
     assert False
 
+
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_end():
     ''' given an end element, return end signal '''
     assert False
+
 
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_subprocess_noready():
     ''' given a subprocess node and a subprocess that havent completed yet,
     return None '''
 
+
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_subprocess_ready():
     ''' given a subprocess node and a subprocess that has been completed,
     return the next node '''
+
 
 @pytest.mark.skip(reason="no way of currently testing this")
 def test_find_next_element_goto():

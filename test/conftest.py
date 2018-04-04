@@ -7,6 +7,7 @@ from pymongo import MongoClient
 
 from pvm.models import bind_models
 
+
 @pytest.fixture
 def config():
     ''' Returns a fully loaded configuration dict '''
@@ -15,6 +16,7 @@ def config():
     con.from_envvar('PVM_SETTINGS', silent=True)
 
     return con
+
 
 @pytest.fixture
 def models():
@@ -29,12 +31,14 @@ def models():
 
     bind_models(engine)
 
+
 @pytest.fixture
 def client():
     ''' makes and returns a testclient for the flask application '''
     from pvm.http.wsgi import app
 
     return app.test_client()
+
 
 @pytest.fixture
 def mongo():

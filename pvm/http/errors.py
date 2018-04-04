@@ -1,8 +1,10 @@
 class JsonReportedException(Exception):
 
+
     def __init__(self, errors, headers=None):
         self.errors = errors
         self.headers = headers if headers else {}
+
 
     def to_json(self):
         return { 'errors': self.errors, }
@@ -14,6 +16,7 @@ class BadRequest(JsonReportedException):
 # 401
 class Unauthorized(JsonReportedException):
     status_code = 401
+
 
     def __init__(self, errors):
         super().__init__(errors, {

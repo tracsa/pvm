@@ -6,6 +6,7 @@ from pvm.models import User
 
 class HardcodedHierarchyProvider(BaseHierarchyProvider):
 
+
     def validate_user(self, user, **params):
         base_user = User.get_by('identifier', params.get('employee'))
 
@@ -18,6 +19,7 @@ class HardcodedHierarchyProvider(BaseHierarchyProvider):
 
         if manager is None or manager.id != user.id:
             raise HierarchyError
+
 
     def find_users(self, **params):
         employee = params.get('employee')

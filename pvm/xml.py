@@ -18,6 +18,7 @@ XML_ATTRIBUTES = {
 
 class Xml:
 
+
     def __init__(self, config, filename):
         try:
             self.id, self.version, _ = filename.split('.')
@@ -50,6 +51,7 @@ class Xml:
                 # the text child of <element></element> is the empty string
                 setattr(self, attr, func(''))
 
+
     @classmethod
     def load(cls, config:dict, common_name:str, direct=False) -> TextIO:
         ''' Loads an xml file and returns the corresponding TextIOWrapper for
@@ -70,6 +72,7 @@ class Xml:
         else:
             raise ProcessNotFound(common_name)
 
+
     def __next__(self):
         ''' Returns an inerator over the nodes and edges of a process defined
         by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed for
@@ -83,8 +86,10 @@ class Xml:
 
         raise StopIteration
 
+
     def __iter__(self):
         return self
+
 
     def find(self, testfunc:Callable[[Element], bool]) -> Element:
         ''' Given an interator returned by the previous function, tries to find the
@@ -95,12 +100,14 @@ class Xml:
 
         raise ElementNotFound('node or edge matching the given condition was not found')
 
+
     def start_node(self) -> Element:
         ''' Returns the starting node '''
         start_node_id = getattr(self, 'start-node')
         start_node = self.find(lambda e: e.getAttribute('id') == start_node_id)
 
         return start_node
+
 
     @classmethod
     def list(cls, config):
@@ -133,6 +140,7 @@ class Xml:
 
         return processes
 
+
     def to_json(self):
         return {
             'id': self.id,
@@ -144,6 +152,7 @@ class Xml:
             'versions': self.versions,
         }
 
+
 def get_ref(el:Element):
     if el.getAttribute('id'):
         return '#' + el.getAttribute('id')
@@ -151,6 +160,7 @@ def get_ref(el:Element):
         return '.' + el.getAttribute('class')
 
     return None
+
 
 def resolve_params(filter_node, execution=None):
     computed_params = {}
@@ -172,6 +182,7 @@ def resolve_params(filter_node, execution=None):
 
     return computed_params
 
+
 @comment
 def etree_from_list(root:Element, nodes:[Element]) -> 'ElementTree':
     ''' Returns a built ElementTree from the list of its members '''
@@ -180,6 +191,7 @@ def etree_from_list(root:Element, nodes:[Element]) -> 'ElementTree':
 
     return ElementTree(root)
 
+
 @comment
 def nodes_from(node:Element, graph):
     ''' returns an iterator over the (node, edge)s that can be reached from
@@ -187,15 +199,18 @@ def nodes_from(node:Element, graph):
     for edge in graph.findall(".//*[@from='{}']".format(node.attrib['id'])):
         yield (graph.find(".//*[@id='{}']".format(edge.attrib['to'])), edge)
 
+
 @comment
 def has_no_incoming(node:Element, graph:'root Element'):
     ''' returns true if this node has no edges pointing to it '''
     return len(graph.findall(".//*[@to='{}']".format(node.attrib['id']))) == 0
 
+
 @comment
 def has_edges(graph:'root Element'):
     ''' returns true if the graph still has edge elements '''
     return len(graph.findall("./connector")) > 0
+
 
 @comment
 def topological_sort(start_node:Element, graph:'root Element') -> 'ElementTree':
@@ -232,6 +247,7 @@ SUPPORTED_ATTRS = {
     'default': str,
     'helper': str,
 }
+
 
 def form_to_dict(form):
     inputs = form.getElementsByTagName('input')

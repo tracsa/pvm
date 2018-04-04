@@ -8,15 +8,18 @@ from pvm.http.wsgi import app
 
 class LdapUser(BaseUser):
 
+
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+
 
     def get_identifier(self):
         return self.username
 
 
 class LdapAuthProvider(BaseAuthProvider):
+
 
     def authenticate(self, **credentials):
         if 'username' not in credentials or \

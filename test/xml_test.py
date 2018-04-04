@@ -20,7 +20,7 @@ def test_load_process(config):
     xml = Xml.load(config, 'simple')
 
     assert xml.filename == 'simple.2018-02-19.xml'
-    assert xml.public == False
+    assert xml.public is False
 
 
 def test_load_last_matching_process(config):
@@ -29,7 +29,7 @@ def test_load_last_matching_process(config):
     xml = Xml.load(config, 'oldest')
 
     assert xml.filename == 'oldest.2018-02-17.xml'
-    assert xml.public == False
+    assert xml.public is False
 
 
 def test_load_specific_version(config):
@@ -38,7 +38,7 @@ def test_load_specific_version(config):
     xml = Xml.load(config, 'oldest.2018-02-14')
 
     assert xml.filename == 'oldest.2018-02-14.xml'
-    assert xml.public == False
+    assert xml.public is False
 
 
 def test_make_iterator(config):
@@ -96,6 +96,7 @@ def test_find(config):
     assert end.tagName == 'node'
     assert end.getAttribute('id') == 'kV9UWSeA89IZ'
 
+
 @pytest.mark.skip
 def test_etree_from_list_empty():
     nodes = []
@@ -107,6 +108,7 @@ def test_etree_from_list_empty():
     for elem, expct in zip(root.iter(), nodes):
         assert elem.tagName == expct.tagName
         assert elem.id == expct.id
+
 
 @pytest.mark.skip
 def test_etree_from_list_withnodes():
@@ -129,6 +131,7 @@ def test_etree_from_list_withnodes():
     ch = root[2][0]
     assert ch.tagName == 'sub'
 
+
 @pytest.mark.skip
 def test_nodes_from(config):
     xml = parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
@@ -150,37 +153,40 @@ def test_nodes_from(config):
         assert node.getAttribute('id') == expct_node.getAttribute('id')
         assert edge.getAttribute('id') == expct_edge.getAttribute('id')
 
+
 @pytest.mark.skip
 def test_has_no_incoming_sorted(config):
     xml = parse(os.path.join(config['XML_PATH'], 'sorted.xml'))
 
-    assert has_no_incoming(Element('node', {'id': 'A'}), xml.getroot()) == True
-    assert has_no_incoming(Element('node', {'id': 'B'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'C'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'D'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'E'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'F'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'G'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'H'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'I'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'J'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'K'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'A'}), xml.getroot()) is True
+    assert has_no_incoming(Element('node', {'id': 'B'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'C'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'D'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'E'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'F'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'G'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'H'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'I'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'J'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'K'}), xml.getroot()) is False
+
 
 @pytest.mark.skip
 def test_has_no_incoming_unsorted(config):
     xml = parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
 
-    assert has_no_incoming(Element('node', {'id': 'A'}), xml.getroot()) == True
-    assert has_no_incoming(Element('node', {'id': 'B'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'C'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'D'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'E'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'F'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'G'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'H'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'I'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'J'}), xml.getroot()) == False
-    assert has_no_incoming(Element('node', {'id': 'K'}), xml.getroot()) == False
+    assert has_no_incoming(Element('node', {'id': 'A'}), xml.getroot()) is True
+    assert has_no_incoming(Element('node', {'id': 'B'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'C'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'D'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'E'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'F'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'G'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'H'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'I'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'J'}), xml.getroot()) is False
+    assert has_no_incoming(Element('node', {'id': 'K'}), xml.getroot()) is False
+
 
 @pytest.mark.skip
 def test_has_edges(config):
@@ -188,9 +194,10 @@ def test_has_edges(config):
     unsorted = parse(os.path.join(config['XML_PATH'], 'unsorted.xml'))
     no_edges = parse(os.path.join(config['XML_PATH'], 'no_edges.xml'))
 
-    assert has_edges(sortedxml) == True
-    assert has_edges(unsorted) == True
-    assert has_edges(no_edges) == False
+    assert has_edges(sortedxml) is True
+    assert has_edges(unsorted) is True
+    assert has_edges(no_edges) is False
+
 
 @pytest.mark.skip
 def test_toposort(config):
@@ -205,6 +212,7 @@ def test_toposort(config):
     for elem, expct in zip(new_xml.iter(), expct_tree.iter()):
         assert elem.tagName == expct.tagName
         assert elem.attrib == expct.attrib
+
 
 def test_form_to_dict(config):
     xml = parse(os.path.join(config['XML_PATH'], 'testing_forms.xml'))
@@ -273,6 +281,7 @@ def test_form_to_dict(config):
             },
         ]
     }
+
 
 def test_resolve_params(config, models):
     xml = Xml.load(config, 'exit_request.2018-03-20.xml')

@@ -18,9 +18,11 @@ class Handler:
     ''' The actual process machine, it is in charge of moving the pointers
     among the graph of nodes '''
 
+
     def __init__(self, config):
         self.config = config
         self.mongo = None
+
 
     def __call__(self, channel, method, properties, body:bytes):
         ''' the main callback of the PVM '''
@@ -49,6 +51,7 @@ class Handler:
         if not self.config['RABBIT_NO_ACK']:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
+
     def call(self, message:dict, channel):
         execution, pointer, xml, current_node, forms, actors, documents = self.recover_step(message)
 
@@ -69,6 +72,7 @@ class Handler:
             execution.delete()
 
         return pointers
+
 
     def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about
@@ -125,6 +129,7 @@ class Handler:
 
         return pointer
 
+
     def teardown(self, pointer, forms, actors, documents):
         ''' finishes the node's lifecycle '''
         collection = self.get_mongo()
@@ -142,6 +147,7 @@ class Handler:
         })
 
         pointer.delete()
+
 
     def parse_message(self, body:bytes):
         ''' validates a received message against all possible needed fields
@@ -161,6 +167,7 @@ class Handler:
 
         return message
 
+
     def get_mongo(self):
         if self.mongo is None:
             client = MongoClient()
@@ -170,8 +177,10 @@ class Handler:
 
         return self.mongo
 
+
     def get_contact_channels(self, user:BaseUser):
         return [('email', {})]
+
 
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former
@@ -180,6 +189,7 @@ class Handler:
         pointer.proxy.execution.set(execution)
 
         return pointer
+
 
     def recover_step(self, message:dict):
         ''' given an execution id and a pointer from the persistent storage,

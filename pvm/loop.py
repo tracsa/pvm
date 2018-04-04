@@ -6,9 +6,11 @@ from .handler import Handler
 
 class Loop:
 
+
     def __init__(self, config:dict):
         self.config = config
         self.handler = Handler(config)
+
 
     def start(self):
         connection = pika.BlockingConnection(pika.ConnectionParameters(

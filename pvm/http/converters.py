@@ -7,6 +7,7 @@ import case_conversion
 
 class AuthProviderConverter(BaseConverter):
 
+
     def to_python(self, value):
         try:
             mod = import_module('pvm.auth.backends.{}'.format(value))
@@ -17,6 +18,7 @@ class AuthProviderConverter(BaseConverter):
             abort(500, 'Misconfigured auth provider, sorry')
 
         return cls(app.config)
+
 
     def to_url(self, values):
         raise NotImplementedError('this converter does not work backwards')

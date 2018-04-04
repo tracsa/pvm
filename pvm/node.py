@@ -14,16 +14,20 @@ class Node:
     ''' A node from the process's graph. It is initialized from an Element
     '''
 
+
     def __init__(self, element):
         self.element = element
+
 
     def next(self, xmliter:Iterator[Element], execution) -> ['Node']:
         ''' Gets the next node in the graph, if it fails raises an exception.'''
         raise NotImplementedError('Should be implemented for subclasses')
 
+
     def is_end(self) -> bool:
         ''' tells if this node is the final node of the graph '''
         return False
+
 
     def is_async(self) -> bool:
         ''' returns true for nodes that require external output to continue '''
@@ -39,6 +43,7 @@ class AsyncNode(Node):
 
 
 class SingleConnectedNode(Node):
+
 
     def next(self, xml:Xml, execution) -> ['Node']:
         ''' just find the next node in the graph '''
@@ -65,6 +70,7 @@ class EchoNode(SyncNode, SingleConnectedNode):
 
 
 class DecisionNode(AsyncNode):
+
 
     def next(self, xml:Xml, execution) -> ['Node']:
         ''' find node whose value corresponds to the answer '''
@@ -99,6 +105,7 @@ class DecisionNode(AsyncNode):
 
 
 class EndNode(SyncNode):
+
 
     def is_end(self):
         return True

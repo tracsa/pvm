@@ -6,10 +6,10 @@ from pymongo import MongoClient
 import json
 import pika
 
-from pvm.errors import ProcessNotFound, CannotMove
+from pvm.errors import CannotMove
 from pvm.logger import log
 from pvm.models import Execution, Pointer
-from pvm.node import make_node, Node, AsyncNode
+from pvm.node import make_node, Node
 from pvm.xml import Xml, resolve_params
 from pvm.auth.base import BaseUser
 

@@ -6,7 +6,8 @@ import os
 import pika
 
 from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity,Forbidden
+from pvm.http.errors import BadRequest, NotFound, \
+    UnprocessableEntity, Forbidden
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json, requires_auth
 from pvm.http.validation import validate_forms, validate_json, validate_auth
@@ -15,13 +16,19 @@ from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, form_to_dict
 
+
 def trans_id(obj):
     obj['_id'] = str(obj['_id'])
     return obj
 
+
 def trans_date(obj):
-    obj['started_at'] = obj['started_at'].isoformat()+'Z' if obj['started_at'] is not None else None
-    obj['finished_at'] = obj['finished_at'].isoformat()+'Z' if obj['finished_at'] is not None else None
+    if obj['started_at'] is not None:
+        obj['started_at'] = obj['started_at'].isoformat()
+
+    if obj['finished_at'] is not None:
+        obj['finished_at'] = obj['finished_at'].isoformat()
+
     return obj
 
 
@@ -45,12 +52,14 @@ def start_process():
         xml = Xml.load(app.config, request.json['process_name'])
     except ProcessNotFound as e:
         raise NotFound([{
-            'detail': '{} process does not exist'.format(request.json['process_name']),
+            'detail': '{} process does not exist'
+                      .format(request.json['process_name']),
             'where': 'request.body.process_name',
         }])
     except MalformedProcess as e:
         raise UnprocessableEntity([{
-            'detail': '{} process lacks important nodes and structure'.format(request.json['process_name']),
+            'detail': '{} process lacks important nodes and structure'
+                      .format(request.json['process_name']),
             'where': 'request.body.process_name',
         }])
 
@@ -58,7 +67,8 @@ def start_process():
         start_point = xml.start_node()
     except ElementNotFound as e:
         raise UnprocessableEntity([{
-            'detail': '{} process does not have a start node, thus cannot be started'.format(request.json['process_name']),
+            'detail': '{} process does not have a start node, thus cannot be '
+                      'started'.format(request.json['process_name']),
             'where': 'request.body.process_name',
         }])
 

@@ -1,5 +1,6 @@
 from flask import json
 
+
 def test_requires_json(client):
     res = client.get('/')
 

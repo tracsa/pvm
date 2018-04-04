@@ -11,4 +11,4 @@ install:
   - pip install pycodestyle
 script:
   - pytest -vv
-  - pycodestyle --show-source --exclude=.env,.tox,dist,docs,build,*.egg .
+  - pycodestyle --exclude=.env,.tox,dist,docs,build,*.egg .

@@ -40,6 +40,7 @@ class BrokerHandler(logging.Handler):
             for key, value in data.items()
         )
 
+
 def init_logging(config):
     # Debug messages to stderr
     formatter = logging.Formatter(fmt='[%(levelname)s] %(message)s - %(filename)s:%(lineno)d', datefmt='%Y-%m-%d %H:%M:%S %z')

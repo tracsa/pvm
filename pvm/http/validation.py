@@ -9,6 +9,7 @@ from pvm.models import User, Token
 from pvm.xml import get_ref, resolve_params
 from pvm.http.wsgi import app
 
+
 def get_associated_data(ref:str, data:dict) -> dict:
     ''' given a reference returns its asociated data in the data dictionary '''
     if 'form_array' not in data:
@@ -26,6 +27,7 @@ def get_associated_data(ref:str, data:dict) -> dict:
 
     return {}
 
+
 def validate_input(form_index:int, input:Element, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
@@ -33,6 +35,7 @@ def validate_input(form_index:int, input:Element, value):
         raise RequiredInputError(form_index, input.getAttribute('name'))
 
     return value
+
 
 def validate_form(index:int, form:Element, data:dict) -> dict:
     ''' Validates the given data against the spec contained in form. In case of
@@ -57,6 +60,7 @@ def validate_form(index:int, form:Element, data:dict) -> dict:
 
     return collected_data
 
+
 def validate_json(json_data:dict, req:list):
     errors = []
 
@@ -70,6 +74,7 @@ def validate_json(json_data:dict, req:list):
 
     if errors:
         raise BadRequest(errors)
+
 
 def validate_auth(node, execution=None):
     auth = node.getElementsByTagName('auth')
@@ -114,11 +119,13 @@ def validate_auth(node, execution=None):
             hipro.validate_user(user, **resolve_params(filter_node, execution))
         except HierarchyError:
             raise Forbidden([{
-                'detail': 'The provided credentials do not match the specified hierarchy',
+                'detail': 'The provided credentials do not match the specified'
+                          ' hierarchy',
                 'where': 'request.authorization',
             }])
 
     return get_ref(auth_node), user
+
 
 def validate_forms(node):
     form_array = node.getElementsByTagName('form-array')

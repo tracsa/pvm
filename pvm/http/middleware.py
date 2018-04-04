@@ -5,6 +5,7 @@ from flask import g
 from pvm.http.errors import BadRequest, Unauthorized
 from pvm.models import User, Token
 
+
 def requires_json(view):
     @wraps(view)
     def wrapper(*args, **kwargs):
@@ -30,6 +31,7 @@ def requires_json(view):
         else:
             return jsonify(res)
     return wrapper
+
 
 def requires_auth(view):
     @wraps(view)

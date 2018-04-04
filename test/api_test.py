@@ -8,6 +8,7 @@ import pytest
 from pvm.handler import Handler
 from pvm.models import Execution, Pointer, User, Token, Activity
 
+
 def test_continue_process_requires(client):
     user = User(identifier='juan').save()
     token = Token(token='123456').save()
@@ -36,6 +37,7 @@ def test_continue_process_requires(client):
         ],
     }
 
+
 def test_continue_process_asks_living_objects(client):
     ''' the app must validate that the ids sent are real objects '''
     res = client.post('/v1/pointer', headers={
@@ -55,6 +57,7 @@ def test_continue_process_asks_living_objects(client):
             },
         ],
     }
+
 
 def test_continue_process_requires_valid_node(client, models):
     exc = Execution(
@@ -79,6 +82,7 @@ def test_continue_process_requires_valid_node(client, models):
         ],
     }
 
+
 def test_continue_process_requires_living_pointer(client, models):
     exc = Execution(
         process_name='decision.2018-02-27',
@@ -101,6 +105,7 @@ def test_continue_process_requires_living_pointer(client, models):
             },
         ],
     }
+
 
 def test_continue_process_asks_for_user(client, models):
     exc = Execution(
@@ -127,6 +132,7 @@ def test_continue_process_asks_for_user(client, models):
             'where': 'request.authorization',
         }],
     }
+
 
 def test_continue_process_asks_for_user_by_hierarchy(client, models):
     ''' a node whose auth has a filter must be completed by a person matching
@@ -159,6 +165,7 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
             'where': 'request.authorization',
         }],
     }
+
 
 def test_continue_process_asks_for_data(client, models):
     juan = User(identifier='juan').save()
@@ -195,6 +202,7 @@ def test_continue_process_asks_for_data(client, models):
             'code': 'validation.required',
         }],
     }
+
 
 def test_can_continue_process(client, models, mocker, config):
     mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
@@ -303,6 +311,7 @@ def test_can_continue_process(client, models, mocker, config):
     assert execution.id == exc.id
     assert pointer.id == ptr.id
 
+
 def test_process_start_simple_requires(client, models, mongo):
     # we need the name of the process to start
     res = client.post('/v1/execution', headers={
@@ -374,6 +383,7 @@ def test_process_start_simple_requires(client, models, mongo):
     # no registry should be created yet
     assert mongo.count() == 0
 
+
 def test_process_start_simple(client, models, mocker, config, mongo):
     mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
 
@@ -424,6 +434,7 @@ def test_process_start_simple(client, models, mocker, config, mongo):
     assert reg['execution_id'] == exc.id
     assert reg['node_id'] == ptr.node_id
 
+
 def test_exit_request_requirements(client, models):
     # first requirement is to have authentication
     res = client.post('/v1/execution', headers={
@@ -470,6 +481,7 @@ def test_exit_request_requirements(client, models):
 
     assert Execution.count() == 0
     assert Activity.count() == 0
+
 
 def test_exit_request_start(client, models, mocker):
     user = User(identifier='juan').save()
@@ -526,6 +538,7 @@ def test_exit_request_start(client, models, mocker):
         'reason': 'tenía que salir al baño',
     }
 
+
 def test_list_processes(client):
     res = client.get('/v1/process')
 
@@ -575,9 +588,11 @@ def test_read_process(client):
         },
     }
 
+
 def test_list_activities_requires(client):
     res = client.get('/v1/activity')
     assert res.status_code == 401
+
 
 def test_list_activities(client, models):
     '''Given 4 activities, two for the current user and two for another, list only the two belonging to him or her'''
@@ -610,10 +625,12 @@ def test_list_activities(client, models):
         ],
     }
 
+
 def test_activity_requires(client):
     #validate user authentication wrong
     res = client.get('/v1/activity/1')
     assert res.status_code == 401
+
 
 def test_activity_wrong_activity(client, models):
     #validate user authentication correct but bad activity
@@ -641,6 +658,7 @@ def test_activity_wrong_activity(client, models):
 
     assert res.status_code == 403
 
+
 def test_activity(client, models):
     #validate user authentication correct with correct activity
     juan = User(identifier='juan').save()
@@ -661,6 +679,7 @@ def test_activity(client, models):
         'data':
             act.to_json(),
     }
+
 
 def test_logs_activity( mongo, client ):
 

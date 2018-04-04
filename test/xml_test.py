@@ -8,10 +8,12 @@ from xml.dom.minidom import parse
 from pvm.models import Execution, User, Activity
 from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, has_edges, topological_sort, resolve_params, form_to_dict
 
+
 def test_load_not_found(config):
     ''' if a process file is not found, raise an exception '''
     with pytest.raises(ProcessNotFound):
         Xml.load(config, 'notfound')
+
 
 def test_load_process(config):
     '''  a process file can be found using only its prefix or common name '''
@@ -19,6 +21,7 @@ def test_load_process(config):
 
     assert xml.filename == 'simple.2018-02-19.xml'
     assert xml.public == False
+
 
 def test_load_last_matching_process(config):
     ''' a process is specified by its common name, but many versions may exist.
@@ -28,6 +31,7 @@ def test_load_last_matching_process(config):
     assert xml.filename == 'oldest.2018-02-17.xml'
     assert xml.public == False
 
+
 def test_load_specific_version(config):
     ''' one should be able to request a specific version of a process,
     thus overriding the process described by the previous test '''
@@ -35,6 +39,7 @@ def test_load_specific_version(config):
 
     assert xml.filename == 'oldest.2018-02-14.xml'
     assert xml.public == False
+
 
 def test_make_iterator(config):
     ''' test that the iter function actually returns an interator over the
@@ -51,6 +56,7 @@ def test_make_iterator(config):
 
     for given, expected in zip(xml, expected_nodes):
         assert given.tagName == expected
+
 
 def test_find(config):
     xml = Xml.load(config, 'simple')

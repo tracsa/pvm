@@ -8,6 +8,7 @@ from pvm.handler import Handler
 from pvm.node import Node, StartNode, make_node
 from pvm.models import Execution, Pointer, User, Activity, Questionaire
 
+
 def test_parse_message(config):
     handler = Handler(config)
 
@@ -25,6 +26,7 @@ def test_parse_message(config):
     assert msg == {
         'command': 'step',
     }
+
 
 def test_recover_step(config, models):
     handler = Handler(config)
@@ -67,6 +69,7 @@ def test_recover_step(config, models):
 
     assert node.element.getAttribute('id') == '4g9lOdPKmRUf'
 
+
 def test_create_pointer(config, models):
     handler = Handler(config)
 
@@ -85,6 +88,7 @@ def test_create_pointer(config, models):
 
     assert execution.process_name == 'simple.2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
+
 
 def test_wakeup(config, models, mongo):
     ''' the first stage in a node's lifecycle '''
@@ -148,6 +152,7 @@ def test_wakeup(config, models, mongo):
     assert isinstance(task, Pointer)
     assert task.node_id == 'manager-node'
     assert task.proxy.execution.get().id == execution.id
+
 
 def test_teardown(config, models, mongo):
     ''' second and last stage of a node's lifecycle '''

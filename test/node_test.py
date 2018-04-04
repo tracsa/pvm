@@ -5,11 +5,13 @@ from pvm.node import make_node, Node, StartNode
 from pvm.xml import Xml
 from pvm.models import Execution, Questionaire
 
+
 def test_make_node_requires_class():
     element = Document().createElement('node')
 
     with pytest.raises(KeyError) as e:
         make_node(element)
+
 
 def test_make_node_requires_existent_class():
     element = Document().createElement('node')
@@ -17,6 +19,7 @@ def test_make_node_requires_existent_class():
 
     with pytest.raises(ValueError) as e:
         make_node(element)
+
 
 def test_make_start_node():
     element = Document().createElement('node')
@@ -27,6 +30,7 @@ def test_make_start_node():
     assert node is not None
     assert isinstance(node, Node)
     assert isinstance(node, StartNode)
+
 
 def test_find_next_element_normal(config):
     ''' given a node, retrieves the next element in the graph, assumes that
@@ -42,6 +46,7 @@ def test_find_next_element_normal(config):
     next_node = current_node.next(xml, None)[0]
 
     assert next_node.element.getAttribute('id') == 'kV9UWSeA89IZ'
+
 
 def test_find_next_element_decision_yes(config):
     ''' given an if and asociated data, retrieves the next element '''
@@ -59,6 +64,7 @@ def test_find_next_element_decision_yes(config):
     next_node = current_node.next(xml, exc)[0]
 
     assert next_node.element.getAttribute('id') == 'Cuptax0WTCL1ueCy'
+
 
 def test_find_next_element_decision_no(config):
     ''' given an if and asociated data, retrieves the next element, negative

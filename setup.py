@@ -12,6 +12,11 @@ setup(
         'pvm.auth.backends',
         'pvm.auth.hierarchy',
     ],
+    entry_points={
+        'console_scripts': [
+            'pvmd = pvm.pvmd:main',
+        ],
+    },
     package_data={'pvm': ['grammars/*.g']},
     include_package_data=True,
     install_requires=[

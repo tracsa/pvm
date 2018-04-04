@@ -1,0 +1,22 @@
+[Unit]
+Description=the gunicorn process for pvm
+After=network.target
+
+[Service]
+PermissionsStartOnly=true
+ExecStartPre=/bin/mkdir -p /run/gunicorn/
+ExecStartPre=/bin/mkdir -p /var/log/gunicorn/
+ExecStartPre=/bin/chown -R www-data:www-data /run/gunicorn/
+ExecStartPre=/bin/chown -R root:www-data /var/log/gunicorn/
+ExecStartPre=/bin/chmod 775 /var/log/gunicorn/
+PIDFile=/run/pvm-http.pid
+User=www-data
+Group=www-data
+WorkingDirectory=/home/user/apps/pvm
+ExecStart=/home/user/apps/pvm/.env/bin/gunicorn -c guniconf.py pvm.http.wsgi:app
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

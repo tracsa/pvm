@@ -7,7 +7,8 @@ from itacate import Config
 import time
 import os
 
-if __name__ == '__main__':
+
+def main():
     # Load the config
     config = Config(os.path.dirname(os.path.realpath(__file__)))
     config.from_object('pvm.settings')
@@ -34,3 +35,7 @@ if __name__ == '__main__':
     # start the loop
     loop = Loop(config)
     loop.start()
+
+
+if __name__ == '__main__':
+    main()

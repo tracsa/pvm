@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='pvm',
-    version='0.2.1',
+    version='0.2.2',
     packages=['pvm'],
     package_data={'pvm': ['grammars/*.g']},
     include_package_data=True,

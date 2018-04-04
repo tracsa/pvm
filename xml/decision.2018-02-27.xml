@@ -27,7 +27,7 @@
       <condition>form#fork[proceed] == "yes"</condition>
     </connector>
 
-    <node id="Cuptax0WTCL1ueCy" class="echo" msg="Option yes selected" />
+    <node id="Cuptax0WTCL1ueCy" class="simple" msg="Option yes selected" />
     <connector from="Cuptax0WTCL1ueCy" to="tMdkDIZkDW7GkmDT" />
     <node id="tMdkDIZkDW7GkmDT" class="end" />
 
@@ -35,7 +35,7 @@
       <condition>form#fork[proceed] == "no"</condition>
     </connector>
 
-    <node id="mj88CNZUaBdvLV83" class="echo" msg="Option no selected" />
+    <node id="mj88CNZUaBdvLV83" class="simple" msg="Option no selected" />
     <connector from="mj88CNZUaBdvLV83" to="BCUHAjo4OxtA31NR" />
     <node id="BCUHAjo4OxtA31NR" class="end" />
   </process>

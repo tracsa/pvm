@@ -8,7 +8,7 @@
     <start-node>decision-node</start-node>
   </process-info>
   <process>
-    <node id="decision-node" class="decision async">
+    <node id="decision-node" class="decision">
       <form-array>
         <form id="auth-form">
           <input type="radio" name="auth" required="required">

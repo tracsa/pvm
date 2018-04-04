@@ -77,13 +77,6 @@ class DecisionNode(Node):
         ))]
 
 
-class AsyncNode(Node):
-    ''' Nodes that wait for external confirmation '''
-
-    def is_async(self) -> bool:
-        return True
-
-
 def make_node(element):
     ''' returns a build Node object given an Element object '''
     if not element.getAttribute('class'):

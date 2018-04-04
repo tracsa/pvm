@@ -10,7 +10,7 @@ from pvm.models import bind_models
 
 # The flask application
 app = Flask(__name__)
-app.config.from_object('settings')
+app.config.from_object('pvm.settings')
 app.config.from_envvar('PVM_SETTINGS', silent=True)
 
 # Enalble cross origin

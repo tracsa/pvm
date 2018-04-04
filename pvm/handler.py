@@ -123,8 +123,8 @@ class Handler:
             'actors': [],
         })
 
-        # async nodes don't return their pointers so they are not queued
-        if not node.is_async():
+        # nodes with forms and documents are not queued
+        if len(node.element.getElementsByTagName('form-array')) > 0:
             return pointer
 
     def teardown(self, pointer, forms, actors, documents):

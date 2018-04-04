@@ -21,10 +21,6 @@ class Node:
         ''' Gets the next node in the graph, if it fails raises an exception.'''
         raise NotImplementedError('Should be implemented for subclasses')
 
-    def is_async(self) -> bool:
-        ''' returns true for nodes that require external output to continue '''
-        return False
-
 
 class EndNode(Node):
 

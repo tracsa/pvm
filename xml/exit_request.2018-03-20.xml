@@ -8,7 +8,7 @@
     <start-node>employee-node</start-node>
   </process-info>
   <process>
-    <node id="employee-node" class="start">
+    <node id="employee-node" class="simple">
       <auth id="requester"></auth>
 
       <form-array>
@@ -42,7 +42,7 @@
       <condition>form#auth-form[auth]=="yes"</condition>
     </connector>
 
-    <node id="security-node" class="async">
+    <node id="security-node" class="simple">
       <auth id="security">
         <filter backend="hardcoded">
           <param name="ou">Security</param>
@@ -60,7 +60,7 @@
       <condition>form#auth-form[auth]=="no"</condition>
     </connector>
 
-    <node id="noauth-node" class="notify end">
+    <node id="noauth-node" class="end notify">
       <auth target="requester"></auth>
     </node>
 

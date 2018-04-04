@@ -5,7 +5,7 @@ import pika
 import pytest
 
 from pvm.handler import Handler
-from pvm.node import Node, StartNode, make_node
+from pvm.node import Node, make_node
 from pvm.models import Execution, Pointer, User, Activity, Questionaire
 
 def test_parse_message(config):
@@ -71,7 +71,7 @@ def test_create_pointer(config, models):
     handler = Handler(config)
 
     ele = Document().createElement('node')
-    ele.setAttribute('class', 'dummy')
+    ele.setAttribute('class', 'simple')
     ele.setAttribute('id', 'chubaca')
 
     node = make_node(ele)

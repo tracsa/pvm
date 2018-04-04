@@ -17,7 +17,7 @@ class Node:
     def __init__(self, element):
         self.element = element
 
-    def next(self, xmliter:Iterator[Element], execution) -> ['Node']:
+    def next(self, xmliter: Iterator[Element], execution) -> ['Node']:
         ''' Gets the next node in the graph, if it fails raises an exception.'''
         raise NotImplementedError('Should be implemented for subclasses')
 
@@ -66,7 +66,7 @@ class EchoNode(SyncNode, SingleConnectedNode):
 
 class DecisionNode(AsyncNode):
 
-    def next(self, xml:Xml, execution) -> ['Node']:
+    def next(self, xml: Xml, execution) -> ['Node']:
         ''' find node whose value corresponds to the answer '''
         def find_node(el):
             if el.tagName != 'connector':

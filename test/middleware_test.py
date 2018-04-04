@@ -37,4 +37,4 @@ def test_requires_json(client):
 
     assert res.status_code == 200
     assert res.headers['Content-Type'] == 'application/json'
-    assert json.loads(res.data) == { 'a': 1 }
+    assert json.loads(res.data) == {'a': 1}

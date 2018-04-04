@@ -40,7 +40,8 @@ def test_find_next_element_normal(config):
     assert xml.filename == 'simple.2018-02-19.xml'
 
     current_node = make_node(xml.find(
-        lambda e: e.tagName=='node' and e.getAttribute('id')=='4g9lOdPKmRUf'
+        lambda e: e.tagName == 'node' and \
+            e.getAttribute('id') == '4g9lOdPKmRUf'
     ))
 
     next_node = current_node.next(xml, None)[0]

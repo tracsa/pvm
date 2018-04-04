@@ -22,7 +22,7 @@ class Handler:
         self.config = config
         self.mongo = None
 
-    def __call__(self, channel, method, properties, body:bytes):
+    def __call__(self, channel, method, properties, body: bytes):
         ''' the main callback of the PVM '''
         message = self.parse_message(body)
 
@@ -49,7 +49,7 @@ class Handler:
         if not self.config['RABBIT_NO_ACK']:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
-    def call(self, message:dict, channel):
+    def call(self, message: dict, channel):
         execution, pointer, xml, cur_node, *rest = self.recover_step(message)
 
         pointers = [] # pointers to be created
@@ -148,7 +148,7 @@ class Handler:
 
         pointer.delete()
 
-    def parse_message(self, body:bytes):
+    def parse_message(self, body: bytes):
         ''' validates a received message against all possible needed fields
         and structure '''
         try:
@@ -175,10 +175,10 @@ class Handler:
 
         return self.mongo
 
-    def get_contact_channels(self, user:BaseUser):
+    def get_contact_channels(self, user: BaseUser):
         return [('email', {})]
 
-    def create_pointer(self, node:Node, execution:Execution):
+    def create_pointer(self, node: Node, execution: Execution):
         ''' Given a node, its process, and a specific execution of the former
         create a persistent pointer to the current execution state '''
         pointer = Pointer \
@@ -188,7 +188,7 @@ class Handler:
 
         return pointer
 
-    def recover_step(self, message:dict):
+    def recover_step(self, message: dict):
         ''' given an execution id and a pointer from the persistent storage,
         return the asociated process node to continue its execution '''
         if 'pointer_id' not in message:

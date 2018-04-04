@@ -10,7 +10,7 @@ from pvm.xml import get_ref, resolve_params
 from pvm.http.wsgi import app
 
 
-def get_associated_data(ref:str, data:dict) -> dict:
+def get_associated_data(ref: str, data: dict) -> dict:
     ''' given a reference returns its asociated data in the data dictionary '''
     if 'form_array' not in data:
         return {}
@@ -28,16 +28,16 @@ def get_associated_data(ref:str, data:dict) -> dict:
     return {}
 
 
-def validate_input(form_index:int, input:Element, value):
+def validate_input(form_index: int, input: Element, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
-    if input.getAttribute('required') and (value=='' or value is None):
+    if input.getAttribute('required') and (value == '' or value is None):
         raise RequiredInputError(form_index, input.getAttribute('name'))
 
     return value
 
 
-def validate_form(index:int, form:Element, data:dict) -> dict:
+def validate_form(index: int, form: Element, data: dict) -> dict:
     ''' Validates the given data against the spec contained in form. In case of
     failure raises an exception. In case of success returns the validated data.
     '''
@@ -61,7 +61,7 @@ def validate_form(index:int, form:Element, data:dict) -> dict:
     return collected_data
 
 
-def validate_json(json_data:dict, req:list):
+def validate_json(json_data: dict, req: list):
     errors = []
 
     for item in req:

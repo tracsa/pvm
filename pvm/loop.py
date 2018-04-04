@@ -6,7 +6,7 @@ from .handler import Handler
 
 class Loop:
 
-    def __init__(self, config:dict):
+    def __init__(self, config: dict):
         self.config = config
         self.handler = Handler(config)
 

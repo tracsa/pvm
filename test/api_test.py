@@ -415,7 +415,7 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
-    #assert json.loads(args['body']) == json_message
+    assert json.loads(args['body']) == json_message
 
     handler = Handler(config)
 
@@ -682,8 +682,7 @@ def test_activity(client, models):
     }
 
 
-def test_logs_activity( mongo, client ):
-
+def test_logs_activity(mongo, client):
     mongo.insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,

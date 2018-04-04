@@ -6,7 +6,8 @@ import json
 from pvm.errors import ProcessNotFound
 from xml.dom.minidom import parse
 from pvm.models import Execution, User, Activity
-from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, has_edges, topological_sort, resolve_params, form_to_dict
+from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, \
+    has_edges, topological_sort, resolve_params, form_to_dict
 
 
 def test_load_not_found(config):
@@ -25,7 +26,8 @@ def test_load_process(config):
 
 def test_load_last_matching_process(config):
     ''' a process is specified by its common name, but many versions may exist.
-    when a process is requested for start we must use the last version of it '''
+    when a process is requested for start we must use the last version of it
+    '''
     xml = Xml.load(config, 'oldest')
 
     assert xml.filename == 'oldest.2018-02-17.xml'

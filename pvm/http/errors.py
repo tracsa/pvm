@@ -5,7 +5,7 @@ class JsonReportedException(Exception):
         self.headers = headers if headers else {}
 
     def to_json(self):
-        return { 'errors': self.errors, }
+        return {'errors': self.errors}
 
 # 400
 class BadRequest(JsonReportedException):

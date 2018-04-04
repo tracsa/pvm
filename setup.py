@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='pvm',
-    version='0.2.6',
+    version='0.2.7',
     packages=[
         'pvm',
         'pvm.http',
@@ -30,6 +30,7 @@ setup(
         'lark-parser',
         'ldap3',
         'pika',
+        'simplejson',
     ],
     setup_requires=[
         'pytest-runner',

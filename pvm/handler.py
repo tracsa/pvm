@@ -50,13 +50,13 @@ class Handler:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, message:dict, channel):
-        execution, pointer, xml, current_node, forms, actors, documents = self.recover_step(message)
+        execution, pointer, xml, cur_node, *rest = self.recover_step(message)
 
         pointers = [] # pointers to be created
 
         # node's lifetime ends here
-        self.teardown(pointer, forms, actors, documents)
-        next_nodes = current_node.next(xml, execution)
+        self.teardown(pointer, *rest)
+        next_nodes = cur_node.next(xml, execution)
 
         for node in next_nodes:
             # node's begining of life
@@ -88,10 +88,15 @@ class Handler:
         backend = filter_node.getAttribute('backend')
 
         mod = import_module('pvm.auth.hierarchy.{}'.format(backend))
-        HierarchyProvider = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
+        HierarchyProvider = getattr(
+            mod,
+            pascalcase(backend) + 'HierarchyProvider'
+        )
 
         hierarchy_provider = HierarchyProvider(self.config)
-        husers = hierarchy_provider.find_users(**resolve_params(filter_node, execution))
+        husers = hierarchy_provider.find_users(
+            **resolve_params(filter_node, execution)
+        )
 
         for huser in husers:
             user = huser.get_user()
@@ -176,7 +181,9 @@ class Handler:
     def create_pointer(self, node:Node, execution:Execution):
         ''' Given a node, its process, and a specific execution of the former
         create a persistent pointer to the current execution state '''
-        pointer = Pointer.validate(node_id=node.element.getAttribute('id')).save()
+        pointer = Pointer \
+            .validate(node_id=node.element.getAttribute('id')) \
+            .save()
         pointer.proxy.execution.set(execution)
 
         return pointer
@@ -191,9 +198,18 @@ class Handler:
         execution = pointer.proxy.execution.get()
         xml = Xml.load(self.config, execution.process_name)
 
-        assert execution.process_name == xml.filename, 'Inconsistent pointer found'
+        assert execution.process_name == xml.filename, 'Inconsistent pointer'
 
         point = xml.find(
             lambda e: e.getAttribute('id') == pointer.node_id
         )
-        return execution, pointer, xml, make_node(point), message.get('forms', []), message.get('actors', []), message.get('documents', [])
+
+        return (
+            execution,
+            pointer,
+            xml,
+            make_node(point),
+            message.get('forms', []),
+            message.get('actors', []),
+            message.get('documents', []),
+        )

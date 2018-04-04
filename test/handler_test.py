@@ -38,25 +38,26 @@ def test_recover_step(config, models):
     ).save()
     ptr.proxy.execution.set(exc)
 
-    execution, pointer, xmliter, node, forms, actors, documents = handler.recover_step({
-        'command': 'step',
-        'pointer_id': ptr.id,
-        'forms': [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'auth': 'yes',
+    execution, pointer, xmliter, node, forms, actors, documents = \
+        handler.recover_step({
+            'command': 'step',
+            'pointer_id': ptr.id,
+            'forms': [
+                {
+                    'ref': '#auth-form',
+                    'data': {
+                        'auth': 'yes',
+                    },
                 },
-            },
-        ],
-        'actors': [
-            {
-                'ref': '#requester',
-                'user': {'identifier': 'juan_manager'}
-            }
-        ],
-        'documents': []
-    })
+            ],
+            'actors': [
+                {
+                    'ref': '#requester',
+                    'user': {'identifier': 'juan_manager'}
+                }
+            ],
+            'documents': []
+        })
 
     assert execution.id == exc.id
     assert pointer.id == pointer.id
@@ -137,7 +138,7 @@ def test_wakeup(config, models, mongo):
     del reg['_id']
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
-    assert reg['finished_at'] == None
+    assert reg['finished_at'] is None
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == 'manager-node'
     assert reg['forms'] == []
@@ -172,7 +173,7 @@ def test_teardown(config, models, mongo):
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
     form = Questionaire(ref='#auth-form', data={
-        'auth' : 'yes',
+        'auth': 'yes',
     }).save()
     form.proxy.execution.set(execution)
 
@@ -201,7 +202,7 @@ def test_teardown(config, models, mongo):
         }],
     }, None)
 
-    assert Pointer.get(p_0.id) == None
+    assert Pointer.get(p_0.id) is None
     assert len(ptrs) == 1
     assert ptrs[0].node_id == 'security-node'
 

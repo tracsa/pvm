@@ -17,7 +17,9 @@ def test_continue_process_requires(client):
     res = client.post('/v1/pointer', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+            b64encode(
+                '{}:{}'.format(user.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({}))
 
@@ -125,7 +127,8 @@ def test_continue_process_asks_for_user(client, models):
 
     assert res.status_code == 401
     assert 'WWW-Authenticate' in res.headers
-    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
+    assert res.headers['WWW-Authenticate'] == \
+        'Basic realm="User Visible Realm"'
     assert json.loads(res.data) == {
         'errors': [{
             'detail': 'You must provide basic authorization headers',
@@ -151,7 +154,9 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
     res = client.post('/v1/pointer', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+            b64encode(
+                    '{}:{}'.format(user.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({
         'execution_id': exc.id,
@@ -161,7 +166,8 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
     assert res.status_code == 403
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': 'The provided credentials do not match the specified hierarchy',
+            'detail': 'The provided credentials do not match '
+            'the specified hierarchy',
             'where': 'request.authorization',
         }],
     }
@@ -187,7 +193,9 @@ def test_continue_process_asks_for_data(client, models):
     res = client.post('/v1/pointer', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(manager.identifier, token.token).encode()).decode()
+            b64encode(
+                    '{}:{}'.format(manager.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({
         'execution_id': exc.id,
@@ -205,7 +213,10 @@ def test_continue_process_asks_for_data(client, models):
 
 
 def test_can_continue_process(client, models, mocker, config):
-    mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
+    mocker.patch(
+                'pika.adapters.blocking_connection.'
+                'BlockingChannel.basic_publish'
+    )
 
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
@@ -227,7 +238,9 @@ def test_can_continue_process(client, models, mocker, config):
     res = client.post('/v1/pointer', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(manager.identifier, token.token).encode()).decode()
+            b64encode(
+                    '{}:{}'.format(manager.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({
         'execution_id': exc.id,
@@ -271,9 +284,11 @@ def test_can_continue_process(client, models, mocker, config):
     }
 
     # rabbit is called
-    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
 
-    args =  pika.adapters.blocking_connection.BlockingChannel.basic_publish.call_args[1]
+    args = pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.call_args[1]
 
     json_message = {
         'command': 'step',
@@ -306,7 +321,8 @@ def test_can_continue_process(client, models, mocker, config):
     # makes a useful call for the handler
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, forms, actors, documents = handler.recover_step(json_message)
+    execution, pointer, xmliter, current_node, forms, actors, documents = \
+        handler.recover_step(json_message)
 
     assert execution.id == exc.id
     assert pointer.id == ptr.id
@@ -374,7 +390,8 @@ def test_process_start_simple_requires(client, models, mongo):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'nostart process lacks important nodes and structure',
+                'detail':
+                'nostart process lacks important nodes and structure',
                 'where': 'request.body.process_name',
             },
         ],
@@ -385,7 +402,10 @@ def test_process_start_simple_requires(client, models, mongo):
 
 
 def test_process_start_simple(client, models, mocker, config, mongo):
-    mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
+    mocker.patch(
+                'pika.adapters.blocking_connection.'
+                'BlockingChannel.basic_publish'
+    )
 
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
@@ -403,9 +423,11 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
     assert ptr.node_id == 'gYcj0XjbgjSO'
 
-    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
 
-    args =  pika.adapters.blocking_connection.BlockingChannel.basic_publish.call_args[1]
+    args = pika.adapters.blocking_connection.\
+        BlockingChannel.basic_publish.call_args[1]
 
     json_message = {
         'command': 'step',
@@ -419,7 +441,8 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, forms, actors, documents = handler.recover_step(json_message)
+    execution, pointer, xmliter, current_node, forms, actors, documents = \
+        handler.recover_step(json_message)
 
     assert execution.id == exc.id
     assert pointer.id == ptr.id
@@ -445,7 +468,8 @@ def test_exit_request_requirements(client, models):
 
     assert res.status_code == 401
     assert 'WWW-Authenticate' in res.headers
-    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
+    assert res.headers['WWW-Authenticate'] == \
+        'Basic realm="User Visible Realm"'
     assert json.loads(res.data) == {
         'errors': [{
             'detail': 'You must provide basic authorization headers',
@@ -464,7 +488,9 @@ def test_exit_request_requirements(client, models):
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+            b64encode(
+                    '{}:{}'.format(user.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({
         'process_name': 'exit_request',
@@ -494,7 +520,9 @@ def test_exit_request_start(client, models, mocker):
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+            b64encode(
+                    '{}:{}'.format(user.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({
         'process_name': 'exit_request',
@@ -543,7 +571,11 @@ def test_list_processes(client):
     res = client.get('/v1/process')
 
     body = json.loads(res.data)
-    exit_req = list(filter(lambda xml: xml['id'] == 'exit_request', body['data']))[0]
+    exit_req = list(
+                    filter(
+                        lambda xml: xml['id'] == 'exit_request', body['data']
+                    )
+                )[0]
 
     assert res.status_code == 200
     assert exit_req == {
@@ -552,7 +584,13 @@ def test_list_processes(client):
         'author': 'categulario',
         'date': '2018-03-20',
         'name': 'Petición de salida',
-        'description': 'Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.',
+        'description':
+            'Este proceso es iniciado por un empleado que quiere salir'
+            ' temporalmente de la empresa (e.g. a comer). La autorización'
+            ' llega a su supervisor, quien autoriza o rechaza la salida, '
+            'evento que es notificado de nuevo al empleado y finalmente '
+            'a los guardias, uno de los cuales notifica que el empleado '
+            'salió de la empresa.',
         'versions': ['2018-03-20'],
         'form_array': [
             {
@@ -596,7 +634,8 @@ def test_list_activities_requires(client):
 
 
 def test_list_activities(client, models):
-    '''Given 4 activities, two for the current user and two for another, list only the two belonging to him or her'''
+    '''Given 4 activities, two for the current user and two for
+    another, list only the two belonging to him or her'''
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
@@ -615,7 +654,9 @@ def test_list_activities(client, models):
 
     res = client.get('/v1/activity', headers={
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(juan.identifier, token.token).encode()).decode()
+            b64encode(
+                '{}:{}'.format(juan.identifier, token.token).encode()
+            ).decode()
         ),
     })
 
@@ -628,13 +669,13 @@ def test_list_activities(client, models):
 
 
 def test_activity_requires(client):
-    #validate user authentication wrong
+    # validate user authentication wrong
     res = client.get('/v1/activity/1')
     assert res.status_code == 401
 
 
 def test_activity_wrong_activity(client, models):
-    #validate user authentication correct but bad activity
+    # validate user authentication correct but bad activity
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
@@ -653,7 +694,9 @@ def test_activity_wrong_activity(client, models):
 
     res = client.get('/v1/activity/{}'.format(act2.id), headers={
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(juan.identifier, token.token).encode()).decode()
+            b64encode(
+                '{}:{}'.format(juan.identifier, token.token).encode()
+            ).decode()
         ),
     })
 
@@ -661,7 +704,7 @@ def test_activity_wrong_activity(client, models):
 
 
 def test_activity(client, models):
-    #validate user authentication correct with correct activity
+    # validate user authentication correct with correct activity
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
@@ -671,7 +714,9 @@ def test_activity(client, models):
 
     res2 = client.get('/v1/activity/{}'.format(act.id), headers={
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(juan.identifier, token.token).encode()).decode()
+            b64encode(
+                '{}:{}'.format(juan.identifier, token.token).encode()
+            ).decode()
         ),
     })
 

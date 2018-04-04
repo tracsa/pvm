@@ -35,7 +35,7 @@ def requires_json(view):
 
 def requires_auth(view):
     @wraps(view)
-    def wrapper(*args, **kwargs):  
+    def wrapper(*args, **kwargs):
         if request.authorization is None:
             raise Unauthorized([{
                 'detail': 'You must provide basic authorization headers',
@@ -48,7 +48,10 @@ def requires_auth(view):
         user = User.get_by('identifier', identifier)
         token = Token.get_by('token', token)
 
-        if user is None or token is None or token.proxy.user.get().id != user.id:
+        if (
+            user is None or token is None or
+            token.proxy.user.get().id != user.id
+        ):
             raise Unauthorized([{
                 'detail': 'Your credentials are invalid, sorry',
                 'where': 'request.authorization',

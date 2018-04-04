@@ -14,7 +14,10 @@ class Execution(Model):
 
 class Activity(Model):
     ''' relates a user and a execution '''
-    execution = fields.ForeignIdRelation('pvm.models.Execution', inverse='actors')
+    execution = fields.ForeignIdRelation(
+                                        'pvm.models.Execution',
+                                        inverse='actors'
+                )
     user = fields.ForeignIdRelation('pvm.models.User', inverse='activities')
     ref = fields.Text()
 

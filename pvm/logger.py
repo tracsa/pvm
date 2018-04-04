@@ -5,6 +5,7 @@ import json
 log = logging.getLogger('fleety-reporter')
 log.setLevel(logging.DEBUG)
 
+
 class BrokerHandler(logging.Handler):
 
     def __init__(self, redis=None, channel=None):
@@ -43,7 +44,11 @@ class BrokerHandler(logging.Handler):
 
 def init_logging(config):
     # Debug messages to stderr
-    formatter = logging.Formatter(fmt='[%(levelname)s] %(message)s - %(filename)s:%(lineno)d', datefmt='%Y-%m-%d %H:%M:%S %z')
+    formatter = logging.Formatter(
+                                fmt='[%(levelname)s] %(message)s - '
+                                '%(filename)s:%(lineno)d',
+                                datefmt='%Y-%m-%d %H:%M:%S %z'
+                )
 
     file_handler = logging.StreamHandler(stream=sys.stderr)
     file_handler.setLevel(config['LOG_LEVEL'])

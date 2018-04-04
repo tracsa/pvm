@@ -56,7 +56,6 @@ class Xml:
                 # the text child of <element></element> is the empty string
                 setattr(self, attr, func(''))
 
-
     @classmethod
     def load(cls, config: dict, common_name: str, direct=False) -> TextIO:
         ''' Loads an xml file and returns the corresponding TextIOWrapper for
@@ -113,7 +112,6 @@ class Xml:
         start_node = self.find(lambda e: e.getAttribute('id') == start_node_id)
 
         return start_node
-
 
     @classmethod
     def list(cls, config):
@@ -224,7 +222,7 @@ def topological_sort(start_node: Element, graph: 'Element') -> 'ElementTree':
     ''' sorts topologically the given xml element tree, source:
     https://en.wikipedia.org/wiki/Topological_sorting '''
     sorted_elements = []  # Empty list that will contain the sorted elements
-    no_incoming = [(start_node, None)] # (node, edge that points to this node)
+    no_incoming = [(start_node, None)]  # (node, edge that points to this node)
 
     while len(no_incoming) > 0:
         node, edge = no_incoming.pop()
@@ -243,6 +241,7 @@ def topological_sort(start_node: Element, graph: 'Element') -> 'ElementTree':
         raise Exception('graph is cyclic')
 
     return etree_from_list(graph, sorted_elements)
+
 
 SUPPORTED_ATTRS = {
     'type': str,

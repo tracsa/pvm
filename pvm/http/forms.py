@@ -16,7 +16,7 @@ class ContinueProcess(Form):
         given execution exists '''
         # validates the existence of the execution
         if not obj.execution_id or not obj.node_id:
-            return # previous validation didn't pass
+            return  # previous validation didn't pass
 
         from pvm.models import Execution
 
@@ -39,7 +39,8 @@ class ContinueProcess(Form):
         except ElementNotFound:
             raise errors.InvalidFieldError(field='node_id')
 
-        # validates the existence of a pointer asociated to the node and execution
+        # validates the existence of a pointer asociated
+        # to the node and execution
         ptrs = execution.proxy.pointers.get()
         pointer = None
 

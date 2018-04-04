@@ -52,7 +52,7 @@ class Handler:
     def call(self, message: dict, channel):
         execution, pointer, xml, cur_node, *rest = self.recover_step(message)
 
-        pointers = [] # pointers to be created
+        pointers = []  # pointers to be created
 
         # node's lifetime ends here
         self.teardown(pointer, *rest)

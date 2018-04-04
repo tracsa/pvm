@@ -58,7 +58,7 @@ class Trigger:
         )
 
 
-def make_tuple(arg:str):
+def make_tuple(arg: str):
     value = tuple(arg.split('='))
 
     if len(value) != 2:
@@ -66,18 +66,33 @@ def make_tuple(arg:str):
 
     return value
 
+
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(description='Trigger a process')
     subparsers = parser.add_subparsers(help='Type of command to trigger')
     trigger = Trigger()
 
-    start_parser = subparsers.add_parser('start', description='starts a new process')
+    start_parser = subparsers.add_parser(
+                                        'start',
+                                        description='starts a new process'
+    )
     start_parser.add_argument('process', help='The process to start')
     start_parser.set_defaults(func=trigger.start)
 
-    continue_parser = subparsers.add_parser('step', description='continues the execution of a process')
-    continue_parser.add_argument('pointer_id', help='the id of the pointer to restore')
-    continue_parser.add_argument('-d', '--data', action='append', type=make_tuple)
+    continue_parser = subparsers.add_parser(
+                                            'step',
+                                            description='continues'
+                                            'the execution of a process'
+    )
+    continue_parser.add_argument(
+                                'pointer_id',
+                                help='the id of the pointer to restore'
+                                )
+    continue_parser.add_argument(
+                                '-d', '--data',
+                                action='append', type=make_tuple
+    )
     continue_parser.set_defaults(func=trigger.step)
 
     args = parser.parse_args()

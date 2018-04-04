@@ -5,12 +5,15 @@ from pvm.http.wsgi import app
 from werkzeug.routing import BaseConverter
 import case_conversion
 
+
 class AuthProviderConverter(BaseConverter):
 
     def to_python(self, value):
         try:
             mod = import_module('pvm.auth.backends.{}'.format(value))
-            cls = getattr(mod, case_conversion.pascalcase(value) + 'AuthProvider')
+            cls = getattr(
+                        mod, case_conversion.pascalcase(value) + 'AuthProvider'
+                        )
         except ModuleNotFoundError:
             abort(404, 'Auth backend not found: {}'.format(value))
         except AttributeError as e:
@@ -20,5 +23,6 @@ class AuthProviderConverter(BaseConverter):
 
     def to_url(self, values):
         raise NotImplementedError('this converter does not work backwards')
+
 
 app.url_map.converters['AuthProvider'] = AuthProviderConverter

@@ -44,5 +44,6 @@ class BaseHierarchyProvider:
         raise NotImplementedError('Must be implemented in subclasses')
 
     def find_users(self, **params) -> [BaseUser]:
-        ''' given the params, retrieves the user identifiers that match them '''
+        ''' given the params, retrieves the
+        user identifiers that match them '''
         raise NotImplementedError('Must be implemented in subclasses')

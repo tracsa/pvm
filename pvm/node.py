@@ -18,7 +18,8 @@ class Node:
         self.element = element
 
     def next(self, xmliter: Iterator[Element], execution) -> ['Node']:
-        ''' Gets the next node in the graph, if it fails raises an exception.'''
+        ''' Gets the next node in the graph,
+        if it fails raises an exception.'''
         raise NotImplementedError('Should be implemented for subclasses')
 
     def is_end(self) -> bool:
@@ -115,7 +116,9 @@ def make_node(element):
     if not element.getAttribute('class'):
         raise KeyError('Must have the class atrribute')
 
-    class_name = case_conversion.pascalcase(element.getAttribute('class')) + 'Node'
+    class_name = case_conversion.pascalcase(
+                                            element.getAttribute('class')
+                ) + 'Node'
     available_classes = __import__(__name__).node
 
     if class_name not in dir(available_classes):

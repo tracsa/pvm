@@ -3,7 +3,8 @@ from xml.dom.minidom import Element
 from case_conversion import pascalcase
 from flask import request
 
-from pvm.errors import ValidationErrors, InputError, RequiredInputError, HierarchyError
+from pvm.errors import ValidationErrors, InputError,\
+    RequiredInputError, HierarchyError
 from pvm.http.errors import BadRequest, Unauthorized, Forbidden
 from pvm.models import User, Token
 from pvm.xml import get_ref, resolve_params
@@ -51,7 +52,8 @@ def validate_form(index: int, form: Element, data: dict) -> dict:
         name = input.getAttribute('name')
 
         try:
-            collected_data[name] = validate_input(index, input, given_data.get(name))
+            collected_data[name] = \
+                validate_input(index, input, given_data.get(name))
         except InputError as e:
             errors.append(e)
 

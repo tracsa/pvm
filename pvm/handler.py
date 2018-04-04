@@ -3,7 +3,7 @@ from coralillo.errors import ModelNotFoundError
 from datetime import datetime
 from importlib import import_module
 from pymongo import MongoClient
-import json
+import simplejson as json
 import pika
 
 from pvm.errors import CannotMove

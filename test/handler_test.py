@@ -1,6 +1,6 @@
 from datetime import datetime
 from xml.dom.minidom import Document
-import json
+import simplejson as json
 import pika
 import pytest
 

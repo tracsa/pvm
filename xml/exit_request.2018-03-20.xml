@@ -8,7 +8,7 @@
     <start-node>employee-node</start-node>
   </process-info>
   <process>
-    <node id="employee-node" class="start">
+    <node id="employee-node" class="simple">
       <auth id="requester"></auth>
 
       <form-array>

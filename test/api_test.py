@@ -8,6 +8,7 @@ import pytest
 from pvm.handler import Handler
 from pvm.models import Execution, Pointer, User, Token, Activity
 
+
 def test_continue_process_requires(client):
     user = User(identifier='juan').save()
     token = Token(token='123456').save()
@@ -16,7 +17,9 @@ def test_continue_process_requires(client):
     res = client.post('/v1/pointer', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+            b64encode(
+                '{}:{}'.format(user.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({}))
 
@@ -35,6 +38,7 @@ def test_continue_process_requires(client):
             },
         ],
     }
+
 
 def test_continue_process_asks_living_objects(client):
     ''' the app must validate that the ids sent are real objects '''
@@ -56,9 +60,10 @@ def test_continue_process_asks_living_objects(client):
         ],
     }
 
+
 def test_continue_process_requires_valid_node(client, models):
     exc = Execution(
-        process_name = 'decision.2018-02-27',
+        process_name='decision.2018-02-27',
     ).save()
 
     res = client.post('/v1/pointer', headers={
@@ -79,9 +84,10 @@ def test_continue_process_requires_valid_node(client, models):
         ],
     }
 
+
 def test_continue_process_requires_living_pointer(client, models):
     exc = Execution(
-        process_name = 'decision.2018-02-27',
+        process_name='decision.2018-02-27',
     ).save()
 
     res = client.post('/v1/pointer', headers={
@@ -102,12 +108,13 @@ def test_continue_process_requires_living_pointer(client, models):
         ],
     }
 
+
 def test_continue_process_asks_for_user(client, models):
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     ptr = Pointer(
-        node_id = 'manager-node',
+        node_id='manager-node',
     ).save()
     ptr.proxy.execution.set(exc)
 
@@ -120,13 +127,15 @@ def test_continue_process_asks_for_user(client, models):
 
     assert res.status_code == 401
     assert 'WWW-Authenticate' in res.headers
-    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
+    assert res.headers['WWW-Authenticate'] == \
+        'Basic realm="User Visible Realm"'
     assert json.loads(res.data) == {
         'errors': [{
             'detail': 'You must provide basic authorization headers',
             'where': 'request.authorization',
         }],
     }
+
 
 def test_continue_process_asks_for_user_by_hierarchy(client, models):
     ''' a node whose auth has a filter must be completed by a person matching
@@ -135,17 +144,19 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
     token = Token(token='123456').save()
     token.proxy.user.set(user)
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     ptr = Pointer(
-        node_id = 'manager-node',
+        node_id='manager-node',
     ).save()
     ptr.proxy.execution.set(exc)
 
     res = client.post('/v1/pointer', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+            b64encode(
+                    '{}:{}'.format(user.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({
         'execution_id': exc.id,
@@ -155,10 +166,12 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
     assert res.status_code == 403
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': 'The provided credentials do not match the specified hierarchy',
+            'detail': 'The provided credentials do not match '
+            'the specified hierarchy',
             'where': 'request.authorization',
         }],
     }
+
 
 def test_continue_process_asks_for_data(client, models):
     juan = User(identifier='juan').save()
@@ -169,18 +182,20 @@ def test_continue_process_asks_for_data(client, models):
     token = Token(token='123456').save()
     token.proxy.user.set(manager)
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     act.proxy.execution.set(exc)
     ptr = Pointer(
-        node_id = 'manager-node',
+        node_id='manager-node',
     ).save()
     ptr.proxy.execution.set(exc)
 
     res = client.post('/v1/pointer', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(manager.identifier, token.token).encode()).decode()
+            b64encode(
+                    '{}:{}'.format(manager.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({
         'execution_id': exc.id,
@@ -196,30 +211,36 @@ def test_continue_process_asks_for_data(client, models):
         }],
     }
 
+
 def test_can_continue_process(client, models, mocker, config):
-    mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
+    mocker.patch(
+                'pika.adapters.blocking_connection.'
+                'BlockingChannel.basic_publish'
+    )
 
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
     actors = []
-    actors.append( {'ref': act.ref, 'user': juan.to_json() } )
+    actors.append({'ref': act.ref, 'user': juan.to_json()})
     manager = User(identifier='juan_manager').save()
     token = Token(token='123456').save()
     token.proxy.user.set(manager)
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     act.proxy.execution.set(exc)
     ptr = Pointer(
-        node_id = 'manager-node',
+        node_id='manager-node',
     ).save()
     ptr.proxy.execution.set(exc)
 
     res = client.post('/v1/pointer', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(manager.identifier, token.token).encode()).decode()
+            b64encode(
+                    '{}:{}'.format(manager.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({
         'execution_id': exc.id,
@@ -263,9 +284,11 @@ def test_can_continue_process(client, models, mocker, config):
     }
 
     # rabbit is called
-    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
 
-    args =  pika.adapters.blocking_connection.BlockingChannel.basic_publish.call_args[1]
+    args = pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.call_args[1]
 
     json_message = {
         'command': 'step',
@@ -298,10 +321,12 @@ def test_can_continue_process(client, models, mocker, config):
     # makes a useful call for the handler
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, forms, actors, documents = handler.recover_step(json_message)
+    execution, pointer, xmliter, current_node, forms, actors, documents = \
+        handler.recover_step(json_message)
 
     assert execution.id == exc.id
     assert pointer.id == ptr.id
+
 
 def test_process_start_simple_requires(client, models, mongo):
     # we need the name of the process to start
@@ -365,7 +390,8 @@ def test_process_start_simple_requires(client, models, mongo):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'nostart process lacks important nodes and structure',
+                'detail':
+                'nostart process lacks important nodes and structure',
                 'where': 'request.body.process_name',
             },
         ],
@@ -374,8 +400,12 @@ def test_process_start_simple_requires(client, models, mongo):
     # no registry should be created yet
     assert mongo.count() == 0
 
+
 def test_process_start_simple(client, models, mocker, config, mongo):
-    mocker.patch('pika.adapters.blocking_connection.BlockingChannel.basic_publish')
+    mocker.patch(
+                'pika.adapters.blocking_connection.'
+                'BlockingChannel.basic_publish'
+    )
 
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
@@ -393,9 +423,11 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
     assert ptr.node_id == 'gYcj0XjbgjSO'
 
-    pika.adapters.blocking_connection.BlockingChannel.basic_publish.assert_called_once()
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
 
-    args =  pika.adapters.blocking_connection.BlockingChannel.basic_publish.call_args[1]
+    args = pika.adapters.blocking_connection.\
+        BlockingChannel.basic_publish.call_args[1]
 
     json_message = {
         'command': 'step',
@@ -405,11 +437,12 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
-    #assert json.loads(args['body']) == json_message
+    assert json.loads(args['body']) == json_message
 
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, forms, actors, documents = handler.recover_step(json_message)
+    execution, pointer, xmliter, current_node, forms, actors, documents = \
+        handler.recover_step(json_message)
 
     assert execution.id == exc.id
     assert pointer.id == ptr.id
@@ -424,6 +457,7 @@ def test_process_start_simple(client, models, mocker, config, mongo):
     assert reg['execution_id'] == exc.id
     assert reg['node_id'] == ptr.node_id
 
+
 def test_exit_request_requirements(client, models):
     # first requirement is to have authentication
     res = client.post('/v1/execution', headers={
@@ -434,7 +468,8 @@ def test_exit_request_requirements(client, models):
 
     assert res.status_code == 401
     assert 'WWW-Authenticate' in res.headers
-    assert res.headers['WWW-Authenticate'] == 'Basic realm="User Visible Realm"'
+    assert res.headers['WWW-Authenticate'] == \
+        'Basic realm="User Visible Realm"'
     assert json.loads(res.data) == {
         'errors': [{
             'detail': 'You must provide basic authorization headers',
@@ -453,7 +488,9 @@ def test_exit_request_requirements(client, models):
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+            b64encode(
+                    '{}:{}'.format(user.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({
         'process_name': 'exit_request',
@@ -471,6 +508,7 @@ def test_exit_request_requirements(client, models):
     assert Execution.count() == 0
     assert Activity.count() == 0
 
+
 def test_exit_request_start(client, models, mocker):
     user = User(identifier='juan').save()
     token = Token(token='123456').save()
@@ -482,7 +520,9 @@ def test_exit_request_start(client, models, mocker):
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(user.identifier, token.token).encode()).decode()
+            b64encode(
+                    '{}:{}'.format(user.identifier, token.token).encode()
+            ).decode()
         ),
     }, data=json.dumps({
         'process_name': 'exit_request',
@@ -526,11 +566,16 @@ def test_exit_request_start(client, models, mocker):
         'reason': 'tenía que salir al baño',
     }
 
+
 def test_list_processes(client):
     res = client.get('/v1/process')
 
     body = json.loads(res.data)
-    exit_req = list(filter(lambda xml: xml['id'] == 'exit_request', body['data']))[0]
+    exit_req = list(
+                    filter(
+                        lambda xml: xml['id'] == 'exit_request', body['data']
+                    )
+                )[0]
 
     assert res.status_code == 200
     assert exit_req == {
@@ -539,7 +584,13 @@ def test_list_processes(client):
         'author': 'categulario',
         'date': '2018-03-20',
         'name': 'Petición de salida',
-        'description': 'Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.',
+        'description':
+            'Este proceso es iniciado por un empleado que quiere salir'
+            ' temporalmente de la empresa (e.g. a comer). La autorización'
+            ' llega a su supervisor, quien autoriza o rechaza la salida, '
+            'evento que es notificado de nuevo al empleado y finalmente '
+            'a los guardias, uno de los cuales notifica que el empleado '
+            'salió de la empresa.',
         'versions': ['2018-03-20'],
         'form_array': [
             {
@@ -554,6 +605,7 @@ def test_list_processes(client):
             },
         ],
     }
+
 
 @pytest.mark.skip
 def test_read_process(client):
@@ -575,12 +627,15 @@ def test_read_process(client):
         },
     }
 
+
 def test_list_activities_requires(client):
     res = client.get('/v1/activity')
     assert res.status_code == 401
 
+
 def test_list_activities(client, models):
-    '''Given 4 activities, two for the current user and two for another, list only the two belonging to him or her'''
+    '''Given 4 activities, two for the current user and two for
+    another, list only the two belonging to him or her'''
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
@@ -592,14 +647,16 @@ def test_list_activities(client, models):
     token = Token(token='123456').save()
     token.proxy.user.set(juan)
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     act.proxy.execution.set(exc)
     act2.proxy.execution.set(exc)
 
     res = client.get('/v1/activity', headers={
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(juan.identifier, token.token).encode()).decode()
+            b64encode(
+                '{}:{}'.format(juan.identifier, token.token).encode()
+            ).decode()
         ),
     })
 
@@ -610,13 +667,15 @@ def test_list_activities(client, models):
         ],
     }
 
+
 def test_activity_requires(client):
-    #validate user authentication wrong
+    # validate user authentication wrong
     res = client.get('/v1/activity/1')
     assert res.status_code == 401
 
+
 def test_activity_wrong_activity(client, models):
-    #validate user authentication correct but bad activity
+    # validate user authentication correct but bad activity
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
@@ -628,21 +687,24 @@ def test_activity_wrong_activity(client, models):
     token = Token(token='123456').save()
     token.proxy.user.set(juan)
     exc = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     act.proxy.execution.set(exc)
     act2.proxy.execution.set(exc)
 
     res = client.get('/v1/activity/{}'.format(act2.id), headers={
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(juan.identifier, token.token).encode()).decode()
+            b64encode(
+                '{}:{}'.format(juan.identifier, token.token).encode()
+            ).decode()
         ),
     })
 
     assert res.status_code == 403
 
+
 def test_activity(client, models):
-    #validate user authentication correct with correct activity
+    # validate user authentication correct with correct activity
     juan = User(identifier='juan').save()
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
@@ -652,7 +714,9 @@ def test_activity(client, models):
 
     res2 = client.get('/v1/activity/{}'.format(act.id), headers={
         'Authorization': 'Basic {}'.format(
-            b64encode('{}:{}'.format(juan.identifier, token.token).encode()).decode()
+            b64encode(
+                '{}:{}'.format(juan.identifier, token.token).encode()
+            ).decode()
         ),
     })
 
@@ -662,8 +726,8 @@ def test_activity(client, models):
             act.to_json(),
     }
 
-def test_logs_activity( mongo, client ):
 
+def test_logs_activity(mongo, client):
     mongo.insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,

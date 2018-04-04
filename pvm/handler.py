@@ -22,7 +22,7 @@ class Handler:
         self.config = config
         self.mongo = None
 
-    def __call__(self, channel, method, properties, body:bytes):
+    def __call__(self, channel, method, properties, body: bytes):
         ''' the main callback of the PVM '''
         message = self.parse_message(body)
 
@@ -35,28 +35,28 @@ class Handler:
 
         for pointer in to_queue:
             channel.basic_publish(
-                exchange = '',
-                routing_key = self.config['RABBIT_QUEUE'],
-                body = json.dumps({
+                exchange='',
+                routing_key=self.config['RABBIT_QUEUE'],
+                body=json.dumps({
                     'command': 'step',
                     'pointer_id': pointer.id,
                 }),
-                properties = pika.BasicProperties(
-                    delivery_mode = 2, # make message persistent
+                properties=pika.BasicProperties(
+                    delivery_mode=2,
                 ),
             )
 
         if not self.config['RABBIT_NO_ACK']:
-            channel.basic_ack(delivery_tag = method.delivery_tag)
+            channel.basic_ack(delivery_tag=method.delivery_tag)
 
-    def call(self, message:dict, channel):
-        execution, pointer, xml, current_node, forms, actors, documents = self.recover_step(message)
+    def call(self, message: dict, channel):
+        execution, pointer, xml, cur_node, *rest = self.recover_step(message)
 
-        to_queue = [] # pointers to be created
+        to_queue = []  # pointers to be created
 
         # node's lifetime ends here
-        self.teardown(pointer, forms, actors, documents)
-        next_nodes = current_node.next(xml, execution)
+        self.teardown(pointer, *rest)
+        next_nodes = cur_node.next(xml, execution)
 
         for node in next_nodes:
             # node's begining of life
@@ -87,10 +87,15 @@ class Handler:
         backend = filter_node.getAttribute('backend')
 
         mod = import_module('pvm.auth.hierarchy.{}'.format(backend))
-        HierarchyProvider = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
+        HierarchyProvider = getattr(
+            mod,
+            pascalcase(backend) + 'HierarchyProvider'
+        )
 
         hierarchy_provider = HierarchyProvider(self.config)
-        husers = hierarchy_provider.find_users(**resolve_params(filter_node, execution))
+        husers = hierarchy_provider.find_users(
+            **resolve_params(filter_node, execution)
+        )
 
         for huser in husers:
             user = huser.get_user()
@@ -106,7 +111,7 @@ class Handler:
                     routing_key=medium,
                     body=json.dumps(params),
                     properties=pika.BasicProperties(
-                        delivery_mode=2, # make message persistent
+                        delivery_mode=2,
                     ),
                 )
 
@@ -145,7 +150,7 @@ class Handler:
 
         pointer.delete()
 
-    def parse_message(self, body:bytes):
+    def parse_message(self, body: bytes):
         ''' validates a received message against all possible needed fields
         and structure '''
         try:
@@ -172,18 +177,20 @@ class Handler:
 
         return self.mongo
 
-    def get_contact_channels(self, user:BaseUser):
+    def get_contact_channels(self, user: BaseUser):
         return [('email', {})]
 
-    def create_pointer(self, node:Node, execution:Execution):
+    def create_pointer(self, node: Node, execution: Execution):
         ''' Given a node, its process, and a specific execution of the former
         create a persistent pointer to the current execution state '''
-        pointer =  Pointer.validate(node_id=node.element.getAttribute('id')).save()
+        pointer = Pointer \
+            .validate(node_id=node.element.getAttribute('id')) \
+            .save()
         pointer.proxy.execution.set(execution)
 
         return pointer
 
-    def recover_step(self, message:dict):
+    def recover_step(self, message: dict):
         ''' given an execution id and a pointer from the persistent storage,
         return the asociated process node to continue its execution '''
         if 'pointer_id' not in message:
@@ -193,9 +200,18 @@ class Handler:
         execution = pointer.proxy.execution.get()
         xml = Xml.load(self.config, execution.process_name)
 
-        assert execution.process_name == xml.filename, 'Inconsistent pointer found'
+        assert execution.process_name == xml.filename, 'Inconsistent pointer'
 
         point = xml.find(
-            lambda e:e.getAttribute('id') == pointer.node_id
+            lambda e: e.getAttribute('id') == pointer.node_id
         )
-        return execution, pointer, xml, make_node(point), message.get('forms', []), message.get('actors', []), message.get('documents', [])
+
+        return (
+            execution,
+            pointer,
+            xml,
+            make_node(point),
+            message.get('forms', []),
+            message.get('actors', []),
+            message.get('documents', []),
+        )

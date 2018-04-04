@@ -24,7 +24,7 @@ class HardcodedHierarchyProvider(BaseHierarchyProvider):
         relation = params.get('relation')
 
         return list(map(
-            lambda u:HardcodedUser(username=u.identifier),
+            lambda u: HardcodedUser(username=u.identifier),
             User.q().filter(
                 identifier='{}_{}'.format(employee, relation)
             )

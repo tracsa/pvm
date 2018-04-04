@@ -29,11 +29,11 @@ bind_models(cora._engine)
 mongo = PyMongo(app)
 
 # Url converters
-import pvm.http.converters
+import pvm.http.converters  # noqa
 
 # Views
-import pvm.http.views.api
-import pvm.http.views.auth
+import pvm.http.views.api  # noqa
+import pvm.http.views.auth  # noqa
 
 # Error handlers
-import pvm.http.error_handlers
+import pvm.http.error_handlers  # noqa

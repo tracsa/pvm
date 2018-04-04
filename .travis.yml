@@ -8,4 +8,6 @@ services:
   - mongodb
 install:
   - pip install -r requirements.txt
-script: "pytest -vv"
+script:
+  - pytest -vv
+  - pycodestyle --show-source --exclude=.env,.tox,dist,docs,build,*.egg .

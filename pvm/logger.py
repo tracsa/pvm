@@ -1,6 +1,6 @@
 import logging
 import sys
-import json
+import simplejson as json
 
 log = logging.getLogger('fleety-reporter')
 log.setLevel(logging.DEBUG)

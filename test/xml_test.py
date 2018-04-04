@@ -1,7 +1,7 @@
 from io import TextIOWrapper
 import os
 import pytest
-import json
+import simplejson as json
 
 from pvm.errors import ProcessNotFound
 from xml.dom.minidom import parse

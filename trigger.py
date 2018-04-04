@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import pika
-import json
+import simplejson as json
 import os
 import argparse
 from itacate import Config

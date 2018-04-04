@@ -12,9 +12,11 @@ from pvm.models import bind_models
 def config():
     ''' Returns a fully loaded configuration dict '''
     con = Config(
-                os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
-        )
-    con.from_pyfile('settings.py')
+                os.path.join(
+                            os.path.dirname(os.path.realpath(__file__)), '..'
+                            )
+                )
+    con.from_object('pvm.settings')
     con.from_envvar('PVM_SETTINGS', silent=True)
 
     return con

@@ -1,7 +1,7 @@
 from xml.dom.minidom import Document
 import pytest
 
-from pvm.node import make_node, Node, StartNode
+from pvm.node import make_node, Node
 from pvm.xml import Xml
 from pvm.models import Execution, Questionaire
 
@@ -19,17 +19,6 @@ def test_make_node_requires_existent_class():
 
     with pytest.raises(ValueError) as e:
         make_node(element)
-
-
-def test_make_start_node():
-    element = Document().createElement('node')
-    element.setAttribute('class', 'start')
-
-    node = make_node(element)
-
-    assert node is not None
-    assert isinstance(node, Node)
-    assert isinstance(node, StartNode)
 
 
 def test_find_next_element_normal(config):

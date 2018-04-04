@@ -22,24 +22,14 @@ class Node:
         if it fails raises an exception.'''
         raise NotImplementedError('Should be implemented for subclasses')
 
-    def is_end(self) -> bool:
-        ''' tells if this node is the final node of the graph '''
-        return False
 
-    def is_async(self) -> bool:
-        ''' returns true for nodes that require external output to continue '''
-        raise NotImplementedError('Should be implemented for subclasses')
+class EndNode(Node):
+
+    def next(self, xml, execution):
+        return []
 
 
-class SyncNode(Node):
-    ''' Nodes that don't wait for external info to execute '''
-
-
-class AsyncNode(Node):
-    ''' Nodes that wait for external confirmation '''
-
-
-class SingleConnectedNode(Node):
+class SimpleNode(Node):
 
     def next(self, xml: Xml, execution) -> ['Node']:
         ''' just find the next node in the graph '''
@@ -56,22 +46,7 @@ class SingleConnectedNode(Node):
         ))]
 
 
-class StartNode(SyncNode, SingleConnectedNode):
-    ''' Each process graph should contain one and only one start node which is
-    the head and trigger of everything. It only leads to the next step in the
-    execution '''
-
-
-class DummyNode(SyncNode, SingleConnectedNode):
-    '''a node that does nothing but stand there... waiting for the appropiate
-    moment for... doing nothing '''
-
-
-class EchoNode(SyncNode, SingleConnectedNode):
-    ''' Prints to console the parameter contained in the attribute msg '''
-
-
-class DecisionNode(AsyncNode):
+class DecisionNode(Node):
 
     def next(self, xml: Xml, execution) -> ['Node']:
         ''' find node whose value corresponds to the answer '''
@@ -103,12 +78,6 @@ class DecisionNode(AsyncNode):
         return [make_node(xml.find(
             lambda e: e.getAttribute('id') == conn.getAttribute('to')
         ))]
-
-
-class EndNode(SyncNode):
-
-    def is_end(self):
-        return True
 
 
 def make_node(element):

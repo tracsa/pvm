@@ -3,8 +3,16 @@ from setuptools import setup
 
 setup(
     name='pvm',
-    version='0.2.0',
-    packages=['pvm'],
+    version='0.2.6',
+    packages=[
+        'pvm',
+        'pvm.http',
+        'pvm.http.views',
+        'pvm.auth',
+        'pvm.auth.backends',
+        'pvm.auth.hierarchy',
+    ],
+    package_data={'pvm': ['grammars/*.g']},
     include_package_data=True,
     install_requires=[
         'Flask-Coralillo',

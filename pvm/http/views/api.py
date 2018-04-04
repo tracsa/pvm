@@ -23,12 +23,14 @@ def trans_id(obj):
 
 
 def trans_date(obj):
-    if obj['started_at'] is not None:
-        obj['started_at'] = obj['started_at'].isoformat()
-
-    if obj['finished_at'] is not None:
-        obj['finished_at'] = obj['finished_at'].isoformat()
-
+    obj['started_at'] = \
+        obj['started_at'].isoformat() if (
+                                        obj['started_at'] is not None
+                                        ) else None
+    obj['finished_at'] = \
+        obj['finished_at'].isoformat() if (
+                                        obj['finished_at'] is not None
+                                        ) else None
     return obj
 
 

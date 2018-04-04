@@ -10,7 +10,7 @@ import os
 if __name__ == '__main__':
     # Load the config
     config = Config(os.path.dirname(os.path.realpath(__file__)))
-    config.from_pyfile('settings.py')
+    config.from_object('pvm.settings')
     config.from_envvar('PVM_SETTINGS', silent=True)
 
     # Set the timezone

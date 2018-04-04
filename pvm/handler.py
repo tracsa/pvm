@@ -3,7 +3,7 @@ from coralillo.errors import ModelNotFoundError
 from datetime import datetime
 from importlib import import_module
 from pymongo import MongoClient
-import json
+import simplejson as json
 import pika
 
 from pvm.errors import CannotMove
@@ -27,13 +27,13 @@ class Handler:
         message = self.parse_message(body)
 
         try:
-            to_notify = self.call(message, channel)
+            to_queue = self.call(message, channel)
         except ModelNotFoundError as e:
             return log.error(str(e))
         except CannotMove as e:
             return log.error(str(e))
 
-        for pointer in to_notify:
+        for pointer in to_queue:
             channel.basic_publish(
                 exchange='',
                 routing_key=self.config['RABBIT_QUEUE'],
@@ -52,7 +52,7 @@ class Handler:
     def call(self, message: dict, channel):
         execution, pointer, xml, cur_node, *rest = self.recover_step(message)
 
-        pointers = []  # pointers to be created
+        to_queue = []  # pointers to be created
 
         # node's lifetime ends here
         self.teardown(pointer, *rest)
@@ -62,23 +62,22 @@ class Handler:
             # node's begining of life
             pointer = self.wakeup(node, execution, channel)
 
+            # async nodes don't return theirs pointers so they are not queued
             if pointer:
-                pointers.append(pointer)
+                to_queue.append(pointer)
 
         if execution.proxy.pointers.count() == 0:
             execution.delete()
 
-        return pointers
+        return to_queue
 
     def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
-        if not node.is_end():
-            # End nodes don't create pointers, their lifetime ends here
-            pointer = self.create_pointer(node, execution)
-        else:
-            pointer = None
+        # create a pointer in this node
+        pointer = self.create_pointer(node, execution)
 
+        # notify someone
         filter_q = node.element.getElementsByTagName('filter')
 
         if len(filter_q) == 0:
@@ -116,6 +115,7 @@ class Handler:
                     ),
                 )
 
+        # update registry about this pointer
         collection = self.get_mongo()
 
         collection.insert_one({
@@ -128,7 +128,9 @@ class Handler:
             'actors': [],
         })
 
-        return pointer
+        # nodes with forms and documents are not queued
+        if len(node.element.getElementsByTagName('form-array')) > 0:
+            return pointer
 
     def teardown(self, pointer, forms, actors, documents):
         ''' finishes the node's lifecycle '''

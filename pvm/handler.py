@@ -64,7 +64,7 @@ class Handler:
 
             # async nodes don't return theirs pointers so they are not queued
             if pointer:
-                pointers.append(pointer)
+                to_queue.append(pointer)
 
         if execution.proxy.pointers.count() == 0:
             execution.delete()

@@ -26,7 +26,7 @@ class Node:
         return False
 
 
-class EndNode(SyncNode):
+class EndNode(Node):
 
     def next(self, xml, execution):
         return []

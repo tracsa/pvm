@@ -3,18 +3,15 @@ from pvm.errors import AuthenticationError
 
 class HardcodedUser(BaseUser):
 
-
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-
 
     def get_identifier(self):
         return self.username
 
 
 class HardcodedAuthProvider(BaseAuthProvider):
-
 
     def authenticate(self, **credentials):
         if 'username' not in credentials or \

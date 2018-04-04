@@ -7,13 +7,11 @@ log.setLevel(logging.DEBUG)
 
 class BrokerHandler(logging.Handler):
 
-
     def __init__(self, redis=None, channel=None):
         super().__init__()
 
         self.redis = redis
         self.channel = channel
-
 
     def emit(self, record):
         try:
@@ -35,7 +33,6 @@ class BrokerHandler(logging.Handler):
             self.redis.publish(self.channel, json.dumps(message))
         except Exception:
             self.handleError(record)
-
 
     def parse_dict(self, data):
         return '\n'.join(

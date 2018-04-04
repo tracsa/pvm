@@ -18,7 +18,6 @@ XML_ATTRIBUTES = {
 
 class Xml:
 
-
     def __init__(self, config, filename):
         try:
             self.id, self.version, _ = filename.split('.')
@@ -72,7 +71,6 @@ class Xml:
         else:
             raise ProcessNotFound(common_name)
 
-
     def __next__(self):
         ''' Returns an inerator over the nodes and edges of a process defined
         by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed for
@@ -86,10 +84,8 @@ class Xml:
 
         raise StopIteration
 
-
     def __iter__(self):
         return self
-
 
     def find(self, testfunc:Callable[[Element], bool]) -> Element:
         ''' Given an interator returned by the previous function, tries to find the
@@ -99,7 +95,6 @@ class Xml:
                 return element
 
         raise ElementNotFound('node or edge matching the given condition was not found')
-
 
     def start_node(self) -> Element:
         ''' Returns the starting node '''
@@ -139,7 +134,6 @@ class Xml:
                 processes[-1].versions.append(version)
 
         return processes
-
 
     def to_json(self):
         return {

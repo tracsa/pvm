@@ -6,7 +6,6 @@ from pvm.errors import RefNotFound
 
 class Condition:
 
-
     def __init__(self, execution):
         filename = os.path.join(os.path.dirname(__file__), 'grammars/condition.g')
 
@@ -17,7 +16,6 @@ class Condition:
                 parser='lalr',
                 transformer=self.ConditionTransformer(execution),
             )
-
 
     def parse(self, string):
         return self.parser.parse(string)

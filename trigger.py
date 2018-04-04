@@ -10,7 +10,6 @@ from pvm.logger import log
 
 class Trigger:
 
-
     def __init__(self):
         config = Config(os.path.dirname(os.path.realpath(__file__)))
         config.from_pyfile('settings.py')
@@ -29,7 +28,6 @@ class Trigger:
         self.config = config
         self.channel = channel
 
-
     def start(self, args):
         self.channel.basic_publish(
             exchange='',
@@ -44,7 +42,6 @@ class Trigger:
         )
 
         log.info("Process queued for start")
-
 
     def step(self, args):
         self.channel.basic_publish(

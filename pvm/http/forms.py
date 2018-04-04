@@ -6,7 +6,7 @@ from pvm.errors import ElementNotFound, NoPointerAlive
 
 class ContinueProcess(Form):
     execution_id = fields.Text()
-    node_id      = fields.Text()
+    node_id = fields.Text()
 
     @validation_rule
     def custom_validations(obj):

@@ -26,11 +26,9 @@ class InputError(Exception):
     code = None
     form_index = 0
 
-
     def __init__(self, form_index, input):
         self.input = input
         self.form_index = form_index
-
 
     def to_json(self):
         return {
@@ -49,11 +47,9 @@ class RequiredInputError(InputError):
 
 class ValidationErrors(Exception):
 
-
     def __init__(self, errors):
         super().__init__()
         self.errors = errors
-
 
     def to_json(self):
         return list(map(

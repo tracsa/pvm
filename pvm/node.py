@@ -40,9 +40,15 @@ class AsyncNode(Node):
 
 class SingleConnectedNode(Node):
 
-    def next(self, xml:Xml, execution) -> ['Node']:
+    def next(self, xml: Xml, execution) -> ['Node']:
         ''' just find the next node in the graph '''
-        conn = xml.find(lambda e: e.tagName=='connector' and e.getAttribute('from') == self.element.getAttribute('id'))
+        def find_node(e):
+            if e.tagName != 'connector':
+                return False
+
+            return e.getAttribute('from') == self.element.getAttribute('id')
+
+        conn = xml.find(find_node)
 
         return [make_node(xml.find(
             lambda e: e.getAttribute('id') == conn.getAttribute('to')

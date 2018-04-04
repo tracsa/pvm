@@ -20,8 +20,8 @@ def trans_id(obj):
     return obj
 
 def trans_date(obj):
-    obj['started_at'] = obj['started_at'].isoformat()+'Z' if obj['started_at'] is not None else None
-    obj['finished_at'] = obj['finished_at'].isoformat()+'Z' if obj['finished_at'] is not None else None
+    obj['started_at'] = obj['started_at'].isoformat() if obj['started_at'] is not None else None
+    obj['finished_at'] = obj['finished_at'].isoformat() if obj['finished_at'] is not None else None
     return obj
 
 @app.route('/', methods=['GET', 'POST'])

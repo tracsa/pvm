@@ -8,7 +8,7 @@
     <start-node>decision-node</start-node>
   </process-info>
   <process>
-    <node id="decision-node" class="decision">
+    <node id="decision-node" class="decision async">
       <form-array>
         <form id="auth-form">
           <input type="radio" name="auth" required="required">
@@ -19,11 +19,15 @@
       </form-array>
     </node>
 
-    <connector from="decision-node" to="confirm-node" condition="#auth-form.auth=='yes'" />
+    <connector from="decision-node" to="confirm-node">
+      <condition>form#auth-form[auth]=="yes"</condition>
+    </connector>
 
     <node id="confirm-node" class="end" />
 
-    <connector from="decision-node" to="denegate-node" condition="#auth-form.auth=='no'" />
+    <connector from="decision-node" to="denegate-node">
+      <condition>form#auth-form[auth]=="no"</condition>
+    </connector>
 
     <node id="denegate-node" class="end" />
   </process>

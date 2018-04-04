@@ -8,7 +8,7 @@
     <start-node>employee-node</start-node>
   </process-info>
   <process>
-    <node id="employee-node" class="sync">
+    <node id="employee-node" class="simple async">
       <auth id="requester"></auth>
 
       <form-array>
@@ -40,7 +40,7 @@
 
     <connector from="employee-node" to="manager-node" />
 
-    <node id="manager-node" class="decision">
+    <node id="manager-node" class="decision async">
       <auth id="manager">
         <filter>
           <param name="employee" source="#requester" />
@@ -59,7 +59,7 @@
 
     <connector from="manager-node" to="security-node" condition="#auth-form.auth=='yes'" />
 
-    <node id="security-node" class="async">
+    <node id="security-node" class="simple async">
       <auth id="security">
         <filter>
           <param name="ou">Security</param>
@@ -75,7 +75,7 @@
 
     <connector from="manager-node" to="noauth-node" condition="#auth-form.auth=='no'" />
 
-    <node id="noauth-node" class="notify end">
+    <node id="noauth-node" class="end notify">
       <auth target="requester"></auth>
     </node>
 

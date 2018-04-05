@@ -13,7 +13,7 @@ from cacahuate.http.errors import BadRequest, Unauthorized, Forbidden
 from cacahuate.models import User, Token
 from cacahuate.xml import get_ref, resolve_params
 from cacahuate.http.wsgi import app
-#from dateutil.parser import parse
+
 
 def get_associated_data(ref: str, data: dict) -> dict:
     ''' given a reference returns its asociated data in the data dictionary '''
@@ -39,57 +39,58 @@ def validate_input(form_index: int, input: Element, value):
     if input.getAttribute('required') and (value == '' or value is None):
         raise RequiredInputError(form_index, input.getAttribute('name'))
 
-    print ("----")
-    print (value)
-    print (type(value))
-    print (input.getAttribute('type'))
-
-    print ("####")
-    if input.getAttribute('type') == 'datetime' or input.getAttribute('type') == 'date':
+    if input.getAttribute('type') == 'datetime' or \
+            input.getAttribute('type') == 'date':
 
         if type(value) is not str:
             raise RequiredStrError(form_index, input.getAttribute('name'))
 
         try:
-            datetime.strptime( value, "%Y-%m-%dT%H:%M:%SZ")
+            datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
         except ValueError:
             raise RequiredDateError(form_index, input.getAttribute('name'))
 
-    if input.getAttribute('type')  == 'checkbox':
+    if input.getAttribute('type') == 'checkbox':
 
         if type(value) is not list:
             raise RequiredListError(form_index, input.getAttribute('name'))
 
-        print (type(value))
+        list_values = [
+            child_element.getAttribute('value')
+            for child_element in input.getElementsByTagName('option')
+        ]
 
-        list_values = [ child_element.getAttribute('value') for child_element in input.getElementsByTagName('option') ]
         for val in value:
             if val not in list_values:
-                raise RequiredValueError(form_index, input.getAttribute('name'))
+                raise RequiredValueError(
+                        form_index,
+                        input.getAttribute('name')
+                    )
 
-    if input.getAttribute('type')  == 'radio':
-
-        if type(value) is not str:
-            raise RequiredStrError(form_index, input.getAttribute('name'))
-
-        print (type(value))
-
-        list_values = [ child_element.getAttribute('value') for child_element in input.getElementsByTagName('option') ]
-        if value not in list_values:
-            raise RequiredValueError(form_index, input.getAttribute('name'))
-
-    if input.getAttribute('type')  == 'select':
+    if input.getAttribute('type') == 'radio':
 
         if type(value) is not str:
             raise RequiredStrError(form_index, input.getAttribute('name'))
 
-        print (type(value))
-
-        list_values = [ child_element.getAttribute('value') for child_element in input.getElementsByTagName('option') ]
+        list_values = [
+                    child_element.getAttribute('value')
+                    for child_element in input.getElementsByTagName('option')
+                ]
         if value not in list_values:
             raise RequiredValueError(form_index, input.getAttribute('name'))
-    #print (form_index)
 
+    if input.getAttribute('type') == 'select':
+
+        if type(value) is not str:
+            raise RequiredStrError(form_index, input.getAttribute('name'))
+
+        list_values = [
+            child_element.getAttribute('value')
+            for child_element in input.getElementsByTagName('option')
+        ]
+
+        if value not in list_values:
+            raise RequiredValueError(form_index, input.getAttribute('name'))
 
     return value
 

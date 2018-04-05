@@ -42,13 +42,11 @@ class IncompleteBranch(Exception):
 
 
 class NoPointerAlive(BadField):
-
     message = '{field} does not have a live pointer'
     errorcode = 'no_live_pointer'
 
 
 class InputError(Exception):
-
     detail = None
     code = None
     form_index = 0
@@ -69,32 +67,29 @@ class InputError(Exception):
 
 
 class RequiredInputError(InputError):
-
     detail = "'{input}' input is required"
     code = 'validation.required'
 
 
 class RequiredDateError(InputError):
-
     detail = "'{input}' input is not date time"
     code = 'validation.required'
 
 
-
 class RequiredValueError(InputError):
-
     detail = "'{input}' value invalid"
     code = 'validation.required'
 
-class RequiredListError(InputError):
 
+class RequiredListError(InputError):
     detail = "'{input}' required a list"
     code = 'validation.required'
 
-class RequiredStrError(InputError):
 
+class RequiredStrError(InputError):
     detail = "'{input}' required a str"
     code = 'validation.required'
+
 
 class ValidationErrors(Exception):
 

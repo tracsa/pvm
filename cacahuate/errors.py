@@ -74,6 +74,28 @@ class RequiredInputError(InputError):
     code = 'validation.required'
 
 
+class RequiredDateError(InputError):
+
+    detail = "'{input}' input is not date time"
+    code = 'validation.required'
+
+
+
+class RequiredValueError(InputError):
+
+    detail = "'{input}' value invalid"
+    code = 'validation.required'
+
+class RequiredListError(InputError):
+
+    detail = "'{input}' required a list"
+    code = 'validation.required'
+
+class RequiredStrError(InputError):
+
+    detail = "'{input}' required a str"
+    code = 'validation.required'
+
 class ValidationErrors(Exception):
 
     def __init__(self, errors):

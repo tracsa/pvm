@@ -6,10 +6,13 @@ services:
   - redis-server
   - rabbitmq
   - mongodb
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libxml2-utils
 install:
   - pip install -r requirements.txt
   - pip install pycodestyle
 script:
   - pytest -vv
   - pycodestyle --statistics --show-source --exclude=.env,.tox,dist,docs,build,*.egg .
-  - xmllint --noout --relaxng xml/process-spec.rng xml/all-inputs.2018-04-04.xml
+  - for f in `ls xml/*.xml`; do xmllint --noout --relaxng xml/process-spec.rng $f; done

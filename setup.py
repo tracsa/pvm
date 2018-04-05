@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(
-    name='pvm',
+    name='cacahuate',
     version='0.2.7',
     packages=[
         'pvm',

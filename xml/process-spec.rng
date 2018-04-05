@@ -47,8 +47,26 @@
   <define name="node">
     <element name="node">
       <attribute name="id"><text/></attribute>
-      <attribute name="class"><text/></attribute>
-      <text/>
+      <attribute name="class">
+        <choice>
+          <value>end</value>
+          <value>simple</value>
+          <value>decision</value>
+        </choice>
+      </attribute>
+
+      <optional>
+        <element name="form-array">
+          <zeroOrMore>
+            <element name="form">
+              <choice>
+                <attribute name="id"><text/></attribute>
+                <attribute name="class"><text/></attribute>
+              </choice>
+            </element>
+          </zeroOrMore>
+        </element>
+      </optional>
     </element>
   </define>
 

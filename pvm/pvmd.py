@@ -7,10 +7,11 @@ from itacate import Config
 import time
 import os
 
-if __name__ == '__main__':
+
+def main():
     # Load the config
     config = Config(os.path.dirname(os.path.realpath(__file__)))
-    config.from_pyfile('settings.py')
+    config.from_object('pvm.settings')
     config.from_envvar('PVM_SETTINGS', silent=True)
 
     # Set the timezone
@@ -25,12 +26,16 @@ if __name__ == '__main__':
 
     # Load the models
     eng = Engine(
-        host = config['REDIS_HOST'],
-        port = config['REDIS_PORT'],
-        db = config['REDIS_DB'],
+        host=config['REDIS_HOST'],
+        port=config['REDIS_PORT'],
+        db=config['REDIS_DB'],
     )
     bind_models(eng)
 
     # start the loop
     loop = Loop(config)
     loop.start()
+
+
+if __name__ == '__main__':
+    main()

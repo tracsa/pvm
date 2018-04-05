@@ -17,8 +17,9 @@ class Node:
     def __init__(self, element):
         self.element = element
 
-    def next(self, xmliter:Iterator[Element], execution) -> ['Node']:
-        ''' Gets the next node in the graph, if it fails raises an exception.'''
+    def next(self, xmliter: Iterator[Element], execution) -> ['Node']:
+        ''' Gets the next node in the graph,
+        if it fails raises an exception.'''
         raise NotImplementedError('Should be implemented for subclasses')
 
 
@@ -30,18 +31,24 @@ class EndNode(Node):
 
 class SimpleNode(Node):
 
-    def next(self, xml:Xml, execution) -> ['Node']:
+    def next(self, xml: Xml, execution) -> ['Node']:
         ''' just find the next node in the graph '''
-        conn = xml.find(lambda e:e.tagName=='connector' and e.getAttribute('from') == self.element.getAttribute('id'))
+        def find_node(e):
+            if e.tagName != 'connector':
+                return False
+
+            return e.getAttribute('from') == self.element.getAttribute('id')
+
+        conn = xml.find(find_node)
 
         return [make_node(xml.find(
-            lambda e:e.getAttribute('id') == conn.getAttribute('to')
+            lambda e: e.getAttribute('id') == conn.getAttribute('to')
         ))]
 
 
 class DecisionNode(Node):
 
-    def next(self, xml:Xml, execution) -> ['Node']:
+    def next(self, xml: Xml, execution) -> ['Node']:
         ''' find node whose value corresponds to the answer '''
         def find_node(el):
             if el.tagName != 'connector':
@@ -69,7 +76,7 @@ class DecisionNode(Node):
             )
 
         return [make_node(xml.find(
-            lambda e:e.getAttribute('id') == conn.getAttribute('to')
+            lambda e: e.getAttribute('id') == conn.getAttribute('to')
         ))]
 
 
@@ -78,7 +85,9 @@ def make_node(element):
     if not element.getAttribute('class'):
         raise KeyError('Must have the class atrribute')
 
-    class_name = case_conversion.pascalcase(element.getAttribute('class')) + 'Node'
+    class_name = case_conversion.pascalcase(
+                                            element.getAttribute('class')
+                ) + 'Node'
     available_classes = __import__(__name__).node
 
     if class_name not in dir(available_classes):

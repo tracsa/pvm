@@ -6,7 +6,8 @@ import os
 import pika
 
 from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from pvm.http.errors import BadRequest, NotFound, UnprocessableEntity,Forbidden
+from pvm.http.errors import BadRequest, NotFound, \
+    UnprocessableEntity, Forbidden
 from pvm.http.forms import ContinueProcess
 from pvm.http.middleware import requires_json, requires_auth
 from pvm.http.validation import validate_forms, validate_json, validate_auth
@@ -15,14 +16,23 @@ from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
 from pvm.rabbit import get_channel
 from pvm.xml import Xml, form_to_dict
 
+
 def trans_id(obj):
     obj['_id'] = str(obj['_id'])
     return obj
 
+
 def trans_date(obj):
-    obj['started_at'] = obj['started_at'].isoformat() if obj['started_at'] is not None else None
-    obj['finished_at'] = obj['finished_at'].isoformat() if obj['finished_at'] is not None else None
+    obj['started_at'] = \
+        obj['started_at'].isoformat() if (
+                                        obj['started_at'] is not None
+                                        ) else None
+    obj['finished_at'] = \
+        obj['finished_at'].isoformat() if (
+                                        obj['finished_at'] is not None
+                                        ) else None
     return obj
+
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
@@ -34,6 +44,7 @@ def index():
     elif request.method == 'POST':
         return request.json
 
+
 @app.route('/v1/execution', methods=['POST'])
 @requires_json
 def start_process():
@@ -43,12 +54,14 @@ def start_process():
         xml = Xml.load(app.config, request.json['process_name'])
     except ProcessNotFound as e:
         raise NotFound([{
-            'detail': '{} process does not exist'.format(request.json['process_name']),
+            'detail': '{} process does not exist'
+                      .format(request.json['process_name']),
             'where': 'request.body.process_name',
         }])
     except MalformedProcess as e:
         raise UnprocessableEntity([{
-            'detail': '{} process lacks important nodes and structure'.format(request.json['process_name']),
+            'detail': '{} process lacks important nodes and structure'
+                      .format(request.json['process_name']),
             'where': 'request.body.process_name',
         }])
 
@@ -56,7 +69,8 @@ def start_process():
         start_point = xml.start_node()
     except ElementNotFound as e:
         raise UnprocessableEntity([{
-            'detail': '{} process does not have a start node, thus cannot be started'.format(request.json['process_name']),
+            'detail': '{} process does not have a start node, thus cannot be '
+                      'started'.format(request.json['process_name']),
             'where': 'request.body.process_name',
         }])
 
@@ -68,11 +82,11 @@ def start_process():
 
     # save the data
     execution = Execution(
-        process_name = xml.filename,
+        process_name=xml.filename,
     ).save()
 
     pointer = Pointer(
-        node_id = start_point.getAttribute('id'),
+        node_id=start_point.getAttribute('id'),
     ).save()
 
     pointer.proxy.execution.set(execution)
@@ -82,14 +96,14 @@ def start_process():
         activity = Activity(ref=auth_ref).save()
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
-        actors.append( {'ref': auth_ref, 'user': user.to_json() } )
+        actors.append({'ref': auth_ref, 'user': user.to_json()})
     forms = []
 
     if len(collected_forms) > 0:
         for ref, form_data in collected_forms:
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
-            forms.append({'ref':ref,'data':form_data})
+            forms.append({'ref': ref, 'data': form_data})
 
     # log to mongo
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
@@ -101,27 +115,28 @@ def start_process():
         'node_id': start_point.getAttribute('id'),
         'forms': forms,
         'actors': actors,
-        'documents':[]
+        'documents': []
     })
 
     # trigger rabbit
     channel = get_channel()
     channel.basic_publish(
-        exchange = '',
-        routing_key = app.config['RABBIT_QUEUE'],
-        body = json.dumps({
+        exchange='',
+        routing_key=app.config['RABBIT_QUEUE'],
+        body=json.dumps({
             'command': 'step',
             'process': execution.process_name,
             'pointer_id': pointer.id,
         }),
-        properties = pika.BasicProperties(
-            delivery_mode = 2, # make message persistent
+        properties=pika.BasicProperties(
+            delivery_mode=2,
         ),
     )
 
     return {
         'data': execution.to_json(),
     }, 201
+
 
 @app.route('/v1/pointer', methods=['POST'])
 @requires_json
@@ -143,7 +158,7 @@ def continue_process():
     xml = Xml.load(app.config, execution.process_name)
 
     try:
-        continue_point = xml.find(lambda e:e.getAttribute('id') == node_id)
+        continue_point = xml.find(lambda e: e.getAttribute('id') == node_id)
     except ElementNotFound as e:
         raise BadRequest([{
             'detail': 'node_id is not a valid node',
@@ -174,21 +189,21 @@ def continue_process():
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
 
-        actors.append( {'ref': auth_ref, 'user': user.to_json() } )
+        actors.append({'ref': auth_ref, 'user': user.to_json()})
 
     forms = []
     if len(collected_forms) > 0:
         for ref, form_data in collected_forms:
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
-            forms.append({'ref':ref, 'data':form_data})
+            forms.append({'ref': ref, 'data': form_data})
 
     # trigger rabbit
     channel = get_channel()
     channel.basic_publish(
-        exchange = '',
-        routing_key = app.config['RABBIT_QUEUE'],
-        body = json.dumps({
+        exchange='',
+        routing_key=app.config['RABBIT_QUEUE'],
+        body=json.dumps({
             'command': 'step',
             'process': execution.process_name,
             'pointer_id': pointer.id,
@@ -196,14 +211,15 @@ def continue_process():
             'actors':  actors,
             'documents': []
         }),
-        properties = pika.BasicProperties(
-            delivery_mode = 2, # make message persistent
+        properties=pika.BasicProperties(
+            delivery_mode=2,
         ),
     )
 
     return {
         'data': 'accepted',
     }, 202
+
 
 @app.route('/v1/process', methods=['GET'])
 def list_process():
@@ -225,13 +241,14 @@ def list_process():
 
     return jsonify({
         'data': list(filter(
-            lambda x:x,
+            lambda x: x,
             map(
                 add_form,
                 Xml.list(app.config),
             )
         ))
     })
+
 
 @app.route('/v1/activity', methods=['GET'])
 @requires_auth
@@ -240,10 +257,11 @@ def list_activities():
 
     return jsonify({
         'data': list(map(
-            lambda a:a.to_json(embed=['execution']),
+            lambda a: a.to_json(embed=['execution']),
             activities
         )),
     })
+
 
 @app.route('/v1/activity/<id>', methods=['GET'])
 @requires_auth
@@ -267,6 +285,7 @@ def one_activity(id):
     return jsonify({
         'data': activity.to_json(),
     })
+
 
 @app.route('/v1/log/<id>', methods=['GET'])
 def list_logs(id):

@@ -1,0 +1,12 @@
+[Unit]
+Description=PVM daemon
+After=network.target
+
+[Service]
+WorkingDirectory=/home/user/apps/pvm
+ExecStart=/home/user/apps/pvm/.env/bin/pvmd
+Environment=PVM_SETTINGS=/home/user/app/pvm/settings_production.py
+Restart=always
+
+[Install]
+WantedBy=default.target

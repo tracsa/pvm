@@ -1,7 +1,7 @@
 import os
 import logging
 
-base_dir = os.path.dirname(os.path.realpath(__file__))
+base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 
 # Testing and log stuff
 TESTING = False
@@ -13,7 +13,7 @@ XML_PATH = os.path.join(base_dir, 'xml')
 # Rabbitmq
 RABBIT_HOST = 'localhost'
 RABBIT_QUEUE = 'pvm_process'
-RABBIT_NOTIFY_EXCHANGE= 'pvm_notify'
+RABBIT_NOTIFY_EXCHANGE = 'pvm_notify'
 RABBIT_CONSUMER_TAG = 'pvm_consumer_1'
 RABBIT_NO_ACK = True
 

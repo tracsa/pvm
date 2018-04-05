@@ -4,17 +4,21 @@ import os
 
 from pvm.errors import RefNotFound
 
+
 class Condition:
 
     def __init__(self, execution):
-        filename = os.path.join(os.path.dirname(__file__), 'grammars/condition.g')
+        filename = os.path.join(
+                                os.path.dirname(__file__),
+                                'grammars/condition.g'
+                                )
 
         with open(filename) as grammar_file:
             self.parser = Lark(
                 grammar_file.read(),
-                start = 'condition',
-                parser = 'lalr',
-                transformer = self.ConditionTransformer(execution),
+                start='condition',
+                parser='lalr',
+                transformer=self.ConditionTransformer(execution),
             )
 
     def parse(self, string):
@@ -25,10 +29,14 @@ class Condition:
         def __init__(self, execution):
             self._execution = execution
 
-        op_eq = lambda self, _: operator.eq
-        op_ne = lambda self, _: operator.ne
+        def op_eq(self, _):
+            return operator.eq
 
-        type_form = lambda self, _: 'forms'
+        def op_ne(self, _):
+            return operator.ne
+
+        def type_form(self, _):
+            return 'forms'
 
         def variable(self, args):
             return args[0][:]
@@ -43,7 +51,11 @@ class Condition:
             obj_type, obj_id, member = args
 
             try:
-                obj = next(getattr(self._execution.proxy, obj_type).q().filter(ref='#'+obj_id))
+                obj = next(
+                        getattr(
+                                self._execution.proxy,
+                                obj_type).q().filter(ref='#'+obj_id)
+                        )
             except StopIteration:
                 raise RefNotFound
 

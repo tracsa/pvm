@@ -2,9 +2,21 @@
 from setuptools import setup
 
 setup(
-    name='pvm',
-    version='0.2.0',
-    packages=['pvm'],
+    name='cacahuate',
+    version='0.2.7',
+    packages=[
+        'pvm',
+        'pvm.http',
+        'pvm.http.views',
+        'pvm.auth',
+        'pvm.auth.backends',
+        'pvm.auth.hierarchy',
+    ],
+    entry_points={
+        'console_scripts': [
+            'pvmd = pvm.pvmd:main',
+        ],
+    },
     package_data={'pvm': ['grammars/*.g']},
     include_package_data=True,
     install_requires=[
@@ -18,6 +30,7 @@ setup(
         'lark-parser',
         'ldap3',
         'pika',
+        'simplejson',
     ],
     setup_requires=[
         'pytest-runner',

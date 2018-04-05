@@ -7,12 +7,12 @@ from .errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from .mark import comment
 
 XML_ATTRIBUTES = {
-    'public': lambda a:a=='true',
+    'public': lambda a: a == 'true',
     'author': str,
     'date': str,
     'name': str,
-    'description': lambda x:x,
-    'start-node': lambda x:x,
+    'description': lambda x: x,
+    'start-node': lambda x: x,
 }
 
 
@@ -22,12 +22,16 @@ class Xml:
         try:
             self.id, self.version, _ = filename.split('.')
         except ValueError:
-            raise MalformedProcess('Name of process is invalid, must be name.version.xml')
+            raise MalformedProcess(
+                'Name of process is invalid, must be name.version.xml'
+            )
 
         self.versions = [self.version]
         self.filename = filename
         self.config = config
-        self.parser = pulldom.parse(open(os.path.join(config['XML_PATH'], filename)))
+        self.parser = pulldom.parse(
+            open(os.path.join(config['XML_PATH'], filename))
+        )
 
         try:
             info_node = next(self)
@@ -41,7 +45,9 @@ class Xml:
             try:
                 node = info_node.getElementsByTagName(attr)[0]
             except IndexError:
-                raise MalformedProcess('Process\' metadata lacks node {}'.format(attr))
+                raise MalformedProcess(
+                    'Process\' metadata lacks node {}'.format(attr)
+                )
 
             if node.firstChild is not None:
                 node.normalize()
@@ -51,13 +57,14 @@ class Xml:
                 setattr(self, attr, func(''))
 
     @classmethod
-    def load(cls, config:dict, common_name:str, direct=False) -> TextIO:
+    def load(cls, config: dict, common_name: str, direct=False) -> TextIO:
         ''' Loads an xml file and returns the corresponding TextIOWrapper for
-        further usage. The file might contain multiple versions so the latest one
-        is chosen.
+        further usage. The file might contain multiple versions so the latest
+        one is chosen.
 
-        common_name is the prefix of the file to find. If multiple files with the
-        same prefix are found the last in lexicographical order is returned.'''
+        common_name is the prefix of the file to find. If multiple files with
+        the same prefix are found the last in lexicographical order is
+        returned.'''
         if direct:
             # skip looking for the most recent version
             return Xml(config, common_name)
@@ -72,11 +79,13 @@ class Xml:
 
     def __next__(self):
         ''' Returns an inerator over the nodes and edges of a process defined
-        by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed for
-        this task. '''
+        by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed
+        for this task. '''
+
+        ITERABLES = ('node', 'connector', 'process-info')
 
         for event, node in self.parser:
-            if event == pulldom.START_ELEMENT and node.tagName in ('node', 'connector', 'process-info'):
+            if event == pulldom.START_ELEMENT and node.tagName in ITERABLES:
                 self.parser.expandNode(node)
 
                 return node
@@ -86,19 +95,21 @@ class Xml:
     def __iter__(self):
         return self
 
-    def find(self, testfunc:Callable[[Element], bool]) -> Element:
-        ''' Given an interator returned by the previous function, tries to find the
-        first node matching the given condition '''
+    def find(self, testfunc: Callable[[Element], bool]) -> Element:
+        ''' Given an interator returned by the previous function, tries to find
+        the first node matching the given condition '''
         for element in self:
             if testfunc(element):
                 return element
 
-        raise ElementNotFound('node or edge matching the given condition was not found')
+        raise ElementNotFound(
+            'node or edge matching the given condition was not found'
+        )
 
     def start_node(self) -> Element:
         ''' Returns the starting node '''
         start_node_id = getattr(self, 'start-node')
-        start_node = self.find(lambda e:e.getAttribute('id') == start_node_id)
+        start_node = self.find(lambda e: e.getAttribute('id') == start_node_id)
 
         return start_node
 
@@ -144,13 +155,15 @@ class Xml:
             'versions': self.versions,
         }
 
-def get_ref(el:Element):
+
+def get_ref(el: Element):
     if el.getAttribute('id'):
         return '#' + el.getAttribute('id')
     elif el.getAttribute('class'):
         return '.' + el.getAttribute('class')
 
     return None
+
 
 def resolve_params(filter_node, execution=None):
     computed_params = {}
@@ -160,7 +173,9 @@ def resolve_params(filter_node, execution=None):
             user_ref = param.firstChild.nodeValue.split('#')[1].strip()
 
             try:
-                actor = next(execution.proxy.actors.q().filter(ref='#'+user_ref))
+                actor = next(
+                    execution.proxy.actors.q().filter(ref='#'+user_ref)
+                )
 
                 value = actor.proxy.user.get().identifier
             except StopIteration:
@@ -172,37 +187,42 @@ def resolve_params(filter_node, execution=None):
 
     return computed_params
 
+
 @comment
-def etree_from_list(root:Element, nodes:[Element]) -> 'ElementTree':
+def etree_from_list(root: Element, nodes: [Element]) -> 'ElementTree':
     ''' Returns a built ElementTree from the list of its members '''
     root = Element(root.tag, attrib=root.attrib)
     root.extend(nodes)
 
     return ElementTree(root)
 
+
 @comment
-def nodes_from(node:Element, graph):
+def nodes_from(node: Element, graph):
     ''' returns an iterator over the (node, edge)s that can be reached from
     node '''
     for edge in graph.findall(".//*[@from='{}']".format(node.attrib['id'])):
         yield (graph.find(".//*[@id='{}']".format(edge.attrib['to'])), edge)
 
+
 @comment
-def has_no_incoming(node:Element, graph:'root Element'):
+def has_no_incoming(node: Element, graph: 'root Element'):
     ''' returns true if this node has no edges pointing to it '''
     return len(graph.findall(".//*[@to='{}']".format(node.attrib['id']))) == 0
 
+
 @comment
-def has_edges(graph:'root Element'):
+def has_edges(graph: 'root Element'):
     ''' returns true if the graph still has edge elements '''
     return len(graph.findall("./connector")) > 0
 
+
 @comment
-def topological_sort(start_node:Element, graph:'root Element') -> 'ElementTree':
+def topological_sort(start_node: Element, graph: 'Element') -> 'ElementTree':
     ''' sorts topologically the given xml element tree, source:
     https://en.wikipedia.org/wiki/Topological_sorting '''
-    sorted_elements = [] # sorted_elements ← Empty list that will contain the sorted elements
-    no_incoming = [(start_node, None)] # (node, edge that points to this node)
+    sorted_elements = []  # Empty list that will contain the sorted elements
+    no_incoming = [(start_node, None)]  # (node, edge that points to this node)
 
     while len(no_incoming) > 0:
         node, edge = no_incoming.pop()
@@ -222,6 +242,7 @@ def topological_sort(start_node:Element, graph:'root Element') -> 'ElementTree':
 
     return etree_from_list(graph, sorted_elements)
 
+
 SUPPORTED_ATTRS = {
     'type': str,
     'name': str,
@@ -232,6 +253,7 @@ SUPPORTED_ATTRS = {
     'default': str,
     'helper': str,
 }
+
 
 def form_to_dict(form):
     inputs = form.getElementsByTagName('input')

@@ -8,6 +8,7 @@ from pvm.handler import Handler
 from pvm.node import Node, make_node
 from pvm.models import Execution, Pointer, User, Activity, Questionaire
 
+
 def test_parse_message(config):
     handler = Handler(config)
 
@@ -26,35 +27,37 @@ def test_parse_message(config):
         'command': 'step',
     }
 
+
 def test_recover_step(config, models):
     handler = Handler(config)
     exc = Execution.validate(
-        process_name = 'simple.2018-02-19.xml',
+        process_name='simple.2018-02-19.xml',
     ).save()
     ptr = Pointer.validate(
-        node_id = '4g9lOdPKmRUf',
+        node_id='4g9lOdPKmRUf',
     ).save()
     ptr.proxy.execution.set(exc)
 
-    execution, pointer, xmliter, node, forms, actors, documents = handler.recover_step({
-        'command': 'step',
-        'pointer_id': ptr.id,
-        'forms':[
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'auth': 'yes',
+    execution, pointer, xmliter, node, forms, actors, documents = \
+        handler.recover_step({
+            'command': 'step',
+            'pointer_id': ptr.id,
+            'forms': [
+                {
+                    'ref': '#auth-form',
+                    'data': {
+                        'auth': 'yes',
+                    },
                 },
-            },
-        ],
-        'actors':  [
-            {
-                'ref': '#requester',
-                'user': {'identifier':'juan_manager'}
-            }
-        ],
-        'documents': []
-    })
+            ],
+            'actors': [
+                {
+                    'ref': '#requester',
+                    'user': {'identifier': 'juan_manager'}
+                }
+            ],
+            'documents': []
+        })
 
     assert execution.id == exc.id
     assert pointer.id == pointer.id
@@ -67,6 +70,7 @@ def test_recover_step(config, models):
 
     assert node.element.getAttribute('id') == '4g9lOdPKmRUf'
 
+
 def test_create_pointer(config, models):
     handler = Handler(config)
 
@@ -76,7 +80,7 @@ def test_create_pointer(config, models):
 
     node = make_node(ele)
     exc = Execution.validate(
-        process_name = 'simple.2018-02-19.xml',
+        process_name='simple.2018-02-19.xml',
     ).save()
     pointer = handler.create_pointer(node, exc)
     execution = pointer.proxy.execution.get()
@@ -86,13 +90,14 @@ def test_create_pointer(config, models):
     assert execution.process_name == 'simple.2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
 
+
 def test_wakeup(config, models, mongo):
     ''' the first stage in a node's lifecycle '''
     # setup stuff
     handler = Handler(config)
 
     execution = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     juan = User(identifier='juan').save()
     manager = User(identifier='juan_manager').save()
@@ -101,7 +106,7 @@ def test_wakeup(config, models, mongo):
     act.proxy.user.set(juan)
     act.proxy.execution.set(execution)
     pointer = Pointer(
-        node_id = 'employee-node',
+        node_id='employee-node',
     ).save()
     pointer.proxy.execution.set(execution)
 
@@ -133,7 +138,7 @@ def test_wakeup(config, models, mongo):
     del reg['_id']
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
-    assert reg['finished_at'] == None
+    assert reg['finished_at'] is None
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == 'manager-node'
     assert reg['forms'] == []
@@ -149,14 +154,15 @@ def test_wakeup(config, models, mongo):
     assert task.node_id == 'manager-node'
     assert task.proxy.execution.get().id == execution.id
 
+
 def test_teardown(config, models, mongo):
     ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
     execution = Execution(
-        process_name = 'exit_request.2018-03-20.xml',
+        process_name='exit_request.2018-03-20.xml',
     ).save()
     p_0 = Pointer(
-        node_id = 'manager-node',
+        node_id='manager-node',
     ).save()
     p_0.proxy.execution.set(execution)
     manager = User(identifier='manager').save()
@@ -167,7 +173,7 @@ def test_teardown(config, models, mongo):
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
     form = Questionaire(ref='#auth-form', data={
-        'auth' : 'yes',
+        'auth': 'yes',
     }).save()
     form.proxy.execution.set(execution)
 
@@ -196,7 +202,7 @@ def test_teardown(config, models, mongo):
         }],
     }, None)
 
-    assert Pointer.get(p_0.id) == None
+    assert Pointer.get(p_0.id) is None
     assert len(ptrs) == 1
     assert ptrs[0].node_id == 'security-node'
 

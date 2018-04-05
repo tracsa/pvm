@@ -3,3 +3,6 @@ release:
 
 clean:
 	rm -rf dist/
+
+lint:
+	pycodestyle --statistics --show-source --exclude=.env,.tox,dist,docs,build,*.egg .

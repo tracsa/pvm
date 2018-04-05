@@ -4,7 +4,6 @@ from flask import json, jsonify
 import case_conversion
 import pika
 import pytest
-
 from cacahuate.handler import Handler
 from cacahuate.models import Execution, Pointer, User, Token, Activity
 
@@ -456,6 +455,205 @@ def test_process_start_simple(client, models, mocker, config, mongo):
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution_id'] == exc.id
     assert reg['node_id'] == ptr.node_id
+
+
+def test_process_all_inputs(client, models, mocker, config, mongo):
+
+    objeto = [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'name': 'Algo',
+                    'datetime': datetime.now().replace(microsecond=0).
+                    isoformat()+'Z',
+                    'secret': '123456',
+                    'interests': ['science', 'music'],
+                    'gender': 'male',
+                    'elections': 'amlo',
+                },
+            },
+        ]
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'all-inputs',
+
+        'form_array': objeto
+    }))
+
+    assert res.status_code == 201
+
+    # mongo has a registry
+    reg = next(mongo.find())
+
+    assert reg['forms'] == objeto
+
+
+def test_process_datetime_error(client, models, mocker, config, mongo):
+
+    objeto = [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'name': 'Algo',
+                    'datetime': 'FECHA ERRONEA',
+                    'secret': '123456',
+                    'interests': ['science', 'music'],
+                    'gender': 'male',
+                    'elections': 'amlo',
+                },
+            },
+        ]
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'all-inputs',
+
+        'form_array': objeto
+    }))
+
+    assert res.status_code == 400
+
+
+def test_process_check_errors(client, models, mocker, config, mongo):
+
+    objeto = [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'name': 'Algo',
+                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    'secret': '123456',
+                    'interests': 12,
+                    'gender': 'male',
+                    'elections': 'amlo',
+                },
+            },
+        ]
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'all-inputs',
+        'form_array': objeto
+    }))
+
+    assert res.status_code == 400
+
+    objeto = [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'name': 'Algo',
+                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    'secret': '123456',
+                    'interests': ["science", "wrong"],
+                    'gender': 'male',
+                    'elections': 'amlo',
+                },
+            },
+        ]
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'all-inputs',
+        'form_array': objeto
+    }))
+
+    assert res.status_code == 400
+
+
+def test_process_radio_errors(client, models, mocker, config, mongo):
+
+    objeto = [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'name': 'Algo',
+                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    'secret': '123456',
+                    'interests': ["science"],
+                    'gender': [],
+                    'elections': 'amlo',
+                },
+            },
+        ]
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'all-inputs',
+        'form_array': objeto
+    }))
+
+    assert res.status_code == 400
+
+    objeto = [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'name': 'Algo',
+                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    'secret': '123456',
+                    'interests': ["science", "wrong"],
+                    'gender': 'error',
+                    'elections': 'amlo',
+                },
+            },
+        ]
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'all-inputs',
+        'form_array': objeto
+    }))
+
+    assert res.status_code == 400
+
+
+def test_process_select_errors(client, models, mocker, config, mongo):
+
+    objeto = [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'name': 'Algo',
+                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    'secret': '123456',
+                    'interests': ["science"],
+                    'gender': "male",
+                    'elections': [],
+                },
+            },
+        ]
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'all-inputs',
+        'form_array': objeto
+    }))
+
+    assert res.status_code == 400
+
+    objeto = [
+            {
+                'ref': '#auth-form',
+                'data': {
+                    'name': 'Algo',
+                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    'secret': '123456',
+                    'interests': ["science", "wrong"],
+                    'gender': "male",
+                    'elections': "error",
+                },
+            },
+        ]
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'all-inputs',
+        'form_array': objeto
+    }))
+
+    assert res.status_code == 400
 
 
 def test_exit_request_requirements(client, models):

@@ -24,9 +24,9 @@ class Execution(Model):
 class Activity(Model):
     ''' relates a user and a execution '''
     execution = fields.ForeignIdRelation(
-                                        'cacahuate.models.Execution',
-                                        inverse='actors'
-                )
+        'cacahuate.models.Execution',
+        inverse='actors'
+    )
     user = fields.ForeignIdRelation(
         'cacahuate.models.User',
         inverse='activities'

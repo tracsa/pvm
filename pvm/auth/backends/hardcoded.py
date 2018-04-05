@@ -1,5 +1,5 @@
-from pvm.auth.base import BaseAuthProvider, BaseUser
-from pvm.errors import AuthenticationError
+from cacahuate.auth.base import BaseAuthProvider, BaseUser
+from cacahuate.errors import AuthenticationError
 
 
 class HardcodedUser(BaseUser):

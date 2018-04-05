@@ -1,7 +1,7 @@
 from coralillo import Form, fields, errors
 from coralillo.validation import validation_rule
 
-from pvm.errors import ElementNotFound, NoPointerAlive
+from cacahuate.errors import ElementNotFound, NoPointerAlive
 
 
 class ContinueProcess(Form):
@@ -18,7 +18,7 @@ class ContinueProcess(Form):
         if not obj.execution_id or not obj.node_id:
             return  # previous validation didn't pass
 
-        from pvm.models import Execution
+        from cacahuate.models import Execution
 
         execution = Execution.get(obj.execution_id)
 
@@ -26,8 +26,8 @@ class ContinueProcess(Form):
             raise errors.InvalidFieldError(field='execution_id')
 
         # validates the existence of the node
-        from pvm.xml import Xml
-        from pvm.http.wsgi import app
+        from cacahuate.xml import Xml
+        from cacahuate.http.wsgi import app
 
         xml = Xml.load(app.config, execution.process_name)
 

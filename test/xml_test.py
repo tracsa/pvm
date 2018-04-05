@@ -3,10 +3,10 @@ import os
 import pytest
 import simplejson as json
 
-from pvm.errors import ProcessNotFound
+from cacahuate.errors import ProcessNotFound
 from xml.dom.minidom import parse
-from pvm.models import Execution, User, Activity
-from pvm.xml import Xml, etree_from_list, nodes_from, has_no_incoming, \
+from cacahuate.models import Execution, User, Activity
+from cacahuate.xml import Xml, etree_from_list, nodes_from, has_no_incoming, \
     has_edges, topological_sort, resolve_params, form_to_dict
 
 

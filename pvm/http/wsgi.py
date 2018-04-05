@@ -5,13 +5,13 @@ from flask_pymongo import PyMongo
 import os
 import time
 
-from pvm.http.forms import bind_forms
-from pvm.models import bind_models
+from cacahuate.http.forms import bind_forms
+from cacahuate.models import bind_models
 
 # The flask application
 app = Flask(__name__)
-app.config.from_object('pvm.settings')
-app.config.from_envvar('PVM_SETTINGS', silent=True)
+app.config.from_object('cacahuate.settings')
+app.config.from_envvar('CACAHUATE_SETTINGS', silent=True)
 
 # Enalble cross origin
 CORS(app)
@@ -29,11 +29,11 @@ bind_models(cora._engine)
 mongo = PyMongo(app)
 
 # Url converters
-import pvm.http.converters  # noqa
+import cacahuate.http.converters  # noqa
 
 # Views
-import pvm.http.views.api  # noqa
-import pvm.http.views.auth  # noqa
+import cacahuate.http.views.api  # noqa
+import cacahuate.http.views.auth  # noqa
 
 # Error handlers
-import pvm.http.error_handlers  # noqa
+import cacahuate.http.error_handlers  # noqa

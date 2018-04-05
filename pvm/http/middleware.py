@@ -2,8 +2,8 @@ from flask import jsonify, request
 from functools import wraps
 from werkzeug.exceptions import BadRequest as WBadRequest
 from flask import g
-from pvm.http.errors import BadRequest, Unauthorized
-from pvm.models import User, Token
+from cacahuate.http.errors import BadRequest, Unauthorized
+from cacahuate.models import User, Token
 
 
 def requires_json(view):

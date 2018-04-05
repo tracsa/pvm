@@ -2,22 +2,22 @@
 from setuptools import setup
 
 setup(
-    name='pvm',
+    name='cacahuate',
     version='0.2.7',
     packages=[
-        'pvm',
-        'pvm.http',
-        'pvm.http.views',
-        'pvm.auth',
-        'pvm.auth.backends',
-        'pvm.auth.hierarchy',
+        'cacahuate',
+        'cacahuate.http',
+        'cacahuate.http.views',
+        'cacahuate.auth',
+        'cacahuate.auth.backends',
+        'cacahuate.auth.hierarchy',
     ],
     entry_points={
         'console_scripts': [
-            'pvmd = pvm.pvmd:main',
+            'cacahuated = cacahuate.cacahuated:main',
         ],
     },
-    package_data={'pvm': ['grammars/*.g']},
+    package_data={'cacahuate': ['grammars/*.g']},
     include_package_data=True,
     install_requires=[
         'Flask-Coralillo',

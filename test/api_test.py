@@ -5,8 +5,8 @@ import case_conversion
 import pika
 import pytest
 
-from pvm.handler import Handler
-from pvm.models import Execution, Pointer, User, Token, Activity
+from cacahuate.handler import Handler
+from cacahuate.models import Execution, Pointer, User, Token, Activity
 
 
 def test_continue_process_requires(client):

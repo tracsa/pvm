@@ -5,7 +5,7 @@ import pytest
 import sys
 from pymongo import MongoClient
 
-from pvm.models import bind_models
+from cacahuate.models import bind_models
 
 
 @pytest.fixture
@@ -16,8 +16,8 @@ def config():
                             os.path.dirname(os.path.realpath(__file__)), '..'
                             )
                 )
-    con.from_object('pvm.settings')
-    con.from_envvar('PVM_SETTINGS', silent=True)
+    con.from_object('cacahuate.settings')
+    con.from_envvar('CACAHUATE_SETTINGS', silent=True)
 
     return con
 
@@ -39,7 +39,7 @@ def models():
 @pytest.fixture
 def client():
     ''' makes and returns a testclient for the flask application '''
-    from pvm.http.wsgi import app
+    from cacahuate.http.wsgi import app
 
     return app.test_client()
 

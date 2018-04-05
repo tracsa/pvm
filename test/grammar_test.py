@@ -1,5 +1,5 @@
-from pvm.grammar import Condition
-from pvm.models import Execution, Questionaire
+from cacahuate.grammar import Condition
+from cacahuate.models import Execution, Questionaire
 
 
 def test_condition(models):

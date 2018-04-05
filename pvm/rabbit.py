@@ -1,7 +1,7 @@
 import pika
 from flask import g
 
-from pvm.http.wsgi import app
+from cacahuate.http.wsgi import app
 
 
 def get_channel():

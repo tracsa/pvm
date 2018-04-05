@@ -1,9 +1,9 @@
 from datetime import datetime
 from flask import request, jsonify, abort
-from pvm.errors import AuthenticationError
-from pvm.http.errors import Unauthorized
-from pvm.http.wsgi import app
-from pvm.models import User, Token
+from cacahuate.errors import AuthenticationError
+from cacahuate.http.errors import Unauthorized
+from cacahuate.http.wsgi import app
+from cacahuate.models import User, Token
 from random import choice
 from string import ascii_letters
 

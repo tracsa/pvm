@@ -7,18 +7,30 @@ class Execution(Model):
     ''' keeps track of the pointers and related data during a process'sss
     execution '''
     process_name = fields.Text()
-    pointers = fields.SetRelation('pvm.models.Pointer', inverse='execution')
-    actors = fields.SetRelation('pvm.models.Activity', inverse='execution')
-    forms = fields.SetRelation('pvm.models.Questionaire', inverse='execution')
+    pointers = fields.SetRelation(
+        'cacahuate.models.Pointer',
+        inverse='execution'
+    )
+    actors = fields.SetRelation(
+        'cacahuate.models.Activity',
+        inverse='execution'
+    )
+    forms = fields.SetRelation(
+        'cacahuate.models.Questionaire',
+        inverse='execution'
+    )
 
 
 class Activity(Model):
     ''' relates a user and a execution '''
     execution = fields.ForeignIdRelation(
-                                        'pvm.models.Execution',
+                                        'cacahuate.models.Execution',
                                         inverse='actors'
                 )
-    user = fields.ForeignIdRelation('pvm.models.User', inverse='activities')
+    user = fields.ForeignIdRelation(
+        'cacahuate.models.User',
+        inverse='activities'
+    )
     ref = fields.Text()
 
 
@@ -33,17 +45,23 @@ class Pointer(Model):
     ''' marks a node and a execution so it can continue from there '''
     node_id = fields.Text()
     execution = fields.ForeignIdRelation(Execution, inverse='pointers')
-    candidates = fields.SetRelation('pvm.models.User', inverse='tasks')
+    candidates = fields.SetRelation('cacahuate.models.User', inverse='tasks')
 
 
 class User(Model):
     ''' those humans who can execute actions '''
     identifier = fields.Text(index=True)
-    tokens = fields.SetRelation('pvm.models.Token', inverse='user')
+    tokens = fields.SetRelation('cacahuate.models.Token', inverse='user')
     # processes I'm participating in
-    activities = fields.SetRelation('pvm.models.Activity', inverse='user')
+    activities = fields.SetRelation(
+        'cacahuate.models.Activity',
+        inverse='user'
+    )
     # pending tasks to solve
-    tasks = fields.SetRelation('pvm.models.Pointer', inverse='candidates')
+    tasks = fields.SetRelation(
+        'cacahuate.models.Pointer',
+        inverse='candidates'
+    )
 
 
 class Token(Model):

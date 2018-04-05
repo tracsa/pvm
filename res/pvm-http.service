@@ -1,5 +1,5 @@
 [Unit]
-Description=the gunicorn process for pvm
+Description=the gunicorn process for cacahuate
 After=network.target
 
 [Service]
@@ -9,11 +9,11 @@ ExecStartPre=/bin/mkdir -p /var/log/gunicorn/
 ExecStartPre=/bin/chown -R www-data:www-data /run/gunicorn/
 ExecStartPre=/bin/chown -R root:www-data /var/log/gunicorn/
 ExecStartPre=/bin/chmod 775 /var/log/gunicorn/
-PIDFile=/run/pvm-http.pid
+PIDFile=/run/cacahuate-http.pid
 User=www-data
 Group=www-data
-WorkingDirectory=/home/user/apps/pvm
-ExecStart=/home/user/apps/pvm/.env/bin/gunicorn -c guniconf.py pvm.http.wsgi:app
+WorkingDirectory=/home/user/apps/cacahuate
+ExecStart=/home/user/apps/cacahuate/.env/bin/gunicorn -c guniconf.py cacahuate.http.wsgi:app
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
 Restart=always

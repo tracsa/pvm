@@ -5,16 +5,18 @@ from flask import request, jsonify, json
 import os
 import pika
 
-from pvm.errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from pvm.http.errors import BadRequest, NotFound, \
-    UnprocessableEntity, Forbidden
-from pvm.http.forms import ContinueProcess
-from pvm.http.middleware import requires_json, requires_auth
-from pvm.http.validation import validate_forms, validate_json, validate_auth
-from pvm.http.wsgi import app, mongo
-from pvm.models import Execution, Pointer, User, Token, Activity, Questionaire
-from pvm.rabbit import get_channel
-from pvm.xml import Xml, form_to_dict
+from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
+from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
+    Forbidden
+from cacahuate.http.forms import ContinueProcess
+from cacahuate.http.middleware import requires_json, requires_auth
+from cacahuate.http.validation import validate_forms, validate_json, \
+    validate_auth
+from cacahuate.http.wsgi import app, mongo
+from cacahuate.models import Execution, Pointer, User, Token, Activity, \
+    Questionaire
+from cacahuate.rabbit import get_channel
+from cacahuate.xml import Xml, form_to_dict
 
 
 def trans_id(obj):

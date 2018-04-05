@@ -1,9 +1,9 @@
 from ldap3 import Server, Connection, ALL, NTLM, core
 from ldap3.core.exceptions import LDAPBindError, LDAPSocketOpenError
 
-from pvm.auth.base import BaseAuthProvider, BaseUser
-from pvm.errors import AuthenticationError
-from pvm.http.wsgi import app
+from cacahuate.auth.base import BaseAuthProvider, BaseUser
+from cacahuate.errors import AuthenticationError
+from cacahuate.http.wsgi import app
 
 
 class LdapUser(BaseUser):

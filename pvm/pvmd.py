@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from pvm.loop import Loop
-from pvm.models import bind_models
+from cacahuate.loop import Loop
+from cacahuate.models import bind_models
 
 from coralillo import Engine
 from itacate import Config
@@ -11,8 +11,8 @@ import os
 def main():
     # Load the config
     config = Config(os.path.dirname(os.path.realpath(__file__)))
-    config.from_object('pvm.settings')
-    config.from_envvar('PVM_SETTINGS', silent=True)
+    config.from_object('cacahuate.settings')
+    config.from_envvar('CACAHUATE_SETTINGS', silent=True)
 
     # Set the timezone
     os.environ['TZ'] = config['TIMEZONE']
@@ -20,7 +20,7 @@ def main():
 
     # Logging stuff
     if not config['TESTING']:
-        from pvm.logger import init_logging
+        from cacahuate.logger import init_logging
 
         init_logging(config)
 

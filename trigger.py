@@ -5,7 +5,7 @@ import os
 import argparse
 from itacate import Config
 
-from pvm.logger import log
+from cacahuate.logger import log
 
 
 class Trigger:
@@ -13,7 +13,7 @@ class Trigger:
     def __init__(self):
         config = Config(os.path.dirname(os.path.realpath(__file__)))
         config.from_pyfile('settings.py')
-        config.from_envvar('PVM_SETTINGS', silent=True)
+        config.from_envvar('CACAHUATE_SETTINGS', silent=True)
 
         connection = pika.BlockingConnection(pika.ConnectionParameters(
             host=config['RABBIT_HOST'],

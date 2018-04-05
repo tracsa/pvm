@@ -1,7 +1,7 @@
 from flask import abort
 from importlib import import_module
-from pvm.http.errors import NotFound
-from pvm.http.wsgi import app
+from cacahuate.http.errors import NotFound
+from cacahuate.http.wsgi import app
 from werkzeug.routing import BaseConverter
 import case_conversion
 
@@ -10,7 +10,7 @@ class AuthProviderConverter(BaseConverter):
 
     def to_python(self, value):
         try:
-            mod = import_module('pvm.auth.backends.{}'.format(value))
+            mod = import_module('cacahuate.auth.backends.{}'.format(value))
             cls = getattr(
                         mod, case_conversion.pascalcase(value) + 'AuthProvider'
                         )

@@ -1,4 +1,4 @@
-from pvm.models import User
+from cacahuate.models import User
 
 
 class BaseUser:

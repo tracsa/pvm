@@ -1,8 +1,8 @@
 from coralillo.errors import ValidationErrors, ModelNotFoundError, BadField
 from flask import jsonify
 
-from pvm.http.wsgi import app
-from pvm.http.errors import JsonReportedException
+from cacahuate.http.wsgi import app
+from cacahuate.http.errors import JsonReportedException
 
 
 @app.errorhandler(JsonReportedException)

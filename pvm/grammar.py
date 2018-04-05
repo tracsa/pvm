@@ -2,7 +2,7 @@ from lark import Lark, Transformer
 import operator
 import os
 
-from pvm.errors import RefNotFound
+from cacahuate.errors import RefNotFound
 
 
 class Condition:

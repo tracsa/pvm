@@ -6,12 +6,12 @@ from pymongo import MongoClient
 import simplejson as json
 import pika
 
-from pvm.errors import CannotMove
-from pvm.logger import log
-from pvm.models import Execution, Pointer
-from pvm.node import make_node, Node
-from pvm.xml import Xml, resolve_params
-from pvm.auth.base import BaseUser
+from cacahuate.errors import CannotMove
+from cacahuate.logger import log
+from cacahuate.models import Execution, Pointer
+from cacahuate.node import make_node, Node
+from cacahuate.xml import Xml, resolve_params
+from cacahuate.auth.base import BaseUser
 
 
 class Handler:
@@ -23,7 +23,7 @@ class Handler:
         self.mongo = None
 
     def __call__(self, channel, method, properties, body: bytes):
-        ''' the main callback of the PVM '''
+        ''' the main callback of cacahuate '''
         message = self.parse_message(body)
 
         try:
@@ -86,7 +86,7 @@ class Handler:
         filter_node = filter_q[0]
         backend = filter_node.getAttribute('backend')
 
-        mod = import_module('pvm.auth.hierarchy.{}'.format(backend))
+        mod = import_module('cacahuate.auth.hierarchy.{}'.format(backend))
         HierarchyProvider = getattr(
             mod,
             pascalcase(backend) + 'HierarchyProvider'

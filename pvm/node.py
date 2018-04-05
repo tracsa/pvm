@@ -4,10 +4,10 @@ import case_conversion
 from typing import Iterator
 from xml.dom.minidom import Element
 
-from pvm.xml import Xml
-from pvm.logger import log
-from pvm.grammar import Condition
-from pvm.errors import ElementNotFound, IncompleteBranch
+from cacahuate.xml import Xml
+from cacahuate.logger import log
+from cacahuate.grammar import Condition
+from cacahuate.errors import ElementNotFound, IncompleteBranch
 
 
 class Node:

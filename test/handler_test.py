@@ -4,9 +4,9 @@ import simplejson as json
 import pika
 import pytest
 
-from pvm.handler import Handler
-from pvm.node import Node, make_node
-from pvm.models import Execution, Pointer, User, Activity, Questionaire
+from cacahuate.handler import Handler
+from cacahuate.node import Node, make_node
+from cacahuate.models import Execution, Pointer, User, Activity, Questionaire
 
 
 def test_parse_message(config):

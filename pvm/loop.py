@@ -28,9 +28,9 @@ class Loop:
             no_ack=self.config['RABBIT_NO_ACK'],
         )
 
-        log.info('PVM started')
+        log.info('cacahuate started')
 
         try:
             channel.start_consuming()
         except KeyboardInterrupt:
-            log.info('PVM stopped')
+            log.info('cacahuate stopped')

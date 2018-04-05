@@ -3,12 +3,12 @@ from xml.dom.minidom import Element
 from case_conversion import pascalcase
 from flask import request
 
-from pvm.errors import ValidationErrors, InputError,\
+from cacahuate.errors import ValidationErrors, InputError,\
     RequiredInputError, HierarchyError
-from pvm.http.errors import BadRequest, Unauthorized, Forbidden
-from pvm.models import User, Token
-from pvm.xml import get_ref, resolve_params
-from pvm.http.wsgi import app
+from cacahuate.http.errors import BadRequest, Unauthorized, Forbidden
+from cacahuate.models import User, Token
+from cacahuate.xml import get_ref, resolve_params
+from cacahuate.http.wsgi import app
 
 
 def get_associated_data(ref: str, data: dict) -> dict:
@@ -112,7 +112,7 @@ def validate_auth(node, execution=None):
         filter_node = filter_q[0]
         backend = filter_node.getAttribute('backend')
 
-        mod = import_module('pvm.auth.hierarchy.{}'.format(backend))
+        mod = import_module('cacahuate.auth.hierarchy.{}'.format(backend))
         HiPro = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
 
         hipro = HiPro(app.config)

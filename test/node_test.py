@@ -1,9 +1,9 @@
 from xml.dom.minidom import Document
 import pytest
 
-from pvm.node import make_node, Node
-from pvm.xml import Xml
-from pvm.models import Execution, Questionaire
+from cacahuate.node import make_node, Node
+from cacahuate.xml import Xml
+from cacahuate.models import Execution, Questionaire
 
 
 def test_make_node_requires_class():

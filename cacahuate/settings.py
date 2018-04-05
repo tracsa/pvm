@@ -43,3 +43,8 @@ LDAP_DOMAIN = "local"
 LOGIN_PROVIDERS = {
     # 'name': 'importable.path',
 }
+
+# custom hierarchy providers
+HIERARCHY_PROVIDERS = {
+    # 'name': 'importable.path',
+}

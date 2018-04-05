@@ -1,7 +1,9 @@
 from importlib import import_module
 from xml.dom.minidom import Element
 from case_conversion import pascalcase
-from flask import request
+from flask import request, abort
+import os
+import sys
 
 from cacahuate.errors import ValidationErrors, InputError,\
     RequiredInputError, HierarchyError
@@ -112,8 +114,23 @@ def validate_auth(node, execution=None):
         filter_node = filter_q[0]
         backend = filter_node.getAttribute('backend')
 
-        mod = import_module('cacahuate.auth.hierarchy.{}'.format(backend))
-        HiPro = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
+        if backend in app.config['HIERARCHY_PROVIDERS']:
+            import_path = app.config['HIERARCHY_PROVIDERS'][backend]
+
+            cwd = os.getcwd()
+
+            if cwd not in sys.path:
+                sys.path.insert(0, cwd)
+        else:
+            import_path = 'cacahuate.auth.hierarchy.' + backend
+
+        try:
+            mod = import_module(import_path)
+            HiPro = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
+        except ModuleNotFoundError:
+            abort(404, 'Auth backend not found: {}'.format(backend))
+        except AttributeError as e:
+            abort(500, 'Misconfigured hierarchy provider, sorry')
 
         hipro = HiPro(app.config)
 

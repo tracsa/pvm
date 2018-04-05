@@ -24,7 +24,7 @@ def handle_404(e):
 def handle_401(e):
     return jsonify({
         'errors': [{
-            'detail': ':'.join(str(e).split(':')[1:])[1:],
+            'detail': str(e),
             'where': 'request.body',
         }],
     }), e.code
@@ -34,7 +34,7 @@ def handle_401(e):
 def handle_500(e):
     return jsonify({
         'errors': [{
-            'detail': 'The server has failed its mission',
+            'detail': str(e),
             'where': 'server',
         }],
     }), 500

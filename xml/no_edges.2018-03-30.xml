@@ -1,13 +1,18 @@
-<process>
-    <node id="A" />
-    <node id="B" />
-    <node id="D" />
-    <node id="E" />
-    <node id="C" />
-    <node id="F" />
-    <node id="G" />
-    <node id="H" />
-    <node id="J" />
-    <node id="I" />
-    <node id="K" />
-</process>
+<?xml version="1.0" encoding="UTF-8"?>
+<process-spec>
+  <process-info>
+  </process-info>
+    <process>
+        <node id="A" />
+        <node id="B" />
+        <node id="D" />
+        <node id="E" />
+        <node id="C" />
+        <node id="F" />
+        <node id="G" />
+        <node id="H" />
+        <node id="J" />
+        <node id="I" />
+        <node id="K" />
+    </process>
+</process-spec>

@@ -60,7 +60,7 @@
       <condition>form#auth-form[auth]=="no"</condition>
     </connector>
 
-    <node id="noauth-node" class="end notify">
+    <node id="noauth-node" class="end">
       <auth target="requester"></auth>
     </node>
 

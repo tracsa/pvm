@@ -9,24 +9,36 @@
   <define name="process-info">
     <element name="process-info">
       <interleave>
-        <element name="author">
-          <text/>
-        </element>
-        <element name="date">
-          <text/>
-        </element>
-        <element name="name">
-          <text/>
-        </element>
-        <element name="public">
-          <text/>
-        </element>
-        <element name="description">
-          <text/>
-        </element>
-        <element name="start-node">
-          <text/>
-        </element>
+        <optional>
+          <element name="author">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="date">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="name">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="public">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="description">
+            <text/>
+          </element>
+        </optional>
+        <optional>
+          <element name="start-node">
+            <text/>
+          </element>
+        </optional>
       </interleave>
     </element>
   </define>
@@ -34,9 +46,9 @@
   <define name="process">
     <element name="process">
       <interleave>
-        <oneOrMore>
+        <zeroOrMore>
           <ref name="node"/>
-        </oneOrMore>
+        </zeroOrMore>
         <zeroOrMore>
           <ref name="connector"/>
         </zeroOrMore>
@@ -47,18 +59,18 @@
   <define name="node">
     <element name="node">
       <attribute name="id"><text/></attribute>
-      <attribute name="class">
+      <optional>
+        <attribute name="class">
         <choice>
           <value>end</value>
           <value>simple</value>
           <value>decision</value>
         </choice>
-      </attribute>
+       </attribute>
+      </optional>
 
       <optional>
-        <element name="auth">
-          <attribute name="id"><text/></attribute>
-        </element>
+          <ref name="auth"/>
       </optional>
 
       <optional>
@@ -84,7 +96,6 @@
     <element name="connector">
       <attribute name="from"><text/></attribute>
       <attribute name="to"><text/></attribute>
-
       <optional>
         <element name="condition">
           <text/>
@@ -120,6 +131,12 @@
       <optional>
         <attribute name="default"><text/></attribute>
       </optional>
+      <optional>
+        <attribute name="regex"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="helper"><text/></attribute>
+      </optional>
 
       <choice>
         <zeroOrMore>
@@ -132,4 +149,43 @@
       </choice>
     </element>
   </define>
+
+  <define name="auth">
+    <element name="auth">
+      <optional>
+        <attribute name="id"><text/></attribute>
+      </optional>
+      <optional>
+        <attribute name="target"><text/></attribute>
+      </optional>
+      <optional>
+        <ref name="filter"/>
+      </optional>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="filter">
+    <element name="filter">
+      <optional>
+        <attribute name="backend"><text/></attribute>
+      </optional>
+      <zeroOrMore>
+        <ref name="param"/>
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <define name="param">
+    <element name="param">
+      <attribute name="name"><text/></attribute>
+      <optional>
+        <attribute name="type"><text/></attribute>
+      </optional>
+      <optional>
+        <text/>
+      </optional>
+    </element>
+  </define>
+
 </grammar>

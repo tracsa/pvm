@@ -7,7 +7,7 @@
         <description>A process without start node</description>
     </process-info>
     <process>
-        <node id="4g9lOdPKmRUf" class="simple" msg="cuca" />
+        <node id="4g9lOdPKmRUf" class="simple"/>
         <connector from="4g9lOdPKmRUf" to="kV9UWSeA89IZ" />
         <node id="kV9UWSeA89IZ" class="end" />
     </process>

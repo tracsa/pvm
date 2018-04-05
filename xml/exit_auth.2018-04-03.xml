@@ -43,7 +43,7 @@
     <node id="manager-node" class="decision">
       <auth id="manager">
         <filter>
-          <param name="employee" source="#requester" />
+          <param name="employee">user#requester</param>
         </filter>
       </auth>
 
@@ -57,7 +57,9 @@
       </form-array>
     </node>
 
-    <connector from="manager-node" to="security-node" condition="#auth-form.auth=='yes'" />
+    <connector from="manager-node" to="security-node">
+      <condition>#auth-form.auth=='yes'</condition>
+    </connector>
 
     <node id="security-node" class="simple">
       <auth id="security">
@@ -73,7 +75,9 @@
       </form-array>
     </node>
 
-    <connector from="manager-node" to="noauth-node" condition="#auth-form.auth=='no'" />
+    <connector from="manager-node" to="noauth-node">
+      <condition>#auth-form.auth=='no'</condition>
+    </connector>
 
     <node id="noauth-node" class="end">
       <auth target="requester"></auth>

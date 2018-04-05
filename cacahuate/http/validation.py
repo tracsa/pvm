@@ -7,8 +7,8 @@ import sys
 from datetime import datetime
 
 from cacahuate.errors import ValidationErrors, InputError,\
-    RequiredInputError, HierarchyError, RequiredDateError,\
-    RequiredValueError, RequiredListError, RequiredStrError
+    RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
+    RequiredListError, RequiredStrError
 from cacahuate.http.errors import BadRequest, Unauthorized, Forbidden
 from cacahuate.models import User, Token
 from cacahuate.xml import get_ref, resolve_params
@@ -48,7 +48,7 @@ def validate_input(form_index: int, input: Element, value):
         try:
             datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
         except ValueError:
-            raise RequiredDateError(form_index, input.getAttribute('name'))
+            raise InvalidDateError(form_index, input.getAttribute('name'))
 
     if input.getAttribute('type') == 'checkbox':
 
@@ -62,7 +62,7 @@ def validate_input(form_index: int, input: Element, value):
 
         for val in value:
             if val not in list_values:
-                raise RequiredValueError(
+                raise InvalidInputError(
                         form_index,
                         input.getAttribute('name')
                     )
@@ -77,7 +77,7 @@ def validate_input(form_index: int, input: Element, value):
                     for child_element in input.getElementsByTagName('option')
                 ]
         if value not in list_values:
-            raise RequiredValueError(form_index, input.getAttribute('name'))
+            raise InvalidInputError(form_index, input.getAttribute('name'))
 
     if input.getAttribute('type') == 'select':
 
@@ -90,7 +90,7 @@ def validate_input(form_index: int, input: Element, value):
         ]
 
         if value not in list_values:
-            raise RequiredValueError(form_index, input.getAttribute('name'))
+            raise InvalidInputError(form_index, input.getAttribute('name'))
 
     return value
 

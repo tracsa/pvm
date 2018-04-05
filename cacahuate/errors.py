@@ -71,24 +71,24 @@ class RequiredInputError(InputError):
     code = 'validation.required'
 
 
-class RequiredDateError(InputError):
+class InvalidDateError(InputError):
     detail = "'{input}' input is not date time"
-    code = 'validation.required'
+    code = 'validation.invalid_date'
 
 
-class RequiredValueError(InputError):
+class InvalidInputError(InputError):
     detail = "'{input}' value invalid"
     code = 'validation.required'
 
 
 class RequiredListError(InputError):
-    detail = "'{input}' required a list"
-    code = 'validation.required'
+    detail = "'{input}' must be a list"
+    code = 'validation.required_list'
 
 
 class RequiredStrError(InputError):
     detail = "'{input}' required a str"
-    code = 'validation.required'
+    code = 'validation.required_str'
 
 
 class ValidationErrors(Exception):

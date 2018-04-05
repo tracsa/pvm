@@ -37,4 +37,4 @@ def handle_500(e):
             'detail': 'The server has failed its mission',
             'where': 'server',
         }],
-    })
+    }), 500

@@ -13,18 +13,21 @@
       <form-array>
         <form id="auth-form">
           <input
-            label="Nombre"
             type="text"
+            label="Nombre"
             name="name"
-            required="true"
+            required="required"
             placeholder="Jon Snow"
-          />
+            >
+          </input>
 
           <input
             label="Fecha de nacimiento"
             type="datetime"
-            required="true"
-          />
+            name="datetime"
+            required="required"
+            >
+          </input>
 
           <input
             label="Un secreto"

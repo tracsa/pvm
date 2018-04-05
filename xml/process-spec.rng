@@ -63,6 +63,10 @@
                 <attribute name="id"><text/></attribute>
                 <attribute name="class"><text/></attribute>
               </choice>
+
+              <zeroOrMore>
+                <ref name="input"/>
+              </zeroOrMore>
             </element>
           </zeroOrMore>
         </element>
@@ -75,6 +79,40 @@
       <attribute name="from"><text/></attribute>
       <attribute name="to"><text/></attribute>
       <text/>
+    </element>
+  </define>
+
+  <define name="input">
+    <element name="input">
+      <attribute name="name"><text/></attribute>
+      <attribute name="type">
+        <choice>
+          <value>text</value>
+          <value>datetime</value>
+          <value>password</value>
+          <value>checkbox</value>
+          <value>radio</value>
+          <value>select</value>
+        </choice>
+      </attribute>
+      <optional>
+        <attribute name="required">
+          <value>required</value>
+        </attribute>
+        <attribute name="label"><text/></attribute>
+        <attribute name="placeholder"><text/></attribute>
+        <attribute name="default"><text/></attribute>
+      </optional>
+
+      <choice>
+        <zeroOrMore>
+          <element name="option">
+            <attribute name="value"><text/></attribute>
+            <text/>
+          </element>
+        </zeroOrMore>
+        <empty/>
+      </choice>
     </element>
   </define>
 </grammar>

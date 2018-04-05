@@ -24,7 +24,7 @@ def test_login_wrong_user(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'Provided user credentials are invalid',
+                'detail': '401 Unauthorized: Provided user credentials are invalid',
                 'where': 'request.body',
             },
         ],

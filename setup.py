@@ -1,9 +1,38 @@
 #!/usr/bin/env python3
 from setuptools import setup
 
+here = path.abspath(path.dirname(__file__))
+
+# Get the long description from the README file
+with open(path.join(here, 'README.rst')) as f:
+    long_description = f.read()
+
 setup(
     name='cacahuate',
+    description='The process virtual machine',
+    long_description=long_description,
+    url='https://github.com/tracsa/cacahuate',
+
     version='0.2.7',
+
+    author='Abraham Toriz Cruz',
+    author_email='categulario@gmail.com',
+    license='MIT',
+
+    classifiers=[
+        'Development Status :: 4 - Beta',
+
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+
+        'License :: OSI Approved :: MIT License',
+
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+    ],
+
+    keywords='process',
+
     packages=[
         'cacahuate',
         'cacahuate.http',
@@ -12,13 +41,17 @@ setup(
         'cacahuate.auth.backends',
         'cacahuate.auth.hierarchy',
     ],
+
+    package_data={'cacahuate': ['grammars/*.g']},
+
     entry_points={
         'console_scripts': [
             'cacahuated = cacahuate.cacahuated:main',
         ],
     },
-    package_data={'cacahuate': ['grammars/*.g']},
+
     include_package_data=True,
+
     install_requires=[
         'Flask-Coralillo',
         'Flask-Cors',

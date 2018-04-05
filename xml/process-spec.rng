@@ -99,8 +99,14 @@
         <attribute name="required">
           <value>required</value>
         </attribute>
+      </optional>
+      <optional>
         <attribute name="label"><text/></attribute>
+      </optional>
+      <optional>
         <attribute name="placeholder"><text/></attribute>
+      </optional>
+      <optional>
         <attribute name="default"><text/></attribute>
       </optional>
 

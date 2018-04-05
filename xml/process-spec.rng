@@ -78,7 +78,12 @@
     <element name="connector">
       <attribute name="from"><text/></attribute>
       <attribute name="to"><text/></attribute>
-      <text/>
+
+      <optional>
+        <element name="condition">
+          <text/>
+        </element>
+      </optional>
     </element>
   </define>
 

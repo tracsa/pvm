@@ -15,26 +15,29 @@
             label="Nombre"
             type="text"
             name="name"
-            required="true"
+            required="required"
             placeholder="Jon Snow"
           />
 
           <input
             label="Fecha de nacimiento"
             type="datetime"
-            required="true"
+            name="datetime"
+            required="required"
           />
 
           <input
             label="Un secreto"
             type="password"
             name="secret"
+            required="required"
           />
 
           <input
             label="Marque sus intereses"
             type="checkbox"
-            name="interests">
+            name="interests"
+            required="required">
             <option value="science">Ciencia</option>
             <option value="sports">Deportes</option>
             <option value="music">Música</option>
@@ -46,7 +49,8 @@
             label="Género?"
             type="radio"
             name="gender"
-            default="male">
+            default="male"
+            required="required">
             <option value="male">Masculino</option>
             <option value="female">Femenino</option>
           </input>

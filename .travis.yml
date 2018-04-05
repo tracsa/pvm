@@ -12,3 +12,4 @@ install:
 script:
   - pytest -vv
   - pycodestyle --statistics --show-source --exclude=.env,.tox,dist,docs,build,*.egg .
+  - xmllint --noout --relaxng xml/process-spec.rng xml/all-inputs.2018-04-04.xml

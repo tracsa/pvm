@@ -115,6 +115,7 @@
           <value>checkbox</value>
           <value>radio</value>
           <value>select</value>
+          <value>file</value>
         </choice>
       </attribute>
       <optional>

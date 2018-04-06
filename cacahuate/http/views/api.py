@@ -24,15 +24,17 @@ def trans_id(obj):
     return obj
 
 
+DATE_FIELDS = [
+    'started_at',
+    'finished_at',
+]
+
+
 def trans_date(obj):
-    obj['started_at'] = \
-        obj['started_at'].isoformat() if (
-                                        obj['started_at'] is not None
-                                        ) else None
-    obj['finished_at'] = \
-        obj['finished_at'].isoformat() if (
-                                        obj['finished_at'] is not None
-                                        ) else None
+    for field in DATE_FIELDS:
+        if obj[field] is not None:
+            obj[field] = obj[field].isoformat()
+
     return obj
 
 

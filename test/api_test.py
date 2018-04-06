@@ -458,21 +458,20 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
 
 def test_process_all_inputs(client, models, mocker, config, mongo):
-
     objeto = [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'name': 'Algo',
-                    'datetime': datetime.now().replace(microsecond=0).
-                    isoformat()+'Z',
-                    'secret': '123456',
-                    'interests': ['science', 'music'],
-                    'gender': 'male',
-                    'elections': 'amlo',
-                },
+        {
+            'ref': '#auth-form',
+            'data': {
+                'name': 'Algo',
+                'datetime': datetime.now().isoformat()+'Z',
+                'secret': '123456',
+                'interests': ['science', 'music'],
+                'gender': 'male',
+                'elections': 'amlo',
             },
-        ]
+        },
+    ]
+
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
     }, data=json.dumps({

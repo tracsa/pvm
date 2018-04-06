@@ -1,0 +1,48 @@
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-04-06</date>
+    <name>Proceso simple</name>
+    <description>Te asigna una tarea a ti mismo</description>
+    <public>true</public>
+    <start-node>node1</start-node>
+  </process-info>
+  <process>
+    <node id="node1" class="decision">
+      <auth id="requester"></auth>
+
+      <form-array>
+        <form id="form">
+          <input type="select" label="¿Asignarme la chamba?" name="continue" required="required">
+            <option value="yes">Simona la changa</option>
+            <option value="no">Nel pastel</option>
+          </input>
+        </form>
+      </form-array>
+    </node>
+
+    <connector from="node1" to="node2">
+      <condition>form#form[continue] == "yes"</condition>
+    </connector>
+    <node id="node2" class="simple">
+      <auth id="self">
+        <filter backend="self">
+          <param name="identifier" type="ref">user#requester</param>
+        </filter>
+      </auth>
+      <form-array>
+        <form id="chamba">
+          <input type="text" label="¿Cuánto es 1+1?" name="ans" required="required" />
+        </form>
+      </form-array>
+    </node>
+
+    <connector from="node2" to="end" />
+
+    <connector from="node1" to="end">
+      <condition>form#form[continue] == "no"</condition>
+    </connector>
+
+    <node id="end" class="end" />
+  </process>
+</process-spec>

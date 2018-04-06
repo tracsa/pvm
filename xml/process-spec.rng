@@ -97,6 +97,9 @@
       <attribute name="from"><text/></attribute>
       <attribute name="to"><text/></attribute>
       <optional>
+        <attribute name="id"><text/></attribute>
+      </optional>
+      <optional>
         <element name="condition">
           <text/>
         </element>

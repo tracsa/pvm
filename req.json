@@ -1,0 +1,9 @@
+{
+	"process_name":"dumb",
+	"form_array":[{
+		"ref":"#formulario",
+		"data":{
+			"continue":"yes"
+		}
+	}]
+}

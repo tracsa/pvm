@@ -81,7 +81,7 @@ class Handler:
         filter_q = node.element.getElementsByTagName('filter')
 
         if len(filter_q) == 0:
-            return
+            return #TODO devolver puntero
 
         filter_node = filter_q[0]
         backend = filter_node.getAttribute('backend')
@@ -96,6 +96,10 @@ class Handler:
         husers = hierarchy_provider.find_users(
             **resolve_params(filter_node, execution)
         )
+        channel.exchange_declare(
+                                exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
+                                exchange_type='direct'
+                                )
 
         for huser in husers:
             user = huser.get_user()
@@ -103,9 +107,10 @@ class Handler:
             if pointer:
                 user.proxy.tasks.add(pointer)
 
-            mediums = self.get_contact_channels(user)
+            mediums = self.get_contact_channels(huser)
 
             for medium, params in mediums:
+
                 channel.basic_publish(
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
                     routing_key=medium,
@@ -133,9 +138,11 @@ class Handler:
             return pointer
 
     def teardown(self, pointer, forms, actors, documents):
+
         ''' finishes the node's lifecycle '''
         collection = self.get_mongo()
 
+        #pointer.proxy.execution.get().id
         collection.update_one({
             'execution_id': pointer.proxy.execution.get().id,
             'node_id': pointer.node_id,
@@ -178,7 +185,7 @@ class Handler:
         return self.mongo
 
     def get_contact_channels(self, user: BaseUser):
-        return [('email', {})]
+        return [('email', {'email':user.get_x_info('email')})]
 
     def create_pointer(self, node: Node, execution: Execution):
         ''' Given a node, its process, and a specific execution of the former

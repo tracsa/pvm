@@ -34,11 +34,9 @@
             <text/>
           </element>
         </optional>
-        <optional>
-          <element name="start-node">
-            <text/>
-          </element>
-        </optional>
+        <element name="start-node">
+          <text/>
+        </element>
       </interleave>
     </element>
   </define>
@@ -168,9 +166,7 @@
 
   <define name="filter">
     <element name="filter">
-      <optional>
-        <attribute name="backend"><text/></attribute>
-      </optional>
+      <attribute name="backend"><text/></attribute>
       <zeroOrMore>
         <ref name="param"/>
       </zeroOrMore>

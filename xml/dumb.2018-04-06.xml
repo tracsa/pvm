@@ -12,7 +12,7 @@
       <auth id="requester"></auth>
 
       <form-array>
-        <form id="form">
+        <form id="formulario">
           <input type="select" label="¿Asignarme la chamba?" name="continue" required="required">
             <option value="yes">Simona la changa</option>
             <option value="no">Nel pastel</option>
@@ -22,7 +22,7 @@
     </node>
 
     <connector from="node1" to="node2">
-      <condition>form#form[continue] == "yes"</condition>
+      <condition>form#formulario[continue] == "yes"</condition>
     </connector>
     <node id="node2" class="simple">
       <auth id="self">
@@ -40,7 +40,7 @@
     <connector from="node2" to="end" />
 
     <connector from="node1" to="end">
-      <condition>form#form[continue] == "no"</condition>
+      <condition>form#formulario[continue] == "no"</condition>
     </connector>
 
     <node id="end" class="end" />

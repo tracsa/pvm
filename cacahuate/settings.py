@@ -29,10 +29,22 @@ COMMANDS = [
     'step',
 ]
 
+# For ephimeral objects, like executions and pointers
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB = 0
 
+# LDAP settings
 LDAP_URI = "ldap://localhost:389"
 LDAP_SSL = True
 LDAP_DOMAIN = "local"
+
+# custom login providers
+LOGIN_PROVIDERS = {
+    # 'name': 'importable.path',
+}
+
+# custom hierarchy providers
+HIERARCHY_PROVIDERS = {
+    # 'name': 'importable.path',
+}

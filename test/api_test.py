@@ -953,3 +953,36 @@ def test_logs_activity(mongo, client):
             'node_id': '4g9lOdPKmRUf',
         }],
     }
+
+
+def test_task_list_requires_auth(client):
+    res = client.get('/v1/task')
+
+    assert res.status_code == 401
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }],
+    }
+
+
+def test_task_list(client, models):
+    juan = User(identifier='juan').save()
+    pointer = Pointer().save()
+    juan.proxy.tasks.set([pointer])
+    token = Token(token='123456').save()
+    token.proxy.user.set(juan)
+
+    res = client.get('/v1/task', headers={
+        'Authorization': 'Basic {}'.format(
+            b64encode(
+                '{}:{}'.format(juan.identifier, token.token).encode()
+            ).decode()
+        ),
+    })
+
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': [pointer.to_json(embed=['execution'])],
+    }

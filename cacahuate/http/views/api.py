@@ -291,6 +291,17 @@ def one_activity(id):
     })
 
 
+@app.route('/v1/task')
+@requires_auth
+def task_list():
+    return jsonify({
+        'data': list(map(
+            lambda t: t.to_json(embed=['execution']),
+            g.user.proxy.tasks.get()
+        )),
+    })
+
+
 @app.route('/v1/log/<id>', methods=['GET'])
 def list_logs(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]

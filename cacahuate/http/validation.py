@@ -36,22 +36,21 @@ def get_associated_data(ref: str, data: dict) -> dict:
 def validate_input(form_index: int, input: Element, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
+    input_type = input.getAttribute('type')
+
     if input.getAttribute('required') and (value == '' or value is None):
         raise RequiredInputError(form_index, input.getAttribute('name'))
 
-    if input.getAttribute('type') == 'datetime' or \
-            input.getAttribute('type') == 'date':
-
+    elif input_type == 'datetime' or input.getAttribute('type') == 'date':
         if type(value) is not str:
             raise RequiredStrError(form_index, input.getAttribute('name'))
 
         try:
-            datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+            datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
             raise InvalidDateError(form_index, input.getAttribute('name'))
 
-    if input.getAttribute('type') == 'checkbox':
-
+    elif input_type == 'checkbox':
         if type(value) is not list:
             raise RequiredListError(form_index, input.getAttribute('name'))
 
@@ -67,8 +66,7 @@ def validate_input(form_index: int, input: Element, value):
                         input.getAttribute('name')
                     )
 
-    if input.getAttribute('type') == 'radio':
-
+    elif input_type == 'radio':
         if type(value) is not str:
             raise RequiredStrError(form_index, input.getAttribute('name'))
 
@@ -79,8 +77,7 @@ def validate_input(form_index: int, input: Element, value):
         if value not in list_values:
             raise InvalidInputError(form_index, input.getAttribute('name'))
 
-    if input.getAttribute('type') == 'select':
-
+    elif input_type == 'select':
         if type(value) is not str:
             raise RequiredStrError(form_index, input.getAttribute('name'))
 

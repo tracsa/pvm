@@ -24,15 +24,17 @@ def trans_id(obj):
     return obj
 
 
+DATE_FIELDS = [
+    'started_at',
+    'finished_at',
+]
+
+
 def trans_date(obj):
-    obj['started_at'] = \
-        obj['started_at'].isoformat() if (
-                                        obj['started_at'] is not None
-                                        ) else None
-    obj['finished_at'] = \
-        obj['finished_at'].isoformat() if (
-                                        obj['finished_at'] is not None
-                                        ) else None
+    for field in DATE_FIELDS:
+        if obj[field] is not None:
+            obj[field] = obj[field].isoformat()
+
     return obj
 
 
@@ -299,6 +301,17 @@ def one_activity(id):
 
     return jsonify({
         'data': activity.to_json(),
+    })
+
+
+@app.route('/v1/task')
+@requires_auth
+def task_list():
+    return jsonify({
+        'data': list(map(
+            lambda t: t.to_json(embed=['execution']),
+            g.user.proxy.tasks.get()
+        )),
     })
 
 

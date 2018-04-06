@@ -124,15 +124,14 @@ class Handler:
             'execution_id': execution.id,
             'node_id': node.element.getAttribute('id'),
             'forms': [],
-            'documents': [],
-            'actors': [],
+            'actor': None,
         })
 
-        # nodes with forms and documents are not queued
+        # nodes with forms are not queued
         if len(node.element.getElementsByTagName('form-array')) > 0:
             return pointer
 
-    def teardown(self, pointer, forms, actors, documents):
+    def teardown(self, pointer, forms, actor):
         ''' finishes the node's lifecycle '''
         collection = self.get_mongo()
 
@@ -143,8 +142,7 @@ class Handler:
             '$set': {
                 'finished_at': datetime.now(),
                 'forms': forms,
-                'actors': actors,
-                'documents': documents,
+                'actor': actor,
             },
         })
 
@@ -212,6 +210,5 @@ class Handler:
             xml,
             make_node(point),
             message.get('forms', []),
-            message.get('actors', []),
-            message.get('documents', []),
+            message.get('actor'),
         )

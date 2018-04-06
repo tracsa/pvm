@@ -38,7 +38,7 @@ def test_recover_step(config, models):
     ).save()
     ptr.proxy.execution.set(exc)
 
-    execution, pointer, xmliter, node, forms, actors, documents = \
+    execution, pointer, xmliter, node, *rest = \
         handler.recover_step({
             'command': 'step',
             'pointer_id': ptr.id,
@@ -56,7 +56,6 @@ def test_recover_step(config, models):
                     'user': {'identifier': 'juan_manager'}
                 }
             ],
-            'documents': []
         })
 
     assert execution.id == exc.id
@@ -142,7 +141,6 @@ def test_wakeup(config, models, mongo):
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == 'manager-node'
     assert reg['forms'] == []
-    assert reg['documents'] == []
     assert reg['actors'] == []
 
     # tasks where asigned
@@ -183,7 +181,6 @@ def test_teardown(config, models, mongo):
         'execution_id': execution.id,
         'node_id': p_0.node_id,
         'forms': [],
-        'documents': [],
         'actors': [],
     })
 
@@ -196,9 +193,6 @@ def test_teardown(config, models, mongo):
         }],
         'actors': [{
             'ref': '#a',
-        }],
-        'documents': [{
-            'ref': '#b',
         }],
     }, None)
 
@@ -222,7 +216,6 @@ def test_teardown(config, models, mongo):
         },
     }]
     assert reg['actors'] == [{'ref': '#a'}]
-    assert reg['documents'] == [{'ref': '#b'}]
 
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0

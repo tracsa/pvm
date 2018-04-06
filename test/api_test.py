@@ -253,7 +253,6 @@ def test_can_continue_process(client, models, mocker, config):
             },
         ],
         'actors': actors,
-        'documents': []
     }))
 
     assert res.status_code == 202
@@ -306,10 +305,7 @@ def test_can_continue_process(client, models, mocker, config):
                 'ref': '#manager',
                 'user': manager.to_json()
             }
-
         ],
-        'documents': []
-
     }
 
     assert args['exchange'] == ''
@@ -320,7 +316,7 @@ def test_can_continue_process(client, models, mocker, config):
     # makes a useful call for the handler
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, forms, actors, documents = \
+    execution, pointer, xmliter, current_node, *rest = \
         handler.recover_step(json_message)
 
     assert execution.id == exc.id
@@ -440,7 +436,7 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, forms, actors, documents = \
+    execution, pointer, xmliter, current_node, *rest = \
         handler.recover_step(json_message)
 
     assert execution.id == exc.id

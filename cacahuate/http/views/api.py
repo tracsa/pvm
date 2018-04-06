@@ -93,12 +93,20 @@ def start_process():
 
     pointer.proxy.execution.set(execution)
 
-    actors = []
+    actor = None
+
     if auth_ref is not None:
         activity = Activity(ref=auth_ref).save()
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
-        actors.append({'ref': auth_ref, 'user': user.to_json()})
+        actor = {
+            'ref': auth_ref,
+            'user': {
+                'identifier': user.identifier,
+                'human_name': user.human_name,
+            },
+        }
+
     forms = []
 
     if len(collected_forms) > 0:
@@ -116,8 +124,7 @@ def start_process():
         'execution_id': execution.id,
         'node_id': start_point.getAttribute('id'),
         'forms': forms,
-        'actors': actors,
-        'documents': []
+        'actor': actor,
     })
 
     # trigger rabbit
@@ -184,16 +191,23 @@ def continue_process():
     collected_forms = validate_forms(continue_point)
 
     # save the data
-    actors = []
+    actor = None
 
     if auth_ref is not None:
         activity = Activity(ref=auth_ref).save()
         activity.proxy.user.set(user)
         activity.proxy.execution.set(execution)
 
-        actors.append({'ref': auth_ref, 'user': user.to_json()})
+        actor = {
+            'ref': auth_ref,
+            'user': {
+                'identifier': user.identifier,
+                'human_name': user.human_name,
+            },
+        }
 
     forms = []
+
     if len(collected_forms) > 0:
         for ref, form_data in collected_forms:
             ques = Questionaire(ref=ref, data=form_data).save()
@@ -210,8 +224,7 @@ def continue_process():
             'process': execution.process_name,
             'pointer_id': pointer.id,
             'forms': forms,
-            'actors':  actors,
-            'documents': []
+            'actor':  actor,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,

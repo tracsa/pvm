@@ -119,6 +119,9 @@
       <optional>
         <attribute name="helper"><text/></attribute>
       </optional>
+      <optional>
+        <attribute name="provider"><text/></attribute>
+      </optional>
 
       <choice>
         <zeroOrMore>

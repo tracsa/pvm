@@ -514,6 +514,33 @@ def test_process_datetime_error(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
+def test_visible_document_provider(client, models, mocker, config, mongo):
+    res = client.get('/v1/process')
+
+    body = json.loads(res.data)
+    document_process = list(
+                    filter(
+                        lambda xml: xml['id'] == 'document', body['data']
+                    )
+                )[0]
+
+    print()
+
+    assert res.status_code == 200
+    assert document_process['form_array'][0] == {
+        'ref': '#doc-form',
+        'inputs': [
+            {
+                'label': 'Documento de identidad oficial',
+                'name': 'identity_card',
+                'provider': 'doqer',
+                'required': True,
+                'type': 'file',
+            },
+        ],
+    }
+
+
 def test_process_allow_document(client, models, mocker, config, mongo):
     form_array = [
         {

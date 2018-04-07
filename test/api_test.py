@@ -524,8 +524,6 @@ def test_visible_document_provider(client, models, mocker, config, mongo):
                     )
                 )[0]
 
-    print()
-
     assert res.status_code == 200
     assert document_process['form_array'][0] == {
         'ref': '#doc-form',

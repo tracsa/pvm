@@ -8,6 +8,8 @@ from cacahuate.handler import Handler
 from cacahuate.node import Node, make_node
 from cacahuate.models import Execution, Pointer, User, Activity, Questionaire
 
+from .utils import make_pointer
+
 
 def test_parse_message(config):
     handler = Handler(config)
@@ -30,13 +32,8 @@ def test_parse_message(config):
 
 def test_recover_step(config, models):
     handler = Handler(config)
-    exc = Execution.validate(
-        process_name='simple.2018-02-19.xml',
-    ).save()
-    ptr = Pointer.validate(
-        node_id='4g9lOdPKmRUf',
-    ).save()
-    ptr.proxy.execution.set(exc)
+    ptr = make_pointer('simple.2018-02-19.xml', '4g9lOdPKmRUf')
+    exc = ptr.proxy.execution.get()
 
     execution, pointer, xmliter, node, *rest = \
         handler.recover_step({

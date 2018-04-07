@@ -1,50 +1,11 @@
-from base64 import b64encode
 from datetime import datetime
 from flask import json, jsonify
-import case_conversion
 import pika
 import pytest
 from cacahuate.handler import Handler
-from cacahuate.models import Execution, Pointer, User, Token, Activity, \
-    Questionaire
+from cacahuate.models import Execution, Activity, Questionaire
 
-def make_user(identifier, name):
-    u = User(identifier=identifier, human_name=name).save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(u)
-
-    return u
-
-def make_auth(user):
-    return {
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                '{}:{}'.format(
-                    user.identifier,
-                    user.proxy.tokens.get()[0].token,
-                ).encode()
-            ).decode()
-        ),
-    }
-
-def make_pointer(process_name, node_id):
-    exc = Execution(
-        process_name=process_name,
-    ).save()
-    ptr = Pointer(
-        node_id=node_id,
-    ).save()
-    ptr.proxy.execution.set(exc)
-
-    return ptr
-
-
-def make_activity(ref, user, execution):
-    act = Activity(ref=ref).save()
-    act.proxy.user.set(user)
-    act.proxy.execution.set(execution)
-
-    return act
+from .utils import make_auth, make_activity, make_pointer, make_user
 
 
 def test_continue_process_asks_for_user(client, models):
@@ -659,18 +620,11 @@ def test_exit_request_requirements(client, models):
     assert Activity.count() == 0
 
     # next, validate the form data
-    user = User(identifier='juan').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(user)
+    user = make_user('juan', 'Juan')
 
-    res = client.post('/v1/execution', headers={
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                    '{}:{}'.format(user.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'process_name': 'exit_request',
     }))
 
@@ -688,21 +642,14 @@ def test_exit_request_requirements(client, models):
 
 
 def test_exit_request_start(client, models, mocker):
-    user = User(identifier='juan').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(user)
+    user = make_user('juan', 'Juan')
 
     assert Execution.count() == 0
     assert Activity.count() == 0
 
-    res = client.post('/v1/execution', headers={
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                    '{}:{}'.format(user.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'process_name': 'exit_request',
         'form_array': [
             {
@@ -814,29 +761,17 @@ def test_list_activities_requires(client):
 def test_list_activities(client, models):
     '''Given 4 activities, two for the current user and two for
     another, list only the two belonging to him or her'''
-    juan = User(identifier='juan').save()
-    act = Activity(ref='#requester').save()
-    act.proxy.user.set(juan)
+    juan = make_user('juan', 'Juan')
+    other = make_user('other', 'Otero')
 
-    other = User(identifier='other').save()
-    act2 = Activity(ref='#some').save()
-    act2.proxy.user.set(other)
-
-    token = Token(token='123456').save()
-    token.proxy.user.set(juan)
     exc = Execution(
         process_name='exit_request.2018-03-20.xml',
     ).save()
-    act.proxy.execution.set(exc)
-    act2.proxy.execution.set(exc)
 
-    res = client.get('/v1/activity', headers={
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                '{}:{}'.format(juan.identifier, token.token).encode()
-            ).decode()
-        ),
-    })
+    act = make_activity('#requester', juan, exc)
+    act2 = make_activity('#some', other, exc)
+
+    res = client.get('/v1/activity', headers=make_auth(juan))
 
     assert res.status_code == 200
     assert json.loads(res.data) == {
@@ -854,49 +789,31 @@ def test_activity_requires(client):
 
 def test_activity_wrong_activity(client, models):
     # validate user authentication correct but bad activity
-    juan = User(identifier='juan').save()
-    act = Activity(ref='#requester').save()
-    act.proxy.user.set(juan)
+    juan = make_user('juan', 'Juan')
+    other = make_user('other', 'Otero')
 
-    other = User(identifier='other').save()
-    act2 = Activity(ref='#some').save()
-    act2.proxy.user.set(other)
-
-    token = Token(token='123456').save()
-    token.proxy.user.set(juan)
     exc = Execution(
         process_name='exit_request.2018-03-20.xml',
     ).save()
-    act.proxy.execution.set(exc)
-    act2.proxy.execution.set(exc)
 
-    res = client.get('/v1/activity/{}'.format(act2.id), headers={
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                '{}:{}'.format(juan.identifier, token.token).encode()
-            ).decode()
-        ),
-    })
+    act = make_activity('#requester', juan, exc)
+    act2 = make_activity('#some', other, exc)
+
+    res = client.get('/v1/activity/{}'.format(act2.id),
+        headers=make_auth(juan))
 
     assert res.status_code == 403
 
 
 def test_activity(client, models):
     # validate user authentication correct with correct activity
-    juan = User(identifier='juan').save()
+    juan = make_user('juan', 'Juan')
+
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
 
-    token = Token(token='123456').save()
-    token.proxy.user.set(juan)
-
-    res2 = client.get('/v1/activity/{}'.format(act.id), headers={
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                '{}:{}'.format(juan.identifier, token.token).encode()
-            ).decode()
-        ),
-    })
+    res2 = client.get('/v1/activity/{}'.format(act.id),
+        headers=make_auth(juan))
 
     assert res2.status_code == 200
     assert json.loads(res2.data) == {
@@ -949,19 +866,12 @@ def test_task_list_requires_auth(client):
 
 
 def test_task_list(client, models):
-    juan = User(identifier='juan').save()
-    pointer = Pointer().save()
-    juan.proxy.tasks.set([pointer])
-    token = Token(token='123456').save()
-    token.proxy.user.set(juan)
+    juan = make_user('user', 'User')
 
-    res = client.get('/v1/task', headers={
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                '{}:{}'.format(juan.identifier, token.token).encode()
-            ).decode()
-        ),
-    })
+    pointer = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    juan.proxy.tasks.set([pointer])
+
+    res = client.get('/v1/task', headers=make_auth(juan))
 
     assert res.status_code == 200
     assert json.loads(res.data) == {

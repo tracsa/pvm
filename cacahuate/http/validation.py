@@ -5,6 +5,8 @@ from flask import request, abort
 import os
 import sys
 from datetime import datetime
+from functools import reduce
+from operator import and_
 
 from cacahuate.errors import ValidationErrors, InputError,\
     RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
@@ -88,6 +90,27 @@ def validate_input(form_index: int, input: Element, value):
 
         if value not in list_values:
             raise InvalidInputError(form_index, input.getAttribute('name'))
+
+    elif input_type == 'file':
+        if type(value) is not dict:
+            raise InvalidInputError(form_index, input.getAttribute('name'))
+
+        provider = input.getAttribute('provider')
+        if provider == 'doqer':
+            valid = reduce(
+                and_,
+                map(
+                    lambda attr:
+                        attr in value and
+                        value[attr] is not None,
+                    ['id', 'mime', 'name', 'type']
+                )
+            )
+
+            if not valid:
+                raise InvalidInputError(form_index, input.getAttribute('name'))
+        else:
+            abort(500, 'File provider `{}` not implemented'.format(provider))
 
     return value
 

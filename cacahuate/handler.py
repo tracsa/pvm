@@ -76,12 +76,16 @@ class Handler:
         the execution, this is the first step in node's lifecycle '''
         # create a pointer in this node
         pointer = self.create_pointer(node, execution)
+        is_async = len(node.element.getElementsByTagName('form-array')) > 0
 
         # notify someone
-        filter_q = node.element.getElementsByTagName('filter')
+        filter_q = node.element.getElementsByTagName('auth-filter')
 
         if len(filter_q) == 0:
-            return
+            if is_async:
+                return
+            else:
+                return pointer
 
         filter_node = filter_q[0]
         backend = filter_node.getAttribute('backend')
@@ -127,7 +131,7 @@ class Handler:
         })
 
         # nodes with forms are not queued
-        if len(node.element.getElementsByTagName('form-array')) > 0:
+        if not is_async:
             return pointer
 
     def teardown(self, pointer, actor):

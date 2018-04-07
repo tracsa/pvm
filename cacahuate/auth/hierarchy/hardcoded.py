@@ -20,7 +20,7 @@ class HardcodedHierarchyProvider(BaseHierarchyProvider):
             raise HierarchyError
 
     def find_users(self, **params):
-        employee = params.get('employee')
+        employee = params.get('identifier')
         relation = params.get('relation')
 
         return list(map(

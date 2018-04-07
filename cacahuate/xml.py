@@ -245,6 +245,7 @@ def topological_sort(start_node: Element, graph: 'Element') -> 'ElementTree':
 
 SUPPORTED_ATTRS = {
     'type': str,
+    'provider': str,
     'name': str,
     'required': lambda x: bool(x),
     'regex': str,

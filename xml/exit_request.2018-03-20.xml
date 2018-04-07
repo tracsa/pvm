@@ -5,12 +5,10 @@
     <name>Petición de salida</name>
     <description>Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.</description>
     <public>true</public>
-    <start-node>employee-node</start-node>
+    <start-node>requester</start-node>
   </process-info>
   <process>
-    <node id="employee-node" class="simple">
-      <auth id="requester"></auth>
-
+    <node id="requester" class="simple">
       <form-array>
         <form id="exit-form">
           <input type="text" name="reason" required="required" />
@@ -18,15 +16,13 @@
       </form-array>
     </node>
 
-    <connector from="employee-node" to="manager-node" />
+    <connector from="requester" to="manager-node" />
 
     <node id="manager-node" class="decision">
-      <auth id="manager">
-        <filter backend="hardcoded">
-          <param name="employee" type="ref">user#requester</param>
-          <param name="relation">manager</param>
-        </filter>
-      </auth>
+      <auth-filter backend="hardcoded">
+        <param name="employee" type="ref">user#requester</param>
+        <param name="relation">manager</param>
+      </auth-filter>
 
       <form-array>
         <form id="auth-form">
@@ -43,11 +39,9 @@
     </connector>
 
     <node id="security-node" class="simple">
-      <auth id="security">
-        <filter backend="hardcoded">
-          <param name="ou">Security</param>
-        </filter>
-      </auth>
+      <auth-filter backend="hardcoded">
+        <param name="ou">Security</param>
+      </auth-filter>
 
       <form-array>
         <form id="confirm-form">
@@ -57,11 +51,12 @@
     </node>
 
     <connector from="manager-node" to="noauth-node">
-      <condition>form#auth-form[auth]=="no"</condition>
     </connector>
 
     <node id="noauth-node" class="end">
-      <auth target="requester"></auth>
+      <auth-filter backend="hardcoded">
+        <param name="ou">Security</param>
+      </auth-filter>
     </node>
 
     <connector from="seurity-node" to="end-node" />

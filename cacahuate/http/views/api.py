@@ -37,6 +37,7 @@ def trans_date(obj):
 
     return obj
 
+
 def store_forms(collected_forms, execution):
     forms = []
 
@@ -47,6 +48,7 @@ def store_forms(collected_forms, execution):
             forms.append({'ref': ref, 'data': form_data})
 
     return forms
+
 
 def store_actor(node, user, execution, forms):
     auth_ref = '#' + node.getAttribute('id')

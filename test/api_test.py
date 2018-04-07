@@ -313,7 +313,8 @@ def test_process_start_simple_requires(client, models, mongo):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'nostart process lacks important nodes and structure',
+                'detail':
+                    'nostart process lacks important nodes and structure',
                 'where': 'request.body.process_name',
             },
         ],
@@ -799,8 +800,10 @@ def test_activity_wrong_activity(client, models):
     act = make_activity('#requester', juan, exc)
     act2 = make_activity('#some', other, exc)
 
-    res = client.get('/v1/activity/{}'.format(act2.id),
-        headers=make_auth(juan))
+    res = client.get(
+        '/v1/activity/{}'.format(act2.id),
+        headers=make_auth(juan)
+    )
 
     assert res.status_code == 403
 
@@ -812,8 +815,10 @@ def test_activity(client, models):
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
 
-    res2 = client.get('/v1/activity/{}'.format(act.id),
-        headers=make_auth(juan))
+    res2 = client.get(
+        '/v1/activity/{}'.format(act.id),
+        headers=make_auth(juan)
+    )
 
     assert res2.status_code == 200
     assert json.loads(res2.data) == {

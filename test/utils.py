@@ -13,6 +13,7 @@ def make_user(identifier, name):
 
     return u
 
+
 def make_auth(user):
     return {
         'Authorization': 'Basic {}'.format(
@@ -24,6 +25,7 @@ def make_auth(user):
             ).decode()
         ),
     }
+
 
 def make_pointer(process_name, node_id):
     exc = Execution(

@@ -7,20 +7,58 @@ import pytest
 from cacahuate.handler import Handler
 from cacahuate.models import Execution, Pointer, User, Token, Activity
 
-
-def test_continue_process_requires(client):
-    user = User(identifier='juan').save()
+def make_user(identifier, name):
+    u = User(identifier=identifier, human_name=name).save()
     token = Token(token='123456').save()
-    token.proxy.user.set(user)
+    token.proxy.user.set(u)
 
-    res = client.post('/v1/pointer', headers={
-        'Content-Type': 'application/json',
+    return u
+
+def make_auth(user):
+    return {
         'Authorization': 'Basic {}'.format(
             b64encode(
-                '{}:{}'.format(user.identifier, token.token).encode()
+                '{}:{}'.format(
+                    user.identifier,
+                    user.proxy.tokens.get()[0].token,
+                ).encode()
             ).decode()
         ),
-    }, data=json.dumps({}))
+    }
+
+def make_pointer(process_name, node_id):
+    exc = Execution(
+        process_name=process_name,
+    ).save()
+    ptr = Pointer(
+        node_id=node_id,
+    ).save()
+    ptr.proxy.execution.set(exc)
+
+    return ptr
+
+
+def test_continue_process_asks_for_user(client, models):
+    res = client.post('/v1/pointer')
+
+    assert res.status_code == 401
+    assert 'WWW-Authenticate' in res.headers
+    assert res.headers['WWW-Authenticate'] == \
+        'Basic realm="User Visible Realm"'
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }],
+    }
+
+
+def test_continue_process_requires(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({}))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
@@ -41,9 +79,11 @@ def test_continue_process_requires(client):
 
 def test_continue_process_asks_living_objects(client):
     ''' the app must validate that the ids sent are real objects '''
-    res = client.post('/v1/pointer', headers={
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'execution_id': 'verde',
         'node_id': 'nada',
     }))
@@ -61,13 +101,14 @@ def test_continue_process_asks_living_objects(client):
 
 
 def test_continue_process_requires_valid_node(client, models):
+    user = make_user('juan', 'Juan')
     exc = Execution(
         process_name='decision.2018-02-27',
     ).save()
 
-    res = client.post('/v1/pointer', headers={
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'notarealnode',
     }))
@@ -85,13 +126,14 @@ def test_continue_process_requires_valid_node(client, models):
 
 
 def test_continue_process_requires_living_pointer(client, models):
+    user = make_user('juan', 'Juan')
     exc = Execution(
         process_name='decision.2018-02-27',
     ).save()
 
-    res = client.post('/v1/pointer', headers={
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': '57TJ0V3nur6m7wvv',
     }))
@@ -108,57 +150,16 @@ def test_continue_process_requires_living_pointer(client, models):
     }
 
 
-def test_continue_process_asks_for_user(client, models):
-    exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
-    ).save()
-    ptr = Pointer(
-        node_id='manager-node',
-    ).save()
-    ptr.proxy.execution.set(exc)
-
-    res = client.post('/v1/pointer', headers={
-        'Content-Type': 'application/json',
-    }, data=json.dumps({
-        'execution_id': exc.id,
-        'node_id': ptr.node_id,
-    }))
-
-    assert res.status_code == 401
-    assert 'WWW-Authenticate' in res.headers
-    assert res.headers['WWW-Authenticate'] == \
-        'Basic realm="User Visible Realm"'
-    assert json.loads(res.data) == {
-        'errors': [{
-            'detail': 'You must provide basic authorization headers',
-            'where': 'request.authorization',
-        }],
-    }
-
-
 def test_continue_process_asks_for_user_by_hierarchy(client, models):
     ''' a node whose auth has a filter must be completed by a person matching
     the filter '''
-    user = User(identifier='juan').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(user)
-    exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
-    ).save()
-    ptr = Pointer(
-        node_id='manager-node',
-    ).save()
-    ptr.proxy.execution.set(exc)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager-node')
 
-    res = client.post('/v1/pointer', headers={
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                    '{}:{}'.format(user.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({
-        'execution_id': exc.id,
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': ptr.proxy.execution.get().id,
         'node_id': ptr.node_id,
     }))
 
@@ -173,31 +174,19 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
 
 
 def test_continue_process_asks_for_data(client, models):
-    juan = User(identifier='juan').save()
+    juan = make_user('juan', 'Juan')
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
 
-    manager = User(identifier='juan_manager').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(manager)
-    exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
-    ).save()
-    act.proxy.execution.set(exc)
-    ptr = Pointer(
-        node_id='manager-node',
-    ).save()
-    ptr.proxy.execution.set(exc)
+    manager = make_user('juan_manager', 'Juanote')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager-node')
 
-    res = client.post('/v1/pointer', headers={
+    act.proxy.execution.set(ptr.proxy.execution.get())
+
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                    '{}:{}'.format(manager.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({
-        'execution_id': exc.id,
+    }, **make_auth(manager)}, data=json.dumps({
+        'execution_id': ptr.proxy.execution.get().id,
         'node_id': ptr.node_id,
     }))
 
@@ -213,8 +202,8 @@ def test_continue_process_asks_for_data(client, models):
 
 def test_can_continue_process(client, models, mocker, config):
     mocker.patch(
-                'pika.adapters.blocking_connection.'
-                'BlockingChannel.basic_publish'
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
     )
 
     juan = User(identifier='juan').save()
@@ -222,7 +211,10 @@ def test_can_continue_process(client, models, mocker, config):
     act.proxy.user.set(juan)
     actors = []
     actors.append({'ref': act.ref, 'user': juan.to_json()})
-    manager = User(identifier='juan_manager').save()
+    manager = User(
+        identifier='juan_manager',
+        human_name='Juanote',
+    ).save()
     token = Token(token='123456').save()
     token.proxy.user.set(manager)
     exc = Execution(

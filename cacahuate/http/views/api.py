@@ -50,6 +50,7 @@ def index():
 
 
 @app.route('/v1/execution', methods=['POST'])
+@requires_auth
 @requires_json
 def start_process():
     validate_json(request.json, ['process_name'])
@@ -79,7 +80,7 @@ def start_process():
         }])
 
     # Check for authorization
-    auth_ref, user = validate_auth(start_point)
+    validate_auth(start_point, g.user)
 
     # check if there are any forms present
     collected_forms = validate_forms(start_point)
@@ -150,6 +151,7 @@ def start_process():
 
 
 @app.route('/v1/pointer', methods=['POST'])
+@requires_auth
 @requires_json
 def continue_process():
     validate_json(request.json, ['execution_id', 'node_id'])

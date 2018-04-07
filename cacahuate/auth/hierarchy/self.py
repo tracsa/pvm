@@ -1,13 +1,26 @@
-from cacahuate.auth.base import BaseHierarchyProvider
+from cacahuate.auth.base import BaseHierarchyProvider, BaseUser
 from cacahuate.auth.backends.hardcoded import HardcodedUser
 from cacahuate.errors import HierarchyError
 from cacahuate.models import User
 
 
-class HardcodedHierarchyProvider(BaseHierarchyProvider):
+class Self(BaseUser):
+    """docstring for Self"""
+
+    def __init__(self, identifier):
+        self.identifier = identifier
+
+    def get_identifier(self):
+        return self.identifier
+
+    def get_x_info(self, medium):
+        return "hardcoded@mailinator.com"
+
+
+class SelfHierarchyProvider(BaseHierarchyProvider):
 
     def validate_user(self, user, **params):
-        base_user = User.get_by('identifier', params.get('identifier'))
+        base_user = User.get_by('identifier', params.get('employee'))
 
         if base_user is None:
             raise HierarchyError
@@ -20,12 +33,7 @@ class HardcodedHierarchyProvider(BaseHierarchyProvider):
             raise HierarchyError
 
     def find_users(self, **params):
-        employee = params.get('identifier')
+        employee = params.get('employee')
         relation = params.get('relation')
 
-        return list(map(
-            lambda u: HardcodedUser(username=u.identifier),
-            User.q().filter(
-                identifier='{}_{}'.format(employee, relation)
-            )
-        ))
+        return [Self(params.get('identifier'))]

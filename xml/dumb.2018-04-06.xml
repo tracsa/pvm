@@ -5,14 +5,12 @@
     <name>Proceso simple</name>
     <description>Te asigna una tarea a ti mismo</description>
     <public>true</public>
-    <start-node>node1</start-node>
+    <start-node>requester</start-node>
   </process-info>
   <process>
-    <node id="node1" class="decision">
-      <auth id="requester"></auth>
-
+    <node id="requester" class="decision">
       <form-array>
-        <form id="form">
+        <form id="formulario">
           <input type="select" label="¿Asignarme la chamba?" name="continue" required="required">
             <option value="yes">Simona la changa</option>
             <option value="no">Nel pastel</option>
@@ -21,15 +19,14 @@
       </form-array>
     </node>
 
-    <connector from="node1" to="node2">
-      <condition>form#form[continue] == "yes"</condition>
+    <connector from="requester" to="node2">
+      <condition>form#formulario[continue] == "yes"</condition>
     </connector>
+
     <node id="node2" class="simple">
-      <auth id="self">
-        <filter backend="self">
-          <param name="identifier" type="ref">user#requester</param>
-        </filter>
-      </auth>
+      <auth-filter backend="self">
+        <param name="identifier" type="ref">user#requester</param>
+      </auth-filter>
       <form-array>
         <form id="chamba">
           <input type="text" label="¿Cuánto es 1+1?" name="ans" required="required" />
@@ -39,8 +36,8 @@
 
     <connector from="node2" to="end" />
 
-    <connector from="node1" to="end">
-      <condition>form#form[continue] == "no"</condition>
+    <connector from="requester" to="end">
+      <condition>form#formulario[continue] == "no"</condition>
     </connector>
 
     <node id="end" class="end" />

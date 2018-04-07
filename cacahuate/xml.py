@@ -56,6 +56,18 @@ class Xml:
                 # the text child of <element></element> is the empty string
                 setattr(self, attr, func(''))
 
+        start_node_id = getattr(self, 'start-node')
+        try:
+            start_node = self.find(
+                lambda e: e.getAttribute('id') == start_node_id
+            )
+        except ElementNotFound:
+            raise MalformedProcess(
+                'Process does not have the start node'
+            )
+
+        self.start_node = start_node
+
     @classmethod
     def load(cls, config: dict, common_name: str, direct=False) -> TextIO:
         ''' Loads an xml file and returns the corresponding TextIOWrapper for
@@ -105,13 +117,6 @@ class Xml:
         raise ElementNotFound(
             'node or edge matching the given condition was not found'
         )
-
-    def start_node(self) -> Element:
-        ''' Returns the starting node '''
-        start_node_id = getattr(self, 'start-node')
-        start_node = self.find(lambda e: e.getAttribute('id') == start_node_id)
-
-        return start_node
 
     @classmethod
     def list(cls, config):

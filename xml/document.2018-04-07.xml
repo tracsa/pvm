@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process-spec>
+  <process-info>
+    <author>OgAstorga</author>
+    <date>2018-04-07</date>
+    <name>Validar identidad</name>
+    <description>This process asks for a file</description>
+    <public>true</public>
+    <start-node>document-node</start-node>
+  </process-info>
+  <process>
+    <node id="document-node" class="decision">
+      <form-array>
+        <form id="doc-form">
+          <input
+            type="file"
+            provider="doqer"
+            label="Documento de identidad oficial"
+            name="identity_card"
+            required="required"
+          />
+        </form>
+      </form-array>
+    </node>
+  </process>
+</process-spec>

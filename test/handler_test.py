@@ -8,6 +8,25 @@ from cacahuate.handler import Handler
 from cacahuate.node import Node, make_node
 from cacahuate.models import Execution, Pointer, User, Activity, Questionaire
 
+from .utils import make_pointer, make_activity
+
+
+class MockChannel:
+
+    def __init__(self):
+        self.bp_kwargs = None
+        self.bp_call_count = 0
+        self.ed_kwargs = None
+        self.ed_call_count = 0
+
+    def basic_publish(self, **kwargs):
+        self.bp_kwargs = kwargs
+        self.bp_call_count += 1
+
+    def exchange_declare(self, **kwargs):
+        self.ed_kwargs = kwargs
+        self.ed_call_count += 1
+
 
 def test_parse_message(config):
     handler = Handler(config)
@@ -30,33 +49,27 @@ def test_parse_message(config):
 
 def test_recover_step(config, models):
     handler = Handler(config)
-    exc = Execution.validate(
-        process_name='simple.2018-02-19.xml',
-    ).save()
-    ptr = Pointer.validate(
-        node_id='4g9lOdPKmRUf',
-    ).save()
-    ptr.proxy.execution.set(exc)
+    ptr = make_pointer('simple.2018-02-19.xml', '4g9lOdPKmRUf')
+    exc = ptr.proxy.execution.get()
 
-    execution, pointer, xmliter, node, forms, actors, documents = \
+    execution, pointer, xmliter, node, *rest = \
         handler.recover_step({
             'command': 'step',
             'pointer_id': ptr.id,
-            'forms': [
-                {
-                    'ref': '#auth-form',
-                    'data': {
-                        'auth': 'yes',
-                    },
-                },
-            ],
             'actors': [
                 {
                     'ref': '#requester',
-                    'user': {'identifier': 'juan_manager'}
+                    'user': {'identifier': 'juan_manager'},
+                    'forms': [
+                        {
+                            'ref': '#auth-form',
+                            'data': {
+                                'auth': 'yes',
+                            },
+                        },
+                    ],
                 }
             ],
-            'documents': []
         })
 
     assert execution.id == exc.id
@@ -96,26 +109,13 @@ def test_wakeup(config, models, mongo):
     # setup stuff
     handler = Handler(config)
 
-    execution = Execution(
-        process_name='exit_request.2018-03-20.xml',
-    ).save()
+    pointer = make_pointer('exit_request.2018-03-20.xml', 'requester')
+    execution = pointer.proxy.execution.get()
     juan = User(identifier='juan').save()
     manager = User(identifier='juan_manager').save()
-    # this is needed in order to resolve the manager
-    act = Activity(ref='#requester').save()
-    act.proxy.user.set(juan)
-    act.proxy.execution.set(execution)
-    pointer = Pointer(
-        node_id='employee-node',
-    ).save()
-    pointer.proxy.execution.set(execution)
+    act = make_activity('#requester', juan, execution)
 
-    class Channel:
-
-        def basic_publish(self, **kwargs):
-            self.kwargs = kwargs
-
-    channel = Channel()
+    channel = MockChannel()
 
     # this is what we test
     ptrs = handler.call({
@@ -124,13 +124,16 @@ def test_wakeup(config, models, mongo):
     }, channel)
 
     # test manager is notified
-    assert hasattr(channel, 'kwargs'), 'Publish was not called'
+    assert channel.bp_call_count == 1
+    assert channel.ed_call_count == 1
 
-    args = channel.kwargs
+    args = channel.bp_kwargs
 
     assert args['exchange'] == config['RABBIT_NOTIFY_EXCHANGE']
     assert args['routing_key'] == 'email'
-    assert json.loads(args['body']) == {}
+    assert json.loads(args['body']) == {
+        'email': 'hardcoded@mailinator.com',
+    }
 
     # mongo has a registry
     reg = next(mongo.find())
@@ -140,9 +143,7 @@ def test_wakeup(config, models, mongo):
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert reg['finished_at'] is None
     assert reg['execution_id'] == execution.id
-    assert reg['node_id'] == 'manager-node'
-    assert reg['forms'] == []
-    assert reg['documents'] == []
+    assert reg['node_id'] == 'manager'
     assert reg['actors'] == []
 
     # tasks where asigned
@@ -151,27 +152,25 @@ def test_wakeup(config, models, mongo):
     task = manager.proxy.tasks.get()[0]
 
     assert isinstance(task, Pointer)
-    assert task.node_id == 'manager-node'
+    assert task.node_id == 'manager'
     assert task.proxy.execution.get().id == execution.id
 
 
 def test_teardown(config, models, mongo):
     ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
-    execution = Execution(
-        process_name='exit_request.2018-03-20.xml',
-    ).save()
-    p_0 = Pointer(
-        node_id='manager-node',
-    ).save()
-    p_0.proxy.execution.set(execution)
+
+    p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    execution = p_0.proxy.execution.get()
+
     manager = User(identifier='manager').save()
     manager2 = User(identifier='manager2').save()
-    act = Activity(ref='#manager').save()
-    act.proxy.user.set(manager)
-    act.proxy.execution.set(execution)
+
+    act = make_activity('#manager', manager, execution)
+
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
+
     form = Questionaire(ref='#auth-form', data={
         'auth': 'yes',
     }).save()
@@ -182,29 +181,28 @@ def test_teardown(config, models, mongo):
         'finished_at': None,
         'execution_id': execution.id,
         'node_id': p_0.node_id,
-        'forms': [],
-        'documents': [],
         'actors': [],
     })
+
+    channel = MockChannel()
 
     ptrs = handler.call({
         'command': 'step',
         'pointer_id': p_0.id,
-        'forms': [{
-            'ref': form.ref,
-            'data': form.data,
-        }],
-        'actors': [{
+        'actor': {
             'ref': '#a',
-        }],
-        'documents': [{
-            'ref': '#b',
-        }],
-    }, None)
+            'forms': [{
+                'ref': form.ref,
+                'data': form.data,
+            }],
+        },
+    }, channel)
 
     assert Pointer.get(p_0.id) is None
-    assert len(ptrs) == 1
-    assert ptrs[0].node_id == 'security-node'
+    assert len(ptrs) == 0
+
+    assert Pointer.count() == 1
+    assert Pointer.get_all()[0].node_id == 'security'
 
     # mongo has a registry
     reg = next(mongo.find())
@@ -215,14 +213,15 @@ def test_teardown(config, models, mongo):
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == p_0.node_id
-    assert reg['forms'] == [{
-        'ref': '#auth-form',
-        'data': {
-            'auth': 'yes',
-        },
+    assert reg['actors'] == [{
+        'ref': '#a',
+        'forms': [{
+            'ref': '#auth-form',
+            'data': {
+                'auth': 'yes',
+            },
+        }],
     }]
-    assert reg['actors'] == [{'ref': '#a'}]
-    assert reg['documents'] == [{'ref': '#b'}]
 
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0

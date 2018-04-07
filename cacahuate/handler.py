@@ -33,6 +33,7 @@ class Handler:
         except CannotMove as e:
             return log.error(str(e))
 
+        channel.queue_declare(queue=self.config['RABBIT_QUEUE'], durable = True)
         for pointer in to_queue:
             channel.basic_publish(
                 exchange='',
@@ -96,10 +97,6 @@ class Handler:
         husers = hierarchy_provider.find_users(
             **resolve_params(filter_node, execution)
         )
-        channel.exchange_declare(
-                                exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
-                                exchange_type='direct'
-                                )
 
         for huser in husers:
             user = huser.get_user()

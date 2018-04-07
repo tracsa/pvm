@@ -38,6 +38,14 @@ def make_pointer(process_name, node_id):
     return ptr
 
 
+def make_activity(ref, user, execution):
+    act = Activity(ref=ref).save()
+    act.proxy.user.set(user)
+    act.proxy.execution.set(execution)
+
+    return act
+
+
 def test_continue_process_asks_for_user(client, models):
     res = client.post('/v1/pointer')
 
@@ -154,7 +162,7 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
     ''' a node whose auth has a filter must be completed by a person matching
     the filter '''
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager-node')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
@@ -179,7 +187,7 @@ def test_continue_process_asks_for_data(client, models):
     act.proxy.user.set(juan)
 
     manager = make_user('juan_manager', 'Juanote')
-    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager-node')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
 
     act.proxy.execution.set(ptr.proxy.execution.get())
 
@@ -206,34 +214,16 @@ def test_can_continue_process(client, models, mocker, config):
         'BlockingChannel.basic_publish'
     )
 
-    juan = User(identifier='juan').save()
-    act = Activity(ref='#requester').save()
-    act.proxy.user.set(juan)
-    actors = []
-    actors.append({'ref': act.ref, 'user': juan.to_json()})
-    manager = User(
-        identifier='juan_manager',
-        human_name='Juanote',
-    ).save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(manager)
-    exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
-    ).save()
-    act.proxy.execution.set(exc)
-    ptr = Pointer(
-        node_id='manager-node',
-    ).save()
-    ptr.proxy.execution.set(exc)
+    juan = make_user('juan', 'Juan')
+    manager = make_user('juan_manager', 'Juanote')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    exc = ptr.proxy.execution.get()
 
-    res = client.post('/v1/pointer', headers={
+    act = make_activity('#requester', juan, ptr.proxy.execution.get())
+
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                    '{}:{}'.format(manager.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({
+    }, **make_auth(manager)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': ptr.node_id,
         'form_array': [
@@ -244,7 +234,6 @@ def test_can_continue_process(client, models, mocker, config):
                 },
             },
         ],
-        'actors': actors,
     }))
 
     assert res.status_code == 202

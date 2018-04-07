@@ -37,6 +37,32 @@ def trans_date(obj):
 
     return obj
 
+def store_forms(collected_forms, execution):
+    forms = []
+
+    if len(collected_forms) > 0:
+        for ref, form_data in collected_forms:
+            ques = Questionaire(ref=ref, data=form_data).save()
+            ques.proxy.execution.set(execution)
+            forms.append({'ref': ref, 'data': form_data})
+
+    return forms
+
+def store_actor(node, user, execution, forms):
+    auth_ref = '#' + node.getAttribute('id')
+    activity = Activity(ref=auth_ref).save()
+    activity.proxy.user.set(g.user)
+    activity.proxy.execution.set(execution)
+
+    return {
+        'ref': auth_ref,
+        'user': {
+            'identifier': g.user.identifier,
+            'human_name': g.user.human_name,
+        },
+        'forms': forms,
+    }
+
 
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
@@ -89,35 +115,17 @@ def start_process():
     execution = Execution(
         process_name=xml.filename,
     ).save()
-
     pointer = Pointer(
         node_id=start_point.getAttribute('id'),
     ).save()
-
     pointer.proxy.execution.set(execution)
 
-    forms = []
-
-    if len(collected_forms) > 0:
-        for ref, form_data in collected_forms:
-            ques = Questionaire(ref=ref, data=form_data).save()
-            ques.proxy.execution.set(execution)
-            forms.append({'ref': ref, 'data': form_data})
-
-    actor = None
-
-    if auth_ref is not None:
-        activity = Activity(ref=auth_ref).save()
-        activity.proxy.user.set(user)
-        activity.proxy.execution.set(execution)
-        actor = {
-            'ref': auth_ref,
-            'user': {
-                'identifier': user.identifier,
-                'human_name': user.human_name,
-            },
-            'forms': forms,
-        }
+    actor = store_actor(
+        start_point,
+        g.user,
+        execution,
+        store_forms(collected_forms, execution)
+    )
 
     # log to mongo
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
@@ -189,35 +197,18 @@ def continue_process():
         }])
 
     # Check for authorization
-    auth_ref, user = validate_auth(continue_point, execution)
+    validate_auth(continue_point, g.user, execution)
 
     # Validate asociated forms
     collected_forms = validate_forms(continue_point)
 
     # save the data
-    forms = []
-
-    if len(collected_forms) > 0:
-        for ref, form_data in collected_forms:
-            ques = Questionaire(ref=ref, data=form_data).save()
-            ques.proxy.execution.set(execution)
-            forms.append({'ref': ref, 'data': form_data})
-
-    actor = None
-
-    if auth_ref is not None:
-        activity = Activity(ref=auth_ref).save()
-        activity.proxy.user.set(user)
-        activity.proxy.execution.set(execution)
-
-        actor = {
-            'ref': auth_ref,
-            'user': {
-                'identifier': user.identifier,
-                'human_name': user.human_name,
-            },
-            'forms': forms,
-        }
+    actor = store_actor(
+        continue_point,
+        g.user,
+        execution,
+        store_forms(collected_forms, execution)
+    )
 
     # trigger rabbit
     channel = get_channel()

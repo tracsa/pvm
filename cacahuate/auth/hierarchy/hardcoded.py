@@ -7,7 +7,7 @@ from cacahuate.models import User
 class HardcodedHierarchyProvider(BaseHierarchyProvider):
 
     def validate_user(self, user, **params):
-        base_user = User.get_by('identifier', params.get('employee'))
+        base_user = User.get_by('identifier', params.get('identifier'))
 
         if base_user is None:
             raise HierarchyError

@@ -313,7 +313,7 @@ def test_resolve_params(config, models):
     xml = Xml.load(config, 'exit_request.2018-03-20.xml')
 
     el = xml.find(lambda e: e.getAttribute('id') == 'manager-node')
-    filter_node = el.getElementsByTagName('filter')[0]
+    filter_node = el.getElementsByTagName('auth-filter')[0]
 
     execution = Execution().save()
     juan = User(identifier='juan').save()
@@ -322,6 +322,6 @@ def test_resolve_params(config, models):
     act.proxy.execution.set(execution)
 
     assert resolve_params(filter_node, execution) == {
-        'employee': 'juan',
+        'identifier': 'juan',
         'relation': 'manager',
     }

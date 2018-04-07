@@ -161,8 +161,6 @@ def validate_auth(node, user, execution=None):
             'where': 'request.authorization',
         }])
 
-    return get_ref(auth_node), user
-
 
 def validate_forms(node):
     form_array = node.getElementsByTagName('form-array')

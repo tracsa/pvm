@@ -128,7 +128,7 @@ def start_process():
         'finished_at': datetime.now(),
         'execution_id': execution.id,
         'node_id': start_point.getAttribute('id'),
-        'actor': actor,
+        'actors': [actor],
     })
 
     # trigger rabbit

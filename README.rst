@@ -21,6 +21,8 @@ You will need the **redis** and **mongo** databases, and **rabbitmq** for this t
    git clone https://github.com/tracsa/cacahuate.git && cd cacahuate
    virtualenv -p /usr/bin/python3 .env
    echo "export CACAHUATE_SETTINGS=$(pwd)/settings_develop.py" >> .env/bin/activate
+   echo "export FLASK_APP=cacahuate.http.wsgi" >> .env/bin/activate
+   echo "export FLASK_DEBUG=1" >> .env/bin/activate
    touch settings_develop.py
    source .env/bin/activate
    pip install -r requirements.txt

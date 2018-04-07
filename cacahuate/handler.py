@@ -200,9 +200,12 @@ class Handler:
 
         assert execution.process_name == xml.filename, 'Inconsistent pointer'
 
-        point = xml.find(
-            lambda e: e.getAttribute('id') == pointer.node_id
-        )
+        if xml.start_node.getAttribute('id') == pointer.node_id:
+            point = xml.start_node
+        else:
+            point = xml.find(
+                lambda e: e.getAttribute('id') == pointer.node_id
+            )
 
         return (
             execution,

@@ -11,6 +11,9 @@ class HardcodedUser(BaseUser):
     def get_identifier(self):
         return self.username
 
+    def get_x_info(self, medium):
+        return "hardcoded@mailinator.com"
+
 
 class HardcodedAuthProvider(BaseAuthProvider):
 

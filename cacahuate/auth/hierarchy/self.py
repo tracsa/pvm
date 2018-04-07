@@ -13,7 +13,7 @@ class Self(BaseUser):
         return self.identifier
 
     def get_x_info(self,medium):
-        return "spartan_carter@yopmail.com"
+        return "hardcoded@mailinator.com"
 
 
 class SelfHierarchyProvider(BaseHierarchyProvider):

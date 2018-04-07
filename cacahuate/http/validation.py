@@ -92,6 +92,9 @@ def validate_input(form_index: int, input: Element, value):
             raise InvalidInputError(form_index, input.getAttribute('name'))
 
     elif input_type == 'file':
+        if type(value) is not dict:
+            raise InvalidInputError(form_index, input.getAttribute('name'))
+
         provider = input.getAttribute('provider')
         if provider == 'doqer':
             valid = reduce(

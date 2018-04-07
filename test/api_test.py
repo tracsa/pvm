@@ -537,7 +537,7 @@ def test_process_allow_document(client, models, mocker, config, mongo):
 
     assert res.status_code == 201
 
-def test_process_allow_document(client, models, mocker, config, mongo):
+def test_process_deny_invalid_document(client, models, mocker, config, mongo):
     form_array = [
         {
             'ref': '#doc-form',
@@ -545,6 +545,24 @@ def test_process_allow_document(client, models, mocker, config, mongo):
                 'identity_card': {
                     'this': 'is invalid'
                 },
+            },
+        },
+    ]
+
+    res = client.post('/v1/execution', headers = {
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'document',
+        'form_array': form_array,
+    }))
+
+    assert res.status_code == 400
+
+    form_array = [
+        {
+            'ref': '#doc-form',
+            'data': {
+                'identity_card': 'also invalid'
             },
         },
     ]

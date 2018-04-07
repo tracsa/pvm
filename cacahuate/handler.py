@@ -115,7 +115,6 @@ class Handler:
             mediums = self.get_contact_channels(huser)
 
             for medium, params in mediums:
-
                 channel.basic_publish(
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
                     routing_key=medium,

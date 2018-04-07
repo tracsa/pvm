@@ -50,12 +50,12 @@ class Handler:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, message: dict, channel):
-        execution, pointer, xml, cur_node, *rest = self.recover_step(message)
+        execution, pointer, xml, cur_node, actor = self.recover_step(message)
 
         to_queue = []  # pointers to be created
 
         # node's lifetime ends here
-        self.teardown(pointer, *rest)
+        self.teardown(pointer, actor)
         next_nodes = cur_node.next(xml, execution)
 
         for node in next_nodes:
@@ -76,12 +76,16 @@ class Handler:
         the execution, this is the first step in node's lifecycle '''
         # create a pointer in this node
         pointer = self.create_pointer(node, execution)
+        is_async = len(node.element.getElementsByTagName('form-array')) > 0
 
         # notify someone
-        filter_q = node.element.getElementsByTagName('filter')
+        filter_q = node.element.getElementsByTagName('auth-filter')
 
         if len(filter_q) == 0:
-            return #TODO devolver puntero
+            if is_async:
+                return
+            else:
+                return pointer
 
         filter_node = filter_q[0]
         backend = filter_node.getAttribute('backend')
@@ -129,17 +133,14 @@ class Handler:
             'finished_at': None,
             'execution_id': execution.id,
             'node_id': node.element.getAttribute('id'),
-            'forms': [],
-            'documents': [],
             'actors': [],
         })
 
-        # nodes with forms and documents are not queued
-        if len(node.element.getElementsByTagName('form-array')) > 0:
+        # nodes with forms are not queued
+        if not is_async:
             return pointer
 
-    def teardown(self, pointer, forms, actors, documents):
-
+    def teardown(self, pointer, actor):
         ''' finishes the node's lifecycle '''
         collection = self.get_mongo()
 
@@ -150,9 +151,9 @@ class Handler:
         }, {
             '$set': {
                 'finished_at': datetime.now(),
-                'forms': forms,
-                'actors': actors,
-                'documents': documents,
+            },
+            '$push': {
+                'actors': actor,
             },
         })
 
@@ -210,16 +211,17 @@ class Handler:
 
         assert execution.process_name == xml.filename, 'Inconsistent pointer'
 
-        point = xml.find(
-            lambda e: e.getAttribute('id') == pointer.node_id
-        )
+        if xml.start_node.getAttribute('id') == pointer.node_id:
+            point = xml.start_node
+        else:
+            point = xml.find(
+                lambda e: e.getAttribute('id') == pointer.node_id
+            )
 
         return (
             execution,
             pointer,
             xml,
             make_node(point),
-            message.get('forms', []),
-            message.get('actors', []),
-            message.get('documents', []),
+            message.get('actor'),
         )

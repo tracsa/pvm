@@ -1,6 +1,5 @@
 from importlib import import_module
 from xml.dom.minidom import Element
-from case_conversion import pascalcase
 from flask import request, abort
 import os
 import sys
@@ -8,11 +7,12 @@ from datetime import datetime
 
 from cacahuate.errors import ValidationErrors, InputError,\
     RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
-    RequiredListError, RequiredStrError
+    RequiredListError, RequiredStrError, MisconfiguredProvider
 from cacahuate.http.errors import BadRequest, Unauthorized, Forbidden
 from cacahuate.models import User, Token
 from cacahuate.xml import get_ref, resolve_params
 from cacahuate.http.wsgi import app
+from cacahuate.utils import user_import
 
 
 def get_associated_data(ref: str, data: dict) -> dict:
@@ -132,68 +132,34 @@ def validate_json(json_data: dict, req: list):
         raise BadRequest(errors)
 
 
-def validate_auth(node, execution=None):
-    auth = node.getElementsByTagName('auth')
+def validate_auth(node, user, execution=None):
+    auth = node.getElementsByTagName('auth-filter')
 
     if len(auth) == 0:
-        return None, None
+        return
 
     auth_node = auth[0]
+    backend = auth_node.getAttribute('backend')
 
-    # Authorization required but not provided, notify
-    if request.authorization is None:
-        raise Unauthorized([{
-            'detail': 'You must provide basic authorization headers',
+    try:
+        HiPro = user_import(
+            backend,
+            app.config['HIERARCHY_PROVIDERS'],
+            'cacahuate.auth.hierarchy',
+        )
+    except MisconfiguredProvider:
+        abort(500, 'Misconfigured hierarchy provider, sorry')
+
+    hipro = HiPro(app.config)
+
+    try:
+        hipro.validate_user(user, **resolve_params(auth_node, execution))
+    except HierarchyError:
+        raise Forbidden([{
+            'detail': 'The provided credentials do not match the specified'
+                      ' hierarchy',
             'where': 'request.authorization',
         }])
-
-    identifier = request.authorization['username']
-    token = request.authorization['password']
-
-    user = User.get_by('identifier', identifier)
-    token = Token.get_by('token', token)
-
-    if user is None or token is None or token.proxy.user.get().id != user.id:
-        raise Unauthorized([{
-            'detail': 'Your credentials are invalid, sorry',
-            'where': 'request.authorization',
-        }])
-
-    # check for filters for this user
-    filter_q = auth_node.getElementsByTagName('filter')
-
-    if len(filter_q) == 1:
-        filter_node = filter_q[0]
-        backend = filter_node.getAttribute('backend')
-
-        if backend in app.config['HIERARCHY_PROVIDERS']:
-            import_path = app.config['HIERARCHY_PROVIDERS'][backend]
-
-            cwd = os.getcwd()
-
-            if cwd not in sys.path:
-                sys.path.insert(0, cwd)
-        else:
-            import_path = 'cacahuate.auth.hierarchy.' + backend
-
-        try:
-            mod = import_module(import_path)
-            HiPro = getattr(mod, pascalcase(backend) + 'HierarchyProvider')
-        except ModuleNotFoundError:
-            abort(404, 'Auth backend not found: {}'.format(backend))
-        except AttributeError as e:
-            abort(500, 'Misconfigured hierarchy provider, sorry')
-
-        hipro = HiPro(app.config)
-
-        try:
-            hipro.validate_user(user, **resolve_params(filter_node, execution))
-        except HierarchyError:
-            raise Forbidden([{
-                'detail': 'The provided credentials do not match the specified'
-                          ' hierarchy',
-                'where': 'request.authorization',
-            }])
 
     return get_ref(auth_node), user
 

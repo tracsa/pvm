@@ -4,5 +4,15 @@ release:
 clean:
 	rm -rf dist/
 
+test:
+	pytest -xvv
+
 lint:
 	pycodestyle --statistics --show-source --exclude=.env,.tox,dist,docs,build,*.egg .
+
+xmllint:
+	xml/validate.sh
+
+clear-objects:
+	python -c "from coralillo import Engine; eng=Engine(); eng.lua.drop(args=['*'])"
+	mongo cacahuate --eval "db.history.drop()"

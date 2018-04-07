@@ -292,20 +292,21 @@ def test_can_continue_process(client, models, mocker, config):
         'command': 'step',
         'process': exc.process_name,
         'pointer_id': ptr.id,
-        'forms': [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'auth': 'yes',
-                },
+        'actor': {
+            'ref': '#manager',
+            'user': {
+                'identifier': 'juan_manager',
+                'human_name': 'Juanote',
             },
-        ],
-        'actors':  [
-            {
-                'ref': '#manager',
-                'user': manager.to_json()
-            }
-        ],
+            'forms': [
+                {
+                    'ref': '#auth-form',
+                    'data': {
+                        'auth': 'yes',
+                    },
+                },
+            ],
+        },
     }
 
     assert args['exchange'] == ''
@@ -472,7 +473,6 @@ def test_process_all_inputs(client, models, mocker, config, mongo):
         'Content-Type': 'application/json',
     }, data=json.dumps({
         'process_name': 'all-inputs',
-
         'form_array': objeto
     }))
 

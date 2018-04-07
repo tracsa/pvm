@@ -50,12 +50,12 @@ class Handler:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, message: dict, channel):
-        execution, pointer, xml, cur_node, *rest = self.recover_step(message)
+        execution, pointer, xml, cur_node, actor = self.recover_step(message)
 
         to_queue = []  # pointers to be created
 
         # node's lifetime ends here
-        self.teardown(pointer, *rest)
+        self.teardown(pointer, actor)
         next_nodes = cur_node.next(xml, execution)
 
         for node in next_nodes:
@@ -123,15 +123,14 @@ class Handler:
             'finished_at': None,
             'execution_id': execution.id,
             'node_id': node.element.getAttribute('id'),
-            'forms': [],
-            'actor': None,
+            'actors': [],
         })
 
         # nodes with forms are not queued
         if len(node.element.getElementsByTagName('form-array')) > 0:
             return pointer
 
-    def teardown(self, pointer, forms, actor):
+    def teardown(self, pointer, actor):
         ''' finishes the node's lifecycle '''
         collection = self.get_mongo()
 
@@ -141,8 +140,9 @@ class Handler:
         }, {
             '$set': {
                 'finished_at': datetime.now(),
-                'forms': forms,
-                'actor': actor,
+            },
+            '$push': {
+                'actors': actor,
             },
         })
 
@@ -209,6 +209,5 @@ class Handler:
             pointer,
             xml,
             make_node(point),
-            message.get('forms', []),
             message.get('actor'),
         )

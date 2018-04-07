@@ -2,42 +2,38 @@ from coralillo.errors import BadField
 
 
 class AuthenticationError(Exception):
-
     pass
 
 
 class ProcessNotFound(Exception):
-
     pass
 
 
 class ElementNotFound(Exception):
-
     pass
 
 
 class CannotMove(Exception):
-
     pass
 
 
 class RefNotFound(Exception):
-
     pass
 
 
 class MalformedProcess(Exception):
-
     pass
 
 
 class HierarchyError(Exception):
-
     pass
 
 
 class IncompleteBranch(Exception):
+    pass
 
+
+class MisconfiguredProvider(Exception):
     pass
 
 

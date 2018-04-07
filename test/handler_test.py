@@ -42,18 +42,18 @@ def test_recover_step(config, models):
         handler.recover_step({
             'command': 'step',
             'pointer_id': ptr.id,
-            'forms': [
-                {
-                    'ref': '#auth-form',
-                    'data': {
-                        'auth': 'yes',
-                    },
-                },
-            ],
             'actors': [
                 {
                     'ref': '#requester',
-                    'user': {'identifier': 'juan_manager'}
+                    'user': {'identifier': 'juan_manager'},
+                    'forms': [
+                        {
+                            'ref': '#auth-form',
+                            'data': {
+                                'auth': 'yes',
+                            },
+                        },
+                    ],
                 }
             ],
         })
@@ -140,7 +140,6 @@ def test_wakeup(config, models, mongo):
     assert reg['finished_at'] is None
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == 'manager-node'
-    assert reg['forms'] == []
     assert reg['actors'] == []
 
     # tasks where asigned
@@ -180,20 +179,19 @@ def test_teardown(config, models, mongo):
         'finished_at': None,
         'execution_id': execution.id,
         'node_id': p_0.node_id,
-        'forms': [],
         'actors': [],
     })
 
     ptrs = handler.call({
         'command': 'step',
         'pointer_id': p_0.id,
-        'forms': [{
-            'ref': form.ref,
-            'data': form.data,
-        }],
-        'actors': [{
+        'actor': {
             'ref': '#a',
-        }],
+            'forms': [{
+                'ref': form.ref,
+                'data': form.data,
+            }],
+        },
     }, None)
 
     assert Pointer.get(p_0.id) is None
@@ -209,13 +207,15 @@ def test_teardown(config, models, mongo):
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution_id'] == execution.id
     assert reg['node_id'] == p_0.node_id
-    assert reg['forms'] == [{
-        'ref': '#auth-form',
-        'data': {
-            'auth': 'yes',
-        },
+    assert reg['actors'] == [{
+        'ref': '#a',
+        'forms': [{
+            'ref': '#auth-form',
+            'data': {
+                'auth': 'yes',
+            },
+        }],
     }]
-    assert reg['actors'] == [{'ref': '#a'}]
 
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0

@@ -95,6 +95,14 @@ def start_process():
 
     pointer.proxy.execution.set(execution)
 
+    forms = []
+
+    if len(collected_forms) > 0:
+        for ref, form_data in collected_forms:
+            ques = Questionaire(ref=ref, data=form_data).save()
+            ques.proxy.execution.set(execution)
+            forms.append({'ref': ref, 'data': form_data})
+
     actor = None
 
     if auth_ref is not None:
@@ -107,15 +115,8 @@ def start_process():
                 'identifier': user.identifier,
                 'human_name': user.human_name,
             },
+            'forms': forms,
         }
-
-    forms = []
-
-    if len(collected_forms) > 0:
-        for ref, form_data in collected_forms:
-            ques = Questionaire(ref=ref, data=form_data).save()
-            ques.proxy.execution.set(execution)
-            forms.append({'ref': ref, 'data': form_data})
 
     # log to mongo
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
@@ -125,7 +126,6 @@ def start_process():
         'finished_at': datetime.now(),
         'execution_id': execution.id,
         'node_id': start_point.getAttribute('id'),
-        'forms': forms,
         'actor': actor,
     })
 
@@ -193,6 +193,14 @@ def continue_process():
     collected_forms = validate_forms(continue_point)
 
     # save the data
+    forms = []
+
+    if len(collected_forms) > 0:
+        for ref, form_data in collected_forms:
+            ques = Questionaire(ref=ref, data=form_data).save()
+            ques.proxy.execution.set(execution)
+            forms.append({'ref': ref, 'data': form_data})
+
     actor = None
 
     if auth_ref is not None:
@@ -206,15 +214,8 @@ def continue_process():
                 'identifier': user.identifier,
                 'human_name': user.human_name,
             },
+            'forms': forms,
         }
-
-    forms = []
-
-    if len(collected_forms) > 0:
-        for ref, form_data in collected_forms:
-            ques = Questionaire(ref=ref, data=form_data).save()
-            ques.proxy.execution.set(execution)
-            forms.append({'ref': ref, 'data': form_data})
 
     # trigger rabbit
     channel = get_channel()
@@ -225,7 +226,6 @@ def continue_process():
             'command': 'step',
             'process': execution.process_name,
             'pointer_id': pointer.id,
-            'forms': forms,
             'actor':  actor,
         }),
         properties=pika.BasicProperties(

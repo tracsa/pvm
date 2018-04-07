@@ -5,6 +5,7 @@
         <name>a process without start node</name>
         <public>false</public>
         <description>A process without start node</description>
+        <start-node>foo</start-node>
     </process-info>
     <process>
         <node id="4g9lOdPKmRUf" class="simple"/>

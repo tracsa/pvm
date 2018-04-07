@@ -1,5 +1,11 @@
 <process-spec>
   <process-info>
+    <author>categulario</author>
+    <date>1970-01-01</date>
+    <name>Ordenado</name>
+    <public>false</public>
+    <description>Ordenado</description>
+    <start-node>A</start-node>
   </process-info>
   <process>
     <connector from="A" to="B" />

@@ -9,36 +9,17 @@
   <define name="process-info">
     <element name="process-info">
       <interleave>
-        <optional>
-          <element name="author">
-            <text/>
-          </element>
-        </optional>
-        <optional>
-          <element name="date">
-            <text/>
-          </element>
-        </optional>
-        <optional>
-          <element name="name">
-            <text/>
-          </element>
-        </optional>
-        <optional>
-          <element name="public">
-            <text/>
-          </element>
-        </optional>
-        <optional>
-          <element name="description">
-            <text/>
-          </element>
-        </optional>
-        <optional>
-          <element name="start-node">
-            <text/>
-          </element>
-        </optional>
+        <element name="author"><text/></element>
+        <element name="date"><text/></element>
+        <element name="name"><text/></element>
+        <element name="public">
+          <choice>
+            <value>true</value>
+            <value>false</value>
+          </choice>
+        </element>
+        <element name="description"><text/></element>
+        <element name="start-node"><text/></element>
       </interleave>
     </element>
   </define>
@@ -70,7 +51,7 @@
       </optional>
 
       <optional>
-          <ref name="auth"/>
+        <ref name="auth-filter"/>
       </optional>
 
       <optional>
@@ -138,6 +119,9 @@
       <optional>
         <attribute name="helper"><text/></attribute>
       </optional>
+      <optional>
+        <attribute name="provider"><text/></attribute>
+      </optional>
 
       <choice>
         <zeroOrMore>
@@ -151,29 +135,13 @@
     </element>
   </define>
 
-  <define name="auth">
-    <element name="auth">
-      <optional>
-        <attribute name="id"><text/></attribute>
-      </optional>
-      <optional>
-        <attribute name="target"><text/></attribute>
-      </optional>
-      <optional>
-        <ref name="filter"/>
-      </optional>
-      <empty/>
-    </element>
-  </define>
-
-  <define name="filter">
-    <element name="filter">
-      <optional>
-        <attribute name="backend"><text/></attribute>
-      </optional>
+  <define name="auth-filter">
+    <element name="auth-filter">
+      <attribute name="backend"><text/></attribute>
       <zeroOrMore>
         <ref name="param"/>
       </zeroOrMore>
+      <empty/>
     </element>
   </define>
 

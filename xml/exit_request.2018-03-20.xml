@@ -5,12 +5,10 @@
     <name>Petición de salida</name>
     <description>Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.</description>
     <public>true</public>
-    <start-node>employee-node</start-node>
+    <start-node>requester</start-node>
   </process-info>
   <process>
-    <node id="employee-node" class="simple">
-      <auth id="requester"></auth>
-
+    <node id="requester" class="simple">
       <form-array>
         <form id="exit-form">
           <input type="text" name="reason" required="required" />
@@ -18,15 +16,13 @@
       </form-array>
     </node>
 
-    <connector from="employee-node" to="manager-node" />
+    <connector from="requester" to="manager" />
 
-    <node id="manager-node" class="decision">
-      <auth id="manager">
-        <filter backend="hardcoded">
-          <param name="employee" type="ref">user#requester</param>
-          <param name="relation">manager</param>
-        </filter>
-      </auth>
+    <node id="manager" class="decision">
+      <auth-filter backend="hardcoded">
+        <param name="identifier" type="ref">user#requester</param>
+        <param name="relation">manager</param>
+      </auth-filter>
 
       <form-array>
         <form id="auth-form">
@@ -38,16 +34,14 @@
       </form-array>
     </node>
 
-    <connector from="manager-node" to="security-node">
+    <connector from="manager" to="security">
       <condition>form#auth-form[auth]=="yes"</condition>
     </connector>
 
-    <node id="security-node" class="simple">
-      <auth id="security">
-        <filter backend="hardcoded">
-          <param name="ou">Security</param>
-        </filter>
-      </auth>
+    <node id="security" class="simple">
+      <auth-filter backend="hardcoded">
+        <param name="ou">Security</param>
+      </auth-filter>
 
       <form-array>
         <form id="confirm-form">
@@ -56,16 +50,17 @@
       </form-array>
     </node>
 
-    <connector from="manager-node" to="noauth-node">
-      <condition>form#auth-form[auth]=="no"</condition>
+    <connector from="manager" to="noauth">
     </connector>
 
-    <node id="noauth-node" class="end">
-      <auth target="requester"></auth>
+    <node id="noauth" class="end">
+      <auth-filter backend="hardcoded">
+        <param name="ou">Security</param>
+      </auth-filter>
     </node>
 
-    <connector from="seurity-node" to="end-node" />
+    <connector from="seurity" to="end" />
 
-    <node id="end-node" class="end"></node>
+    <node id="end" class="end"></node>
   </process>
 </process-spec>

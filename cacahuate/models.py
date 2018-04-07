@@ -51,6 +51,7 @@ class Pointer(Model):
 class User(Model):
     ''' those humans who can execute actions '''
     identifier = fields.Text(index=True)
+    human_name = fields.Text()
     tokens = fields.SetRelation('cacahuate.models.Token', inverse='user')
     # processes I'm participating in
     activities = fields.SetRelation(

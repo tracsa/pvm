@@ -15,4 +15,4 @@ install:
 script:
   - pytest -vv
   - pycodestyle --statistics --show-source --exclude=.env,.tox,dist,docs,build,*.egg .
-  - for f in `ls xml/*.xml`; do xmllint --noout --relaxng xml/process-spec.rng $f; done
+  - xml/validate.sh

@@ -101,11 +101,11 @@ def validate_input(form_index: int, input: Element, value):
                 and_,
                 map(
                     lambda attr:
-                        attr in value and \
+                        attr in value and
                         value[attr] is not None,
                     ['id', 'mime', 'name', 'type']
                 )
-            );
+            )
 
             if not valid:
                 raise InvalidInputError(form_index, input.getAttribute('name'))

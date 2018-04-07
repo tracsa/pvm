@@ -112,8 +112,19 @@ def test_wakeup(config, models, mongo):
 
     class Channel:
 
+        def __init__(self):
+            self.bp_kwargs = None
+            self.bp_call_count = 0
+            self.ed_kwargs = None
+            self.ed_call_count = 0
+
         def basic_publish(self, **kwargs):
-            self.kwargs = kwargs
+            self.bp_kwargs = kwargs
+            self.bp_call_count += 1
+
+        def exchange_declare(self, **kwargs):
+            self.ed_kwargs = kwargs
+            self.ed_call_count += 1
 
     channel = Channel()
 
@@ -124,7 +135,8 @@ def test_wakeup(config, models, mongo):
     }, channel)
 
     # test manager is notified
-    assert hasattr(channel, 'kwargs'), 'Publish was not called'
+    assert channel.bp_call_count == 1
+    assert channel.ed_call_count == 1
 
     args = channel.kwargs
 

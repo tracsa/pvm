@@ -24,16 +24,46 @@ def trans_id(obj):
     return obj
 
 
+DATE_FIELDS = [
+    'started_at',
+    'finished_at',
+]
+
+
 def trans_date(obj):
-    obj['started_at'] = \
-        obj['started_at'].isoformat() if (
-                                        obj['started_at'] is not None
-                                        ) else None
-    obj['finished_at'] = \
-        obj['finished_at'].isoformat() if (
-                                        obj['finished_at'] is not None
-                                        ) else None
+    for field in DATE_FIELDS:
+        if obj[field] is not None:
+            obj[field] = obj[field].isoformat()
+
     return obj
+
+
+def store_forms(collected_forms, execution):
+    forms = []
+
+    if len(collected_forms) > 0:
+        for ref, form_data in collected_forms:
+            ques = Questionaire(ref=ref, data=form_data).save()
+            ques.proxy.execution.set(execution)
+            forms.append({'ref': ref, 'data': form_data})
+
+    return forms
+
+
+def store_actor(node, user, execution, forms):
+    auth_ref = '#' + node.getAttribute('id')
+    activity = Activity(ref=auth_ref).save()
+    activity.proxy.user.set(g.user)
+    activity.proxy.execution.set(execution)
+
+    return {
+        'ref': auth_ref,
+        'user': {
+            'identifier': g.user.identifier,
+            'human_name': g.user.human_name,
+        },
+        'forms': forms,
+    }
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -48,6 +78,7 @@ def index():
 
 
 @app.route('/v1/execution', methods=['POST'])
+@requires_auth
 @requires_json
 def start_process():
     validate_json(request.json, ['process_name'])
@@ -67,17 +98,10 @@ def start_process():
             'where': 'request.body.process_name',
         }])
 
-    try:
-        start_point = xml.start_node()
-    except ElementNotFound as e:
-        raise UnprocessableEntity([{
-            'detail': '{} process does not have a start node, thus cannot be '
-                      'started'.format(request.json['process_name']),
-            'where': 'request.body.process_name',
-        }])
+    start_point = xml.start_node
 
     # Check for authorization
-    auth_ref, user = validate_auth(start_point)
+    validate_auth(start_point, g.user)
 
     # check if there are any forms present
     collected_forms = validate_forms(start_point)
@@ -86,26 +110,17 @@ def start_process():
     execution = Execution(
         process_name=xml.filename,
     ).save()
-
     pointer = Pointer(
         node_id=start_point.getAttribute('id'),
     ).save()
-
     pointer.proxy.execution.set(execution)
 
-    actors = []
-    if auth_ref is not None:
-        activity = Activity(ref=auth_ref).save()
-        activity.proxy.user.set(user)
-        activity.proxy.execution.set(execution)
-        actors.append({'ref': auth_ref, 'user': user.to_json()})
-    forms = []
-
-    if len(collected_forms) > 0:
-        for ref, form_data in collected_forms:
-            ques = Questionaire(ref=ref, data=form_data).save()
-            ques.proxy.execution.set(execution)
-            forms.append({'ref': ref, 'data': form_data})
+    actor = store_actor(
+        start_point,
+        g.user,
+        execution,
+        store_forms(collected_forms, execution)
+    )
 
     # log to mongo
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
@@ -115,9 +130,7 @@ def start_process():
         'finished_at': datetime.now(),
         'execution_id': execution.id,
         'node_id': start_point.getAttribute('id'),
-        'forms': forms,
-        'actors': actors,
-        'documents': []
+        'actors': [actor],
     })
 
     # trigger rabbit
@@ -141,6 +154,7 @@ def start_process():
 
 
 @app.route('/v1/pointer', methods=['POST'])
+@requires_auth
 @requires_json
 def continue_process():
     validate_json(request.json, ['execution_id', 'node_id'])
@@ -178,27 +192,18 @@ def continue_process():
         }])
 
     # Check for authorization
-    auth_ref, user = validate_auth(continue_point, execution)
+    validate_auth(continue_point, g.user, execution)
 
     # Validate asociated forms
     collected_forms = validate_forms(continue_point)
 
     # save the data
-    actors = []
-
-    if auth_ref is not None:
-        activity = Activity(ref=auth_ref).save()
-        activity.proxy.user.set(user)
-        activity.proxy.execution.set(execution)
-
-        actors.append({'ref': auth_ref, 'user': user.to_json()})
-
-    forms = []
-    if len(collected_forms) > 0:
-        for ref, form_data in collected_forms:
-            ques = Questionaire(ref=ref, data=form_data).save()
-            ques.proxy.execution.set(execution)
-            forms.append({'ref': ref, 'data': form_data})
+    actor = store_actor(
+        continue_point,
+        g.user,
+        execution,
+        store_forms(collected_forms, execution)
+    )
 
     # trigger rabbit
     channel = get_channel()
@@ -209,9 +214,7 @@ def continue_process():
             'command': 'step',
             'process': execution.process_name,
             'pointer_id': pointer.id,
-            'forms': forms,
-            'actors':  actors,
-            'documents': []
+            'actor':  actor,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,
@@ -226,15 +229,10 @@ def continue_process():
 @app.route('/v1/process', methods=['GET'])
 def list_process():
     def add_form(xml):
-        try:
-            start_node = xml.start_node()
-        except ElementNotFound:
-            return None
-
         json_xml = xml.to_json()
         forms = []
 
-        for form in start_node.getElementsByTagName('form'):
+        for form in xml.start_node.getElementsByTagName('form'):
             forms.append(form_to_dict(form))
 
         json_xml['form_array'] = forms
@@ -286,6 +284,17 @@ def one_activity(id):
 
     return jsonify({
         'data': activity.to_json(),
+    })
+
+
+@app.route('/v1/task')
+@requires_auth
+def task_list():
+    return jsonify({
+        'data': list(map(
+            lambda t: t.to_json(embed=['execution']),
+            g.user.proxy.tasks.get()
+        )),
     })
 
 

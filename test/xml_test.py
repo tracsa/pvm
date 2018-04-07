@@ -49,7 +49,6 @@ def test_make_iterator(config):
     xml = Xml.load(config, 'simple')
 
     expected_nodes = [
-        'node',
         'connector',
         'node',
         'connector',
@@ -63,7 +62,7 @@ def test_make_iterator(config):
 def test_find(config):
     xml = Xml.load(config, 'simple')
 
-    start = xml.find(lambda e: e.tagName == 'node')
+    start = xml.start_node
 
     assert start.tagName == 'node'
     assert start.getAttribute('id') == 'gYcj0XjbgjSO'
@@ -312,8 +311,8 @@ def test_form_to_dict(config):
 def test_resolve_params(config, models):
     xml = Xml.load(config, 'exit_request.2018-03-20.xml')
 
-    el = xml.find(lambda e: e.getAttribute('id') == 'manager-node')
-    filter_node = el.getElementsByTagName('filter')[0]
+    el = xml.find(lambda e: e.getAttribute('id') == 'manager')
+    filter_node = el.getElementsByTagName('auth-filter')[0]
 
     execution = Execution().save()
     juan = User(identifier='juan').save()
@@ -322,6 +321,6 @@ def test_resolve_params(config, models):
     act.proxy.execution.set(execution)
 
     assert resolve_params(filter_node, execution) == {
-        'employee': 'juan',
+        'identifier': 'juan',
         'relation': 'manager',
     }

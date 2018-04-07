@@ -1,26 +1,34 @@
-from base64 import b64encode
 from datetime import datetime
 from flask import json, jsonify
-import case_conversion
 import pika
 import pytest
 from cacahuate.handler import Handler
-from cacahuate.models import Execution, Pointer, User, Token, Activity
+from cacahuate.models import Execution, Activity, Questionaire
+
+from .utils import make_auth, make_activity, make_pointer, make_user
+
+
+def test_continue_process_asks_for_user(client, models):
+    res = client.post('/v1/pointer')
+
+    assert res.status_code == 401
+    assert 'WWW-Authenticate' in res.headers
+    assert res.headers['WWW-Authenticate'] == \
+        'Basic realm="User Visible Realm"'
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }],
+    }
 
 
 def test_continue_process_requires(client):
-    user = User(identifier='juan').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(user)
+    user = make_user('juan', 'Juan')
 
-    res = client.post('/v1/pointer', headers={
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                '{}:{}'.format(user.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({}))
+    }, **make_auth(user)}, data=json.dumps({}))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
@@ -41,9 +49,11 @@ def test_continue_process_requires(client):
 
 def test_continue_process_asks_living_objects(client):
     ''' the app must validate that the ids sent are real objects '''
-    res = client.post('/v1/pointer', headers={
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'execution_id': 'verde',
         'node_id': 'nada',
     }))
@@ -61,13 +71,14 @@ def test_continue_process_asks_living_objects(client):
 
 
 def test_continue_process_requires_valid_node(client, models):
+    user = make_user('juan', 'Juan')
     exc = Execution(
         process_name='decision.2018-02-27',
     ).save()
 
-    res = client.post('/v1/pointer', headers={
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'notarealnode',
     }))
@@ -85,13 +96,14 @@ def test_continue_process_requires_valid_node(client, models):
 
 
 def test_continue_process_requires_living_pointer(client, models):
+    user = make_user('juan', 'Juan')
     exc = Execution(
         process_name='decision.2018-02-27',
     ).save()
 
-    res = client.post('/v1/pointer', headers={
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': '57TJ0V3nur6m7wvv',
     }))
@@ -108,57 +120,16 @@ def test_continue_process_requires_living_pointer(client, models):
     }
 
 
-def test_continue_process_asks_for_user(client, models):
-    exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
-    ).save()
-    ptr = Pointer(
-        node_id='manager-node',
-    ).save()
-    ptr.proxy.execution.set(exc)
-
-    res = client.post('/v1/pointer', headers={
-        'Content-Type': 'application/json',
-    }, data=json.dumps({
-        'execution_id': exc.id,
-        'node_id': ptr.node_id,
-    }))
-
-    assert res.status_code == 401
-    assert 'WWW-Authenticate' in res.headers
-    assert res.headers['WWW-Authenticate'] == \
-        'Basic realm="User Visible Realm"'
-    assert json.loads(res.data) == {
-        'errors': [{
-            'detail': 'You must provide basic authorization headers',
-            'where': 'request.authorization',
-        }],
-    }
-
-
 def test_continue_process_asks_for_user_by_hierarchy(client, models):
     ''' a node whose auth has a filter must be completed by a person matching
     the filter '''
-    user = User(identifier='juan').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(user)
-    exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
-    ).save()
-    ptr = Pointer(
-        node_id='manager-node',
-    ).save()
-    ptr.proxy.execution.set(exc)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
 
-    res = client.post('/v1/pointer', headers={
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                    '{}:{}'.format(user.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({
-        'execution_id': exc.id,
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': ptr.proxy.execution.get().id,
         'node_id': ptr.node_id,
     }))
 
@@ -173,31 +144,19 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
 
 
 def test_continue_process_asks_for_data(client, models):
-    juan = User(identifier='juan').save()
+    juan = make_user('juan', 'Juan')
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
 
-    manager = User(identifier='juan_manager').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(manager)
-    exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
-    ).save()
-    act.proxy.execution.set(exc)
-    ptr = Pointer(
-        node_id='manager-node',
-    ).save()
-    ptr.proxy.execution.set(exc)
+    manager = make_user('juan_manager', 'Juanote')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
 
-    res = client.post('/v1/pointer', headers={
+    act.proxy.execution.set(ptr.proxy.execution.get())
+
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                    '{}:{}'.format(manager.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({
-        'execution_id': exc.id,
+    }, **make_auth(manager)}, data=json.dumps({
+        'execution_id': ptr.proxy.execution.get().id,
         'node_id': ptr.node_id,
     }))
 
@@ -213,35 +172,20 @@ def test_continue_process_asks_for_data(client, models):
 
 def test_can_continue_process(client, models, mocker, config):
     mocker.patch(
-                'pika.adapters.blocking_connection.'
-                'BlockingChannel.basic_publish'
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
     )
 
-    juan = User(identifier='juan').save()
-    act = Activity(ref='#requester').save()
-    act.proxy.user.set(juan)
-    actors = []
-    actors.append({'ref': act.ref, 'user': juan.to_json()})
-    manager = User(identifier='juan_manager').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(manager)
-    exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
-    ).save()
-    act.proxy.execution.set(exc)
-    ptr = Pointer(
-        node_id='manager-node',
-    ).save()
-    ptr.proxy.execution.set(exc)
+    juan = make_user('juan', 'Juan')
+    manager = make_user('juan_manager', 'Juanote')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    exc = ptr.proxy.execution.get()
 
-    res = client.post('/v1/pointer', headers={
+    act = make_activity('#requester', juan, ptr.proxy.execution.get())
+
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                    '{}:{}'.format(manager.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({
+    }, **make_auth(manager)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': ptr.node_id,
         'form_array': [
@@ -252,8 +196,6 @@ def test_can_continue_process(client, models, mocker, config):
                 },
             },
         ],
-        'actors': actors,
-        'documents': []
     }))
 
     assert res.status_code == 202
@@ -293,23 +235,21 @@ def test_can_continue_process(client, models, mocker, config):
         'command': 'step',
         'process': exc.process_name,
         'pointer_id': ptr.id,
-        'forms': [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'auth': 'yes',
-                },
+        'actor': {
+            'ref': '#manager',
+            'user': {
+                'identifier': 'juan_manager',
+                'human_name': 'Juanote',
             },
-        ],
-        'actors':  [
-            {
-                'ref': '#manager',
-                'user': manager.to_json()
-            }
-
-        ],
-        'documents': []
-
+            'forms': [
+                {
+                    'ref': '#auth-form',
+                    'data': {
+                        'auth': 'yes',
+                    },
+                },
+            ],
+        },
     }
 
     assert args['exchange'] == ''
@@ -320,7 +260,7 @@ def test_can_continue_process(client, models, mocker, config):
     # makes a useful call for the handler
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, forms, actors, documents = \
+    execution, pointer, xmliter, current_node, *rest = \
         handler.recover_step(json_message)
 
     assert execution.id == exc.id
@@ -328,10 +268,11 @@ def test_can_continue_process(client, models, mocker, config):
 
 
 def test_process_start_simple_requires(client, models, mongo):
-    # we need the name of the process to start
-    res = client.post('/v1/execution', headers={
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data='{}')
+    }, **make_auth(juan)}, data='{}')
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
@@ -345,9 +286,9 @@ def test_process_start_simple_requires(client, models, mongo):
     }
 
     # we need an existing process to start
-    res = client.post('/v1/execution', headers={
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'foo',
     }))
 
@@ -362,26 +303,9 @@ def test_process_start_simple_requires(client, models, mongo):
     }
 
     # we need a process able to load
-    res = client.post('/v1/execution', headers={
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
-        'process_name': 'sorted',
-    }))
-
-    assert res.status_code == 422
-    assert json.loads(res.data) == {
-        'errors': [
-            {
-                'detail': 'sorted process lacks important nodes and structure',
-                'where': 'request.body.process_name',
-            },
-        ],
-    }
-
-    # we need a process with a start node
-    res = client.post('/v1/execution', headers={
-        'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'nostart',
     }))
 
@@ -390,7 +314,7 @@ def test_process_start_simple_requires(client, models, mongo):
         'errors': [
             {
                 'detail':
-                'nostart process lacks important nodes and structure',
+                    'nostart process lacks important nodes and structure',
                 'where': 'request.body.process_name',
             },
         ],
@@ -398,17 +322,21 @@ def test_process_start_simple_requires(client, models, mongo):
 
     # no registry should be created yet
     assert mongo.count() == 0
+    assert Activity.count() == 0
+    assert Questionaire.count() == 0
 
 
 def test_process_start_simple(client, models, mocker, config, mongo):
     mocker.patch(
-                'pika.adapters.blocking_connection.'
-                'BlockingChannel.basic_publish'
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
     )
 
-    res = client.post('/v1/execution', headers={
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'simple',
     }))
 
@@ -440,7 +368,7 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, forms, actors, documents = \
+    execution, pointer, xmliter, current_node, *rest = \
         handler.recover_step(json_message)
 
     assert execution.id == exc.id
@@ -458,26 +386,26 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
 
 def test_process_all_inputs(client, models, mocker, config, mongo):
+    user = make_user('juan', 'Juan')
 
     objeto = [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'name': 'Algo',
-                    'datetime': datetime.now().replace(microsecond=0).
-                    isoformat()+'Z',
-                    'secret': '123456',
-                    'interests': ['science', 'music'],
-                    'gender': 'male',
-                    'elections': 'amlo',
-                },
+        {
+            'ref': '#auth-form',
+            'data': {
+                'name': 'Algo',
+                'datetime': datetime.now().isoformat()+'Z',
+                'secret': '123456',
+                'interests': ['science', 'music'],
+                'gender': 'male',
+                'elections': 'amlo',
             },
-        ]
-    res = client.post('/v1/execution', headers={
-        'Content-Type': 'application/json',
-    }, data=json.dumps({
-        'process_name': 'all-inputs',
+        },
+    ]
 
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'all-inputs',
         'form_array': objeto
     }))
 
@@ -486,53 +414,129 @@ def test_process_all_inputs(client, models, mocker, config, mongo):
     # mongo has a registry
     reg = next(mongo.find())
 
-    assert reg['forms'] == objeto
+    assert reg['actors'][0] == {
+        'ref': '#inputs-node',
+        'user': {
+            'identifier': 'juan',
+            'human_name': 'Juan',
+        },
+        'forms': objeto,
+    }
 
 
 def test_process_datetime_error(client, models, mocker, config, mongo):
-
     objeto = [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'name': 'Algo',
-                    'datetime': 'FECHA ERRONEA',
-                    'secret': '123456',
-                    'interests': ['science', 'music'],
-                    'gender': 'male',
-                    'elections': 'amlo',
-                },
+        {
+            'ref': '#auth-form',
+            'data': {
+                'name': 'Algo',
+                'datetime': 'FECHA ERRONEA',
+                'secret': '123456',
+                'interests': ['science', 'music'],
+                'gender': 'male',
+                'elections': 'amlo',
             },
-        ]
-    res = client.post('/v1/execution', headers={
+        },
+    ]
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'all-inputs',
 
         'form_array': objeto
+    }))
+
+    assert res.status_code == 400
+
+
+def test_process_allow_document(client, models, mocker, config, mongo):
+    form_array = [
+        {
+            'ref': '#doc-form',
+            'data': {
+                'identity_card': {
+                    'id': 102214720680704176,
+                    'mime': 'image/gif',
+                    'name': 'credencial de elector',
+                    'type': 'doqer:file',
+                },
+            },
+        },
+    ]
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'document',
+        'form_array': form_array,
+    }))
+
+    assert res.status_code == 201
+
+
+def test_process_deny_invalid_document(client, models, mocker, config, mongo):
+    form_array = [
+        {
+            'ref': '#doc-form',
+            'data': {
+                'identity_card': {
+                    'this': 'is invalid'
+                },
+            },
+        },
+    ]
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'document',
+        'form_array': form_array,
+    }))
+
+    assert res.status_code == 400
+
+    form_array = [
+        {
+            'ref': '#doc-form',
+            'data': {
+                'identity_card': 'also invalid'
+            },
+        },
+    ]
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'document',
+        'form_array': form_array,
     }))
 
     assert res.status_code == 400
 
 
 def test_process_check_errors(client, models, mocker, config, mongo):
-
     objeto = [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'name': 'Algo',
-                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                    'secret': '123456',
-                    'interests': 12,
-                    'gender': 'male',
-                    'elections': 'amlo',
-                },
+        {
+            'ref': '#auth-form',
+            'data': {
+                'name': 'Algo',
+                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                'secret': '123456',
+                'interests': 12,
+                'gender': 'male',
+                'elections': 'amlo',
             },
-        ]
-    res = client.post('/v1/execution', headers={
+        },
+    ]
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'all-inputs',
         'form_array': objeto
     }))
@@ -540,21 +544,22 @@ def test_process_check_errors(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
     objeto = [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'name': 'Algo',
-                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                    'secret': '123456',
-                    'interests': ["science", "wrong"],
-                    'gender': 'male',
-                    'elections': 'amlo',
-                },
+        {
+            'ref': '#auth-form',
+            'data': {
+                'name': 'Algo',
+                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                'secret': '123456',
+                'interests': ["science", "wrong"],
+                'gender': 'male',
+                'elections': 'amlo',
             },
-        ]
-    res = client.post('/v1/execution', headers={
+        },
+    ]
+
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'all-inputs',
         'form_array': objeto
     }))
@@ -563,23 +568,24 @@ def test_process_check_errors(client, models, mocker, config, mongo):
 
 
 def test_process_radio_errors(client, models, mocker, config, mongo):
-
     objeto = [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'name': 'Algo',
-                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                    'secret': '123456',
-                    'interests': ["science"],
-                    'gender': [],
-                    'elections': 'amlo',
-                },
+        {
+            'ref': '#auth-form',
+            'data': {
+                'name': 'Algo',
+                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                'secret': '123456',
+                'interests': ["science"],
+                'gender': [],
+                'elections': 'amlo',
             },
-        ]
-    res = client.post('/v1/execution', headers={
+        },
+    ]
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'all-inputs',
         'form_array': objeto
     }))
@@ -587,21 +593,22 @@ def test_process_radio_errors(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
     objeto = [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'name': 'Algo',
-                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                    'secret': '123456',
-                    'interests': ["science", "wrong"],
-                    'gender': 'error',
-                    'elections': 'amlo',
-                },
+        {
+            'ref': '#auth-form',
+            'data': {
+                'name': 'Algo',
+                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                'secret': '123456',
+                'interests': ["science", "wrong"],
+                'gender': 'error',
+                'elections': 'amlo',
             },
-        ]
-    res = client.post('/v1/execution', headers={
+        },
+    ]
+
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'all-inputs',
         'form_array': objeto
     }))
@@ -610,23 +617,24 @@ def test_process_radio_errors(client, models, mocker, config, mongo):
 
 
 def test_process_select_errors(client, models, mocker, config, mongo):
-
     objeto = [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'name': 'Algo',
-                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                    'secret': '123456',
-                    'interests': ["science"],
-                    'gender': "male",
-                    'elections': [],
-                },
+        {
+            'ref': '#auth-form',
+            'data': {
+                'name': 'Algo',
+                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                'secret': '123456',
+                'interests': ["science"],
+                'gender': "male",
+                'elections': [],
             },
-        ]
-    res = client.post('/v1/execution', headers={
+        },
+    ]
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'all-inputs',
         'form_array': objeto
     }))
@@ -634,21 +642,22 @@ def test_process_select_errors(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
     objeto = [
-            {
-                'ref': '#auth-form',
-                'data': {
-                    'name': 'Algo',
-                    'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                    'secret': '123456',
-                    'interests': ["science", "wrong"],
-                    'gender': "male",
-                    'elections': "error",
-                },
+        {
+            'ref': '#auth-form',
+            'data': {
+                'name': 'Algo',
+                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
+                'secret': '123456',
+                'interests': ["science", "wrong"],
+                'gender': "male",
+                'elections': "error",
             },
-        ]
-    res = client.post('/v1/execution', headers={
+        },
+    ]
+
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'all-inputs',
         'form_array': objeto
     }))
@@ -679,18 +688,11 @@ def test_exit_request_requirements(client, models):
     assert Activity.count() == 0
 
     # next, validate the form data
-    user = User(identifier='juan').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(user)
+    user = make_user('juan', 'Juan')
 
-    res = client.post('/v1/execution', headers={
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                    '{}:{}'.format(user.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'process_name': 'exit_request',
     }))
 
@@ -708,21 +710,14 @@ def test_exit_request_requirements(client, models):
 
 
 def test_exit_request_start(client, models, mocker):
-    user = User(identifier='juan').save()
-    token = Token(token='123456').save()
-    token.proxy.user.set(user)
+    user = make_user('juan', 'Juan')
 
     assert Execution.count() == 0
     assert Activity.count() == 0
 
-    res = client.post('/v1/execution', headers={
+    res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                    '{}:{}'.format(user.identifier, token.token).encode()
-            ).decode()
-        ),
-    }, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'process_name': 'exit_request',
         'form_array': [
             {
@@ -834,29 +829,17 @@ def test_list_activities_requires(client):
 def test_list_activities(client, models):
     '''Given 4 activities, two for the current user and two for
     another, list only the two belonging to him or her'''
-    juan = User(identifier='juan').save()
-    act = Activity(ref='#requester').save()
-    act.proxy.user.set(juan)
+    juan = make_user('juan', 'Juan')
+    other = make_user('other', 'Otero')
 
-    other = User(identifier='other').save()
-    act2 = Activity(ref='#some').save()
-    act2.proxy.user.set(other)
-
-    token = Token(token='123456').save()
-    token.proxy.user.set(juan)
     exc = Execution(
         process_name='exit_request.2018-03-20.xml',
     ).save()
-    act.proxy.execution.set(exc)
-    act2.proxy.execution.set(exc)
 
-    res = client.get('/v1/activity', headers={
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                '{}:{}'.format(juan.identifier, token.token).encode()
-            ).decode()
-        ),
-    })
+    act = make_activity('#requester', juan, exc)
+    act2 = make_activity('#some', other, exc)
+
+    res = client.get('/v1/activity', headers=make_auth(juan))
 
     assert res.status_code == 200
     assert json.loads(res.data) == {
@@ -874,49 +857,35 @@ def test_activity_requires(client):
 
 def test_activity_wrong_activity(client, models):
     # validate user authentication correct but bad activity
-    juan = User(identifier='juan').save()
-    act = Activity(ref='#requester').save()
-    act.proxy.user.set(juan)
+    juan = make_user('juan', 'Juan')
+    other = make_user('other', 'Otero')
 
-    other = User(identifier='other').save()
-    act2 = Activity(ref='#some').save()
-    act2.proxy.user.set(other)
-
-    token = Token(token='123456').save()
-    token.proxy.user.set(juan)
     exc = Execution(
         process_name='exit_request.2018-03-20.xml',
     ).save()
-    act.proxy.execution.set(exc)
-    act2.proxy.execution.set(exc)
 
-    res = client.get('/v1/activity/{}'.format(act2.id), headers={
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                '{}:{}'.format(juan.identifier, token.token).encode()
-            ).decode()
-        ),
-    })
+    act = make_activity('#requester', juan, exc)
+    act2 = make_activity('#some', other, exc)
+
+    res = client.get(
+        '/v1/activity/{}'.format(act2.id),
+        headers=make_auth(juan)
+    )
 
     assert res.status_code == 403
 
 
 def test_activity(client, models):
     # validate user authentication correct with correct activity
-    juan = User(identifier='juan').save()
+    juan = make_user('juan', 'Juan')
+
     act = Activity(ref='#requester').save()
     act.proxy.user.set(juan)
 
-    token = Token(token='123456').save()
-    token.proxy.user.set(juan)
-
-    res2 = client.get('/v1/activity/{}'.format(act.id), headers={
-        'Authorization': 'Basic {}'.format(
-            b64encode(
-                '{}:{}'.format(juan.identifier, token.token).encode()
-            ).decode()
-        ),
-    })
+    res2 = client.get(
+        '/v1/activity/{}'.format(act.id),
+        headers=make_auth(juan)
+    )
 
     assert res2.status_code == 200
     assert json.loads(res2.data) == {
@@ -953,4 +922,30 @@ def test_logs_activity(mongo, client):
             'execution_id': "15asbs",
             'node_id': '4g9lOdPKmRUf',
         }],
+    }
+
+
+def test_task_list_requires_auth(client):
+    res = client.get('/v1/task')
+
+    assert res.status_code == 401
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }],
+    }
+
+
+def test_task_list(client, models):
+    juan = make_user('user', 'User')
+
+    pointer = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    juan.proxy.tasks.set([pointer])
+
+    res = client.get('/v1/task', headers=make_auth(juan))
+
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': [pointer.to_json(embed=['execution'])],
     }

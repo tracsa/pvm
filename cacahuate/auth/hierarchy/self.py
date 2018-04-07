@@ -3,16 +3,17 @@ from cacahuate.auth.backends.hardcoded import HardcodedUser
 from cacahuate.errors import HierarchyError
 from cacahuate.models import User
 
+
 class Self(BaseUser):
     """docstring for Self"""
 
-    def __init__(self,identifier):
+    def __init__(self, identifier):
         self.identifier = identifier
 
     def get_identifier(self):
         return self.identifier
 
-    def get_x_info(self,medium):
+    def get_x_info(self, medium):
         return "hardcoded@mailinator.com"
 
 
@@ -34,6 +35,5 @@ class SelfHierarchyProvider(BaseHierarchyProvider):
     def find_users(self, **params):
         employee = params.get('employee')
         relation = params.get('relation')
-        print (params)
 
         return [Self(params.get('identifier'))]

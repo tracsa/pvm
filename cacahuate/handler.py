@@ -144,7 +144,6 @@ class Handler:
         ''' finishes the node's lifecycle '''
         collection = self.get_mongo()
 
-        #pointer.proxy.execution.get().id
         collection.update_one({
             'execution_id': pointer.proxy.execution.get().id,
             'node_id': pointer.node_id,
@@ -187,7 +186,7 @@ class Handler:
         return self.mongo
 
     def get_contact_channels(self, user: BaseUser):
-        return [('email', {'email':user.get_x_info('email')})]
+        return [('email', {'email': user.get_x_info('email')})]
 
     def create_pointer(self, node: Node, execution: Execution):
         ''' Given a node, its process, and a specific execution of the former

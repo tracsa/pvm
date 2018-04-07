@@ -96,14 +96,7 @@ def start_process():
             'where': 'request.body.process_name',
         }])
 
-    try:
-        start_point = xml.start_node()
-    except ElementNotFound as e:
-        raise UnprocessableEntity([{
-            'detail': '{} process does not have a start node, thus cannot be '
-                      'started'.format(request.json['process_name']),
-            'where': 'request.body.process_name',
-        }])
+    start_point = xml.start_node
 
     # Check for authorization
     validate_auth(start_point, g.user)
@@ -234,15 +227,10 @@ def continue_process():
 @app.route('/v1/process', methods=['GET'])
 def list_process():
     def add_form(xml):
-        try:
-            start_node = xml.start_node()
-        except ElementNotFound:
-            return None
-
         json_xml = xml.to_json()
         forms = []
 
-        for form in start_node.getElementsByTagName('form'):
+        for form in xml.start_node.getElementsByTagName('form'):
             forms.append(form_to_dict(form))
 
         json_xml['form_array'] = forms

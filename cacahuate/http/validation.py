@@ -132,7 +132,11 @@ def validate_form(index: int, form: Element, data: dict) -> dict:
         name = input.getAttribute('name')
 
         try:
-            input_description = validate_input(index, input, given_data.get(name))
+            input_description = validate_input(
+                index,
+                input,
+                given_data.get(name)
+            )
             collected_data.append(input_description)
         except InputError as e:
             errors.append(e)

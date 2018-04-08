@@ -198,6 +198,25 @@ def resolve_params(filter_node, execution=None):
     return computed_params
 
 
+def get_node_info(node):
+    # Get node-info
+    node_info = node.getElementsByTagName('node-info')
+    node_name = None,
+    node_description = None,
+
+    if len(node_info) == 1:
+        node_info = node_info[0]
+        node_name = node_info.getElementsByTagName('name')
+        node_name = node_name[0].firstChild.nodeValue
+        node_description = node_info.getElementsByTagName('description')
+        node_description = node_description[0].firstChild.nodeValue
+
+    return {
+        'name': node_name,
+        'description': node_description,
+    }
+
+
 @comment
 def etree_from_list(root: Element, nodes: [Element]) -> 'ElementTree':
     ''' Returns a built ElementTree from the list of its members '''

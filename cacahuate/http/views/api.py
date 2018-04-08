@@ -16,7 +16,7 @@ from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer, User, Token, Activity, \
     Questionaire
 from cacahuate.rabbit import get_channel
-from cacahuate.xml import Xml, form_to_dict
+from cacahuate.xml import Xml, form_to_dict, get_node_info
 
 
 def trans_id(obj):
@@ -100,23 +100,13 @@ def start_process():
 
     start_point = xml.start_node
 
-    # Get node-info
-    node_info = start_point.getElementsByTagName('node-info')
-    if len(node_info) == 0:
-        node_name = None,
-        node_description = None,
-    else:
-        node_info = node_info[0]
-        node_name = node_info.getElementsByTagName('name')
-        node_name = node_name[0].firstChild.nodeValue
-        node_description = node_info.getElementsByTagName('description')
-        node_description = node_description[0].firstChild.nodeValue
-
     # Check for authorization
     validate_auth(start_point, g.user)
 
     # check if there are any forms present
     collected_forms = validate_forms(start_point)
+
+    node_info = get_node_info(start_point)
 
     # save the data
     execution = Execution(
@@ -126,8 +116,7 @@ def start_process():
     ).save()
     pointer = Pointer(
         node_id=start_point.getAttribute('id'),
-        name=node_name,
-        description=node_description,
+        **node_info,
     ).save()
     pointer.proxy.execution.set(execution)
 
@@ -149,11 +138,9 @@ def start_process():
             'name': execution.name,
             'description': execution.description,
         },
-        'node': {
+        'node': {**{
             'id': start_point.getAttribute('id'),
-            'name': node_name,
-            'description': node_description,
-        },
+        }, **node_info},
         'actors': [actor],
     })
 

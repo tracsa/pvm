@@ -10,7 +10,7 @@ from cacahuate.errors import CannotMove
 from cacahuate.logger import log
 from cacahuate.models import Execution, Pointer
 from cacahuate.node import make_node, Node
-from cacahuate.xml import Xml, resolve_params
+from cacahuate.xml import Xml, resolve_params, get_node_info
 from cacahuate.auth.base import BaseUser
 
 
@@ -143,18 +143,6 @@ class Handler:
         # update registry about this pointer
         collection = self.get_mongo()
 
-        # Get node-info
-        node_info = node.element.getElementsByTagName('node-info')
-        if len(node_info) == 0:
-            node_name = None,
-            node_description = None,
-        else:
-            node_info = node_info[0]
-            node_name = node_info.getElementsByTagName('name')
-            node_name = node_name[0].firstChild.nodeValue
-            node_description = node_info.getElementsByTagName('description')
-            node_description = node_description[0].firstChild.nodeValue
-
         collection.insert_one({
             'started_at': datetime.now(),
             'finished_at': None,
@@ -163,11 +151,9 @@ class Handler:
                 'name': execution.name,
                 'description': execution.description,
             },
-            'node': {
+            'node': {**{
                 'id': node.element.getAttribute('id'),
-                'name': node_name,
-                'description': node_description,
-            },
+            }, **get_node_info(node.element)},
             'actors': [],
         })
 
@@ -246,20 +232,9 @@ class Handler:
         create a persistent pointer to the current execution state '''
         node_info = node.element.getElementsByTagName('node-info')
 
-        if len(node_info) == 0:
-            name = None
-            description = None
-        else:
-            node_info = node_info[0]
-            name = node_info.getElementsByTagName('name')
-            name = name[0].firstChild.nodeValue
-            description = node_info.getElementsByTagName('description')
-            description = description[0].firstChild.nodeValue
-
         pointer = Pointer(
             node_id=node.element.getAttribute('id'),
-            name=name,
-            description=name,
+            **get_node_info(node.element),
         ).save()
 
         pointer.proxy.execution.set(execution)

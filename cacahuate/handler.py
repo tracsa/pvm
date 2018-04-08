@@ -138,11 +138,25 @@ class Handler:
         # update registry about this pointer
         collection = self.get_mongo()
 
+        # Get node-info
+        node_info = start_point.getElementsByTagName('node-info')
+        if len(node_info) == 0:
+            node_name=None,
+            node_description=None,
+        else:
+            node_info = node_info[0]
+            node_name = node_info.getElementsByTagName('name')[0].firstChild.nodeValue
+            node_description = node_info.getElementsByTagName('description')[0].firstChild.nodeValue
+
         collection.insert_one({
             'started_at': datetime.now(),
             'finished_at': None,
             'execution_id': execution.id,
+            'execution_name': execution.name,
+            'execution_description': execution.description,
             'node_id': node.element.getAttribute('id'),
+            'node_name': node_name,
+            'node_description': node_description,
             'actors': [],
         })
 

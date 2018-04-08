@@ -143,7 +143,11 @@ def start_process():
         'started_at': datetime.now(),
         'finished_at': datetime.now(),
         'execution_id': execution.id,
+        'execution_name': execution.name,
+        'execution_description': execution.description,
         'node_id': start_point.getAttribute('id'),
+        'node_name': node_name,
+        'node_description': node_description,
         'actors': [actor],
     })
 

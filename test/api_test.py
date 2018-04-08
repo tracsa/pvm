@@ -1076,3 +1076,34 @@ def test_execution_has_node_info(client, models):
 
     assert pointer.name == 'Primer paso ;)'
     assert pointer.description == 'Te asignas chamba'
+
+
+def test_log_has_node_info(client, models):
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'dumb',
+        'form_array': [
+            {
+                'ref': '#formulario',
+                'data': {
+                    'continue': 'yes',
+                },
+            },
+        ],
+    }))
+    body = json.loads(res.data)
+    execution_id = body['data']['id']
+
+    res = client.get('/v1/log/{}'.format(execution_id))
+    body = json.loads(res.data)
+
+    assert body['data'][0]['node_id'] == 'requester'
+    assert body['data'][0]['node_name'] == 'Primer paso ;)'
+    assert body['data'][0]['node_description'] == 'Te asignas chamba'
+
+    assert body['data'][0]['execution_id'] == execution_id
+    assert body['data'][0]['execution_name'] == 'Proceso simple'
+    assert body['data'][0]['execution_description'] == 'Te asigna una tarea a ti mismo'

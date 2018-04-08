@@ -17,24 +17,6 @@ from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
 
 
-def get_associated_data(ref: str, data: dict) -> dict:
-    ''' given a reference returns its asociated data in the data dictionary '''
-    if 'form_array' not in data:
-        return {}
-
-    for form in data['form_array']:
-        if type(form) != dict:
-            continue
-
-        if 'ref' not in form:
-            continue
-
-        if form['ref'] == ref:
-            return form['data']
-
-    return {}
-
-
 def validate_input(form_index: int, input: Element, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
@@ -153,22 +135,29 @@ def validate_form(form: Element, data: dict) -> dict:
     return collected_data
 
 
-def validate_forms(node):
-    form_array = node.getElementsByTagName('form-array')
-    collected_forms = []
+def validate_forms(node, json_data):
+    form_specs = get_form_specs(node)
 
-    if len(form_array) == 0:
+    if not form_specs:
         return []
 
-    form_array_node = form_array[0]
+    if 'form_array' in json_data and type(json_data['form_array']) != list:
+        raise BadRequest
 
+    collected_forms = []
     errors = []
 
-    for form in form_array_node.getElementsByTagName('form'):
+    for form in request.json.get('form_array', []):
+        if 'ref' not in form:
+            raise BadRequest
+
+        if 'data' in form and type(form['data']) != list:
+            raise BadRequest
+
         try:
-            for data in validate_form(form, request.json):
+            for data in validate_form(form_specs[form['ref']], form):
                 # because a form might have multiple responses
-                collected_forms.append((form.getAttribute('id'), data))
+                collected_forms.append((form['ref'], data))
         except ValidationErrors as e:
             errors += e.errors
 

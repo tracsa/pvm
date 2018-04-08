@@ -112,7 +112,10 @@ def validate_input(form_index: int, input: Element, value):
         else:
             abort(500, 'File provider `{}` not implemented'.format(provider))
 
-    return value
+    input_dict = input_to_dict(input)
+    input_dict['value'] = value
+
+    return input_dict
 
 
 def validate_form(index: int, form: Element, data: dict) -> dict:
@@ -122,15 +125,14 @@ def validate_form(index: int, form: Element, data: dict) -> dict:
     ref = get_ref(form)
 
     given_data = get_associated_data(ref, data)
-    collected_data = {}
+    collected_data = []
     errors = []
 
     for input in form.getElementsByTagName('input'):
         name = input.getAttribute('name')
 
         try:
-            collected_data[name] = \
-                validate_input(index, input, given_data.get(name))
+            collected_data.append(validate_input(index, input, given_data.get(name)))
         except InputError as e:
             errors.append(e)
 

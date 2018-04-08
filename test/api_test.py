@@ -1179,3 +1179,38 @@ def test_log_has_form_input_data(client, models):
             "value": "yes"
         }
     ]
+
+
+def test_termination_execution( client, models):
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'dumb',
+        'form_array': [
+            {
+                'ref': 'formulario',
+                'data': {
+                    'continue': 'yes',
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201
+
+    body = json.loads(res.data)
+    execution_id = body['data']['id']
+ 
+    res = client.delete('/v1/execution/' + execution_id )
+
+    assert res.status_code == 200
+
+    execution = []
+
+    try:
+        execution = Execution.get_or_exception(execution_id)
+        assert execution != []
+    except Exception as e:
+        assert execution == []

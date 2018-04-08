@@ -192,7 +192,11 @@ def continue_process():
         }])
 
     # Check for authorization
-    validate_auth(continue_point, g.user, execution)
+    if pointer not in g.user.proxy.tasks:
+        raise Forbidden([{
+            'detail': 'Provided user does not have this task assigned',
+            'where': 'request.authorization',
+        }])
 
     # Validate asociated forms
     collected_forms = validate_forms(continue_point)
@@ -283,7 +287,7 @@ def one_activity(id):
         }])
 
     return jsonify({
-        'data': activity.to_json(),
+        'data': activity.to_json(embed=['execution']),
     })
 
 
@@ -295,6 +299,33 @@ def task_list():
             lambda t: t.to_json(embed=['execution']),
             g.user.proxy.tasks.get()
         )),
+    })
+
+
+@app.route('/v1/task/<id>', methods=['GET'])
+@requires_auth
+def task_read(id):
+    pointer = Pointer.get_or_exception(id)
+
+    if pointer not in g.user.proxy.tasks:
+        raise Forbidden([{
+            'detail': 'Provided user does not have this task assigned',
+            'where': 'request.authorization',
+        }])
+
+    forms = []
+    xml = Xml.load(app.config, pointer.proxy.execution.get().process_name)
+    node = xml.find(lambda e: e.getAttribute('id') == pointer.node_id)
+
+    for form in node.getElementsByTagName('form'):
+        forms.append(form_to_dict(form))
+
+    json_data = pointer.to_json(embed=['execution'])
+
+    json_data['form_array'] = forms
+
+    return jsonify({
+        'data': json_data,
     })
 
 

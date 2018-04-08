@@ -136,8 +136,7 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
     assert res.status_code == 403
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': 'The provided credentials do not match '
-            'the specified hierarchy',
+            'detail': 'Provided user does not have this task assigned',
             'where': 'request.authorization',
         }],
     }
@@ -150,6 +149,7 @@ def test_continue_process_asks_for_data(client, models):
 
     manager = make_user('juan_manager', 'Juanote')
     ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    manager.proxy.tasks.set([ptr])
 
     act.proxy.execution.set(ptr.proxy.execution.get())
 
@@ -179,6 +179,7 @@ def test_can_continue_process(client, models, mocker, config):
     juan = make_user('juan', 'Juan')
     manager = make_user('juan_manager', 'Juanote')
     ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    manager.proxy.tasks.set([ptr])
     exc = ptr.proxy.execution.get()
 
     act = make_activity('#requester', juan, ptr.proxy.execution.get())
@@ -914,8 +915,7 @@ def test_activity(client, models):
 
     assert res2.status_code == 200
     assert json.loads(res2.data) == {
-        'data':
-            act.to_json(),
+        'data': act.to_json(embed=['execution']),
     }
 
 
@@ -973,4 +973,63 @@ def test_task_list(client, models):
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [pointer.to_json(embed=['execution'])],
+    }
+
+
+def test_task_read_requires_auth(client, models):
+    res = client.get('/v1/task/foo')
+
+    assert res.status_code == 401
+
+
+def test_task_read_requires_real_pointer(client, models):
+    juan = make_user('juan', 'Juan')
+
+    res = client.get('/v1/task/foo', headers=make_auth(juan))
+
+    assert res.status_code == 404
+
+
+def test_task_read_requires_assigned_task(client, models):
+    ptr = make_pointer('dumb.2018-04-06.xml', 'node2')
+    juan = make_user('juan', 'Juan')
+
+    res = client.get('/v1/task/{}'.format(ptr.id), headers=make_auth(juan))
+
+    assert res.status_code == 403
+
+
+def test_task_read(client, models):
+    ptr = make_pointer('dumb.2018-04-06.xml', 'node2')
+    juan = make_user('juan', 'Juan')
+    juan.proxy.tasks.set([ptr])
+    execution = ptr.proxy.execution.get()
+
+    res = client.get('/v1/task/{}'.format(ptr.id), headers=make_auth(juan))
+
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': {
+            '_type': 'pointer',
+            'id': ptr.id,
+            'node_id': ptr.node_id,
+            'execution': {
+                '_type': 'execution',
+                'id': execution.id,
+                'process_name': execution.process_name,
+            },
+            'form_array': [
+                {
+                    'ref': '#chamba',
+                    'inputs': [
+                        {
+                            'label': '¿Cuánto es 1+1?',
+                            'name': 'ans',
+                            'required': True,
+                            'type': 'text',
+                        },
+                    ],
+                },
+            ],
+        },
     }

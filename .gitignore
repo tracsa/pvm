@@ -7,3 +7,4 @@ settings_*.py
 .tox/
 build/
 dist/
+*.json

@@ -51,6 +51,15 @@
       </optional>
 
       <optional>
+        <element name="node-info">
+          <interleave>
+            <element name="name"><text /></element>
+            <element name="description"><text /></element>
+          </interleave>
+        </element>
+      </optional>
+
+      <optional>
         <ref name="auth-filter"/>
       </optional>
 

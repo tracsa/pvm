@@ -1144,13 +1144,16 @@ def test_log_has_form_input_data(client, models):
         'process_name': 'dumb',
         'form_array': [
             {
-                'ref': '#formulario',
+                'ref': 'formulario',
                 'data': {
                     'continue': 'yes',
                 },
             },
         ],
     }))
+
+    assert res.status_code == 201
+
     body = json.loads(res.data)
     execution_id = body['data']['id']
 

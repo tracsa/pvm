@@ -139,7 +139,7 @@ class Handler:
         collection = self.get_mongo()
 
         # Get node-info
-        node_info = start_point.getElementsByTagName('node-info')
+        node_info = node.element.getElementsByTagName('node-info')
         if len(node_info) == 0:
             node_name=None,
             node_description=None,

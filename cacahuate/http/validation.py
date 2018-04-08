@@ -118,13 +118,20 @@ def validate_input(form_index: int, input: Element, value):
     return input_dict
 
 
-def validate_form(index: int, form: Element, data: dict) -> dict:
+def validate_form(form: Element, data: dict) -> dict:
     ''' Validates the given data against the spec contained in form. In case of
     failure raises an exception. In case of success returns the validated data.
     '''
     ref = form.getAttribute('id')
-    given_data = get_associated_data(ref, data)
+    min = 0
     collected_data = []
+
+    if form.getAttribute('multiple'):
+        max = float('inf')
+    else:
+        max = 1
+
+    given_data = get_associated_data(ref, data, min, max)
     errors = []
 
     for input in form.getElementsByTagName('input'):
@@ -144,6 +151,31 @@ def validate_form(index: int, form: Element, data: dict) -> dict:
         raise ValidationErrors(errors)
 
     return collected_data
+
+
+def validate_forms(node):
+    form_array = node.getElementsByTagName('form-array')
+    collected_forms = []
+
+    if len(form_array) == 0:
+        return []
+
+    form_array_node = form_array[0]
+
+    errors = []
+
+    for form in form_array_node.getElementsByTagName('form'):
+        try:
+            for data in validate_form(form, request.json):
+                # because a form might have multiple responses
+                collected_forms.append((form.getAttribute('id'), data))
+        except ValidationErrors as e:
+            errors += e.errors
+
+    if len(errors) > 0:
+        raise BadRequest(ValidationErrors(errors).to_json())
+
+    return collected_forms
 
 
 def validate_json(json_data: dict, req: list):
@@ -189,27 +221,3 @@ def validate_auth(node, user, execution=None):
                       ' hierarchy',
             'where': 'request.authorization',
         }])
-
-
-def validate_forms(node):
-    form_array = node.getElementsByTagName('form-array')
-    collected_forms = []
-
-    if len(form_array) == 0:
-        return []
-
-    form_array_node = form_array[0]
-
-    errors = []
-
-    for index, form in enumerate(form_array_node.getElementsByTagName('form')):
-        try:
-            data = validate_form(index, form, request.json)
-            collected_forms.append((form.getAttribute('id'), data))
-        except ValidationErrors as e:
-            errors += e.errors
-
-    if len(errors) > 0:
-        raise BadRequest(ValidationErrors(errors).to_json())
-
-    return collected_forms

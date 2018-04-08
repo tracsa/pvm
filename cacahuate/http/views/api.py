@@ -42,20 +42,19 @@ def trans_date(obj):
 def store_forms(collected_forms, execution):
     forms = []
 
-    if len(collected_forms) > 0:
-        for ref, form_description in collected_forms:
-            form_data = dict(map(
-                lambda x: (x['name'], x['value']),
-                form_description
-            ))
+    for ref, form_description in collected_forms:
+        form_data = dict(map(
+            lambda x: (x['name'], x['value']),
+            form_description
+        ))
 
-            ques = Questionaire(ref=ref, data=form_data).save()
-            ques.proxy.execution.set(execution)
-            forms.append({
-                'ref': ref,
-                'data': form_data,
-                'form': form_description,
-            })
+        ques = Questionaire(ref=ref, data=form_data).save()
+        ques.proxy.execution.set(execution)
+        forms.append({
+            'ref': ref,
+            'data': form_data,
+            'form': form_description,
+        })
 
     return forms
 

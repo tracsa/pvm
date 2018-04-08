@@ -197,10 +197,14 @@ def get_node_info(node):
 
     if len(node_info) == 1:
         node_info = node_info[0]
+
         node_name = node_info.getElementsByTagName('name')
-        node_name = node_name[0].firstChild.nodeValue
+        if node_name[0].firstChild is not None:
+            node_name = node_name[0].firstChild.nodeValue
+
         node_description = node_info.getElementsByTagName('description')
-        node_description = node_description[0].firstChild.nodeValue
+        if node_description[0].firstChild is not None:
+            node_description = node_description[0].firstChild.nodeValue
 
     return {
         'name': node_name,

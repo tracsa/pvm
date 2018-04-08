@@ -27,10 +27,39 @@
       <condition>form#formulario[continue] == "yes"</condition>
     </connector>
 
-    <node id="node2" class="simple">
+    <connector from="requester" to="end">
+      <condition>form#formulario[continue] == "no"</condition>
+    </connector>
+
+
+    <node id="node2" class="decision">
       <node-info>
-        <name>Segundo paso ;)</name>
-        <description>Te asignas mas chamba</description>
+        <name>Segundo paso :o</name>
+        <description>Te asignas más chamba</description>
+      </node-info>
+      <form-array>
+        <form id="formulario2">
+          <input type="select" label="¿Asignarme más chamba?" name="continue" required="required">
+            <option value="yes">Simona la changa</option>
+            <option value="no">Nel pastel</option>
+          </input>
+        </form>
+      </form-array>
+    </node>
+
+    <connector from="node2" to="node3">
+      <condition>form#formulario2[continue] == "yes"</condition>
+    </connector>
+
+    <connector from="node2" to="end">
+      <condition>form#formulario2[continue] == "no"</condition>
+    </connector>
+
+
+    <node id="node3" class="simple">
+      <node-info>
+        <name>Tercer paso :c</name>
+        <description></description>
       </node-info>
       <auth-filter backend="self">
         <param name="identifier" type="ref">user#requester</param>
@@ -42,11 +71,7 @@
       </form-array>
     </node>
 
-    <connector from="node2" to="end" />
-
-    <connector from="requester" to="end">
-      <condition>form#formulario[continue] == "no"</condition>
-    </connector>
+    <connector from="node3" to="end" />
 
     <node id="end" class="end" />
   </process>

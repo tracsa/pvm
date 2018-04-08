@@ -457,10 +457,10 @@ def test_visible_document_provider(client, models, mocker, config, mongo):
 
     body = json.loads(res.data)
     document_process = list(
-                    filter(
-                        lambda xml: xml['id'] == 'document', body['data']
-                    )
-                )[0]
+        filter(
+            lambda xml: xml['id'] == 'document', body['data']
+        )
+    )[0]
 
     assert res.status_code == 200
     assert document_process['form_array'][0] == {

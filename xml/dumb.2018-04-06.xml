@@ -24,11 +24,11 @@
     </node>
 
     <connector from="requester" to="node2">
-      <condition>form#formulario[continue] == "yes"</condition>
+      <condition>#formulario.continue == "yes"</condition>
     </connector>
 
     <connector from="requester" to="end">
-      <condition>form#formulario[continue] == "no"</condition>
+      <condition>#formulario.continue == "no"</condition>
     </connector>
 
 
@@ -51,11 +51,11 @@
     </node>
 
     <connector from="node2" to="node3">
-      <condition>form#formulario2[continue] == "yes"</condition>
+      <condition>#formulario2.continue == "yes"</condition>
     </connector>
 
     <connector from="node2" to="end">
-      <condition>form#formulario2[continue] == "no"</condition>
+      <condition>#formulario2.continue == "no"</condition>
     </connector>
 
 

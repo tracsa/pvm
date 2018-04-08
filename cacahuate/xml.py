@@ -166,15 +166,6 @@ class Xml:
         }
 
 
-def get_ref(el: Element):
-    if el.getAttribute('id'):
-        return '#' + el.getAttribute('id')
-    elif el.getAttribute('class'):
-        return '.' + el.getAttribute('class')
-
-    return None
-
-
 def resolve_params(filter_node, execution=None):
     computed_params = {}
 
@@ -184,7 +175,7 @@ def resolve_params(filter_node, execution=None):
 
             try:
                 actor = next(
-                    execution.proxy.actors.q().filter(ref='#'+user_ref)
+                    execution.proxy.actors.q().filter(ref=user_ref)
                 )
 
                 value = actor.proxy.user.get().identifier
@@ -289,7 +280,7 @@ def form_to_dict(form):
     inputs = form.getElementsByTagName('input')
 
     form_dict = {
-        'ref': get_ref(form),
+        'ref': form.getAttribute('id'),
         'inputs': [],
     }
 

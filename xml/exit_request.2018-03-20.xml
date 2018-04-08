@@ -35,7 +35,7 @@
     </node>
 
     <connector from="manager" to="security">
-      <condition>form#auth-form[auth]=="yes"</condition>
+      <condition>#auth-form.auth=="yes"</condition>
     </connector>
 
     <node id="security" class="simple">

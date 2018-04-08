@@ -12,7 +12,7 @@ from cacahuate.errors import ValidationErrors, InputError,\
     RequiredListError, RequiredStrError, MisconfiguredProvider
 from cacahuate.http.errors import BadRequest, Unauthorized, Forbidden
 from cacahuate.models import User, Token
-from cacahuate.xml import get_ref, resolve_params
+from cacahuate.xml import resolve_params
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
 
@@ -119,8 +119,7 @@ def validate_form(index: int, form: Element, data: dict) -> dict:
     ''' Validates the given data against the spec contained in form. In case of
     failure raises an exception. In case of success returns the validated data.
     '''
-    ref = get_ref(form)
-
+    ref = form.getAttribute('id')
     given_data = get_associated_data(ref, data)
     collected_data = {}
     errors = []
@@ -199,7 +198,7 @@ def validate_forms(node):
     for index, form in enumerate(form_array_node.getElementsByTagName('form')):
         try:
             data = validate_form(index, form, request.json)
-            collected_forms.append((get_ref(form), data))
+            collected_forms.append((form.getAttribute('id'), data))
         except ValidationErrors as e:
             errors += e.errors
 

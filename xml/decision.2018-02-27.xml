@@ -24,7 +24,7 @@
     </node>
 
     <connector from="57TJ0V3nur6m7wvv" to="Cuptax0WTCL1ueCy">
-      <condition>form#fork[proceed] == "yes"</condition>
+      <condition>#fork.proceed == "yes"</condition>
     </connector>
 
     <node id="Cuptax0WTCL1ueCy" class="simple" />
@@ -32,7 +32,7 @@
     <node id="tMdkDIZkDW7GkmDT" class="end" />
 
     <connector from="57TJ0V3nur6m7wvv" to="mj88CNZUaBdvLV83">
-      <condition>form#fork[proceed] == "no"</condition>
+      <condition>#fork.proceed == "no"</condition>
     </connector>
 
     <node id="mj88CNZUaBdvLV83" class="simple" />

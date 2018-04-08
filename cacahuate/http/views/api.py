@@ -51,7 +51,7 @@ def store_forms(collected_forms, execution):
 
 
 def store_actor(node, user, execution, forms):
-    auth_ref = '#' + node.getAttribute('id')
+    auth_ref = node.getAttribute('id')
     activity = Activity(ref=auth_ref).save()
     activity.proxy.user.set(g.user)
     activity.proxy.execution.set(execution)
@@ -93,8 +93,7 @@ def start_process():
         }])
     except MalformedProcess as e:
         raise UnprocessableEntity([{
-            'detail': '{} process lacks important nodes and structure'
-                      .format(request.json['process_name']),
+            'detail': str(e),
             'where': 'request.body.process_name',
         }])
 

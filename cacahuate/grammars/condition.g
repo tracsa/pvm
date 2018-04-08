@@ -6,9 +6,7 @@ op: "==" -> op_eq
 expr: ref
     | string
 
-ref: obj_type "#" obj_id "[" member "]"
-
-obj_type: "form" -> type_form
+ref: "#" obj_id "." member
 
 obj_id: variable
 member: variable

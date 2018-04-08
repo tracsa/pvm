@@ -42,7 +42,7 @@ def test_find_next_element_decision_yes(config):
     ''' given an if and asociated data, retrieves the next element '''
     xml = Xml.load(config, 'decision')
     exc = Execution().save()
-    form = Questionaire(ref="#fork", data={'proceed': 'yes'}).save()
+    form = Questionaire(ref="fork", data={'proceed': 'yes'}).save()
     form.proxy.execution.set(exc)
 
     assert xml.filename == 'decision.2018-02-27.xml'
@@ -63,7 +63,7 @@ def test_find_next_element_decision_no(config):
     xml = Xml.load(config, 'decision')
     xml = Xml.load(config, 'decision')
     exc = Execution().save()
-    form = Questionaire(ref="#fork", data={'proceed': 'no'}).save()
+    form = Questionaire(ref="fork", data={'proceed': 'no'}).save()
     form.proxy.execution.set(exc)
 
     assert xml.filename == 'decision.2018-02-27.xml'

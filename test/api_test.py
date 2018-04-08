@@ -144,7 +144,7 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
 
 def test_continue_process_asks_for_data(client, models):
     juan = make_user('juan', 'Juan')
-    act = Activity(ref='#requester').save()
+    act = Activity(ref='requester').save()
     act.proxy.user.set(juan)
 
     manager = make_user('juan_manager', 'Juanote')
@@ -182,7 +182,7 @@ def test_can_continue_process(client, models, mocker, config):
     manager.proxy.tasks.set([ptr])
     exc = ptr.proxy.execution.get()
 
-    act = make_activity('#requester', juan, ptr.proxy.execution.get())
+    act = make_activity('requester', juan, ptr.proxy.execution.get())
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
@@ -191,7 +191,7 @@ def test_can_continue_process(client, models, mocker, config):
         'node_id': ptr.node_id,
         'form_array': [
             {
-                'ref': '#auth-form',
+                'ref': 'auth-form',
                 'data': {
                     'auth': 'yes',
                 },
@@ -208,9 +208,9 @@ def test_can_continue_process(client, models, mocker, config):
 
     assert exc.proxy.actors.count() == 2
 
-    activity = next(exc.proxy.actors.q().filter(ref='#manager'))
+    activity = next(exc.proxy.actors.q().filter(ref='manager'))
 
-    assert activity.ref == '#manager'
+    assert activity.ref == 'manager'
     assert activity.proxy.user.get() == manager
 
     # form is attached
@@ -220,7 +220,7 @@ def test_can_continue_process(client, models, mocker, config):
 
     form = forms[0]
 
-    assert form.ref == '#auth-form'
+    assert form.ref == 'auth-form'
     assert form.data == {
         'auth': 'yes',
     }
@@ -237,14 +237,14 @@ def test_can_continue_process(client, models, mocker, config):
         'process': exc.process_name,
         'pointer_id': ptr.id,
         'actor': {
-            'ref': '#manager',
+            'ref': 'manager',
             'user': {
                 'identifier': 'juan_manager',
                 'human_name': 'Juanote',
             },
             'forms': [
                 {
-                    'ref': '#auth-form',
+                    'ref': 'auth-form',
                     'data': {
                         'auth': 'yes',
                     },
@@ -314,8 +314,7 @@ def test_process_start_simple_requires(client, models, mongo):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail':
-                    'nostart process lacks important nodes and structure',
+                'detail': 'Process does not have the start node',
                 'where': 'request.body.process_name',
             },
         ],
@@ -391,7 +390,7 @@ def test_process_all_inputs(client, models, mocker, config, mongo):
 
     objeto = [
         {
-            'ref': '#auth-form',
+            'ref': 'auth-form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().isoformat()+'Z',
@@ -416,7 +415,7 @@ def test_process_all_inputs(client, models, mocker, config, mongo):
     reg = next(mongo.find())
 
     assert reg['actors'][0] == {
-        'ref': '#inputs-node',
+        'ref': 'inputs-node',
         'user': {
             'identifier': 'juan',
             'human_name': 'Juan',
@@ -428,7 +427,7 @@ def test_process_all_inputs(client, models, mocker, config, mongo):
 def test_process_datetime_error(client, models, mocker, config, mongo):
     objeto = [
         {
-            'ref': '#auth-form',
+            'ref': 'auth-form',
             'data': {
                 'name': 'Algo',
                 'datetime': 'FECHA ERRONEA',
@@ -464,7 +463,7 @@ def test_visible_document_provider(client, models, mocker, config, mongo):
 
     assert res.status_code == 200
     assert document_process['form_array'][0] == {
-        'ref': '#doc-form',
+        'ref': 'doc-form',
         'inputs': [
             {
                 'label': 'Documento de identidad oficial',
@@ -480,7 +479,7 @@ def test_visible_document_provider(client, models, mocker, config, mongo):
 def test_process_allow_document(client, models, mocker, config, mongo):
     form_array = [
         {
-            'ref': '#doc-form',
+            'ref': 'doc-form',
             'data': {
                 'identity_card': {
                     'id': 102214720680704176,
@@ -506,7 +505,7 @@ def test_process_allow_document(client, models, mocker, config, mongo):
 def test_process_deny_invalid_document(client, models, mocker, config, mongo):
     form_array = [
         {
-            'ref': '#doc-form',
+            'ref': 'doc-form',
             'data': {
                 'identity_card': {
                     'this': 'is invalid'
@@ -527,7 +526,7 @@ def test_process_deny_invalid_document(client, models, mocker, config, mongo):
 
     form_array = [
         {
-            'ref': '#doc-form',
+            'ref': 'doc-form',
             'data': {
                 'identity_card': 'also invalid'
             },
@@ -547,7 +546,7 @@ def test_process_deny_invalid_document(client, models, mocker, config, mongo):
 def test_process_check_errors(client, models, mocker, config, mongo):
     objeto = [
         {
-            'ref': '#auth-form',
+            'ref': 'auth-form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -571,7 +570,7 @@ def test_process_check_errors(client, models, mocker, config, mongo):
 
     objeto = [
         {
-            'ref': '#auth-form',
+            'ref': 'auth-form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -596,7 +595,7 @@ def test_process_check_errors(client, models, mocker, config, mongo):
 def test_process_radio_errors(client, models, mocker, config, mongo):
     objeto = [
         {
-            'ref': '#auth-form',
+            'ref': 'auth-form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -620,7 +619,7 @@ def test_process_radio_errors(client, models, mocker, config, mongo):
 
     objeto = [
         {
-            'ref': '#auth-form',
+            'ref': 'auth-form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -645,7 +644,7 @@ def test_process_radio_errors(client, models, mocker, config, mongo):
 def test_process_select_errors(client, models, mocker, config, mongo):
     objeto = [
         {
-            'ref': '#auth-form',
+            'ref': 'auth-form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -669,7 +668,7 @@ def test_process_select_errors(client, models, mocker, config, mongo):
 
     objeto = [
         {
-            'ref': '#auth-form',
+            'ref': 'auth-form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -747,7 +746,7 @@ def test_exit_request_start(client, models, mocker):
         'process_name': 'exit_request',
         'form_array': [
             {
-                'ref': '#exit-form',
+                'ref': 'exit-form',
                 'data': {
                     'reason': 'tenía que salir al baño',
                 },
@@ -770,7 +769,7 @@ def test_exit_request_start(client, models, mocker):
 
     activity = actors[0]
 
-    assert activity.ref == '#requester'
+    assert activity.ref == 'requester'
     assert activity.proxy.user.get() == user
 
     # form is attached
@@ -780,7 +779,7 @@ def test_exit_request_start(client, models, mocker):
 
     form = forms[0]
 
-    assert form.ref == '#exit-form'
+    assert form.ref == 'exit-form'
     assert form.data == {
         'reason': 'tenía que salir al baño',
     }
@@ -813,7 +812,7 @@ def test_list_processes(client):
         'versions': ['2018-03-20'],
         'form_array': [
             {
-                'ref': '#exit-form',
+                'ref': 'exit-form',
                 'inputs': [
                     {
                         'type': 'text',
@@ -862,8 +861,8 @@ def test_list_activities(client, models):
         process_name='exit_request.2018-03-20.xml',
     ).save()
 
-    act = make_activity('#requester', juan, exc)
-    act2 = make_activity('#some', other, exc)
+    act = make_activity('requester', juan, exc)
+    act2 = make_activity('some', other, exc)
 
     res = client.get('/v1/activity', headers=make_auth(juan))
 
@@ -890,8 +889,8 @@ def test_activity_wrong_activity(client, models):
         process_name='exit_request.2018-03-20.xml',
     ).save()
 
-    act = make_activity('#requester', juan, exc)
-    act2 = make_activity('#some', other, exc)
+    act = make_activity('requester', juan, exc)
+    act2 = make_activity('some', other, exc)
 
     res = client.get(
         '/v1/activity/{}'.format(act2.id),
@@ -905,7 +904,7 @@ def test_activity(client, models):
     # validate user authentication correct with correct activity
     juan = make_user('juan', 'Juan')
 
-    act = Activity(ref='#requester').save()
+    act = Activity(ref='requester').save()
     act.proxy.user.set(juan)
 
     res2 = client.get(
@@ -1036,7 +1035,7 @@ def test_task_read(client, models):
             },
             'form_array': [
                 {
-                    'ref': '#formulario2',
+                    'ref': 'formulario2',
                     'inputs': [
                         {
                             'label': '¿Asignarme más chamba?',
@@ -1070,7 +1069,7 @@ def test_execution_has_node_info(client, models):
         'process_name': 'dumb',
         'form_array': [
             {
-                'ref': '#formulario',
+                'ref': 'formulario',
                 'data': {
                     'continue': 'yes',
                 },
@@ -1099,7 +1098,7 @@ def test_log_has_node_info(client, models):
         'process_name': 'dumb',
         'form_array': [
             {
-                'ref': '#formulario',
+                'ref': 'formulario',
                 'data': {
                     'continue': 'yes',
                 },
@@ -1120,3 +1119,75 @@ def test_log_has_node_info(client, models):
     assert data['execution']['id'] == execution_id
     assert data['execution']['name'] == 'Proceso simple'
     assert data['execution']['description'] == 'Te asigna una tarea a ti mismo'
+
+
+def test_validate_form_multiple(client, models):
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'jorge',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {},
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': '\'phone\' input is required',
+                'where': 'request.body.form_array.1.phone',
+                'code': 'validation.required',
+            },
+        ]
+    }
+
+
+def test_validate_form_multiple_error_position(client, models):
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'jorge',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '12432',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {},
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': '\'phone\' input is required',
+                'where': 'request.body.form_array.2.phone',
+                'code': 'validation.required',
+            },
+        ]
+    }

@@ -35,9 +35,6 @@ class Condition:
         def op_ne(self, _):
             return operator.ne
 
-        def type_form(self, _):
-            return 'forms'
-
         def variable(self, args):
             return args[0][:]
 
@@ -48,14 +45,10 @@ class Condition:
             return args[0][:]
 
         def ref(self, args):
-            obj_type, obj_id, member = args
+            obj_id, member = args
 
             try:
-                obj = next(
-                        getattr(
-                                self._execution.proxy,
-                                obj_type).q().filter(ref='#'+obj_id)
-                        )
+                obj = next(self._execution.proxy.forms.q().filter(ref=obj_id))
             except StopIteration:
                 raise RefNotFound
 

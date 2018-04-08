@@ -249,7 +249,7 @@ def test_form_to_dict(config):
     ))
 
     assert dict_forms[0] == {
-        'ref': '#text-input',
+        'ref': 'text-input',
         'inputs': [
             {
                 'type': 'text',
@@ -261,7 +261,7 @@ def test_form_to_dict(config):
     }
 
     assert dict_forms[1] == {
-        "ref": "#two-inputs",
+        "ref": "two-inputs",
         "inputs": [
             {
                 "type": "text",
@@ -275,7 +275,7 @@ def test_form_to_dict(config):
     }
 
     assert dict_forms[2] == {
-        "ref": "#select",
+        "ref": "select",
         "inputs": [
             {
                 "type": "radio",
@@ -297,7 +297,7 @@ def test_form_to_dict(config):
     }
 
     assert dict_forms[3] == {
-        "ref": "#with-helper",
+        "ref": "with-helper",
         "inputs": [
             {
                 "type": "password",
@@ -316,7 +316,7 @@ def test_resolve_params(config, models):
 
     execution = Execution().save()
     juan = User(identifier='juan').save()
-    act = Activity(ref='#requester').save()
+    act = Activity(ref='requester').save()
     act.proxy.user.set(juan)
     act.proxy.execution.set(execution)
 

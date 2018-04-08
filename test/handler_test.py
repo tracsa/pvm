@@ -58,11 +58,11 @@ def test_recover_step(config, models):
             'pointer_id': ptr.id,
             'actors': [
                 {
-                    'ref': '#requester',
+                    'ref': 'requester',
                     'user': {'identifier': 'juan_manager'},
                     'forms': [
                         {
-                            'ref': '#auth-form',
+                            'ref': 'auth-form',
                             'data': {
                                 'auth': 'yes',
                             },
@@ -131,7 +131,7 @@ def test_wakeup(config, models, mongo):
     execution = pointer.proxy.execution.get()
     juan = User(identifier='juan').save()
     manager = User(identifier='juan_manager').save()
-    act = make_activity('#requester', juan, execution)
+    act = make_activity('requester', juan, execution)
 
     channel = MockChannel()
 
@@ -184,12 +184,12 @@ def test_teardown(config, models, mongo):
     manager = User(identifier='manager').save()
     manager2 = User(identifier='manager2').save()
 
-    act = make_activity('#manager', manager, execution)
+    act = make_activity('manager', manager, execution)
 
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
 
-    form = Questionaire(ref='#auth-form', data={
+    form = Questionaire(ref='auth-form', data={
         'auth': 'yes',
     }).save()
     form.proxy.execution.set(execution)
@@ -212,7 +212,7 @@ def test_teardown(config, models, mongo):
         'command': 'step',
         'pointer_id': p_0.id,
         'actor': {
-            'ref': '#a',
+            'ref': 'a',
             'forms': [{
                 'ref': form.ref,
                 'data': form.data,
@@ -236,9 +236,9 @@ def test_teardown(config, models, mongo):
     assert reg['execution']['id'] == execution.id
     assert reg['node']['id'] == p_0.node_id
     assert reg['actors'] == [{
-        'ref': '#a',
+        'ref': 'a',
         'forms': [{
-            'ref': '#auth-form',
+            'ref': 'auth-form',
             'data': {
                 'auth': 'yes',
             },

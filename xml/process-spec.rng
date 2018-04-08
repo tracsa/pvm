@@ -67,10 +67,12 @@
         <element name="form-array">
           <zeroOrMore>
             <element name="form">
-              <choice>
-                <attribute name="id"><text/></attribute>
-                <attribute name="class"><text/></attribute>
-              </choice>
+              <attribute name="id"><text/></attribute>
+              <optional>
+                <attribute name="multiple">
+                  <value>multiple</value>
+                </attribute>
+              </optional>
 
               <zeroOrMore>
                 <ref name="input"/>

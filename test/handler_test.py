@@ -91,11 +91,27 @@ def test_create_pointer(config, models):
     ele.setAttribute('class', 'simple')
     ele.setAttribute('id', 'chubaca')
 
+    node_name = Document().createTextNode('nombre')
+    node_desc = Document().createTextNode('descripción')
+
+    # Build node structure
+    node_info_el = Document().createElement('node-info')
+    node_name_el = Document().createElement('name')
+    node_desc_el = Document().createElement('description')
+
+    node_name_el.appendChild(node_name)
+    node_info_el.appendChild(node_name_el)
+
+    node_desc_el.appendChild(node_desc)
+    node_info_el.appendChild(node_desc_el)
+
+    ele.appendChild(node_info_el)
+
     node = make_node(ele)
     exc = Execution.validate(
         process_name='simple.2018-02-19.xml',
-        name='<name>',
-        description='<desc>'
+        name='nombre',
+        description='description'
     ).save()
     pointer = handler.create_pointer(node, exc)
     execution = pointer.proxy.execution.get()

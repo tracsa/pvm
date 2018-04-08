@@ -225,7 +225,9 @@ class Handler:
             name = None
             description = None
         else:
-            raise 'Así te quería agarrar puerco'
+            node_info = node_info[0]
+            name = node_info.getElementsByTagName('name')[0].firstChild.nodeValue
+            description = node_info.getElementsByTagName('description')[0].firstChild.nodeValue
 
         pointer = Pointer(
             node_id=node.element.getAttribute('id'),

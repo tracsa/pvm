@@ -245,6 +245,24 @@ def test_can_continue_process(client, models, mocker, config):
             'forms': [
                 {
                     'ref': 'auth-form',
+                    'form': [
+                        {
+                            "name": "auth",
+                            "options": [
+                                {
+                                    "label": "\u00c1ndale mijito, ve",
+                                    "value": "yes"
+                                },
+                                {
+                                    "label": "Ni madres",
+                                    "value": "no"
+                                }
+                            ],
+                            "required": True,
+                            "type": "radio",
+                            "value": "yes"
+                        }
+                    ],
                     'data': {
                         'auth': 'yes',
                     },
@@ -385,7 +403,7 @@ def test_process_start_simple(client, models, mocker, config, mongo):
     assert reg['node']['id'] == ptr.node_id
 
 
-def test_process_all_inputs(client, models, mocker, config, mongo):
+def test_process_all_inputs(client, models, config, mongo):
     user = make_user('juan', 'Juan')
 
     objeto = [
@@ -413,15 +431,11 @@ def test_process_all_inputs(client, models, mocker, config, mongo):
 
     # mongo has a registry
     reg = next(mongo.find())
+    actor = reg['actors'][0]
 
-    assert reg['actors'][0] == {
-        'ref': 'inputs-node',
-        'user': {
-            'identifier': 'juan',
-            'human_name': 'Juan',
-        },
-        'forms': objeto,
-    }
+    assert actor['ref'] == 'inputs-node'
+    assert actor['user']['identifier'] == 'juan'
+    assert actor['forms'][0]['data'] == objeto[0]['data']
 
 
 def test_process_datetime_error(client, models, mocker, config, mongo):
@@ -1121,73 +1135,45 @@ def test_log_has_node_info(client, models):
     assert data['execution']['description'] == 'Te asigna una tarea a ti mismo'
 
 
-def test_validate_form_multiple(client, models):
+def test_log_has_form_input_data(client, models):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'form-multiple',
+        'process_name': 'dumb',
         'form_array': [
             {
-                'ref': 'single-form',
+                'ref': '#formulario',
                 'data': {
-                    'name': 'jorge',
+                    'continue': 'yes',
                 },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {},
             },
         ],
     }))
+    body = json.loads(res.data)
+    execution_id = body['data']['id']
 
-    assert res.status_code == 400
-    assert json.loads(res.data) == {
-        'errors': [
-            {
-                'detail': '\'phone\' input is required',
-                'where': 'request.body.form_array.1.phone',
-                'code': 'validation.required',
-            },
-        ]
-    }
+    res = client.get('/v1/log/{}'.format(execution_id))
+    body = json.loads(res.data)
+    data = body['data'][0]
 
-
-def test_validate_form_multiple_error_position(client, models):
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'form-multiple',
-        'form_array': [
-            {
-                'ref': 'single-form',
-                'data': {
-                    'name': 'jorge',
+    assert data['actors'][0]['forms'][0]['form'] == [
+        {
+            "label": "\u00bfAsignarme la chamba?",
+            "name": "continue",
+            "options": [
+                {
+                    "label": "Simona la changa",
+                    "value": "yes"
                 },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '12432',
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {},
-            },
-        ],
-    }))
-
-    assert res.status_code == 400
-    assert json.loads(res.data) == {
-        'errors': [
-            {
-                'detail': '\'phone\' input is required',
-                'where': 'request.body.form_array.2.phone',
-                'code': 'validation.required',
-            },
-        ]
-    }
+                {
+                    "label": "Nel pastel",
+                    "value": "no"
+                }
+            ],
+            "required": True,
+            "type": "select",
+            "value": "yes"
+        }
+    ]

@@ -276,6 +276,24 @@ SUPPORTED_ATTRS = {
 }
 
 
+def input_to_dict(input):
+    input_attrs = [
+        (attr, func(input.getAttribute(attr)))
+        for attr, func in SUPPORTED_ATTRS.items()
+    ] + [('options', list(map(
+        lambda e: {
+            'value': e.getAttribute('value'),
+            'label': e.firstChild.nodeValue,
+        },
+        input.getElementsByTagName('option'),
+    )))]
+
+    return dict(filter(
+        lambda a: a[1],
+        input_attrs
+    ))
+
+
 def form_to_dict(form):
     inputs = form.getElementsByTagName('input')
 
@@ -285,20 +303,6 @@ def form_to_dict(form):
     }
 
     for input in inputs:
-        input_attrs = [
-            (attr, func(input.getAttribute(attr)))
-            for attr, func in SUPPORTED_ATTRS.items()
-        ] + [('options', list(map(
-            lambda e: {
-                'value': e.getAttribute('value'),
-                'label': e.firstChild.nodeValue,
-            },
-            input.getElementsByTagName('option'),
-        )))]
-
-        form_dict['inputs'].append(dict(filter(
-            lambda a: a[1],
-            input_attrs
-        )))
+        form_dict['inputs'].append(input_to_dict(input))
 
     return form_dict

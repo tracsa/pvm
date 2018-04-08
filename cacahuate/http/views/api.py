@@ -4,6 +4,7 @@ from flask import g
 from flask import request, jsonify, json
 import os
 import pika
+from functools import reduce
 
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
@@ -42,10 +43,19 @@ def store_forms(collected_forms, execution):
     forms = []
 
     if len(collected_forms) > 0:
-        for ref, form_data in collected_forms:
+        for ref, form_description in collected_forms:
+            form_data = dict(map(
+                lambda x: (x['name'], x['value']),
+                form_description
+            ))
+
             ques = Questionaire(ref=ref, data=form_data).save()
             ques.proxy.execution.set(execution)
-            forms.append({'ref': ref, 'data': form_data})
+            forms.append({
+                'ref': ref,
+                'data': form_data,
+                'form': form_description,
+            })
 
     return forms
 

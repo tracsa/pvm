@@ -12,7 +12,7 @@ from cacahuate.errors import ValidationErrors, InputError,\
     RequiredListError, RequiredStrError, MisconfiguredProvider
 from cacahuate.http.errors import BadRequest, Unauthorized, Forbidden
 from cacahuate.models import User, Token
-from cacahuate.xml import resolve_params
+from cacahuate.xml import resolve_params, input_to_dict
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
 
@@ -112,7 +112,10 @@ def validate_input(form_index: int, input: Element, value):
         else:
             abort(500, 'File provider `{}` not implemented'.format(provider))
 
-    return value
+    input_dict = input_to_dict(input)
+    input_dict['value'] = value
+
+    return input_dict
 
 
 def validate_form(index: int, form: Element, data: dict) -> dict:
@@ -121,15 +124,19 @@ def validate_form(index: int, form: Element, data: dict) -> dict:
     '''
     ref = form.getAttribute('id')
     given_data = get_associated_data(ref, data)
-    collected_data = {}
+    collected_data = []
     errors = []
 
     for input in form.getElementsByTagName('input'):
         name = input.getAttribute('name')
 
         try:
-            collected_data[name] = \
-                validate_input(index, input, given_data.get(name))
+            input_description = validate_input(
+                index,
+                input,
+                given_data.get(name)
+            )
+            collected_data.append(input_description)
         except InputError as e:
             errors.append(e)
 

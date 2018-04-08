@@ -7,6 +7,8 @@ class Execution(Model):
     ''' keeps track of the pointers and related data during a process'sss
     execution '''
     process_name = fields.Text()
+    name = fields.Text()
+    description = fields.Text()
     pointers = fields.SetRelation(
         'cacahuate.models.Pointer',
         inverse='execution'
@@ -44,6 +46,8 @@ class Questionaire(Model):
 class Pointer(Model):
     ''' marks a node and a execution so it can continue from there '''
     node_id = fields.Text()
+    name = fields.Text()
+    description = fields.Text()
     execution = fields.ForeignIdRelation(Execution, inverse='pointers')
     candidates = fields.SetRelation('cacahuate.models.User', inverse='tasks')
 

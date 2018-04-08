@@ -1,20 +1,22 @@
 # Colores
 
-* api de status de una parte del proceso que muestra status, label, nombre humano del valor del status
+## refs
+
+* buscar todos los lugares donde se usan refs para pensar cómo sustituirlos
+* refs ahora solo son el identificador del formulario
+* formularios deben especificar si necesitan múltiples respuestas
 
 ## primera iteración
 
-* test de que responder un formulario con un campo que es status guarda status en mongo
-* test de que responder un formulario con un campo que viaja al pasado establece status del pasado
-    - probar también con más de un elemento en la historia
-* test de que iniciar un proceso con status guarda valores iniciales
-    - a menos que el formulario tenga el campo status
-
-* no hay colores, se guarda todo el estado
-* regresar restaura el estado
+* iniciar un proceso guarda formularios en campo status
+* continuar un proceso guarda formularios en campo status
+* volver al pasado restaura los formularios del nodo al que cayó con las fechas más recientes
+    - probar con varios registros
 * regresar dispara búsqueda de padres de punteros para saber quienes sobreviven y quienes no
-* botar los refs, mandar siempre si el formulario admite múltiples respuestas y validar al recibir información
-* buscar todos los lugares donde se usan refs para pensar cómo sustituirlos
+* api de status de un nodo (último registro de estado de ese nodo)
+
+# gramática de condicionales
+
 * las decisiones solo pueden depender de los formularios, esto permite simplificar la gramática de las condiciones
 
 # Multiauth

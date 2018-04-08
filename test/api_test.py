@@ -3,7 +3,7 @@ from flask import json, jsonify
 import pika
 import pytest
 from cacahuate.handler import Handler
-from cacahuate.models import Execution, Activity, Questionaire
+from cacahuate.models import Pointer, Execution, Activity, Questionaire
 
 from .utils import make_auth, make_activity, make_pointer, make_user
 
@@ -1014,20 +1014,34 @@ def test_task_read(client, models):
             '_type': 'pointer',
             'id': ptr.id,
             'node_id': ptr.node_id,
+            'name': None,
+            'description': None,
             'execution': {
                 '_type': 'execution',
                 'id': execution.id,
                 'process_name': execution.process_name,
+                'name': None,
+                'description': None,
             },
             'form_array': [
                 {
-                    'ref': '#chamba',
+                    'ref': '#formulario2',
                     'inputs': [
                         {
-                            'label': '¿Cuánto es 1+1?',
-                            'name': 'ans',
+                            'label': '¿Asignarme más chamba?',
+                            'name': 'continue',
                             'required': True,
-                            'type': 'text',
+                            'type': 'select',
+                            'options': [
+                                {
+                                    'label': 'Simona la changa',
+                                    'value': 'yes',
+                                },
+                                {
+                                    'label': 'Nel pastel',
+                                    'value': 'no',
+                                },
+                            ],
                         },
                     ],
                 },

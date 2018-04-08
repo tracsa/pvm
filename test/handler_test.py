@@ -94,6 +94,8 @@ def test_create_pointer(config, models):
     node = make_node(ele)
     exc = Execution.validate(
         process_name='simple.2018-02-19.xml',
+        name='<name>',
+        description='<desc>'
     ).save()
     pointer = handler.create_pointer(node, exc)
     execution = pointer.proxy.execution.get()

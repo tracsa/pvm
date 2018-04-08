@@ -219,9 +219,20 @@ class Handler:
     def create_pointer(self, node: Node, execution: Execution):
         ''' Given a node, its process, and a specific execution of the former
         create a persistent pointer to the current execution state '''
-        pointer = Pointer \
-            .validate(node_id=node.element.getAttribute('id')) \
-            .save()
+        node_info = node.element.getElementsByTagName('node-info')
+
+        if len(node_info) == 0:
+            name = None
+            description = None
+        else:
+            raise 'Así te quería agarrar puerco'
+
+        pointer = Pointer(
+            node_id=node.element.getAttribute('id'),
+            name=name,
+            description=name,
+        ).save()
+
         pointer.proxy.execution.set(execution)
 
         return pointer

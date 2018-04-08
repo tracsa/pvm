@@ -192,7 +192,12 @@ def continue_process():
         }])
 
     # Check for authorization
-    validate_auth(continue_point, g.user, execution)
+    if pointer not in g.user.proxy.tasks:
+        raise Forbidden([{
+            'detail': 'The provided credentials do not match the specified'
+                      ' hierarchy',
+            'where': 'request.authorization',
+        }])
 
     # Validate asociated forms
     collected_forms = validate_forms(continue_point)

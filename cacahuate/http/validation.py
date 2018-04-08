@@ -12,7 +12,7 @@ from cacahuate.errors import ValidationErrors, InputError,\
     RequiredListError, RequiredStrError, MisconfiguredProvider
 from cacahuate.http.errors import BadRequest, Unauthorized, Forbidden
 from cacahuate.models import User, Token
-from cacahuate.xml import get_ref, resolve_params
+from cacahuate.xml import get_ref, resolve_params, input_to_dict
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
 

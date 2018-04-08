@@ -1180,3 +1180,75 @@ def test_log_has_form_input_data(client, models):
             "value": "yes"
         }
     ]
+
+
+def test_validate_form_multiple(client, models):
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'jorge',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {},
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': '\'phone\' input is required',
+                'where': 'request.body.form_array.1.phone',
+                'code': 'validation.required',
+            },
+        ]
+    }
+
+
+def test_validate_form_multiple_error_position(client, models):
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'jorge',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '12432',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {},
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': '\'phone\' input is required',
+                'where': 'request.body.form_array.2.phone',
+                'code': 'validation.required',
+            },
+        ]
+    }

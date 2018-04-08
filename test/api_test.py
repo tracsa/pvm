@@ -1048,3 +1048,32 @@ def test_task_read(client, models):
             ],
         },
     }
+
+
+def test_execution_has_node_info(client, models):
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'dumb',
+        'form_array': [
+            {
+                'ref': '#formulario',
+                'data': {
+                    'continue': 'yes',
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201
+
+    execution = Execution.get_all()[0]
+    pointer = Pointer.get_all()[0]
+
+    assert execution.name == 'Proceso simple'
+    assert execution.description == 'Te asigna una tarea a ti mismo'
+
+    assert pointer.name == 'Primer paso ;)'
+    assert pointer.description == 'Te asignas chamba'

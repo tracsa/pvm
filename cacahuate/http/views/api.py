@@ -100,6 +100,16 @@ def start_process():
 
     start_point = xml.start_node
 
+    # Get node-info
+    node_info = start_point.getElementsByTagName('node-info')
+    if len(node_info) == 0:
+        node_name=None,
+        node_description=None,
+    else:
+        node_info = node_info[0]
+        node_name = node_info.getElementsByTagName('name')[0].firstChild.nodeValue
+        node_description = node_info.getElementsByTagName('description')[0].firstChild.nodeValue
+
     # Check for authorization
     validate_auth(start_point, g.user)
 
@@ -109,9 +119,13 @@ def start_process():
     # save the data
     execution = Execution(
         process_name=xml.filename,
+        name=xml.name,
+        description=xml.description,
     ).save()
     pointer = Pointer(
         node_id=start_point.getAttribute('id'),
+        name=node_name,
+        description=node_description,
     ).save()
     pointer.proxy.execution.set(execution)
 

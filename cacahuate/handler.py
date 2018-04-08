@@ -141,12 +141,14 @@ class Handler:
         # Get node-info
         node_info = node.element.getElementsByTagName('node-info')
         if len(node_info) == 0:
-            node_name=None,
-            node_description=None,
+            node_name = None,
+            node_description = None,
         else:
             node_info = node_info[0]
-            node_name = node_info.getElementsByTagName('name')[0].firstChild.nodeValue
-            node_description = node_info.getElementsByTagName('description')[0].firstChild.nodeValue
+            node_name = node_info.getElementsByTagName('name')
+            node_name = node_name[0].firstChild.nodeValue
+            node_description = node_info.getElementsByTagName('description')
+            node_description = node_description[0].firstChild.nodeValue
 
         collection.insert_one({
             'started_at': datetime.now(),
@@ -240,8 +242,10 @@ class Handler:
             description = None
         else:
             node_info = node_info[0]
-            name = node_info.getElementsByTagName('name')[0].firstChild.nodeValue
-            description = node_info.getElementsByTagName('description')[0].firstChild.nodeValue
+            name = node_info.getElementsByTagName('name')
+            name = name[0].firstChild.nodeValue
+            description = node_info.getElementsByTagName('description')
+            description = description[0].firstChild.nodeValue
 
         pointer = Pointer(
             node_id=node.element.getAttribute('id'),

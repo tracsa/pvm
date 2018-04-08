@@ -1068,14 +1068,14 @@ def test_execution_has_node_info(client, models):
 
     assert res.status_code == 201
 
-    execution = Execution.get_all()[0]
-    pointer = Pointer.get_all()[0]
+    exe = Execution.get_all()[0]
+    ptr = Pointer.get_all()[0]
 
-    assert execution.name == 'Proceso simple'
-    assert execution.description == 'Te asigna una tarea a ti mismo'
+    assert exe.name == 'Proceso simple'
+    assert exe.description == 'Te asigna una tarea a ti mismo'
 
-    assert pointer.name == 'Primer paso ;)'
-    assert pointer.description == 'Te asignas chamba'
+    assert ptr.name == 'Primer paso ;)'
+    assert ptr.description == 'Te asignas chamba'
 
 
 def test_log_has_node_info(client, models):
@@ -1099,11 +1099,12 @@ def test_log_has_node_info(client, models):
 
     res = client.get('/v1/log/{}'.format(execution_id))
     body = json.loads(res.data)
+    data = body['data'][0]
 
-    assert body['data'][0]['node_id'] == 'requester'
-    assert body['data'][0]['node_name'] == 'Primer paso ;)'
-    assert body['data'][0]['node_description'] == 'Te asignas chamba'
+    assert data['node_id'] == 'requester'
+    assert data['node_name'] == 'Primer paso ;)'
+    assert data['node_description'] == 'Te asignas chamba'
 
-    assert body['data'][0]['execution_id'] == execution_id
-    assert body['data'][0]['execution_name'] == 'Proceso simple'
-    assert body['data'][0]['execution_description'] == 'Te asigna una tarea a ti mismo'
+    assert data['execution_id'] == execution_id
+    assert data['execution_name'] == 'Proceso simple'
+    assert data['execution_description'] == 'Te asigna una tarea a ti mismo'

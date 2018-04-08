@@ -5,7 +5,7 @@ base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 
 # Testing and log stuff
 TESTING = False
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG
 
 # Where to store xml files
 XML_PATH = os.path.join(base_dir, 'xml')

@@ -301,7 +301,7 @@ def one_activity(id):
         }])
 
     return jsonify({
-        'data': activity.to_json(),
+        'data': activity.to_json(embed=['execution']),
     })
 
 

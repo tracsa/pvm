@@ -67,7 +67,7 @@ class Handler:
                 to_queue.append(pointer)
 
         if execution.proxy.pointers.count() == 0:
-            execution.delete()
+            self.finish_execution(execution)
 
         return to_queue
 
@@ -76,6 +76,11 @@ class Handler:
         the execution, this is the first step in node's lifecycle '''
         # create a pointer in this node
         pointer = self.create_pointer(node, execution)
+        log.debug('Created pointer p:{} n:{} e:{}'.format(
+            pointer.id,
+            node.element.getAttribute('id'),
+            execution.id,
+        ))
         is_async = len(node.element.getElementsByTagName('form-array')) > 0
 
         # notify someone
@@ -115,6 +120,12 @@ class Handler:
             mediums = self.get_contact_channels(huser)
 
             for medium, params in mediums:
+                log.debug('Notified user {} via {} about n:{} e:{}'.format(
+                    user.identifier,
+                    medium,
+                    node.element.getAttribute('id'),
+                    execution.id,
+                ))
                 channel.basic_publish(
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
                     routing_key=medium,
@@ -155,7 +166,25 @@ class Handler:
             },
         })
 
+        log.debug('Deleted pointer p:{} n:{} e:{}'.format(
+            pointer.id,
+            pointer.node_id,
+            pointer.proxy.execution.get().id,
+        ))
+
         pointer.delete()
+
+    def finish_execution(self, execution):
+        """ shuts down this execution and every related object """
+        for activity in execution.proxy.actors.get():
+            activity.delete()
+
+        for form in execution.proxy.forms.get():
+            form.delete()
+
+        log.debug('Finished e:{}'.format(execution.id))
+
+        execution.delete()
 
     def parse_message(self, body: bytes):
         ''' validates a received message against all possible needed fields

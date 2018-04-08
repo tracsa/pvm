@@ -150,6 +150,7 @@ def test_continue_process_asks_for_data(client, models):
 
     manager = make_user('juan_manager', 'Juanote')
     ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    manager.proxy.tasks.set([ptr])
 
     act.proxy.execution.set(ptr.proxy.execution.get())
 
@@ -179,6 +180,7 @@ def test_can_continue_process(client, models, mocker, config):
     juan = make_user('juan', 'Juan')
     manager = make_user('juan_manager', 'Juanote')
     ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    manager.proxy.tasks.set([ptr])
     exc = ptr.proxy.execution.get()
 
     act = make_activity('#requester', juan, ptr.proxy.execution.get())

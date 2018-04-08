@@ -248,3 +248,58 @@ def test_teardown(config, models, mongo):
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0
     assert manager2.proxy.tasks.count() == 0
+
+
+def test_teardown_start_process(config, models, mongo):
+    ''' second and last stage of a node's lifecycle '''
+    handler = Handler(config)
+
+    p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    execution = p_0.proxy.execution.get()
+
+    manager = User(identifier='manager').save()
+    manager2 = User(identifier='manager2').save()
+
+    manager.proxy.tasks.set([p_0])
+    manager2.proxy.tasks.set([p_0])
+
+    form = Questionaire(ref='auth-form', data={
+        'auth': 'yes',
+    }).save()
+    form.proxy.execution.set(execution)
+
+    mongo.insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'execution': {
+            'id': execution.id,
+        },
+        'node': {
+            'id': p_0.node_id,
+        },
+        'actors': [{
+            'ref': 'a',
+            'forms': [],
+        }],
+    })
+
+    channel = MockChannel()
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': p_0.id,
+    }, channel)
+
+    # mongo has a registry
+    reg = next(mongo.find())
+
+    del reg['_id']
+
+    assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert reg['execution']['id'] == execution.id
+    assert reg['node']['id'] == p_0.node_id
+    assert reg['actors'] == [{
+        'ref': 'a',
+        'forms': [],
+    }]

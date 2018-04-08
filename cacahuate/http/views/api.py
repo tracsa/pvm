@@ -235,7 +235,6 @@ def continue_process():
         routing_key=app.config['RABBIT_QUEUE'],
         body=json.dumps({
             'command': 'step',
-            'process': execution.process_name,
             'pointer_id': pointer.id,
             'actor':  actor,
         }),

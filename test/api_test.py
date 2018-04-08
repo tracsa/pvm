@@ -234,7 +234,6 @@ def test_can_continue_process(client, models, mocker, config):
 
     json_message = {
         'command': 'step',
-        'process': exc.process_name,
         'pointer_id': ptr.id,
         'actor': {
             'ref': 'manager',

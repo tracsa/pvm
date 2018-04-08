@@ -9,6 +9,10 @@
   </process-info>
   <process>
     <node id="requester" class="decision">
+      <node-info>
+        <name>Primer paso ;)</name>
+        <description>Te asignas chamba</description>
+      </node-info>
       <form-array>
         <form id="formulario">
           <input type="select" label="¿Asignarme la chamba?" name="continue" required="required">
@@ -24,6 +28,10 @@
     </connector>
 
     <node id="node2" class="simple">
+      <node-info>
+        <name>Segundo paso ;)</name>
+        <description>Te asignas mas chamba</description>
+      </node-info>
       <auth-filter backend="self">
         <param name="identifier" type="ref">user#requester</param>
       </auth-filter>

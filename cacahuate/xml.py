@@ -2,6 +2,7 @@ from typing import Iterator, TextIO, Callable
 import os
 from xml.dom import pulldom
 from xml.dom.minidom import Element
+from xml.sax._exceptions import SAXParseException
 
 from .errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from .mark import comment
@@ -96,11 +97,15 @@ class Xml:
 
         ITERABLES = ('node', 'connector', 'process-info')
 
-        for event, node in self.parser:
-            if event == pulldom.START_ELEMENT and node.tagName in ITERABLES:
-                self.parser.expandNode(node)
+        try:
+            for event, node in self.parser:
+                if event == pulldom.START_ELEMENT and \
+                        node.tagName in ITERABLES:
+                    self.parser.expandNode(node)
 
-                return node
+                    return node
+        except SAXParseException:
+            raise MalformedProcess
 
         raise StopIteration
 

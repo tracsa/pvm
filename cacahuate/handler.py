@@ -33,6 +33,11 @@ class Handler:
         except CannotMove as e:
             return log.error(str(e))
 
+        channel.queue_declare(
+            queue=self.config['RABBIT_QUEUE'],
+            durable=True
+        )
+
         for pointer in to_queue:
             channel.basic_publish(
                 exchange='',

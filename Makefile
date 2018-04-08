@@ -14,5 +14,5 @@ xmllint:
 	xml/validate.sh
 
 clear-objects:
-	python -c "from coralillo import Engine; eng=Engine(); eng.lua.drop(args=['*'])"
+	.eng/bin/python -c "from coralillo import Engine; eng=Engine(); eng.lua.drop(args=['*'])"
 	mongo cacahuate --eval "db.history.drop()"

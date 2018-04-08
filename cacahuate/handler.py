@@ -153,12 +153,16 @@ class Handler:
         collection.insert_one({
             'started_at': datetime.now(),
             'finished_at': None,
-            'execution_id': execution.id,
-            'execution_name': execution.name,
-            'execution_description': execution.description,
-            'node_id': node.element.getAttribute('id'),
-            'node_name': node_name,
-            'node_description': node_description,
+            'execution': {
+                'id': execution.id,
+                'name': execution.name,
+                'description': execution.description,
+            },
+            'node': {
+                'id': node.element.getAttribute('id'),
+                'name': node_name,
+                'description': node_description,
+            },
             'actors': [],
         })
 
@@ -171,8 +175,8 @@ class Handler:
         collection = self.get_mongo()
 
         collection.update_one({
-            'execution_id': pointer.proxy.execution.get().id,
-            'node_id': pointer.node_id,
+            'execution.id': pointer.proxy.execution.get().id,
+            'node.id': pointer.node_id,
         }, {
             '$set': {
                 'finished_at': datetime.now(),

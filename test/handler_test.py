@@ -160,8 +160,8 @@ def test_wakeup(config, models, mongo):
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert reg['finished_at'] is None
-    assert reg['execution_id'] == execution.id
-    assert reg['node_id'] == 'manager'
+    assert reg['execution']['id'] == execution.id
+    assert reg['node']['id'] == 'manager'
     assert reg['actors'] == []
 
     # tasks where asigned
@@ -197,8 +197,12 @@ def test_teardown(config, models, mongo):
     mongo.insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
-        'execution_id': execution.id,
-        'node_id': p_0.node_id,
+        'execution': {
+            'id': execution.id,
+        },
+        'node': {
+            'id': p_0.node_id,
+        },
         'actors': [],
     })
 
@@ -229,8 +233,8 @@ def test_teardown(config, models, mongo):
 
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
-    assert reg['execution_id'] == execution.id
-    assert reg['node_id'] == p_0.node_id
+    assert reg['execution']['id'] == execution.id
+    assert reg['node']['id'] == p_0.node_id
     assert reg['actors'] == [{
         'ref': '#a',
         'forms': [{

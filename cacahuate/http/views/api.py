@@ -144,12 +144,16 @@ def start_process():
     collection.insert_one({
         'started_at': datetime.now(),
         'finished_at': datetime.now(),
-        'execution_id': execution.id,
-        'execution_name': execution.name,
-        'execution_description': execution.description,
-        'node_id': start_point.getAttribute('id'),
-        'node_name': node_name,
-        'node_description': node_description,
+        'execution': {
+            'id': execution.id,
+            'name': execution.name,
+            'description': execution.description,
+        },
+        'node': {
+            'id': start_point.getAttribute('id'),
+            'name': node_name,
+            'description': node_description,
+        },
         'actors': [actor],
     })
 
@@ -353,10 +357,10 @@ def task_read(id):
 def list_logs(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
     node_id = request.args.get('node_id')
-    query = {'execution_id': id}
+    query = {'execution.id': id}
 
     if node_id:
-        query['node_id'] = node_id
+        query['node.id'] = node_id
 
     return jsonify({
         "data": list(map(

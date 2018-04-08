@@ -382,8 +382,8 @@ def test_process_start_simple(client, models, mocker, config, mongo):
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
-    assert reg['execution_id'] == exc.id
-    assert reg['node_id'] == ptr.node_id
+    assert reg['execution']['id'] == exc.id
+    assert reg['node']['id'] == ptr.node_id
 
 
 def test_process_all_inputs(client, models, mocker, config, mongo):
@@ -923,15 +923,23 @@ def test_logs_activity(mongo, client):
     mongo.insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
-        'execution_id': "15asbs",
-        'node_id': '4g9lOdPKmRUf',
+        'execution': {
+            'id': "15asbs",
+        },
+        'node': {
+            'id': '4g9lOdPKmRUf',
+        },
     })
 
     mongo.insert_one({
         'started_at': datetime(2018, 4, 1, 21, 50),
         'finished_at': None,
-        'execution_id': "15asbs",
-        'node_id': '4g9lOdPKmRUf2',
+        'execution': {
+            'id': "15asbs",
+        },
+        'node': {
+            'id': '4g9lOdPKmRUf2',
+        },
     })
 
     res = client.get('/v1/log/15asbs?node_id=4g9lOdPKmRUf')
@@ -944,8 +952,12 @@ def test_logs_activity(mongo, client):
         "data": [{
             'started_at': '2018-04-01T21:45:00+00:00',
             'finished_at': None,
-            'execution_id': "15asbs",
-            'node_id': '4g9lOdPKmRUf',
+            'execution': {
+                'id': '15asbs',
+            },
+            'node': {
+                'id': '4g9lOdPKmRUf',
+            },
         }],
     }
 
@@ -1101,10 +1113,10 @@ def test_log_has_node_info(client, models):
     body = json.loads(res.data)
     data = body['data'][0]
 
-    assert data['node_id'] == 'requester'
-    assert data['node_name'] == 'Primer paso ;)'
-    assert data['node_description'] == 'Te asignas chamba'
+    assert data['node']['id'] == 'requester'
+    assert data['node']['name'] == 'Primer paso ;)'
+    assert data['node']['description'] == 'Te asignas chamba'
 
-    assert data['execution_id'] == execution_id
-    assert data['execution_name'] == 'Proceso simple'
-    assert data['execution_description'] == 'Te asigna una tarea a ti mismo'
+    assert data['execution']['id'] == execution_id
+    assert data['execution']['name'] == 'Proceso simple'
+    assert data['execution']['description'] == 'Te asigna una tarea a ti mismo'

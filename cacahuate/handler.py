@@ -101,14 +101,11 @@ class Handler:
         husers = hierarchy_provider.find_users(
             **resolve_params(filter_node, execution)
         )
-<<<<<<< HEAD
-=======
 
         channel.exchange_declare(
             exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
             exchange_type='direct'
         )
->>>>>>> master
 
         for huser in husers:
             user = huser.get_user()

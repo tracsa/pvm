@@ -2,9 +2,10 @@ from coralillo.errors import ModelNotFoundError
 from datetime import datetime
 from flask import g
 from flask import request, jsonify, json
+from functools import reduce
 import os
 import pika
-from functools import reduce
+import pymongo
 
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
@@ -368,7 +369,9 @@ def list_logs(id):
             trans_date,
             map(
                 trans_id,
-                collection.find(query)
+                collection.find(query).sort([
+                    ('started_at', pymongo.DESCENDING)
+                ])
             )
         )),
     }), 200

@@ -377,14 +377,7 @@ def list_logs(id):
 @app.route('/v1/execution/<id>', methods=['DELETE'])
 @requires_auth
 def delete_process(id):
-    try:
-        execution = Execution.get_or_exception(id)
-    except ModelNotFoundError:
-        raise BadRequest([{
-            'detail': 'execution_id is not valid',
-            'code': 'validation.invalid',
-            'where': 'request.body.execution_id',
-        }])
+    execution = Execution.get_or_exception(id)
 
     for pointer in execution.proxy.pointers.get():
         pointer.delete()

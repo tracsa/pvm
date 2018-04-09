@@ -86,6 +86,15 @@ def index():
         return request.json
 
 
+@app.route('/v1/execution/<id>', methods=['GET'])
+def process_status(id):
+    execution = Execution.get_or_exception(id)
+
+    return jsonify({
+        'data': execution.to_json(),
+    })
+
+
 @app.route('/v1/execution', methods=['POST'])
 @requires_auth
 @requires_json

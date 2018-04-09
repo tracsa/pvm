@@ -373,9 +373,10 @@ def list_logs(id):
         )),
     }), 200
 
-@app.route('/v1/execution/<id>', methods=['DELETE'])
-def delete_process(id):
 
+@app.route('/v1/execution/<id>', methods=['DELETE'])
+@requires_auth
+def delete_process(id):
     try:
         execution = Execution.get_or_exception(id)
     except ModelNotFoundError:
@@ -383,7 +384,7 @@ def delete_process(id):
             'detail': 'execution_id is not valid',
             'code': 'validation.invalid',
             'where': 'request.body.execution_id',
-    }])
+        }])
 
     for pointer in execution.proxy.pointers.get():
         pointer.delete()
@@ -396,8 +397,4 @@ def delete_process(id):
 
     execution.delete()
 
-    return jsonify({
-        'data': {
-                'msg' : 'ok'
-        },
-    }), 200
+    return '', 204

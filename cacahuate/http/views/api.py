@@ -42,20 +42,19 @@ def trans_date(obj):
 def store_forms(collected_forms, execution):
     forms = []
 
-    if len(collected_forms) > 0:
-        for ref, form_description in collected_forms:
-            form_data = dict(map(
-                lambda x: (x['name'], x['value']),
-                form_description
-            ))
+    for ref, form_description in collected_forms:
+        form_data = dict(map(
+            lambda x: (x['name'], x['value']),
+            form_description[1]
+        ))
 
-            ques = Questionaire(ref=ref, data=form_data).save()
-            ques.proxy.execution.set(execution)
-            forms.append({
-                'ref': ref,
-                'data': form_data,
-                'form': form_description,
-            })
+        ques = Questionaire(ref=ref, data=form_data).save()
+        ques.proxy.execution.set(execution)
+        forms.append({
+            'ref': ref,
+            'data': form_data,
+            'form': form_description[1],
+        })
 
     return forms
 
@@ -113,7 +112,7 @@ def start_process():
     validate_auth(start_point, g.user)
 
     # check if there are any forms present
-    collected_forms = validate_forms(start_point)
+    collected_forms = validate_forms(start_point, request.json)
 
     node_info = get_node_info(start_point)
 
@@ -219,7 +218,7 @@ def continue_process():
         }])
 
     # Validate asociated forms
-    collected_forms = validate_forms(continue_point)
+    collected_forms = validate_forms(continue_point, request.json)
 
     # save the data
     actor = store_actor(
@@ -278,10 +277,17 @@ def list_process():
 def list_activities():
     activities = g.user.proxy.activities.get()
 
+    seen = {}
+    unique = []
+    for activity in activities:
+        if activity.execution not in seen:
+            seen[activity.execution] = True
+            unique.append(activity)
+
     return jsonify({
         'data': list(map(
             lambda a: a.to_json(embed=['execution']),
-            activities
+            unique
         )),
     })
 

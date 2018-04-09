@@ -50,12 +50,7 @@ class Xml:
                     'Process\' metadata lacks node {}'.format(attr)
                 )
 
-            if node.firstChild is not None:
-                node.normalize()
-                setattr(self, attr, func(node.firstChild.nodeValue))
-            else:
-                # the text child of <element></element> is the empty string
-                setattr(self, attr, func(''))
+            setattr(self, attr, func(get_text(node)))
 
         start_node_id = getattr(self, 'start-node')
         try:
@@ -171,7 +166,7 @@ def resolve_params(filter_node, execution=None):
 
     for param in filter_node.getElementsByTagName('param'):
         if execution is not None and param.getAttribute('type') == 'ref':
-            user_ref = param.firstChild.nodeValue.split('#')[1].strip()
+            user_ref = get_text(param).split('#')[1].strip()
 
             try:
                 actor = next(
@@ -182,7 +177,7 @@ def resolve_params(filter_node, execution=None):
             except StopIteration:
                 value = None
         else:
-            value = param.firstChild.nodeValue
+            value = get_text(param)
 
         computed_params[param.getAttribute('name')] = value
 
@@ -192,20 +187,82 @@ def resolve_params(filter_node, execution=None):
 def get_node_info(node):
     # Get node-info
     node_info = node.getElementsByTagName('node-info')
-    node_name = None,
-    node_description = None,
+    name = None
+    description = None
 
     if len(node_info) == 1:
         node_info = node_info[0]
+
         node_name = node_info.getElementsByTagName('name')
-        node_name = node_name[0].firstChild.nodeValue
+        name = get_text(node_name[0])
+
         node_description = node_info.getElementsByTagName('description')
-        node_description = node_description[0].firstChild.nodeValue
+        description = get_text(node_description[0])
 
     return {
-        'name': node_name,
-        'description': node_description,
+        'name': name,
+        'description': description,
     }
+
+
+def get_text(node):
+    node.normalize()
+
+    if node.firstChild is not None:
+        return node.firstChild.nodeValue or ''
+
+    return ''
+
+
+def get_options(node):
+    options = []
+
+    for option in node.getElementsByTagName('option'):
+        option.normalize()
+
+        options.append({
+            'value': option.getAttribute('value'),
+            'label': option.firstChild.nodeValue,
+        })
+
+    return options
+
+
+def get_input_specs(node):
+    specs = []
+
+    for field in node.getElementsByTagName('input'):
+        spec = {
+            attr: SUPPORTED_ATTRS[attr](field.getAttribute(attr))
+            for attr in SUPPORTED_ATTRS
+            if field.getAttribute(attr)
+        }
+
+        spec['options'] = get_options(field)
+
+        specs.append(spec)
+
+    return specs
+
+
+def get_form_specs(node):
+    form_array = node.getElementsByTagName('form-array')
+
+    if len(form_array) == 0:
+        return []
+
+    form_array = form_array[0]
+
+    specs = []
+
+    for form in form_array.getElementsByTagName('form'):
+        specs.append({
+            'ref': form.getAttribute('id'),
+            'multiple': form.getAttribute('multiple'),
+            'inputs': get_input_specs(form)
+        })
+
+    return specs
 
 
 @comment
@@ -264,15 +321,15 @@ def topological_sort(start_node: Element, graph: 'Element') -> 'ElementTree':
 
 
 SUPPORTED_ATTRS = {
-    'type': str,
-    'provider': str,
-    'name': str,
-    'required': lambda x: bool(x),
-    'regex': str,
-    'label': str,
-    'placeholder': str,
     'default': str,
     'helper': str,
+    'label': str,
+    'name': str,
+    'placeholder': str,
+    'provider': str,
+    'regex': str,
+    'required': lambda x: bool(x),
+    'type': str,
 }
 
 
@@ -283,7 +340,7 @@ def input_to_dict(input):
     ] + [('options', list(map(
         lambda e: {
             'value': e.getAttribute('value'),
-            'label': e.firstChild.nodeValue,
+            'label': get_text(e),
         },
         input.getElementsByTagName('option'),
     )))]

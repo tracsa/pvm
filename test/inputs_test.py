@@ -303,5 +303,3 @@ def test_select_errors(client, models, mocker, config, mongo):
     }))
 
     assert res.status_code == 400
-
-

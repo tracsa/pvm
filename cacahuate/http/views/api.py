@@ -282,7 +282,7 @@ def list_activities():
     seen = {}
     unique = []
     for activity in activities:
-        if not activity.execution in seen:
+        if activity.execution not in seen:
             seen[activity.execution] = True
             unique.append(activity)
 

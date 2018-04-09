@@ -62,7 +62,7 @@
     <node id="node3" class="simple">
       <node-info>
         <name>Tercer paso :c</name>
-        <description></description>
+        <description>Mueres</description>
       </node-info>
       <auth-filter backend="self">
         <param name="identifier" type="ref">user#requester</param>

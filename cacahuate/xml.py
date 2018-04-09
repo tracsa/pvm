@@ -208,6 +208,70 @@ def get_node_info(node):
     }
 
 
+SPEC_ATTRS = [
+    'name',
+    'type',
+    'required',
+    'label',
+    'placeholder',
+    'default',
+    'regex',
+    'helper',
+    'provider',
+]
+
+
+def get_options(node):
+    options = []
+
+    for option in node.getElementsByTagName('option'):
+        option.normalize()
+
+        options.append({
+            'value': option.getAttribute('value'),
+            'label': option.firstChild.nodeValue,
+        })
+
+    return options
+
+
+def get_input_specs(node):
+    specs = []
+
+    for field in node.getElementsByTagName('input'):
+        spec = {
+            attr: field.getAttribute(attr)
+            for attr in SPEC_ATTRS
+            if field.getAttribute(attr)
+        }
+
+        spec['options'] = get_options(field)
+
+        specs.append(spec)
+
+    return specs
+
+
+def get_form_specs(node):
+    form_array = node.getElementsByTagName('form-array')
+
+    if len(form_array) == 0:
+        return []
+
+    form_array = form_array[0]
+
+    specs = []
+
+    for form in form_array.getElementsByTagName('form'):
+        specs.append({
+            'ref': form.getAttribute('id'),
+            'multiple': form.getAttribute('multiple'),
+            'inputs': get_input_specs(form)
+        })
+
+    return specs
+
+
 @comment
 def etree_from_list(root: Element, nodes: [Element]) -> 'ElementTree':
     ''' Returns a built ElementTree from the list of its members '''

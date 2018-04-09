@@ -163,9 +163,8 @@ def test_continue_process_asks_for_data(client, models):
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': "'auth' input is required",
-            'where': 'request.body.form_array.0.auth',
-            'code': 'validation.required',
+            'detail': "form count lower than expected for ref auth-form",
+            'where': 'request.body.form_array',
         }],
     }
 

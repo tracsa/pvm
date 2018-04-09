@@ -12,12 +12,12 @@ from cacahuate.errors import ValidationErrors, InputError,\
     RequiredListError, RequiredStrError, MisconfiguredProvider
 from cacahuate.http.errors import BadRequest, Unauthorized, Forbidden
 from cacahuate.models import User, Token
-from cacahuate.xml import resolve_params, input_to_dict
+from cacahuate.xml import resolve_params, input_to_dict, get_form_specs
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
 
 
-def validate_input(form_index: int, input: Element, value):
+def validate_input(form_index: int, input, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
     input_type = input.getAttribute('type')
@@ -100,30 +100,38 @@ def validate_input(form_index: int, input: Element, value):
     return input_dict
 
 
-def validate_form(form: Element, data: dict) -> dict:
-    ''' Validates the given data against the spec contained in form. In case of
-    failure raises an exception. In case of success returns the validated data.
-    '''
-    ref = form.getAttribute('id')
-    min = 0
-    collected_data = []
+def get_associated_data(ref, data, min, max):
+    count = 0
+    forms = []
 
-    if form.getAttribute('multiple'):
-        max = float('inf')
-    else:
-        max = 1
+    for index, form in enumerate(data.get('form_array', [])):
+        if form['ref'] == ref:
+            forms.append((index, form))
+            count += 1
 
-    given_data = get_associated_data(ref, data, min, max)
+        if count == max:
+            break
+
+    if count < min:
+        raise BadRequest([{
+            'detail': 'form count lower than expected for ref {}'.format(ref),
+            'where': 'request.body.form_array',
+        }])
+
+    return forms
+
+
+def validate_form(form_specs, index, data):
     errors = []
 
-    for input in form.getElementsByTagName('input'):
-        name = input.getAttribute('name')
+    for input in form_specs['inputs']:
+        name = input['name']
 
         try:
             input_description = validate_input(
                 index,
                 input,
-                given_data.get(name)
+                data.get(name)
             )
             collected_data.append(input_description)
         except InputError as e:
@@ -132,30 +140,43 @@ def validate_form(form: Element, data: dict) -> dict:
     if errors:
         raise ValidationErrors(errors)
 
+    return
+
+
+def validate_form_spec(form_specs, data) -> dict:
+    ''' Validates the given data against the spec contained in form. In case of
+    failure raises an exception. In case of success returns the validated data.
+    '''
+    ref = form_specs['ref']
+    specs = form_specs['multiple']
+    collected_data = []
+
+    if form_specs.get('multiple'):
+        max = float('inf')
+        min = 0
+    else:
+        max = 1
+        min = 1
+
+    for index, form in get_associated_data(ref, data, min, max):
+        collected_data.append((ref, validate_form(form_specs, index, form)))
+
     return collected_data
 
 
 def validate_forms(node, json_data):
-    form_specs = get_form_specs(node)
-
-    if not form_specs:
-        return []
-
     if 'form_array' in json_data and type(json_data['form_array']) != list:
-        raise BadRequest
+        raise BadRequest({
+            'detail': 'form_array has wrong type',
+            'where': 'request.body.form_array',
+        })
 
     collected_forms = []
     errors = []
 
-    for form in request.json.get('form_array', []):
-        if 'ref' not in form:
-            raise BadRequest
-
-        if 'data' in form and type(form['data']) != list:
-            raise BadRequest
-
+    for form_specs in get_form_specs(node):
         try:
-            for data in validate_form(form_specs[form['ref']], form):
+            for data in validate_form_spec(form_specs, json_data):
                 # because a form might have multiple responses
                 collected_forms.append((form['ref'], data))
         except ValidationErrors as e:

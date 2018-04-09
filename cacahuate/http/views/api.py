@@ -112,7 +112,7 @@ def start_process():
     validate_auth(start_point, g.user)
 
     # check if there are any forms present
-    collected_forms = validate_forms(start_point)
+    collected_forms = validate_forms(start_point, request.json)
 
     node_info = get_node_info(start_point)
 
@@ -218,7 +218,7 @@ def continue_process():
         }])
 
     # Validate asociated forms
-    collected_forms = validate_forms(continue_point)
+    collected_forms = validate_forms(continue_point, request.json)
 
     # save the data
     actor = store_actor(

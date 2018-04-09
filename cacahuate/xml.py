@@ -194,12 +194,10 @@ def get_node_info(node):
         node_info = node_info[0]
 
         node_name = node_info.getElementsByTagName('name')
-        if node_name[0].firstChild is not None:
-            node_name = get_text(node_name[0])
+        name = get_text(node_name[0])
 
         node_description = node_info.getElementsByTagName('description')
-        if node_description[0].firstChild is not None:
-            node_description = get_text(node_description[0])
+        description = get_text(node_description[0])
 
     return {
         'name': name,
@@ -212,6 +210,8 @@ def get_text(node):
 
     if node.firstChild is not None:
         return node.firstChild.nodeValue or ''
+
+    return ''
 
 
 def get_options(node):

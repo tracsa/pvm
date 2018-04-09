@@ -164,6 +164,7 @@ def test_wakeup(config, models, mongo):
     assert reg['execution']['id'] == execution.id
     assert reg['node']['id'] == 'manager'
     assert reg['actors'] == []
+    assert reg['notified_users'] == [manager.to_json()]
 
     # tasks where asigned
     assert manager.proxy.tasks.count() == 1

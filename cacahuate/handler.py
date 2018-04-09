@@ -117,8 +117,11 @@ class Handler:
             exchange_type='direct'
         )
 
+        notified_users = []
+
         for huser in husers:
             user = huser.get_user()
+            notified_users.append(user.to_json())
 
             if pointer:
                 user.proxy.tasks.add(pointer)
@@ -157,6 +160,7 @@ class Handler:
             'node': {**{
                 'id': node.element.getAttribute('id'),
             }, **get_node_info(node.element)},
+            'notified_users': notified_users,
             'actors': [],
         })
 

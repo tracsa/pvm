@@ -150,6 +150,7 @@ def start_process():
             'id': start_point.getAttribute('id'),
         }, **node_info},
         'actors': [actor],
+        'state': execution.get_state(),
     })
 
     # trigger rabbit

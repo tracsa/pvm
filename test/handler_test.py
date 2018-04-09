@@ -244,6 +244,12 @@ def test_teardown(config, models, mongo):
             },
         }],
     }]
+    assert reg['state'] == [
+        {
+            'ref': 'ref',
+            'data': {},
+        },
+    ]
 
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0

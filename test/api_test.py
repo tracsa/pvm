@@ -399,6 +399,7 @@ def test_start_process_simple(client, models, mocker, config, mongo):
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
+    assert reg['state'] == []
 
 
 def test_exit_request_requirements(client, models):
@@ -444,7 +445,7 @@ def test_exit_request_requirements(client, models):
     assert Activity.count() == 0
 
 
-def test_exit_request_start(client, models, mocker):
+def test_exit_request_start(client, models, mocker, mongo):
     user = make_user('juan', 'Juan')
 
     assert Execution.count() == 0
@@ -494,6 +495,15 @@ def test_exit_request_start(client, models, mocker):
         'reason': 'tenía que salir al baño',
     }
 
+    # mongo has a registry
+    reg = next(mongo.find())
+
+    assert reg['state'] == [{
+        'ref': 'exit-form',
+        'data': {
+            'reason': 'tenía que salir al baño',
+        },
+    }]
 
 def test_list_processes(client):
     res = client.get('/v1/process')
@@ -947,4 +957,26 @@ def test_validate_form_multiple_error_position(client, models):
                 'code': 'validation.required',
             },
         ]
+    }
+
+
+def test_status_notfound(client, models):
+    res = client.get('/v1/execution/doo')
+
+    assert res.status_code == 404
+
+
+def test_status(client, models):
+    ptr = make_pointer()
+    execution = ptr.proxy.execution.get()
+
+    res = request.get('/v1/execution/{}'.format(execution.id))
+
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': {
+            'id': '',
+            'state': {
+            },
+        },
     }

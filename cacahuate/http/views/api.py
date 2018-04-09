@@ -279,10 +279,17 @@ def list_process():
 def list_activities():
     activities = g.user.proxy.activities.get()
 
+    seen = {}
+    unique = []
+    for activity in activities:
+        if not activity.execution in seen:
+            seen[activity.execution] = True
+            unique.append(activity)
+
     return jsonify({
         'data': list(map(
             lambda a: a.to_json(embed=['execution']),
-            activities
+            unique
         )),
     })
 

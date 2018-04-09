@@ -4,7 +4,7 @@ import case_conversion
 from typing import Iterator
 from xml.dom.minidom import Element
 
-from cacahuate.xml import Xml
+from cacahuate.xml import Xml, get_text
 from cacahuate.logger import log
 from cacahuate.grammar import Condition
 from cacahuate.errors import ElementNotFound, IncompleteBranch
@@ -63,9 +63,8 @@ class DecisionNode(Node):
                 return False
 
             con = cons[0]
-            con.normalize()
 
-            return Condition(execution).parse(con.firstChild.nodeValue)
+            return Condition(execution).parse(get_text(con))
 
         try:
             conn = xml.find(find_node)

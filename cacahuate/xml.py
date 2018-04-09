@@ -50,12 +50,7 @@ class Xml:
                     'Process\' metadata lacks node {}'.format(attr)
                 )
 
-            if node.firstChild is not None:
-                node.normalize()
-                setattr(self, attr, func(node.firstChild.nodeValue))
-            else:
-                # the text child of <element></element> is the empty string
-                setattr(self, attr, func(''))
+            setattr(self, attr, func(get_text(node)))
 
         start_node_id = getattr(self, 'start-node')
         try:
@@ -171,7 +166,7 @@ def resolve_params(filter_node, execution=None):
 
     for param in filter_node.getElementsByTagName('param'):
         if execution is not None and param.getAttribute('type') == 'ref':
-            user_ref = param.firstChild.nodeValue.split('#')[1].strip()
+            user_ref = get_text(param).split('#')[1].strip()
 
             try:
                 actor = next(
@@ -182,7 +177,7 @@ def resolve_params(filter_node, execution=None):
             except StopIteration:
                 value = None
         else:
-            value = param.firstChild.nodeValue
+            value = get_text(param)
 
         computed_params[param.getAttribute('name')] = value
 
@@ -200,16 +195,20 @@ def get_node_info(node):
         node_name = node_info.getElementsByTagName('name')
         node_description = node_info.getElementsByTagName('description')
 
-        if len(node_name) == 1:
-            name = node_name[0].firstChild.nodeValue
-
-        if len(node_description) == 1:
-            description = node_description[0].firstChild.nodeValue
+        name = get_text(node_name[0])
+        description = get_text(node_description[0])
 
     return {
         'name': name,
         'description': description,
     }
+
+
+def get_text(node):
+    node.normalize()
+
+    if node.firstChild is not None:
+        return node.firstChild.nodeValue or ''
 
 
 @comment
@@ -287,7 +286,7 @@ def input_to_dict(input):
     ] + [('options', list(map(
         lambda e: {
             'value': e.getAttribute('value'),
-            'label': e.firstChild.nodeValue,
+            'label': get_text(e),
         },
         input.getElementsByTagName('option'),
     )))]

@@ -1,9 +1,5 @@
 # Colores
 
-## refs
-
-* tets de validación de un formulario que se llena muchas veces
-
 ## primera iteración
 
 * iniciar un proceso guarda formularios en campo status

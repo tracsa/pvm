@@ -163,9 +163,8 @@ def test_continue_process_asks_for_data(client, models):
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': "'auth' input is required",
-            'where': 'request.body.form_array.0.auth',
-            'code': 'validation.required',
+            'detail': "form count lower than expected for ref auth-form",
+            'where': 'request.body.form_array',
         }],
     }
 
@@ -234,7 +233,6 @@ def test_can_continue_process(client, models, mocker, config):
 
     json_message = {
         'command': 'step',
-        'process': exc.process_name,
         'pointer_id': ptr.id,
         'actor': {
             'ref': 'manager',
@@ -738,9 +736,8 @@ def test_exit_request_requirements(client, models):
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': "'reason' input is required",
-            'where': 'request.body.form_array.0.reason',
-            'code': 'validation.required',
+            'detail': "form count lower than expected for ref exit-form",
+            'where': 'request.body.form_array',
         }],
     }
 
@@ -1180,3 +1177,75 @@ def test_log_has_form_input_data(client, models):
             "value": "yes"
         }
     ]
+
+
+def test_validate_form_multiple(client, models):
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'jorge',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {},
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': '\'phone\' input is required',
+                'where': 'request.body.form_array.1.phone',
+                'code': 'validation.required',
+            },
+        ]
+    }
+
+
+def test_validate_form_multiple_error_position(client, models):
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'jorge',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '12432',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {},
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': '\'phone\' input is required',
+                'where': 'request.body.form_array.2.phone',
+                'code': 'validation.required',
+            },
+        ]
+    }

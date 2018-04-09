@@ -192,11 +192,14 @@ def get_node_info(node):
 
     if len(node_info) == 1:
         node_info = node_info[0]
-        node_name = node_info.getElementsByTagName('name')
-        node_description = node_info.getElementsByTagName('description')
 
-        name = get_text(node_name[0])
-        description = get_text(node_description[0])
+        node_name = node_info.getElementsByTagName('name')
+        if node_name[0].firstChild is not None:
+            node_name = get_text(node_name[0])
+
+        node_description = node_info.getElementsByTagName('description')
+        if node_description[0].firstChild is not None:
+            node_description = get_text(node_description[0])
 
     return {
         'name': name,
@@ -209,6 +212,57 @@ def get_text(node):
 
     if node.firstChild is not None:
         return node.firstChild.nodeValue or ''
+
+
+def get_options(node):
+    options = []
+
+    for option in node.getElementsByTagName('option'):
+        option.normalize()
+
+        options.append({
+            'value': option.getAttribute('value'),
+            'label': option.firstChild.nodeValue,
+        })
+
+    return options
+
+
+def get_input_specs(node):
+    specs = []
+
+    for field in node.getElementsByTagName('input'):
+        spec = {
+            attr: SUPPORTED_ATTRS[attr](field.getAttribute(attr))
+            for attr in SUPPORTED_ATTRS
+            if field.getAttribute(attr)
+        }
+
+        spec['options'] = get_options(field)
+
+        specs.append(spec)
+
+    return specs
+
+
+def get_form_specs(node):
+    form_array = node.getElementsByTagName('form-array')
+
+    if len(form_array) == 0:
+        return []
+
+    form_array = form_array[0]
+
+    specs = []
+
+    for form in form_array.getElementsByTagName('form'):
+        specs.append({
+            'ref': form.getAttribute('id'),
+            'multiple': form.getAttribute('multiple'),
+            'inputs': get_input_specs(form)
+        })
+
+    return specs
 
 
 @comment
@@ -267,15 +321,15 @@ def topological_sort(start_node: Element, graph: 'Element') -> 'ElementTree':
 
 
 SUPPORTED_ATTRS = {
-    'type': str,
-    'provider': str,
-    'name': str,
-    'required': lambda x: bool(x),
-    'regex': str,
-    'label': str,
-    'placeholder': str,
     'default': str,
     'helper': str,
+    'label': str,
+    'name': str,
+    'placeholder': str,
+    'provider': str,
+    'regex': str,
+    'required': lambda x: bool(x),
+    'type': str,
 }
 
 

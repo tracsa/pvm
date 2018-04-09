@@ -165,17 +165,21 @@ class Handler:
         ''' finishes the node's lifecycle '''
         collection = self.get_mongo()
 
-        collection.update_one({
-            'execution.id': pointer.proxy.execution.get().id,
-            'node.id': pointer.node_id,
-        }, {
+        update_query = {
             '$set': {
                 'finished_at': datetime.now(),
             },
-            '$push': {
+        }
+
+        if actor is not None:
+            update_query['$push'] = {
                 'actors': actor,
-            },
-        })
+            }
+
+        collection.update_one({
+            'execution.id': pointer.proxy.execution.get().id,
+            'node.id': pointer.node_id,
+        }, update_query)
 
         log.debug('Deleted pointer p:{} n:{} e:{}'.format(
             pointer.id,

@@ -736,9 +736,8 @@ def test_exit_request_requirements(client, models):
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': "'reason' input is required",
-            'where': 'request.body.form_array.0.reason',
-            'code': 'validation.required',
+            'detail': "form count lower than expected for ref exit-form",
+            'where': 'request.body.form_array',
         }],
     }
 

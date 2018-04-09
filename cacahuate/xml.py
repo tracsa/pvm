@@ -208,19 +208,6 @@ def get_node_info(node):
     }
 
 
-SPEC_ATTRS = [
-    'name',
-    'type',
-    'required',
-    'label',
-    'placeholder',
-    'default',
-    'regex',
-    'helper',
-    'provider',
-]
-
-
 def get_options(node):
     options = []
 
@@ -240,8 +227,8 @@ def get_input_specs(node):
 
     for field in node.getElementsByTagName('input'):
         spec = {
-            attr: field.getAttribute(attr)
-            for attr in SPEC_ATTRS
+            attr: SUPPORTED_ATTRS[attr](field.getAttribute(attr))
+            for attr in SUPPORTED_ATTRS
             if field.getAttribute(attr)
         }
 
@@ -328,15 +315,15 @@ def topological_sort(start_node: Element, graph: 'Element') -> 'ElementTree':
 
 
 SUPPORTED_ATTRS = {
-    'type': str,
-    'provider': str,
-    'name': str,
-    'required': lambda x: bool(x),
-    'regex': str,
-    'label': str,
-    'placeholder': str,
     'default': str,
     'helper': str,
+    'label': str,
+    'name': str,
+    'placeholder': str,
+    'provider': str,
+    'regex': str,
+    'required': lambda x: bool(x),
+    'type': str,
 }
 
 

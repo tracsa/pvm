@@ -40,7 +40,7 @@ def validate_input(form_index: int, input, value):
 
         list_values = [
             child_element.get('value')
-            for child_element in input.getElementsByTagName('option')
+            for child_element in input.get('options', [])
         ]
 
         for val in value:
@@ -55,9 +55,9 @@ def validate_input(form_index: int, input, value):
             raise RequiredStrError(form_index, input.get('name'))
 
         list_values = [
-                    child_element.get('value')
-                    for child_element in input.getElementsByTagName('option')
-                ]
+            child_element.get('value')
+            for child_element in input.get('options', [])
+        ]
         if value not in list_values:
             raise InvalidInputError(form_index, input.get('name'))
 
@@ -67,7 +67,7 @@ def validate_input(form_index: int, input, value):
 
         list_values = [
             child_element.get('value')
-            for child_element in input.getElementsByTagName('option')
+            for child_element in input.get('options', [])
         ]
 
         if value not in list_values:
@@ -94,10 +94,9 @@ def validate_input(form_index: int, input, value):
         else:
             abort(500, 'File provider `{}` not implemented'.format(provider))
 
-    input_dict = input_to_dict(input)
-    input_dict['value'] = value
+    input['value'] = value
 
-    return input_dict
+    return input
 
 
 def get_associated_data(ref, data, min, max):
@@ -123,6 +122,7 @@ def get_associated_data(ref, data, min, max):
 
 def validate_form(form_specs, index, data):
     errors = []
+    collected_data = []
 
     for input in form_specs['inputs']:
         name = input['name']
@@ -140,7 +140,7 @@ def validate_form(form_specs, index, data):
     if errors:
         raise ValidationErrors(errors)
 
-    return
+    return collected_data
 
 
 def validate_form_spec(form_specs, data) -> dict:
@@ -159,7 +159,10 @@ def validate_form_spec(form_specs, data) -> dict:
         min = 1
 
     for index, form in get_associated_data(ref, data, min, max):
-        collected_data.append((ref, validate_form(form_specs, index, form)))
+        collected_data.append((
+            ref,
+            validate_form(form_specs, index, form['data'])
+        ))
 
     return collected_data
 
@@ -178,7 +181,7 @@ def validate_forms(node, json_data):
         try:
             for data in validate_form_spec(form_specs, json_data):
                 # because a form might have multiple responses
-                collected_forms.append((form['ref'], data))
+                collected_forms.append((form_specs['ref'], data))
         except ValidationErrors as e:
             errors += e.errors
 

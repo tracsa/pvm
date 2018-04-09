@@ -967,10 +967,10 @@ def test_status_notfound(client, models):
 
 
 def test_status(client, models):
-    ptr = make_pointer()
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
     execution = ptr.proxy.execution.get()
 
-    res = request.get('/v1/execution/{}'.format(execution.id))
+    res = client.get('/v1/execution/{}'.format(execution.id))
 
     assert res.status_code == 200
     assert json.loads(res.data) == {

@@ -135,7 +135,9 @@ class Handler:
                 channel.basic_publish(
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
                     routing_key=medium,
-                    body=json.dumps(params),
+                    body=json.dumps({**{
+                        'pointer': pointer.to_json(embed=['execution']),
+                    }, **params}),
                     properties=pika.BasicProperties(
                         delivery_mode=2,
                     ),

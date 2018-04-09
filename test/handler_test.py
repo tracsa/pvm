@@ -151,6 +151,7 @@ def test_wakeup(config, models, mongo):
     assert args['routing_key'] == 'email'
     assert json.loads(args['body']) == {
         'email': 'hardcoded@mailinator.com',
+        'pointer': Pointer.get_all()[0].to_json(embed=['execution']),
     }
 
     # mongo has a registry

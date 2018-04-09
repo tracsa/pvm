@@ -20,26 +20,26 @@ from cacahuate.utils import user_import
 def validate_input(form_index: int, input, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
-    input_type = input.getAttribute('type')
+    input_type = input.get('type')
 
-    if input.getAttribute('required') and (value == '' or value is None):
-        raise RequiredInputError(form_index, input.getAttribute('name'))
+    if input.get('required') and (value == '' or value is None):
+        raise RequiredInputError(form_index, input.get('name'))
 
-    elif input_type == 'datetime' or input.getAttribute('type') == 'date':
+    elif input_type == 'datetime' or input.get('type') == 'date':
         if type(value) is not str:
-            raise RequiredStrError(form_index, input.getAttribute('name'))
+            raise RequiredStrError(form_index, input.get('name'))
 
         try:
             datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
-            raise InvalidDateError(form_index, input.getAttribute('name'))
+            raise InvalidDateError(form_index, input.get('name'))
 
     elif input_type == 'checkbox':
         if type(value) is not list:
-            raise RequiredListError(form_index, input.getAttribute('name'))
+            raise RequiredListError(form_index, input.get('name'))
 
         list_values = [
-            child_element.getAttribute('value')
+            child_element.get('value')
             for child_element in input.getElementsByTagName('option')
         ]
 
@@ -47,37 +47,37 @@ def validate_input(form_index: int, input, value):
             if val not in list_values:
                 raise InvalidInputError(
                         form_index,
-                        input.getAttribute('name')
+                        input.get('name')
                     )
 
     elif input_type == 'radio':
         if type(value) is not str:
-            raise RequiredStrError(form_index, input.getAttribute('name'))
+            raise RequiredStrError(form_index, input.get('name'))
 
         list_values = [
-                    child_element.getAttribute('value')
+                    child_element.get('value')
                     for child_element in input.getElementsByTagName('option')
                 ]
         if value not in list_values:
-            raise InvalidInputError(form_index, input.getAttribute('name'))
+            raise InvalidInputError(form_index, input.get('name'))
 
     elif input_type == 'select':
         if type(value) is not str:
-            raise RequiredStrError(form_index, input.getAttribute('name'))
+            raise RequiredStrError(form_index, input.get('name'))
 
         list_values = [
-            child_element.getAttribute('value')
+            child_element.get('value')
             for child_element in input.getElementsByTagName('option')
         ]
 
         if value not in list_values:
-            raise InvalidInputError(form_index, input.getAttribute('name'))
+            raise InvalidInputError(form_index, input.get('name'))
 
     elif input_type == 'file':
         if type(value) is not dict:
-            raise InvalidInputError(form_index, input.getAttribute('name'))
+            raise InvalidInputError(form_index, input.get('name'))
 
-        provider = input.getAttribute('provider')
+        provider = input.get('provider')
         if provider == 'doqer':
             valid = reduce(
                 and_,
@@ -90,7 +90,7 @@ def validate_input(form_index: int, input, value):
             )
 
             if not valid:
-                raise InvalidInputError(form_index, input.getAttribute('name'))
+                raise InvalidInputError(form_index, input.get('name'))
         else:
             abort(500, 'File provider `{}` not implemented'.format(provider))
 

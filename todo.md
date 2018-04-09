@@ -26,3 +26,7 @@
 
 * handler debe poder cargar hierarchy externos
 * mecanismo de suspensión de procesos en caso de falla crítica para no matar otros procesos
+
+# comunicación externa
+
+* forma de hacer peticiones desde un nodo

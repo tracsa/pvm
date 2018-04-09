@@ -12,6 +12,7 @@ from cacahuate.models import Execution, Pointer
 from cacahuate.node import make_node, Node
 from cacahuate.xml import Xml, resolve_params, get_node_info
 from cacahuate.auth.base import BaseUser
+from cacahuate.utils import user_import
 
 
 class Handler:
@@ -100,13 +101,13 @@ class Handler:
         filter_node = filter_q[0]
         backend = filter_node.getAttribute('backend')
 
-        mod = import_module('cacahuate.auth.hierarchy.{}'.format(backend))
-        HierarchyProvider = getattr(
-            mod,
-            pascalcase(backend) + 'HierarchyProvider'
+        HiPro = user_import(
+            backend,
+            self.config['HIERARCHY_PROVIDERS'],
+            'cacahuate.auth.hierarchy',
         )
 
-        hierarchy_provider = HierarchyProvider(self.config)
+        hierarchy_provider = HiPro(self.config)
         husers = hierarchy_provider.find_users(
             **resolve_params(filter_node, execution)
         )

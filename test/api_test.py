@@ -399,7 +399,7 @@ def test_start_process_simple(client, models, mocker, config, mongo):
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
 
-    assert reg['execution']['id'] == reg2['execution_id']
+    assert reg['execution']['id'] == reg2['id']
     assert reg2['status'] == 'ongoing'
 
 

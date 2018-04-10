@@ -309,21 +309,21 @@ def test_teardown_start_process(config, models, mongo):
 
 def test_finish_execution(config, models, mongo):
     handler = Handler(config)
-    # reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
-    # execution = Execution.get_all()[0]
+
     p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
     execution = p_0.proxy.execution.get()
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'status': 'ongoing',
-        'execution_id': execution.id
-
+        'id': execution.id
     })
+
     reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
-    assert execution.id == reg['execution_id']
+    assert execution.id == reg['id']
 
     handler.finish_execution(execution)
+
     reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
 
     assert reg['status'] == 'finished'

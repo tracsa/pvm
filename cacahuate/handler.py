@@ -207,7 +207,7 @@ class Handler:
 
         collection = self.get_mongo(self.config['MONGO_EXECUTION_COLLECTION'])
         collection.update_one({
-            'execution_id': execution.id
+            'id': execution.id
             },
             {'$set': {
                 'status': 'finished',

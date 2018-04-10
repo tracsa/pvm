@@ -206,7 +206,14 @@ class Handler:
             form.delete()
 
         collection = self.get_mongo(self.config['MONGO_EXECUTION_COLLECTION'])
-        collection.update_one({ 'execution_id': execution.id},{'$set': { 'status':'finished', 'finished_at': datetime.now()}})
+        collection.update_one({
+            'execution_id': execution.id
+            },
+            {'$set': {
+                'status': 'finished',
+                'finished_at': datetime.now()
+            }}
+        )
 
         log.debug('Finished e:{}'.format(execution.id))
 
@@ -238,7 +245,6 @@ class Handler:
             self.mongo = db[collection]
 
         return self.mongo
-
 
     def get_contact_channels(self, user: BaseUser):
         return [('email', {'email': user.get_x_info('email')})]

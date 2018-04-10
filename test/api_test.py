@@ -402,6 +402,7 @@ def test_start_process_simple(client, models, mocker, config, mongo):
     assert reg['execution']['id'] == reg2['execution_id']
     assert reg2['status'] == 'ongoing'
 
+
 def test_exit_request_requirements(client, models):
     # first requirement is to have authentication
     res = client.post('/v1/execution', headers={

@@ -316,7 +316,7 @@ def test_finish_execution(config, models, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
-        'status':'ongoing',
+        'status': 'ongoing',
         'execution_id': execution.id
 
     })

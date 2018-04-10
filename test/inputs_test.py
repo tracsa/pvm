@@ -29,7 +29,6 @@ def test_all_inputs(client, models, config, mongo):
     }))
 
     assert res.status_code == 201
-    print (config["MONGO_HISTORY_COLLECTION"])
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
     actor = reg['actors'][0]

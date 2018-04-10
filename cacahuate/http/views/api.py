@@ -156,8 +156,8 @@ def start_process():
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
 
     history_execution = collection.insert_one({
-        'execution_id':execution.id,
-        'status':'ongoing',
+        'execution_id': execution.id,
+        'status': 'ongoing',
         'started_at': datetime.now(),
         'finished_at': None,
     })

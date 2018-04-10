@@ -90,61 +90,7 @@ class Handler:
         is_async = len(node.element.getElementsByTagName('form-array')) > 0
 
         # notify someone
-        filter_q = node.element.getElementsByTagName('auth-filter')
-
-        if len(filter_q) == 0:
-            if is_async:
-                return
-            else:
-                return pointer
-
-        filter_node = filter_q[0]
-        backend = filter_node.getAttribute('backend')
-
-        HiPro = user_import(
-            backend,
-            self.config['HIERARCHY_PROVIDERS'],
-            'cacahuate.auth.hierarchy',
-        )
-
-        hierarchy_provider = HiPro(self.config)
-        husers = hierarchy_provider.find_users(
-            **resolve_params(filter_node, execution)
-        )
-
-        channel.exchange_declare(
-            exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
-            exchange_type='direct'
-        )
-
-        notified_users = []
-
-        for huser in husers:
-            user = huser.get_user()
-            notified_users.append(user.to_json())
-
-            if pointer:
-                user.proxy.tasks.add(pointer)
-
-            mediums = self.get_contact_channels(huser)
-
-            for medium, params in mediums:
-                log.debug('Notified user {} via {} about n:{} e:{}'.format(
-                    user.identifier,
-                    medium,
-                    node.element.getAttribute('id'),
-                    execution.id,
-                ))
-                channel.basic_publish(
-                    exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
-                    routing_key=medium,
-                    body=json.dumps({**{
-                        'pointer': pointer.to_json(embed=['execution']),
-                    }, **params}),
-                    properties=pika.BasicProperties(
-                        delivery_mode=2,
-                    ),
-                )
+        notified_users = self.notify_users(node, pointer, channel)
 
         # update registry about this pointer
         collection = self.get_mongo()
@@ -208,6 +154,62 @@ class Handler:
         log.debug('Finished e:{}'.format(execution.id))
 
         execution.delete()
+
+    def notify_users(self, node, pointer, channel):
+        filter_q = node.element.getElementsByTagName('auth-filter')
+
+        if len(filter_q) == 0:
+            return []
+
+        filter_node = filter_q[0]
+
+        backend = filter_node.getAttribute('backend')
+
+        HiPro = user_import(
+            backend,
+            self.config['HIERARCHY_PROVIDERS'],
+            'cacahuate.auth.hierarchy',
+        )
+
+        hierarchy_provider = HiPro(self.config)
+        husers = hierarchy_provider.find_users(
+            **resolve_params(filter_node, pointer.proxy.execution.get())
+        )
+
+        channel.exchange_declare(
+            exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
+            exchange_type='direct'
+        )
+
+        notified_users = []
+
+        for huser in husers:
+            user = huser.get_user()
+            notified_users.append(user.to_json())
+
+            user.proxy.tasks.add(pointer)
+
+            mediums = self.get_contact_channels(huser)
+
+            for medium, params in mediums:
+                log.debug('Notified user {} via {} about n:{} e:{}'.format(
+                    user.identifier,
+                    medium,
+                    node.element.getAttribute('id'),
+                    pointer.proxy.execution.get().id,
+                ))
+                channel.basic_publish(
+                    exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
+                    routing_key=medium,
+                    body=json.dumps({**{
+                        'pointer': pointer.to_json(embed=['execution']),
+                    }, **params}),
+                    properties=pika.BasicProperties(
+                        delivery_mode=2,
+                    ),
+                )
+
+        return notified_users
 
     def parse_message(self, body: bytes):
         ''' validates a received message against all possible needed fields

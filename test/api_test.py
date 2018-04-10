@@ -284,7 +284,7 @@ def test_continue_process(client, models, mocker, config):
     assert pointer.id == ptr.id
 
 
-def test_start_process_simple_requires(client, models, mongo):
+def test_start_process_simple_requires(client, models, mongo, config):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -337,7 +337,7 @@ def test_start_process_simple_requires(client, models, mongo):
     }
 
     # no registry should be created yet
-    assert mongo.count() == 0
+    assert mongo[config["MONGO_HISTORY_COLLECTION"]].count() == 0
     assert Activity.count() == 0
     assert Questionaire.count() == 0
 
@@ -391,15 +391,16 @@ def test_start_process_simple(client, models, mocker, config, mongo):
     assert pointer.id == ptr.id
 
     # mongo has a registry
-    reg = next(mongo.find())
-
-    del reg['_id']
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+    reg2 = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
 
+    assert reg['execution']['id'] == reg2['execution_id']
+    assert reg2['status'] == 'ongoing'
 
 def test_exit_request_requirements(client, models):
     # first requirement is to have authentication
@@ -471,7 +472,6 @@ def test_exit_request_start(client, models, mocker):
     assert json.loads(res.data) == {
         'data': exc.to_json(),
     }
-
     # user is attached
     actors = exc.proxy.actors.get()
 
@@ -628,8 +628,8 @@ def test_activity(client, models):
     }
 
 
-def test_logs_activity(mongo, client):
-    mongo.insert_one({
+def test_logs_activity(mongo, client, config):
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
@@ -640,7 +640,7 @@ def test_logs_activity(mongo, client):
         },
     })
 
-    mongo.insert_one({
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 50),
         'finished_at': None,
         'execution': {

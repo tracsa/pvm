@@ -165,14 +165,6 @@ class Handler:
             'actors': [],
         })
 
-        collection = self.get_mongo(self.config['MONGO_EXECUTION_COLLECTION'])
-
-        # collection.insert_one({
-        #     'execution_id':execution.id,
-        #     'started_at': datetime.now(),
-        #     'finished_at': None,
-        # })
-
         # nodes with forms are not queued
         if not is_async:
             return pointer
@@ -214,11 +206,7 @@ class Handler:
             form.delete()
 
         collection = self.get_mongo(self.config['MONGO_EXECUTION_COLLECTION'])
-        collection.update_one({
-            'execution_id': execution.id,
-            'status':'finished',
-            'finished_at': datetime.now()
-            })
+        collection.update_one({ 'execution_id': execution.id},{'$set': { 'status':'finished', 'finished_at': datetime.now()}})
 
         log.debug('Finished e:{}'.format(execution.id))
 

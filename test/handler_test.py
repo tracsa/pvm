@@ -151,6 +151,7 @@ def test_wakeup(config, models, mongo):
     assert args['routing_key'] == 'email'
     assert json.loads(args['body']) == {
         'email': 'hardcoded@mailinator.com',
+        'pointer': Pointer.get_all()[0].to_json(embed=['execution']),
     }
 
     # mongo has a registry
@@ -163,6 +164,7 @@ def test_wakeup(config, models, mongo):
     assert reg['execution']['id'] == execution.id
     assert reg['node']['id'] == 'manager'
     assert reg['actors'] == []
+    assert reg['notified_users'] == [manager.to_json()]
 
     # tasks where asigned
     assert manager.proxy.tasks.count() == 1

@@ -163,6 +163,15 @@ def start_process():
         'state': execution.get_state(),
     })
 
+    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+
+    history_execution = collection.insert_one({
+        'id': execution.id,
+        'status': 'ongoing',
+        'started_at': datetime.now(),
+        'finished_at': None,
+    })
+
     # trigger rabbit
     channel = get_channel()
     channel.basic_publish(

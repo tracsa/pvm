@@ -53,4 +53,7 @@ def mongo():
     collection = db[con['MONGO_HISTORY_COLLECTION']]
     collection.drop()
 
-    return collection
+    collection_execution = db[con['MONGO_EXECUTION_COLLECTION']]
+    collection_execution.drop()
+
+    return db

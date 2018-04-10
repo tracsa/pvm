@@ -20,6 +20,7 @@ RABBIT_NO_ACK = True
 # Mongodb
 MONGO_DBNAME = 'cacahuate'
 MONGO_HISTORY_COLLECTION = 'history'
+MONGO_EXECUTION_COLLECTION = 'execution'
 
 # Time stuff
 TIMEZONE = 'UTC'

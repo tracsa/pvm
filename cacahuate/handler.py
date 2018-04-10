@@ -81,6 +81,7 @@ class Handler:
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
         # create a pointer in this node
+
         pointer = self.create_pointer(node, execution)
         log.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,
@@ -93,7 +94,7 @@ class Handler:
         notified_users = self.notify_users(node, pointer, channel)
 
         # update registry about this pointer
-        collection = self.get_mongo()
+        collection = self.get_mongo(self.config['MONGO_HISTORY_COLLECTION'])
 
         collection.insert_one({
             'started_at': datetime.now(),
@@ -116,7 +117,7 @@ class Handler:
 
     def teardown(self, pointer, actor):
         ''' finishes the node's lifecycle '''
-        collection = self.get_mongo()
+        collection = self.get_mongo(self.config['MONGO_HISTORY_COLLECTION'])
 
         update_query = {
             '$set': {
@@ -150,6 +151,16 @@ class Handler:
 
         for form in execution.proxy.forms.get():
             form.delete()
+
+        collection = self.get_mongo(self.config['MONGO_EXECUTION_COLLECTION'])
+        collection.update_one({
+            'id': execution.id
+            },
+            {'$set': {
+                'status': 'finished',
+                'finished_at': datetime.now()
+            }}
+        )
 
         log.debug('Finished e:{}'.format(execution.id))
 
@@ -229,12 +240,12 @@ class Handler:
 
         return message
 
-    def get_mongo(self):
+    def get_mongo(self, collection):
         if self.mongo is None:
             client = MongoClient()
             db = client[self.config['MONGO_DBNAME']]
 
-            self.mongo = db[self.config['MONGO_HISTORY_COLLECTION']]
+            self.mongo = db[collection]
 
         return self.mongo
 

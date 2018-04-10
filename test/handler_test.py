@@ -155,7 +155,7 @@ def test_wakeup(config, models, mongo):
     }
 
     # mongo has a registry
-    reg = next(mongo.find())
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
     del reg['_id']
 
@@ -196,7 +196,7 @@ def test_teardown(config, models, mongo):
     }).save()
     form.proxy.execution.set(execution)
 
-    mongo.insert_one({
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
@@ -229,7 +229,7 @@ def test_teardown(config, models, mongo):
     assert Pointer.get_all()[0].node_id == 'security'
 
     # mongo has a registry
-    reg = next(mongo.find())
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
     del reg['_id']
 
@@ -278,7 +278,7 @@ def test_teardown_start_process(config, models, mongo):
     }).save()
     form.proxy.execution.set(execution)
 
-    mongo.insert_one({
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
@@ -301,7 +301,7 @@ def test_teardown_start_process(config, models, mongo):
     }, channel)
 
     # mongo has a registry
-    reg = next(mongo.find())
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
     del reg['_id']
 
@@ -313,3 +313,26 @@ def test_teardown_start_process(config, models, mongo):
         'ref': 'a',
         'forms': [],
     }]
+
+
+def test_finish_execution(config, models, mongo):
+    handler = Handler(config)
+
+    p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    execution = p_0.proxy.execution.get()
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'status': 'ongoing',
+        'id': execution.id
+    })
+
+    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+    assert execution.id == reg['id']
+
+    handler.finish_execution(execution)
+
+    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+
+    assert reg['status'] == 'finished'
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2

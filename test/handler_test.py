@@ -322,4 +322,9 @@ def test_finish_execution(config, models, mongo):
     })
     reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
     assert execution.id == reg['execution_id']
+
     handler.finish_execution(execution)
+    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+
+    assert reg['status'] == 'finished'
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2

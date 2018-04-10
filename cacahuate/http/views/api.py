@@ -268,7 +268,7 @@ def list_process():
             map(
                 add_form,
                 Xml.list(app.config),
-            )
+              )
         ))
     })
 
@@ -375,3 +375,22 @@ def list_logs(id):
             )
         )),
     }), 200
+
+
+@app.route('/v1/execution/<id>', methods=['DELETE'])
+@requires_auth
+def delete_process(id):
+    execution = Execution.get_or_exception(id)
+
+    for pointer in execution.proxy.pointers.get():
+        pointer.delete()
+
+    for activity in execution.proxy.actors.get():
+        activity.delete()
+
+    for form in execution.proxy.forms.get():
+        form.delete()
+
+    execution.delete()
+
+    return '', 204

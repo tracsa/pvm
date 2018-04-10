@@ -966,6 +966,7 @@ def test_status_notfound(client, models):
     assert res.status_code == 404
 
 
+@pytest.mark.skip
 def test_status(client, models, mongo):
     ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
     execution = ptr.proxy.execution.get()

@@ -248,8 +248,10 @@ def test_teardown(config, models, mongo):
     }]
     assert reg['state'] == [
         {
-            'ref': 'ref',
-            'data': {},
+            'ref': 'auth-form',
+            'data': {
+                'auth': 'yes',
+            },
         },
     ]
 

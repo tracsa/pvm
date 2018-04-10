@@ -175,6 +175,7 @@ class Handler:
         update_query = {
             '$set': {
                 'finished_at': datetime.now(),
+                'state': pointer.proxy.execution.get().get_state(),
             },
         }
 

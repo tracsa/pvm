@@ -447,7 +447,7 @@ def test_exit_request_requirements(client, models):
     assert Activity.count() == 0
 
 
-def test_exit_request_start(client, models, mocker, mongo):
+def test_exit_request_start(client, models, mocker, mongo, config):
     user = make_user('juan', 'Juan')
 
     assert Execution.count() == 0
@@ -497,7 +497,7 @@ def test_exit_request_start(client, models, mocker, mongo):
     }
 
     # mongo has a registry
-    reg = next(mongo.find())
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
     assert reg['state'] == [{
         'ref': 'exit-form',

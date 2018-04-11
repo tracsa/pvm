@@ -28,11 +28,34 @@ class Handler:
         message = self.parse_message(body)
 
         try:
-            to_queue = self.call(message, channel)
+            self.call(message, channel)
         except ModelNotFoundError as e:
             return log.error(str(e))
         except CannotMove as e:
             return log.error(str(e))
+
+        if not self.config['RABBIT_NO_ACK']:
+            channel.basic_ack(delivery_tag=method.delivery_tag)
+
+    def call(self, message: dict, channel):
+        execution, pointer, xml, cur_node, actor = self.recover_step(message)
+
+        to_queue = []  # pointers to be sent to the queue
+
+        # node's lifetime ends here
+        self.teardown(pointer, actor)
+        next_nodes = cur_node.next(xml, execution)
+
+        for node in next_nodes:
+            # node's begining of life
+            pointer = self.wakeup(node, execution, channel)
+
+            # async nodes don't return theirs pointers so they are not queued
+            if pointer:
+                to_queue.append(pointer)
+
+        if execution.proxy.pointers.count() == 0:
+            self.finish_execution(execution)
 
         channel.queue_declare(
             queue=self.config['RABBIT_QUEUE'],
@@ -52,36 +75,14 @@ class Handler:
                 ),
             )
 
-        if not self.config['RABBIT_NO_ACK']:
-            channel.basic_ack(delivery_tag=method.delivery_tag)
-
-    def call(self, message: dict, channel):
-        execution, pointer, xml, cur_node, actor = self.recover_step(message)
-
-        to_queue = []  # pointers to be created
-
-        # node's lifetime ends here
-        self.teardown(pointer, actor)
-        next_nodes = cur_node.next(xml, execution)
-
-        for node in next_nodes:
-            # node's begining of life
-            pointer = self.wakeup(node, execution, channel)
-
-            # async nodes don't return theirs pointers so they are not queued
-            if pointer:
-                to_queue.append(pointer)
-
-        if execution.proxy.pointers.count() == 0:
-            self.finish_execution(execution)
-
-        return to_queue
-
     def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
-        # create a pointer in this node
+        # Nodes that come from the past have special threatment
+        if is_backwards:
+            self.recover_state(node, execution)
 
+        # create a pointer in this node
         pointer = self.create_pointer(node, execution)
         log.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,

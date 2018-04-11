@@ -23,7 +23,10 @@ class Execution(Model):
     )
 
     def get_state(self):
-        return [q.get_state() for q in self.proxy.forms.get()]
+        return {
+            'forms': [q.get_state() for q in self.proxy.forms.get()],
+            'actors': [a.get_state() for a in self.proxy.actors.get()],
+        }
 
 
 class Activity(Model):
@@ -37,6 +40,12 @@ class Activity(Model):
         inverse='activities'
     )
     ref = fields.Text()
+
+    def get_state(self):
+        return {
+            'ref': self.ref,
+            'user_id': self.proxy.user.get().id,
+        }
 
 
 class Questionaire(Model):

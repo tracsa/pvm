@@ -9,7 +9,7 @@ from cacahuate.handler import Handler
 from cacahuate.node import Node, make_node
 from cacahuate.models import Execution, Pointer, User, Activity, Questionaire
 
-from .utils import make_pointer, make_activity
+from .utils import make_pointer, make_activity, make_user
 
 
 def test_parse_message(config):
@@ -116,11 +116,13 @@ def test_wakeup(config, models, mongo):
     juan = User(identifier='juan').save()
     manager = User(identifier='juan_manager').save()
     act = make_activity('requester', juan, execution)
+    ques = Questionaire(ref='exit-form', data={'reason': 'why not'}).save()
+    ques.proxy.execution.set(execution)
 
     channel = MagicMock()
 
     # this is what we test
-    ptrs = handler.call({
+    handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
     }, channel)
@@ -149,6 +151,18 @@ def test_wakeup(config, models, mongo):
     assert reg['node']['id'] == 'manager'
     assert reg['actors'] == []
     assert reg['notified_users'] == [manager.to_json()]
+    assert reg['state'] == {
+        'forms': [{
+            'ref': 'exit-form',
+            'data': {
+                'reason': 'why not',
+            },
+        }],
+        'actors': [{
+            'ref': 'requester',
+            'user_id': juan.id,
+        }],
+    }
 
     # tasks where asigned
     assert manager.proxy.tasks.count() == 1
@@ -167,6 +181,7 @@ def test_teardown(config, models, mongo):
     p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
     execution = p_0.proxy.execution.get()
 
+    juan = User(identifier='juan').save()
     manager = User(identifier='manager').save()
     manager2 = User(identifier='manager2').save()
 
@@ -190,6 +205,22 @@ def test_teardown(config, models, mongo):
             'id': p_0.node_id,
         },
         'actors': [],
+        'state': {
+            'forms': [
+                {
+                    'ref': 'exit-form',
+                    'data': {
+                        'reason': 'quiero salir',
+                    },
+                },
+            ],
+            'actors': [
+                {
+                    'ref': 'requester',
+                    'user_id': juan.id,
+                },
+            ],
+        },
     })
 
     channel = MagicMock()
@@ -229,14 +260,22 @@ def test_teardown(config, models, mongo):
             },
         }],
     }]
-    assert reg['state'] == [
-        {
-            'ref': 'auth-form',
-            'data': {
-                'auth': 'yes',
+    assert reg['state'] == {
+        'forms': [
+            {
+                'ref': 'exit-form',
+                'data': {
+                    'reason': 'quiero salir',
+                },
             },
-        },
-    ]
+        ],
+        'actors': [
+            {
+                'ref': 'requester',
+                'user_id': juan.id,
+            },
+        ],
+    }
 
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0
@@ -319,3 +358,103 @@ def test_finish_execution(config, models, mongo):
 
     assert reg['status'] == 'finished'
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+
+
+def test_call_trigger_recover(config, mongo, models):
+    handler = Handler(config)
+    channel = MagicMock()
+    pointer = make_pointer('cyclic.2018-04-11.xml', 'jump-node')
+    execution = pointer.proxy.execution.get()
+    old_user = make_user('old', 'Old')
+    p_user = make_user('present', 'Present')
+
+    pques = Questionaire(ref='present', data={'a': '0'}).save()
+    pques.proxy.execution.set(execution)
+
+    act = make_activity('present', p_user, execution)
+
+    def make_history(num):
+        return {
+            'node_id': 'start-node',
+            'execution_id': execution.id,
+            'started_at': datetime(2018, 4, num),
+            'state': {
+                'forms': [{
+                    'ref': 'old',
+                    'data': {
+                        'a': str(num),
+                    },
+                }],
+                'actors': [{
+                    'ref': 'start-node',
+                    'user_id': old_user.id,
+                }],
+            },
+        }
+
+    # insert some noisy registers in mongo for this node
+    mongo[config['MONGO_HISTORY_COLLECTION']].insert_many([
+        make_history(1),
+        make_history(3),
+        make_history(2),
+    ])
+
+    mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({
+        'id': execution.id,
+        'status': 'ongoing',
+        'state': {
+            'forms': [{
+                'a': '0',
+            }],
+            'actors': [{
+                'ref': 'present',
+                'user': old_user.to_json(),
+            }],
+        },
+    })
+
+    # this is what we test
+    handler.call({
+        'command': 'step',
+        'pointer_id': pointer.id,
+    }, channel)
+
+    # present questionary is deleted
+    with pytest.raises(StopIteration):
+        next(Questionaire.q().filter(ref='present'))
+
+    # present actor is deleted
+    with pytest.raises(StopIteration):
+        next(Activity.q().filter(ref='present'))
+
+    # Questionaries are restored
+    ques = next(Questionaire.q().filter(ref='old'))
+
+    assert ques in execution.proxy.forms
+    assert ques.data == {
+        'a': '3',
+    }, 'last version of data is recovered'
+
+    # actors are restored
+    act = next(Activity.q().filter(ref='start-node'))
+
+    assert act in execution.proxy.actors
+    assert act.proxy.user.get() == old_user
+
+    # execution collection has new state
+    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+
+    assert reg['status'] == 'ongoing'
+    assert reg['id'] == execution.id
+    assert reg['state'] == {
+        'forms': [{
+            'ref': 'old',
+            'data': {
+                'a': '3',
+            },
+        }],
+        'actors': [{
+            'ref': 'start-node',
+            'user_id': old_user.id,
+        }],
+    }

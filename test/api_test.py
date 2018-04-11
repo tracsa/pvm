@@ -398,7 +398,13 @@ def test_start_process_simple(client, models, mocker, config, mongo):
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
-    assert reg['state'] == []
+    assert reg['state'] == {
+        'forms': [],
+        'actors': [{
+            'ref': 'start-node',
+            'user_id': juan.id,
+        }],
+    }
 
     assert reg['execution']['id'] == reg2['id']
     assert reg2['status'] == 'ongoing'
@@ -499,12 +505,20 @@ def test_exit_request_start(client, models, mocker, mongo, config):
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
-    assert reg['state'] == [{
-        'ref': 'exit-form',
-        'data': {
-            'reason': 'tenía que salir al baño',
-        },
-    }]
+    assert reg['state'] == {
+        'forms': [{
+            'ref': 'exit-form',
+            'data': {
+                'reason': 'tenía que salir al baño',
+            },
+        }],
+        'actors': [
+            {
+                'ref': 'requester',
+                'user_id': user.id,
+            }
+        ],
+    }
 
 
 def test_list_processes(client):
@@ -970,16 +984,16 @@ def test_status_notfound(client, models):
 def test_status(client, models, mongo):
     ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
     execution = ptr.proxy.execution.get()
-    mongo.insert_one({
 
+    mongo.insert_one({
+        'id': execution.id,
     })
 
     res = client.get('/v1/execution/{}'.format(execution.id))
 
     data = execution.to_json()
 
-    data['state'] = [
-    ]
+    data['state'] = {}
 
     assert res.status_code == 200
     assert json.loads(res.data) == {

@@ -5,10 +5,11 @@ from importlib import import_module
 from pymongo import MongoClient
 import simplejson as json
 import pika
+import pymongo
 
 from cacahuate.errors import CannotMove
 from cacahuate.logger import log
-from cacahuate.models import Execution, Pointer
+from cacahuate.models import Execution, Pointer, Questionaire, Activity, User
 from cacahuate.node import make_node, Node
 from cacahuate.xml import Xml, resolve_params, get_node_info
 from cacahuate.auth.base import BaseUser
@@ -96,7 +97,7 @@ class Handler:
         notified_users = self.notify_users(node, pointer, channel)
 
         # update registry about this pointer
-        collection = self.get_mongo(self.config['MONGO_HISTORY_COLLECTION'])
+        collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
 
         collection.insert_one({
             'started_at': datetime.now(),
@@ -111,6 +112,7 @@ class Handler:
             }, **get_node_info(node.element)},
             'notified_users': notified_users,
             'actors': [],
+            'state': execution.get_state(),
         })
 
         # nodes with forms are not queued
@@ -119,12 +121,11 @@ class Handler:
 
     def teardown(self, pointer, actor):
         ''' finishes the node's lifecycle '''
-        collection = self.get_mongo(self.config['MONGO_HISTORY_COLLECTION'])
+        collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
 
         update_query = {
             '$set': {
                 'finished_at': datetime.now(),
-                'state': pointer.proxy.execution.get().get_state(),
             },
         }
 
@@ -148,25 +149,64 @@ class Handler:
 
     def finish_execution(self, execution):
         """ shuts down this execution and every related object """
+        self.delete_related_objects(execution)
+
+        mongo = self.get_mongo()
+        collection = mongo[self.config['MONGO_EXECUTION_COLLECTION']]
+        collection.update_one({
+            'id': execution.id
+        }, {
+            '$set': {
+                'status': 'finished',
+                'finished_at': datetime.now()
+            }
+        })
+
+        log.debug('Finished e:{}'.format(execution.id))
+
+        execution.delete()
+
+    def delete_related_objects(self, execution):
         for activity in execution.proxy.actors.get():
             activity.delete()
 
         for form in execution.proxy.forms.get():
             form.delete()
 
-        collection = self.get_mongo(self.config['MONGO_EXECUTION_COLLECTION'])
+    def recover_state(self, node, execution):
+        ''' recovers the lost state '''
+        self.delete_related_objects(execution)
+
+        mongo = self.get_mongo()
+
+        # finds most recent registry for this node
+        collection = mongo[self.config['MONGO_HISTORY_COLLECTION']]
+        prev_state = next(collection.find({
+            'execution_id': execution.id,
+            'node_id': node.element.getAttribute('id'),
+        }).sort([
+            ('started_at', pymongo.DESCENDING)
+        ]))
+
+        # restores froms and actors from that time
+        for form_data in prev_state['state']['forms']:
+            q = Questionaire(**form_data).save()
+            q.proxy.execution.set(execution)
+
+        for act_data in prev_state['state']['actors']:
+            a = Activity(**act_data).save()
+            a.proxy.execution.set(execution)
+            a.proxy.user.set(User.get(act_data['user_id']))
+
+        # sets state in mongo
+        collection = mongo[self.config['MONGO_EXECUTION_COLLECTION']]
         collection.update_one({
-            'id': execution.id
+            'id': execution.id,
+        }, {
+            '$set': {
+                'state': execution.get_state(),
             },
-            {'$set': {
-                'status': 'finished',
-                'finished_at': datetime.now()
-            }}
-        )
-
-        log.debug('Finished e:{}'.format(execution.id))
-
-        execution.delete()
+        })
 
     def notify_users(self, node, pointer, channel):
         filter_q = node.element.getElementsByTagName('auth-filter')
@@ -242,12 +282,12 @@ class Handler:
 
         return message
 
-    def get_mongo(self, collection):
+    def get_mongo(self):
         if self.mongo is None:
             client = MongoClient()
             db = client[self.config['MONGO_DBNAME']]
 
-            self.mongo = db[collection]
+            self.mongo = db
 
         return self.mongo
 

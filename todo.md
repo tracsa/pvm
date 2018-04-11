@@ -1,12 +1,3 @@
-# Colores
-
-* iniciar un proceso guarda formularios en campo status
-* continuar un proceso guarda formularios en campo status
-* volver al pasado restaura los formularios del nodo al que cayó con las fechas más recientes
-    - probar con varios registros
-* regresar dispara búsqueda de padres de punteros para saber quienes sobreviven y quienes no
-* api de status de un nodo (último registro de estado de ese nodo)
-
 # Multiauth
 
 * cada respuesta de usuario elimina la relación entre el usuario y el puntero

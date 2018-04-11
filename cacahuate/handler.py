@@ -5,10 +5,11 @@ from importlib import import_module
 from pymongo import MongoClient
 import simplejson as json
 import pika
+import pymongo
 
 from cacahuate.errors import CannotMove
 from cacahuate.logger import log
-from cacahuate.models import Execution, Pointer
+from cacahuate.models import Execution, Pointer, Questionaire, Activity, User
 from cacahuate.node import make_node, Node
 from cacahuate.xml import Xml, resolve_params, get_node_info
 from cacahuate.auth.base import BaseUser
@@ -28,11 +29,38 @@ class Handler:
         message = self.parse_message(body)
 
         try:
-            to_queue = self.call(message, channel)
+            self.call(message, channel)
         except ModelNotFoundError as e:
             return log.error(str(e))
         except CannotMove as e:
             return log.error(str(e))
+
+        if not self.config['RABBIT_NO_ACK']:
+            channel.basic_ack(delivery_tag=method.delivery_tag)
+
+    def call(self, message: dict, channel):
+        execution, pointer, xml, cur_node, actor = self.recover_step(message)
+
+        to_queue = []  # pointers to be sent to the queue
+
+        # node's lifetime ends here
+        self.teardown(pointer, actor)
+        next_nodes = cur_node.next(xml, execution)
+
+        for is_backwards, node in next_nodes:
+            # Nodes that come from the past have special threatment
+            if is_backwards:
+                self.recover_state(node, execution)
+
+            # node's begining of life
+            pointer = self.wakeup(node, execution, channel)
+
+            # async nodes don't return theirs pointers so they are not queued
+            if pointer:
+                to_queue.append(pointer)
+
+        if execution.proxy.pointers.count() == 0:
+            self.finish_execution(execution)
 
         channel.queue_declare(
             queue=self.config['RABBIT_QUEUE'],
@@ -52,36 +80,11 @@ class Handler:
                 ),
             )
 
-        if not self.config['RABBIT_NO_ACK']:
-            channel.basic_ack(delivery_tag=method.delivery_tag)
-
-    def call(self, message: dict, channel):
-        execution, pointer, xml, cur_node, actor = self.recover_step(message)
-
-        to_queue = []  # pointers to be created
-
-        # node's lifetime ends here
-        self.teardown(pointer, actor)
-        next_nodes = cur_node.next(xml, execution)
-
-        for node in next_nodes:
-            # node's begining of life
-            pointer = self.wakeup(node, execution, channel)
-
-            # async nodes don't return theirs pointers so they are not queued
-            if pointer:
-                to_queue.append(pointer)
-
-        if execution.proxy.pointers.count() == 0:
-            self.finish_execution(execution)
-
-        return to_queue
-
     def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
-        # create a pointer in this node
 
+        # create a pointer in this node
         pointer = self.create_pointer(node, execution)
         log.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,
@@ -91,64 +94,10 @@ class Handler:
         is_async = len(node.element.getElementsByTagName('form-array')) > 0
 
         # notify someone
-        filter_q = node.element.getElementsByTagName('auth-filter')
-
-        if len(filter_q) == 0:
-            if is_async:
-                return
-            else:
-                return pointer
-
-        filter_node = filter_q[0]
-        backend = filter_node.getAttribute('backend')
-
-        HiPro = user_import(
-            backend,
-            self.config['HIERARCHY_PROVIDERS'],
-            'cacahuate.auth.hierarchy',
-        )
-
-        hierarchy_provider = HiPro(self.config)
-        husers = hierarchy_provider.find_users(
-            **resolve_params(filter_node, execution)
-        )
-
-        channel.exchange_declare(
-            exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
-            exchange_type='direct'
-        )
-
-        notified_users = []
-
-        for huser in husers:
-            user = huser.get_user()
-            notified_users.append(user.to_json())
-
-            if pointer:
-                user.proxy.tasks.add(pointer)
-
-            mediums = self.get_contact_channels(huser)
-
-            for medium, params in mediums:
-                log.debug('Notified user {} via {} about n:{} e:{}'.format(
-                    user.identifier,
-                    medium,
-                    node.element.getAttribute('id'),
-                    execution.id,
-                ))
-                channel.basic_publish(
-                    exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
-                    routing_key=medium,
-                    body=json.dumps({**{
-                        'pointer': pointer.to_json(embed=['execution']),
-                    }, **params}),
-                    properties=pika.BasicProperties(
-                        delivery_mode=2,
-                    ),
-                )
+        notified_users = self.notify_users(node, pointer, channel)
 
         # update registry about this pointer
-        collection = self.get_mongo(self.config['MONGO_HISTORY_COLLECTION'])
+        collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
 
         collection.insert_one({
             'started_at': datetime.now(),
@@ -163,6 +112,7 @@ class Handler:
             }, **get_node_info(node.element)},
             'notified_users': notified_users,
             'actors': [],
+            'state': execution.get_state(),
         })
 
         # nodes with forms are not queued
@@ -171,7 +121,7 @@ class Handler:
 
     def teardown(self, pointer, actor):
         ''' finishes the node's lifecycle '''
-        collection = self.get_mongo(self.config['MONGO_HISTORY_COLLECTION'])
+        collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
 
         update_query = {
             '$set': {
@@ -199,25 +149,120 @@ class Handler:
 
     def finish_execution(self, execution):
         """ shuts down this execution and every related object """
+        self.delete_related_objects(execution)
+
+        mongo = self.get_mongo()
+        collection = mongo[self.config['MONGO_EXECUTION_COLLECTION']]
+        collection.update_one({
+            'id': execution.id
+        }, {
+            '$set': {
+                'status': 'finished',
+                'finished_at': datetime.now()
+            }
+        })
+
+        log.debug('Finished e:{}'.format(execution.id))
+
+        execution.delete()
+
+    def delete_related_objects(self, execution):
         for activity in execution.proxy.actors.get():
             activity.delete()
 
         for form in execution.proxy.forms.get():
             form.delete()
 
-        collection = self.get_mongo(self.config['MONGO_EXECUTION_COLLECTION'])
+    def recover_state(self, node, execution):
+        ''' recovers the lost state '''
+        self.delete_related_objects(execution)
+
+        mongo = self.get_mongo()
+
+        # finds most recent registry for this node
+        collection = mongo[self.config['MONGO_HISTORY_COLLECTION']]
+        prev_state = next(collection.find({
+            'execution_id': execution.id,
+            'node_id': node.element.getAttribute('id'),
+        }).sort([
+            ('started_at', pymongo.DESCENDING)
+        ]))
+
+        # restores froms and actors from that time
+        for form_data in prev_state['state']['forms']:
+            q = Questionaire(**form_data).save()
+            q.proxy.execution.set(execution)
+
+        for act_data in prev_state['state']['actors']:
+            a = Activity(**act_data).save()
+            a.proxy.execution.set(execution)
+            a.proxy.user.set(User.get(act_data['user_id']))
+
+        # sets state in mongo
+        collection = mongo[self.config['MONGO_EXECUTION_COLLECTION']]
         collection.update_one({
-            'id': execution.id
+            'id': execution.id,
+        }, {
+            '$set': {
+                'state': execution.get_state(),
             },
-            {'$set': {
-                'status': 'finished',
-                'finished_at': datetime.now()
-            }}
+        })
+
+    def notify_users(self, node, pointer, channel):
+        filter_q = node.element.getElementsByTagName('auth-filter')
+
+        if len(filter_q) == 0:
+            return []
+
+        filter_node = filter_q[0]
+
+        backend = filter_node.getAttribute('backend')
+
+        HiPro = user_import(
+            backend,
+            self.config['HIERARCHY_PROVIDERS'],
+            'cacahuate.auth.hierarchy',
         )
 
-        log.debug('Finished e:{}'.format(execution.id))
+        hierarchy_provider = HiPro(self.config)
+        husers = hierarchy_provider.find_users(
+            **resolve_params(filter_node, pointer.proxy.execution.get())
+        )
 
-        execution.delete()
+        channel.exchange_declare(
+            exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
+            exchange_type='direct'
+        )
+
+        notified_users = []
+
+        for huser in husers:
+            user = huser.get_user()
+            notified_users.append(user.to_json())
+
+            user.proxy.tasks.add(pointer)
+
+            mediums = self.get_contact_channels(huser)
+
+            for medium, params in mediums:
+                log.debug('Notified user {} via {} about n:{} e:{}'.format(
+                    user.identifier,
+                    medium,
+                    node.element.getAttribute('id'),
+                    pointer.proxy.execution.get().id,
+                ))
+                channel.basic_publish(
+                    exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
+                    routing_key=medium,
+                    body=json.dumps({**{
+                        'pointer': pointer.to_json(embed=['execution']),
+                    }, **params}),
+                    properties=pika.BasicProperties(
+                        delivery_mode=2,
+                    ),
+                )
+
+        return notified_users
 
     def parse_message(self, body: bytes):
         ''' validates a received message against all possible needed fields
@@ -237,12 +282,12 @@ class Handler:
 
         return message
 
-    def get_mongo(self, collection):
+    def get_mongo(self):
         if self.mongo is None:
             client = MongoClient()
             db = client[self.config['MONGO_DBNAME']]
 
-            self.mongo = db[collection]
+            self.mongo = db
 
         return self.mongo
 
@@ -275,12 +320,9 @@ class Handler:
 
         assert execution.process_name == xml.filename, 'Inconsistent pointer'
 
-        if xml.start_node.getAttribute('id') == pointer.node_id:
-            point = xml.start_node
-        else:
-            point = xml.find(
-                lambda e: e.getAttribute('id') == pointer.node_id
-            )
+        point = xml.find(
+            lambda e: e.getAttribute('id') == pointer.node_id
+        )
 
         return (
             execution,

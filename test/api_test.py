@@ -364,7 +364,7 @@ def test_start_process_simple(client, models, mocker, config, mongo):
 
     ptr = exc.proxy.pointers.get()[0]
 
-    assert ptr.node_id == 'gYcj0XjbgjSO'
+    assert ptr.node_id == 'start-node'
 
     pika.adapters.blocking_connection.BlockingChannel.\
         basic_publish.assert_called_once()
@@ -398,6 +398,13 @@ def test_start_process_simple(client, models, mocker, config, mongo):
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
+    assert reg['state'] == {
+        'forms': [],
+        'actors': [{
+            'ref': 'start-node',
+            'user_id': juan.id,
+        }],
+    }
 
     assert reg['execution']['id'] == reg2['id']
     assert reg2['status'] == 'ongoing'
@@ -446,7 +453,7 @@ def test_exit_request_requirements(client, models):
     assert Activity.count() == 0
 
 
-def test_exit_request_start(client, models, mocker):
+def test_exit_request_start(client, models, mocker, mongo, config):
     user = make_user('juan', 'Juan')
 
     assert Execution.count() == 0
@@ -495,16 +502,32 @@ def test_exit_request_start(client, models, mocker):
         'reason': 'tenía que salir al baño',
     }
 
+    # mongo has a registry
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+
+    assert reg['state'] == {
+        'forms': [{
+            'ref': 'exit-form',
+            'data': {
+                'reason': 'tenía que salir al baño',
+            },
+        }],
+        'actors': [
+            {
+                'ref': 'requester',
+                'user_id': user.id,
+            }
+        ],
+    }
+
 
 def test_list_processes(client):
     res = client.get('/v1/process')
 
     body = json.loads(res.data)
-    exit_req = list(
-                    filter(
-                        lambda xml: xml['id'] == 'exit_request', body['data']
-                    )
-                )[0]
+    exit_req = list(filter(
+        lambda xml: xml['id'] == 'exit_request', body['data']
+    ))[0]
 
     assert res.status_code == 200
     assert exit_req == {
@@ -637,7 +660,7 @@ def test_logs_activity(mongo, client, config):
             'id': "15asbs",
         },
         'node': {
-            'id': '4g9lOdPKmRUf',
+            'id': 'mid-node',
         },
     })
 
@@ -652,7 +675,7 @@ def test_logs_activity(mongo, client, config):
         },
     })
 
-    res = client.get('/v1/log/15asbs?node_id=4g9lOdPKmRUf')
+    res = client.get('/v1/log/15asbs?node_id=mid-node')
 
     ans = json.loads(res.data)
     del ans['data'][0]['_id']
@@ -666,7 +689,7 @@ def test_logs_activity(mongo, client, config):
                 'id': '15asbs',
             },
             'node': {
-                'id': '4g9lOdPKmRUf',
+                'id': 'mid-node',
             },
         }],
     }
@@ -974,3 +997,30 @@ def test_delete_process(config, client, mongo):
 
     assert reg['status'] == 'cancelled'
     assert execution.id == reg['execution_id']
+
+
+def test_status_notfound(client, models):
+    res = client.get('/v1/execution/doo')
+
+    assert res.status_code == 404
+
+
+@pytest.mark.skip
+def test_status(client, models, mongo):
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    execution = ptr.proxy.execution.get()
+
+    mongo.insert_one({
+        'id': execution.id,
+    })
+
+    res = client.get('/v1/execution/{}'.format(execution.id))
+
+    data = execution.to_json()
+
+    data['state'] = {}
+
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': data,
+    }

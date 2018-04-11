@@ -22,6 +22,12 @@ class Execution(Model):
         inverse='execution'
     )
 
+    def get_state(self):
+        return {
+            'forms': [q.get_state() for q in self.proxy.forms.get()],
+            'actors': [a.get_state() for a in self.proxy.actors.get()],
+        }
+
 
 class Activity(Model):
     ''' relates a user and a execution '''
@@ -35,12 +41,24 @@ class Activity(Model):
     )
     ref = fields.Text()
 
+    def get_state(self):
+        return {
+            'ref': self.ref,
+            'user_id': self.proxy.user.get().id,
+        }
+
 
 class Questionaire(Model):
     ''' Represents filled forms and their data '''
     ref = fields.Text()
     data = fields.Dict()
     execution = fields.ForeignIdRelation(Execution, inverse='forms')
+
+    def get_state(self):
+        return {
+            'ref': self.ref,
+            'data': self.data,
+        }
 
 
 class Pointer(Model):

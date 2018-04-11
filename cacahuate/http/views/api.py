@@ -1,6 +1,6 @@
 from coralillo.errors import ModelNotFoundError
 from datetime import datetime
-from flask import g
+from flask import g, abort
 from flask import request, jsonify, json
 from functools import reduce
 import os
@@ -87,6 +87,20 @@ def index():
         return request.json
 
 
+@app.route('/v1/execution/<id>', methods=['GET'])
+def process_status(id):
+    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+
+    try:
+        exc = next(collection.find({'id': id}))
+    except StopIteration:
+        abort(404, 'Specified execution never existed, and never will')
+
+    return jsonify({
+        'data': trans_dat(exc),
+    })
+
+
 @app.route('/v1/execution', methods=['POST'])
 @requires_auth
 @requires_json
@@ -151,6 +165,7 @@ def start_process():
             'id': start_point.getAttribute('id'),
         }, **node_info},
         'actors': [actor],
+        'state': execution.get_state(),
     })
 
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]

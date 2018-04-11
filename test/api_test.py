@@ -949,3 +949,28 @@ def test_validate_form_multiple_error_position(client, models):
             },
         ]
     }
+
+
+def test_delete_process(config, client, mongo):
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    juan = make_user('juan', 'Juan')
+    juan.proxy.tasks.set([ptr])
+
+    p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    execution = p_0.proxy.execution.get()
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'status': 'ongoing',
+        'execution_id': execution.id
+    })
+
+    res = client.delete(
+        '/v1/execution/{}'.format(execution.id),
+        headers=make_auth(juan)
+    )
+    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+
+    assert reg['status'] == 'cancelled'
+    assert execution.id == reg['execution_id']

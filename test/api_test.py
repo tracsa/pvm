@@ -364,7 +364,7 @@ def test_start_process_simple(client, models, mocker, config, mongo):
 
     ptr = exc.proxy.pointers.get()[0]
 
-    assert ptr.node_id == 'gYcj0XjbgjSO'
+    assert ptr.node_id == 'start-node'
 
     pika.adapters.blocking_connection.BlockingChannel.\
         basic_publish.assert_called_once()
@@ -647,7 +647,7 @@ def test_logs_activity(mongo, client, config):
             'id': "15asbs",
         },
         'node': {
-            'id': '4g9lOdPKmRUf',
+            'id': 'mid-node',
         },
     })
 
@@ -662,7 +662,7 @@ def test_logs_activity(mongo, client, config):
         },
     })
 
-    res = client.get('/v1/log/15asbs?node_id=4g9lOdPKmRUf')
+    res = client.get('/v1/log/15asbs?node_id=mid-node')
 
     ans = json.loads(res.data)
     del ans['data'][0]['_id']
@@ -676,7 +676,7 @@ def test_logs_activity(mongo, client, config):
                 'id': '15asbs',
             },
             'node': {
-                'id': '4g9lOdPKmRUf',
+                'id': 'mid-node',
             },
         }],
     }

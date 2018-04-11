@@ -49,7 +49,7 @@ def test_parse_message(config):
 
 def test_recover_step(config, models):
     handler = Handler(config)
-    ptr = make_pointer('simple.2018-02-19.xml', '4g9lOdPKmRUf')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     exc = ptr.proxy.execution.get()
 
     execution, pointer, xmliter, node, *rest = \
@@ -78,10 +78,10 @@ def test_recover_step(config, models):
 
     conn = next(xmliter)
     assert conn.tagName == 'connector'
-    assert conn.getAttribute('from') == '4g9lOdPKmRUf'
-    assert conn.getAttribute('to') == 'kV9UWSeA89IZ'
+    assert conn.getAttribute('from') == 'mid-node'
+    assert conn.getAttribute('to') == 'end-node'
 
-    assert node.element.getAttribute('id') == '4g9lOdPKmRUf'
+    assert node.element.getAttribute('id') == 'mid-node'
 
 
 def test_create_pointer(config, models):

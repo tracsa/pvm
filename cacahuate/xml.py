@@ -53,16 +53,17 @@ class Xml:
             setattr(self, attr, func(get_text(node)))
 
         start_node_id = getattr(self, 'start-node')
+        self.start_node_consumed = True
+
         try:
-            start_node = self.find(
+            self.start_node = self.find(
                 lambda e: e.getAttribute('id') == start_node_id
             )
+            self.start_node_consumed = False
         except ElementNotFound:
             raise MalformedProcess(
                 'Process does not have the start node'
             )
-
-        self.start_node = start_node
 
     @classmethod
     def load(cls, config: dict, common_name: str, direct=False) -> TextIO:
@@ -110,6 +111,14 @@ class Xml:
     def find(self, testfunc: Callable[[Element], bool]) -> Element:
         ''' Given an interator returned by the previous function, tries to find
         the first node matching the given condition '''
+        # Since we already consumed the start node on initialization, this
+        # fix is needed for find() to be stable
+        if not self.start_node_consumed:
+            self.start_node_consumed = True
+
+            if testfunc(self.start_node):
+                return self.start_node
+
         for element in self:
             if testfunc(element):
                 return element

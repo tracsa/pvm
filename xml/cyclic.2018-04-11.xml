@@ -1,0 +1,36 @@
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-04-10</date>
+    <name>Cyclic Process</name>
+    <public>false</public>
+    <description>Smallest Cyclic process</description>
+    <start-node>start-node</start-node>
+  </process-info>
+  <process>
+    <node id="start-node" class="decision">
+      <form-array>
+        <form id="decision">
+          <input type="radio" name="continue">
+            <option value="yes">Si</option>
+            <option value="no">No</option>
+          </input>
+        </form>
+      </form-array>
+    </node>
+
+    <connector from="start-node" to="end-node">
+      <condition>#decision.continue == "no"</condition>
+    </connector>
+
+    <node id="end-node" class="end" />
+
+    <connector from="start-node" to="jump-node">
+      <condition>#decision.continue == "yes"</condition>
+    </connector>
+
+    <node id="jump-node" class="goto" />
+
+    <connector from="jump-node" to="start-node"/>
+  </process>
+</process-spec>

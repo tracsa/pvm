@@ -29,13 +29,15 @@ def test_find_next_element_normal(config):
     assert xml.filename == 'simple.2018-02-19.xml'
 
     current_node = make_node(xml.find(
-        lambda e:
-        e.tagName == 'node' and e.getAttribute('id') == '4g9lOdPKmRUf'
+        lambda e: e.getAttribute('id') == 'mid-node'
     ))
 
-    next_node = current_node.next(xml, None)[0]
+    assert current_node.element.getAttribute('id') == 'mid-node'
 
-    assert next_node.element.getAttribute('id') == 'kV9UWSeA89IZ'
+    is_backwards, next_node = current_node.next(xml, None)[0]
+
+    assert is_backwards is False
+    assert next_node.element.getAttribute('id') == 'end-node'
 
 
 def test_find_next_element_decision_yes(config, models):
@@ -52,8 +54,9 @@ def test_find_next_element_decision_yes(config, models):
         e.tagName == 'node' and e.getAttribute('id') == '57TJ0V3nur6m7wvv'
     ))
 
-    next_node = current_node.next(xml, exc)[0]
+    is_backwards, next_node = current_node.next(xml, exc)[0]
 
+    assert is_backwards is False
     assert next_node.element.getAttribute('id') == 'Cuptax0WTCL1ueCy'
 
 
@@ -72,8 +75,9 @@ def test_find_next_element_decision_no(config, models):
         e.tagName == 'node' and e.getAttribute('id') == '57TJ0V3nur6m7wvv'
     ))
 
-    next_node = current_node.next(xml, exc)[0]
+    is_backwards, next_node = current_node.next(xml, exc)[0]
 
+    assert is_backwards is False
     assert next_node.element.getAttribute('id') == 'mj88CNZUaBdvLV83'
 
 
@@ -110,7 +114,9 @@ def test_find_next_element_end(config):
         e.tagName == 'node' and e.getAttribute('id') == 'BCUHAjo4OxtA31NR'
     ))
 
-    assert current_node.next(xml, exc) == []
+    nodes = current_node.next(xml, exc)
+
+    assert nodes == []
 
 
 @pytest.mark.skip(reason="no way of currently testing this")
@@ -125,7 +131,17 @@ def test_find_next_element_subprocess_ready():
     return the next node '''
 
 
-def test_find_next_element_goto():
+def test_find_next_element_goto(config):
     ''' given a goto element that points to a previous node in the graph,
     return that element '''
-    assert False
+    xml = Xml.load(config, 'cyclic')
+    exc = Execution().save()
+
+    current_node = make_node(xml.find(
+        lambda e: e.getAttribute('id') == 'jump-node'
+    ))
+
+    is_backwards, next_node = current_node.next(xml, exc)[0]
+
+    assert is_backwards is True
+    assert next_node.element.getAttribute('id') == 'start-node'

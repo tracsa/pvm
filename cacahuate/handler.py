@@ -46,7 +46,11 @@ class Handler:
         self.teardown(pointer, actor)
         next_nodes = cur_node.next(xml, execution)
 
-        for node in next_nodes:
+        for is_backwards, node in next_nodes:
+            # Nodes that come from the past have special threatment
+            if is_backwards:
+                self.recover_state(node, execution)
+
             # node's begining of life
             pointer = self.wakeup(node, execution, channel)
 
@@ -78,9 +82,6 @@ class Handler:
     def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
-        # Nodes that come from the past have special threatment
-        if is_backwards:
-            self.recover_state(node, execution)
 
         # create a pointer in this node
         pointer = self.create_pointer(node, execution)
@@ -279,12 +280,9 @@ class Handler:
 
         assert execution.process_name == xml.filename, 'Inconsistent pointer'
 
-        if xml.start_node.getAttribute('id') == pointer.node_id:
-            point = xml.start_node
-        else:
-            point = xml.find(
-                lambda e: e.getAttribute('id') == pointer.node_id
-            )
+        point = xml.find(
+            lambda e: e.getAttribute('id') == pointer.node_id
+        )
 
         return (
             execution,

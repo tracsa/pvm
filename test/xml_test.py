@@ -65,7 +65,7 @@ def test_find(config):
     start = xml.start_node
 
     assert start.tagName == 'node'
-    assert start.getAttribute('id') == 'gYcj0XjbgjSO'
+    assert start.getAttribute('id') == 'start-node'
 
     conn = xml.find(
         lambda e:
@@ -74,15 +74,15 @@ def test_find(config):
     )
 
     assert conn.tagName == 'connector'
-    assert conn.getAttribute('from') == 'gYcj0XjbgjSO'
-    assert conn.getAttribute('to') == '4g9lOdPKmRUf'
+    assert conn.getAttribute('from') == 'start-node'
+    assert conn.getAttribute('to') == 'mid-node'
 
     echo = xml.find(
         lambda e: e.getAttribute('id') == conn.getAttribute('to')
     )
 
     assert echo.tagName == 'node'
-    assert echo.getAttribute('id') == '4g9lOdPKmRUf'
+    assert echo.getAttribute('id') == 'mid-node'
 
     conn = xml.find(
         lambda e:
@@ -91,15 +91,15 @@ def test_find(config):
     )
 
     assert conn.tagName == 'connector'
-    assert conn.getAttribute('from') == '4g9lOdPKmRUf'
-    assert conn.getAttribute('to') == 'kV9UWSeA89IZ'
+    assert conn.getAttribute('from') == 'mid-node'
+    assert conn.getAttribute('to') == 'end-node'
 
     end = xml.find(
         lambda e: e.getAttribute('id') == conn.getAttribute('to')
     )
 
     assert end.tagName == 'node'
-    assert end.getAttribute('id') == 'kV9UWSeA89IZ'
+    assert end.getAttribute('id') == 'end-node'
 
 
 @pytest.mark.skip

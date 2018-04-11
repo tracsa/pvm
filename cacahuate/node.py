@@ -41,9 +41,9 @@ class SimpleNode(Node):
 
         conn = xml.find(find_node)
 
-        return [make_node(xml.find(
+        return [(False, make_node(xml.find(
             lambda e: e.getAttribute('id') == conn.getAttribute('to')
-        ))]
+        )))]
 
 
 class DecisionNode(Node):
@@ -74,9 +74,29 @@ class DecisionNode(Node):
                 'there is not enough information in the asociated data'
             )
 
-        return [make_node(xml.find(
+        return [(False, make_node(xml.find(
             lambda e: e.getAttribute('id') == conn.getAttribute('to')
-        ))]
+        )))]
+
+
+class GotoNode(Node):
+
+    def next(self, xml: Xml, execution) -> ['Node']:
+        ''' tries to find an element back in time '''
+        def find_node(e):
+            if e.tagName != 'connector':
+                return False
+
+            return e.getAttribute('from') == self.element.getAttribute('id')
+
+        conn = xml.find(find_node)
+
+        rewinded = Xml(xml.config, xml.filename)
+        del xml
+
+        return [(True, make_node(rewinded.find(
+            lambda e: e.getAttribute('id') == conn.getAttribute('to')
+        )))]
 
 
 def make_node(element):

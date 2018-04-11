@@ -12,6 +12,7 @@ from cacahuate.models import Execution, Pointer
 from cacahuate.node import make_node, Node
 from cacahuate.xml import Xml, resolve_params, get_node_info
 from cacahuate.auth.base import BaseUser
+from cacahuate.utils import user_import
 
 
 class Handler:
@@ -80,6 +81,7 @@ class Handler:
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
         # create a pointer in this node
+
         pointer = self.create_pointer(node, execution)
         log.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,
@@ -100,13 +102,13 @@ class Handler:
         filter_node = filter_q[0]
         backend = filter_node.getAttribute('backend')
 
-        mod = import_module('cacahuate.auth.hierarchy.{}'.format(backend))
-        HierarchyProvider = getattr(
-            mod,
-            pascalcase(backend) + 'HierarchyProvider'
+        HiPro = user_import(
+            backend,
+            self.config['HIERARCHY_PROVIDERS'],
+            'cacahuate.auth.hierarchy',
         )
 
-        hierarchy_provider = HierarchyProvider(self.config)
+        hierarchy_provider = HiPro(self.config)
         husers = hierarchy_provider.find_users(
             **resolve_params(filter_node, execution)
         )
@@ -116,8 +118,11 @@ class Handler:
             exchange_type='direct'
         )
 
+        notified_users = []
+
         for huser in husers:
             user = huser.get_user()
+            notified_users.append(user.to_json())
 
             if pointer:
                 user.proxy.tasks.add(pointer)
@@ -134,14 +139,16 @@ class Handler:
                 channel.basic_publish(
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
                     routing_key=medium,
-                    body=json.dumps(params),
+                    body=json.dumps({**{
+                        'pointer': pointer.to_json(embed=['execution']),
+                    }, **params}),
                     properties=pika.BasicProperties(
                         delivery_mode=2,
                     ),
                 )
 
         # update registry about this pointer
-        collection = self.get_mongo()
+        collection = self.get_mongo(self.config['MONGO_HISTORY_COLLECTION'])
 
         collection.insert_one({
             'started_at': datetime.now(),
@@ -154,6 +161,7 @@ class Handler:
             'node': {**{
                 'id': node.element.getAttribute('id'),
             }, **get_node_info(node.element)},
+            'notified_users': notified_users,
             'actors': [],
         })
 
@@ -163,7 +171,7 @@ class Handler:
 
     def teardown(self, pointer, actor):
         ''' finishes the node's lifecycle '''
-        collection = self.get_mongo()
+        collection = self.get_mongo(self.config['MONGO_HISTORY_COLLECTION'])
 
         update_query = {
             '$set': {
@@ -197,6 +205,16 @@ class Handler:
         for form in execution.proxy.forms.get():
             form.delete()
 
+        collection = self.get_mongo(self.config['MONGO_EXECUTION_COLLECTION'])
+        collection.update_one({
+            'id': execution.id
+            },
+            {'$set': {
+                'status': 'finished',
+                'finished_at': datetime.now()
+            }}
+        )
+
         log.debug('Finished e:{}'.format(execution.id))
 
         execution.delete()
@@ -219,12 +237,12 @@ class Handler:
 
         return message
 
-    def get_mongo(self):
+    def get_mongo(self, collection):
         if self.mongo is None:
             client = MongoClient()
             db = client[self.config['MONGO_DBNAME']]
 
-            self.mongo = db[self.config['MONGO_HISTORY_COLLECTION']]
+            self.mongo = db[collection]
 
         return self.mongo
 

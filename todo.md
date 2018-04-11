@@ -1,7 +1,5 @@
 # Colores
 
-## primera iteración
-
 * iniciar un proceso guarda formularios en campo status
 * continuar un proceso guarda formularios en campo status
 * volver al pasado restaura los formularios del nodo al que cayó con las fechas más recientes

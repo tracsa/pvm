@@ -169,7 +169,7 @@ def test_continue_process_asks_for_data(client, models):
     }
 
 
-def test_can_continue_process(client, models, mocker, config):
+def test_continue_process(client, models, mocker, config):
     mocker.patch(
         'pika.adapters.blocking_connection.'
         'BlockingChannel.basic_publish'
@@ -284,7 +284,7 @@ def test_can_continue_process(client, models, mocker, config):
     assert pointer.id == ptr.id
 
 
-def test_process_start_simple_requires(client, models, mongo):
+def test_start_process_simple_requires(client, models, mongo, config):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -337,12 +337,12 @@ def test_process_start_simple_requires(client, models, mongo):
     }
 
     # no registry should be created yet
-    assert mongo.count() == 0
+    assert mongo[config["MONGO_HISTORY_COLLECTION"]].count() == 0
     assert Activity.count() == 0
     assert Questionaire.count() == 0
 
 
-def test_process_start_simple(client, models, mocker, config, mongo):
+def test_start_process_simple(client, models, mocker, config, mongo):
     mocker.patch(
         'pika.adapters.blocking_connection.'
         'BlockingChannel.basic_publish'
@@ -391,315 +391,16 @@ def test_process_start_simple(client, models, mocker, config, mongo):
     assert pointer.id == ptr.id
 
     # mongo has a registry
-    reg = next(mongo.find())
-
-    del reg['_id']
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+    reg2 = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
 
-
-def test_process_all_inputs(client, models, config, mongo):
-    user = make_user('juan', 'Juan')
-
-    objeto = [
-        {
-            'ref': 'auth-form',
-            'data': {
-                'name': 'Algo',
-                'datetime': datetime.now().isoformat()+'Z',
-                'secret': '123456',
-                'interests': ['science', 'music'],
-                'gender': 'male',
-                'elections': 'amlo',
-            },
-        },
-    ]
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'all-inputs',
-        'form_array': objeto
-    }))
-
-    assert res.status_code == 201
-
-    # mongo has a registry
-    reg = next(mongo.find())
-    actor = reg['actors'][0]
-
-    assert actor['ref'] == 'inputs-node'
-    assert actor['user']['identifier'] == 'juan'
-    assert actor['forms'][0]['data'] == objeto[0]['data']
-
-
-def test_process_datetime_error(client, models, mocker, config, mongo):
-    objeto = [
-        {
-            'ref': 'auth-form',
-            'data': {
-                'name': 'Algo',
-                'datetime': 'FECHA ERRONEA',
-                'secret': '123456',
-                'interests': ['science', 'music'],
-                'gender': 'male',
-                'elections': 'amlo',
-            },
-        },
-    ]
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'all-inputs',
-
-        'form_array': objeto
-    }))
-
-    assert res.status_code == 400
-
-
-def test_visible_document_provider(client, models, mocker, config, mongo):
-    res = client.get('/v1/process')
-
-    body = json.loads(res.data)
-    document_process = list(
-        filter(
-            lambda xml: xml['id'] == 'document', body['data']
-        )
-    )[0]
-
-    assert res.status_code == 200
-    assert document_process['form_array'][0] == {
-        'ref': 'doc-form',
-        'inputs': [
-            {
-                'label': 'Documento de identidad oficial',
-                'name': 'identity_card',
-                'provider': 'doqer',
-                'required': True,
-                'type': 'file',
-            },
-        ],
-    }
-
-
-def test_process_allow_document(client, models, mocker, config, mongo):
-    form_array = [
-        {
-            'ref': 'doc-form',
-            'data': {
-                'identity_card': {
-                    'id': 102214720680704176,
-                    'mime': 'image/gif',
-                    'name': 'credencial de elector',
-                    'type': 'doqer:file',
-                },
-            },
-        },
-    ]
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'document',
-        'form_array': form_array,
-    }))
-
-    assert res.status_code == 201
-
-
-def test_process_deny_invalid_document(client, models, mocker, config, mongo):
-    form_array = [
-        {
-            'ref': 'doc-form',
-            'data': {
-                'identity_card': {
-                    'this': 'is invalid'
-                },
-            },
-        },
-    ]
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'document',
-        'form_array': form_array,
-    }))
-
-    assert res.status_code == 400
-
-    form_array = [
-        {
-            'ref': 'doc-form',
-            'data': {
-                'identity_card': 'also invalid'
-            },
-        },
-    ]
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'document',
-        'form_array': form_array,
-    }))
-
-    assert res.status_code == 400
-
-
-def test_process_check_errors(client, models, mocker, config, mongo):
-    objeto = [
-        {
-            'ref': 'auth-form',
-            'data': {
-                'name': 'Algo',
-                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                'secret': '123456',
-                'interests': 12,
-                'gender': 'male',
-                'elections': 'amlo',
-            },
-        },
-    ]
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'all-inputs',
-        'form_array': objeto
-    }))
-
-    assert res.status_code == 400
-
-    objeto = [
-        {
-            'ref': 'auth-form',
-            'data': {
-                'name': 'Algo',
-                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                'secret': '123456',
-                'interests': ["science", "wrong"],
-                'gender': 'male',
-                'elections': 'amlo',
-            },
-        },
-    ]
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'all-inputs',
-        'form_array': objeto
-    }))
-
-    assert res.status_code == 400
-
-
-def test_process_radio_errors(client, models, mocker, config, mongo):
-    objeto = [
-        {
-            'ref': 'auth-form',
-            'data': {
-                'name': 'Algo',
-                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                'secret': '123456',
-                'interests': ["science"],
-                'gender': [],
-                'elections': 'amlo',
-            },
-        },
-    ]
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'all-inputs',
-        'form_array': objeto
-    }))
-
-    assert res.status_code == 400
-
-    objeto = [
-        {
-            'ref': 'auth-form',
-            'data': {
-                'name': 'Algo',
-                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                'secret': '123456',
-                'interests': ["science", "wrong"],
-                'gender': 'error',
-                'elections': 'amlo',
-            },
-        },
-    ]
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'all-inputs',
-        'form_array': objeto
-    }))
-
-    assert res.status_code == 400
-
-
-def test_process_select_errors(client, models, mocker, config, mongo):
-    objeto = [
-        {
-            'ref': 'auth-form',
-            'data': {
-                'name': 'Algo',
-                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                'secret': '123456',
-                'interests': ["science"],
-                'gender': "male",
-                'elections': [],
-            },
-        },
-    ]
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'all-inputs',
-        'form_array': objeto
-    }))
-
-    assert res.status_code == 400
-
-    objeto = [
-        {
-            'ref': 'auth-form',
-            'data': {
-                'name': 'Algo',
-                'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
-                'secret': '123456',
-                'interests': ["science", "wrong"],
-                'gender': "male",
-                'elections': "error",
-            },
-        },
-    ]
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'all-inputs',
-        'form_array': objeto
-    }))
-
-    assert res.status_code == 400
+    assert reg['execution']['id'] == reg2['id']
+    assert reg2['status'] == 'ongoing'
 
 
 def test_exit_request_requirements(client, models):
@@ -772,7 +473,6 @@ def test_exit_request_start(client, models, mocker):
     assert json.loads(res.data) == {
         'data': exc.to_json(),
     }
-
     # user is attached
     actors = exc.proxy.actors.get()
 
@@ -929,8 +629,8 @@ def test_activity(client, models):
     }
 
 
-def test_logs_activity(mongo, client):
-    mongo.insert_one({
+def test_logs_activity(mongo, client, config):
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
@@ -941,7 +641,7 @@ def test_logs_activity(mongo, client):
         },
     })
 
-    mongo.insert_one({
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 50),
         'finished_at': None,
         'execution': {

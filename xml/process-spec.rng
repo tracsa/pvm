@@ -46,6 +46,7 @@
           <value>end</value>
           <value>simple</value>
           <value>decision</value>
+          <value>goto</value>
         </choice>
        </attribute>
       </optional>

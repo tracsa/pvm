@@ -1,31 +1,15 @@
 from datetime import datetime
+from unittest.mock import MagicMock
 from xml.dom.minidom import Document
-import simplejson as json
 import pika
 import pytest
+import simplejson as json
 
 from cacahuate.handler import Handler
 from cacahuate.node import Node, make_node
 from cacahuate.models import Execution, Pointer, User, Activity, Questionaire
 
 from .utils import make_pointer, make_activity
-
-
-class MockChannel:
-
-    def __init__(self):
-        self.bp_kwargs = None
-        self.bp_call_count = 0
-        self.ed_kwargs = None
-        self.ed_call_count = 0
-
-    def basic_publish(self, **kwargs):
-        self.bp_kwargs = kwargs
-        self.bp_call_count += 1
-
-    def exchange_declare(self, **kwargs):
-        self.ed_kwargs = kwargs
-        self.ed_call_count += 1
 
 
 def test_parse_message(config):
@@ -133,7 +117,7 @@ def test_wakeup(config, models, mongo):
     manager = User(identifier='juan_manager').save()
     act = make_activity('requester', juan, execution)
 
-    channel = MockChannel()
+    channel = MagicMock()
 
     # this is what we test
     ptrs = handler.call({
@@ -142,10 +126,10 @@ def test_wakeup(config, models, mongo):
     }, channel)
 
     # test manager is notified
-    assert channel.bp_call_count == 1
-    assert channel.ed_call_count == 1
+    channel.basic_publish.assert_called_once()
+    channel.exchange_declare.assert_called_once()
 
-    args = channel.bp_kwargs
+    args = channel.basic_publish.call_args[1]
 
     assert args['exchange'] == config['RABBIT_NOTIFY_EXCHANGE']
     assert args['routing_key'] == 'email'
@@ -208,9 +192,9 @@ def test_teardown(config, models, mongo):
         'actors': [],
     })
 
-    channel = MockChannel()
+    channel = MagicMock()
 
-    ptrs = handler.call({
+    handler.call({
         'command': 'step',
         'pointer_id': p_0.id,
         'actor': {
@@ -223,7 +207,6 @@ def test_teardown(config, models, mongo):
     }, channel)
 
     assert Pointer.get(p_0.id) is None
-    assert len(ptrs) == 0
 
     assert Pointer.count() == 1
     assert Pointer.get_all()[0].node_id == 'security'
@@ -293,7 +276,7 @@ def test_teardown_start_process(config, models, mongo):
         }],
     })
 
-    channel = MockChannel()
+    channel = MagicMock()
 
     handler.call({
         'command': 'step',

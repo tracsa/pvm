@@ -506,15 +506,14 @@ def test_exit_request_start(client, models, mocker, mongo, config):
         },
     }]
 
+
 def test_list_processes(client):
     res = client.get('/v1/process')
 
     body = json.loads(res.data)
-    exit_req = list(
-                    filter(
-                        lambda xml: xml['id'] == 'exit_request', body['data']
-                    )
-                )[0]
+    exit_req = list(filter(
+        lambda xml: xml['id'] == 'exit_request', body['data']
+    ))[0]
 
     assert res.status_code == 200
     assert exit_req == {

@@ -18,10 +18,16 @@ def user_import(module_key, import_maper, default_path):
     else:
         import_path = default_path + '.' + module_key
 
+    cls_name = pascalcase(module_key)
+
     try:
         mod = import_module(import_path)
-        cls = getattr(mod, pascalcase(module_key) + 'HierarchyProvider')
-    except (ModuleNotFoundError, AttributeError):
-        raise MisconfiguredProvider
+        cls = getattr(mod, cls_name + 'HierarchyProvider')
+    except ModuleNotFoundError:
+        raise MisconfiguredProvider('Could not import provider module')
+    except AttributeError:
+        raise MisconfiguredProvider('Provider does not define class {}'.format(
+            cls_name,
+        ))
 
     return cls

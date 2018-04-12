@@ -37,6 +37,10 @@ class MisconfiguredProvider(Exception):
     pass
 
 
+class InconsistentState(Exception):
+    pass
+
+
 class NoPointerAlive(BadField):
     message = '{field} does not have a live pointer'
     errorcode = 'no_live_pointer'

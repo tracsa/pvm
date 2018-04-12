@@ -458,3 +458,85 @@ def test_call_trigger_recover(config, mongo, models):
             'user_id': old_user.id,
         }],
     }
+
+
+def test_resistance_unexisteng_hierarchy_backend(config):
+    handler = Handler(config)
+
+    ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
+    exc = ptr.proxy.execution.get()
+    que = Questionaire(ref='form', data={'choice': 'noprov'}).save()
+    que.proxy.execution.set(exc)
+
+    # this is what we test
+    handler(MagicMock(), MagicMock(), None, json.dumps({
+        'command': 'step',
+        'pointer_id': ptr.id,
+    }))
+
+
+def test_resistance_hierarchy_return(config):
+    handler = Handler(config)
+
+    ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
+    exc = ptr.proxy.execution.get()
+    que = Questionaire(ref='form', data={'choice': 'return'}).save()
+    que.proxy.execution.set(exc)
+
+    # this is what we test
+    handler(MagicMock(), MagicMock(), None, json.dumps({
+        'command': 'step',
+        'pointer_id': ptr.id,
+    }))
+
+
+def test_resistance_hierarchy_item(config):
+    handler = Handler(config)
+
+    ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
+    exc = ptr.proxy.execution.get()
+    que = Questionaire(ref='form', data={'choice': 'item'}).save()
+    que.proxy.execution.set(exc)
+
+    # this is what we test
+    handler(MagicMock(), MagicMock(), None, json.dumps({
+        'command': 'step',
+        'pointer_id': ptr.id,
+    }))
+
+
+def test_resistance_node_not_found(config):
+    handler = Handler(config)
+
+    ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
+    exc = ptr.proxy.execution.get()
+    que = Questionaire(ref='form', data={'choice': 'nonode'}).save()
+    que.proxy.execution.set(exc)
+
+    # this is what we test
+    handler(MagicMock(), MagicMock(), None, json.dumps({
+        'command': 'step',
+        'pointer_id': ptr.id,
+    }))
+
+
+def test_resistance_dead_pointer(config):
+    handler = Handler(config)
+
+    # this is what we test
+    handler(MagicMock(), MagicMock(), None, json.dumps({
+        'command': 'step',
+        'pointer_id': 'nones',
+    }))
+
+
+def test_resistance_dead_execution(config):
+    handler = Handler(config)
+
+    ptr = Pointer().save()
+
+    # this is what we test
+    handler(MagicMock(), MagicMock(), None, json.dumps({
+        'command': 'step',
+        'pointer_id': ptr.id,
+    }))

@@ -7,7 +7,8 @@ import simplejson as json
 import pika
 import pymongo
 
-from cacahuate.errors import CannotMove
+from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
+    MisconfiguredProvider
 from cacahuate.logger import log
 from cacahuate.models import Execution, Pointer, Questionaire, Activity, User
 from cacahuate.node import make_node, Node
@@ -30,10 +31,10 @@ class Handler:
 
         try:
             self.call(message, channel)
-        except ModelNotFoundError as e:
-            return log.error(str(e))
-        except CannotMove as e:
-            return log.error(str(e))
+        except (ModelNotFoundError, CannotMove, ElementNotFound,
+                MisconfiguredProvider, InconsistentState
+                ) as e:
+            log.error(str(e))
 
         if not self.config['RABBIT_NO_ACK']:
             channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -229,6 +230,9 @@ class Handler:
             **resolve_params(filter_node, pointer.proxy.execution.get())
         )
 
+        if type(husers) != list:
+            raise MisconfiguredProvider('Provider returned non list')
+
         channel.exchange_declare(
             exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
             exchange_type='direct'
@@ -237,6 +241,11 @@ class Handler:
         notified_users = []
 
         for huser in husers:
+            if not isinstance(huser, BaseUser):
+                raise MisconfiguredProvider(
+                    'User returned by hierarchy provider is not BaseUser, '
+                    'but {}'.format(type(huser))
+                )
             user = huser.get_user()
             notified_users.append(user.to_json())
 
@@ -316,6 +325,10 @@ class Handler:
 
         pointer = Pointer.get_or_exception(message['pointer_id'])
         execution = pointer.proxy.execution.get()
+
+        if execution is None:
+            raise InconsistentState('Found an orphan pointer')
+
         xml = Xml.load(self.config, execution.process_name)
 
         assert execution.process_name == xml.filename, 'Inconsistent pointer'

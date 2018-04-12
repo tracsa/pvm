@@ -31,13 +31,15 @@ class Handler:
 
         if message['command'] == 'cancel':
             self.cancel_execution(message)
-
-        try:
-            self.call(message, channel)
-        except (ModelNotFoundError, CannotMove, ElementNotFound,
-                MisconfiguredProvider, InconsistentState
-                ) as e:
-            log.error(str(e))
+        elif message['command'] == 'step':
+            try:
+                self.call(message, channel)
+            except (ModelNotFoundError, CannotMove, ElementNotFound,
+                    MisconfiguredProvider, InconsistentState
+                    ) as e:
+                log.error(str(e))
+        else:
+            log.warning('Unrecognized command {}'.format(message['command']))
 
         if not self.config['RABBIT_NO_ACK']:
             channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -364,13 +366,14 @@ class Handler:
         collection = self.get_mongo()[
             self.config['MONGO_EXECUTION_COLLECTION']
         ]
+
         collection.update_one({
             'execution_id': execution.id
-            },
-            {'$set': {
-                'status': 'cancel',
+        }, {
+            '$set': {
+                'status': 'cancelled',
                 'finished_at': datetime.now()
-            }}
-        )
+            }
+        })
 
         execution.delete()

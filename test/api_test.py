@@ -120,7 +120,7 @@ def test_continue_process_requires_living_pointer(client, models):
     }
 
 
-def test_continue_process_asks_for_user_by_hierarchy(client, models):
+def test_continue_process_requires_user_hierarchy(client, models):
     ''' a node whose auth has a filter must be completed by a person matching
     the filter '''
     user = make_user('juan', 'Juan')
@@ -142,7 +142,7 @@ def test_continue_process_asks_for_user_by_hierarchy(client, models):
     }
 
 
-def test_continue_process_asks_for_data(client, models):
+def test_continue_process_requires_data(client, models):
     juan = make_user('juan', 'Juan')
     act = Activity(ref='requester').save()
     act.proxy.user.set(juan)
@@ -271,7 +271,6 @@ def test_continue_process(client, models, mocker, config):
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
-
     assert json.loads(args['body']) == json_message
 
     # makes a useful call for the handler
@@ -974,13 +973,36 @@ def test_validate_form_multiple_error_position(client, models):
     }
 
 
-def test_delete_process(config, client, mongo):
+def test_delete_process(config, client, mongo, mocker):
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
+
     p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
     execution = p_0.proxy.execution.get()
 
+    juan = make_user('juan', 'Juan')
+
     res = client.delete(
         '/v1/execution/{}'.format(execution.id),
+        headers=make_auth(juan)
     )
+
+    assert res.status_code == 202
+
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.call_args[1]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'execution_id': execution.id,
+        'command': 'cancel',
+    }
 
 
 def test_status_notfound(client, models):
@@ -989,22 +1011,20 @@ def test_status_notfound(client, models):
     assert res.status_code == 404
 
 
-@pytest.mark.skip
-def test_status(client, models, mongo):
+def test_status(config, client, models, mongo):
     ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
     execution = ptr.proxy.execution.get()
 
-    mongo.insert_one({
+    oid = mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({
         'id': execution.id,
     })
 
     res = client.get('/v1/execution/{}'.format(execution.id))
 
-    data = execution.to_json()
-
-    data['state'] = {}
-
     assert res.status_code == 200
     assert json.loads(res.data) == {
-        'data': data,
+        'data': {
+            '_id': str(oid.inserted_id),
+            'id': execution.id,
+        },
     }

@@ -21,20 +21,18 @@ from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict, get_node_info
 
 
-def trans_id(obj):
-    obj['_id'] = str(obj['_id'])
-    return obj
-
-
 DATE_FIELDS = [
     'started_at',
     'finished_at',
 ]
 
 
-def trans_date(obj):
+def json_prepare(obj):
+    if obj.get('_id'):
+        obj['_id'] = str(obj['_id'])
+
     for field in DATE_FIELDS:
-        if obj[field] is not None:
+        if obj.get(field) and type(obj[field]) == datetime:
             obj[field] = obj[field].isoformat()
 
     return obj
@@ -94,11 +92,36 @@ def process_status(id):
     try:
         exc = next(collection.find({'id': id}))
     except StopIteration:
-        abort(404, 'Specified execution never existed, and never will')
+        raise ModelNotFoundError(
+            'Specified execution never existed, and never will'
+        )
 
     return jsonify({
-        'data': trans_dat(exc),
+        'data': json_prepare(exc),
     })
+
+
+@app.route('/v1/execution/<id>', methods=['DELETE'])
+@requires_auth
+def delete_process(id):
+    execution = Execution.get_or_exception(id)
+
+    channel = get_channel()
+    channel.basic_publish(
+        exchange='',
+        routing_key=app.config['RABBIT_QUEUE'],
+        body=json.dumps({
+            'command': 'cancel',
+            'execution_id': execution.id,
+        }),
+        properties=pika.BasicProperties(
+            delivery_mode=2,
+        ),
+    )
+
+    return jsonify({
+        'data': 'accepted',
+    }), 202
 
 
 @app.route('/v1/execution', methods=['POST'])
@@ -390,32 +413,9 @@ def list_logs(id):
 
     return jsonify({
         "data": list(map(
-            trans_date,
-            map(
-                trans_id,
-                collection.find(query).sort([
-                    ('started_at', pymongo.DESCENDING)
-                ])
-            )
+            json_prepare,
+            collection.find(query).sort([
+                ('started_at', pymongo.DESCENDING)
+            ])
         )),
     }), 200
-
-
-@app.route('/v1/execution/<id>', methods=['DELETE'])
-@requires_auth
-def delete_process(id):
-    execution = Execution.get_or_exception(id)
-    channel = get_channel()
-    channel.basic_publish(
-        exchange='',
-        routing_key=app.config['RABBIT_QUEUE'],
-        body=json.dumps({
-            'command': 'cancel',
-            'execution_id': execution.id,
-        }),
-        properties=pika.BasicProperties(
-            delivery_mode=2,
-        ),
-    )
-
-    return '', 204

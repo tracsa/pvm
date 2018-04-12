@@ -460,7 +460,7 @@ def test_call_trigger_recover(config, mongo, models):
     }
 
 
-def test_call__handler_delete_process(config, mongo, models):
+def test_call_handler_delete_process(config, mongo, models):
     handler = Handler(config)
     channel = MagicMock()
     method = {'delivery_tag': True}
@@ -477,11 +477,14 @@ def test_call__handler_delete_process(config, mongo, models):
             'execution_id': execution_id
         })
 
-    handler.__call__(channel, method, properties, body)
+    handler(channel, method, properties, body)
+
     reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+
     assert reg['execution_id'] == execution_id
-    assert reg['status'] == "cancel"
+    assert reg['status'] == "cancelled"
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+
     assert Execution.count() == 0
     assert Pointer.count() == 0
     assert Questionaire.count() == 0

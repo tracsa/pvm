@@ -8,11 +8,12 @@ def test_unexistent_backend(client):
     mth = ''.join(choice(ascii_letters) for _ in range(6))
     res = client.post('/v1/auth/signin/{}'.format(mth))
 
-    assert res.status_code == 404
+    assert res.status_code == 500
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': 'Auth backend not found: {}'.format(mth),
-            'where': 'request.url',
+            'detail': '500 Internal Server Error: Could not import provider '
+                'module cacahuate.auth.backends.{}'.format(mth),
+            'where': 'server',
         }],
     }
 

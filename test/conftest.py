@@ -12,7 +12,7 @@ TESTING_SETTINGS = {
         'hardcoded': 'test.hardcoded_login',
     },
     'HIERARCHY_PROVIDERS': {
-        'hardcoded': 'importable.path',
+        'hardcoded': 'test.hardcoded_hierarchy',
     },
 }
 

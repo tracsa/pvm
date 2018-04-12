@@ -218,6 +218,7 @@ def validate_auth(node, user, execution=None):
     try:
         HiPro = user_import(
             backend,
+            'HierarchyProvider',
             app.config['HIERARCHY_PROVIDERS'],
             'cacahuate.auth.hierarchy',
         )

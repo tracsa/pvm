@@ -227,6 +227,7 @@ class Handler:
 
         HiPro = user_import(
             backend,
+            'HierarchyProvider',
             self.config['HIERARCHY_PROVIDERS'],
             'cacahuate.auth.hierarchy',
         )

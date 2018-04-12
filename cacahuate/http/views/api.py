@@ -404,13 +404,14 @@ def list_logs(id):
 @app.route('/v1/execution/<id>', methods=['DELETE'])
 @requires_auth
 def delete_process(id):
+    execution = Execution.get_or_exception(id)
     channel = get_channel()
     channel.basic_publish(
         exchange='',
         routing_key=app.config['RABBIT_QUEUE'],
         body=json.dumps({
-            'command': 'cancelled',
-            'execution_id': id,
+            'command': 'cancel',
+            'execution_id': execution.id,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,

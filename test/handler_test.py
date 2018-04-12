@@ -460,25 +460,29 @@ def test_call_trigger_recover(config, mongo, models):
     }
 
 
-def test_call__handler_delete_process(config, mongo):
+def test_call__handler_delete_process(config, mongo, models):
     handler = Handler(config)
     channel = MagicMock()
     method = {'delivery_tag': True}
     properties = ""
     pointer = make_pointer('exit_request.2018-03-20.xml', 'requester')
-    execution = pointer.proxy.execution.get()
-    body = '{"command":"cancelled", "execution_id":"%s", "pointer_id":"%s"}'\
-        % (execution.id, pointer.id)
+    execution_id = pointer.proxy.execution.get().id
+    body = '{"command":"cancel", "execution_id":"%s", "pointer_id":"%s"}'\
+        % (execution_id, pointer.id)
 
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
             'started_at': datetime(2018, 4, 1, 21, 45),
             'finished_at': None,
             'status': 'ongoing',
-            'execution_id': execution.id
+            'execution_id': execution_id
         })
 
     handler.__call__(channel, method, properties, body)
     reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
-    assert reg['execution_id'] == execution.id
-    assert reg['status'] == "cancelled"
+    assert reg['execution_id'] == execution_id
+    assert reg['status'] == "cancel"
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert Execution.count() == 0
+    assert Pointer.count() == 0
+    assert Questionaire.count() == 0
+    assert Activity.count() == 0

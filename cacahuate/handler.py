@@ -28,31 +28,8 @@ class Handler:
         ''' the main callback of cacahuate '''
         message = self.parse_message(body)
 
-        if message['command'] == 'cancelled':
-            execution = Execution.get_or_exception(message['execution_id'])
-
-            for pointer in execution.proxy.pointers.get():
-                pointer.delete()
-
-            for activity in execution.proxy.actors.get():
-                activity.delete()
-
-            for form in execution.proxy.forms.get():
-                form.delete()
-
-            collection = self.get_mongo()[
-                self.config['MONGO_EXECUTION_COLLECTION']
-            ]
-            collection.update_one({
-                'execution_id': execution.id
-                },
-                {'$set': {
-                    'status': 'cancelled',
-                    'finished_at': datetime.now()
-                }}
-            )
-
-            execution.delete()
+        if message['command'] == 'cancel':
+            self.cancel_execution(message)
 
         try:
             self.call(message, channel)
@@ -358,3 +335,29 @@ class Handler:
             make_node(point),
             message.get('actor'),
         )
+
+    def cancel_execution(self, message):
+        execution = Execution.get_or_exception(message['execution_id'])
+
+        for pointer in execution.proxy.pointers.get():
+            pointer.delete()
+
+        for activity in execution.proxy.actors.get():
+            activity.delete()
+
+        for form in execution.proxy.forms.get():
+            form.delete()
+
+        collection = self.get_mongo()[
+            self.config['MONGO_EXECUTION_COLLECTION']
+        ]
+        collection.update_one({
+            'execution_id': execution.id
+            },
+            {'$set': {
+                'status': 'cancel',
+                'finished_at': datetime.now()
+            }}
+        )
+
+        execution.delete()

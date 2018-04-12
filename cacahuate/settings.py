@@ -28,6 +28,7 @@ TIMEZONE = 'UTC'
 # Supported commands for cacahuate
 COMMANDS = [
     'step',
+    'cancelled',
 ]
 
 # For ephimeral objects, like executions and pointers

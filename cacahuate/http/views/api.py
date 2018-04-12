@@ -404,35 +404,13 @@ def list_logs(id):
 @app.route('/v1/execution/<id>', methods=['DELETE'])
 @requires_auth
 def delete_process(id):
-    execution = Execution.get_or_exception(id)
-
-    for pointer in execution.proxy.pointers.get():
-        pointer.delete()
-
-    for activity in execution.proxy.actors.get():
-        activity.delete()
-
-    for form in execution.proxy.forms.get():
-        form.delete()
-
-    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
-    collection.update_one({
-        'execution_id': execution.id
-        },
-        {'$set': {
-            'status': 'cancelled',
-            'finished_at': datetime.now()
-        }}
-    )
-
-    execution.delete()
-
     channel = get_channel()
     channel.basic_publish(
         exchange='',
         routing_key=app.config['RABBIT_QUEUE'],
         body=json.dumps({
-            'msj': 'execution cancelled',
+            'command': 'cancelled',
+            'execution_id': id,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,

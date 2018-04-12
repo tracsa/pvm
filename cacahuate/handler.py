@@ -28,6 +28,32 @@ class Handler:
         ''' the main callback of cacahuate '''
         message = self.parse_message(body)
 
+        if message['command'] == 'cancelled':
+            execution = Execution.get_or_exception(message['execution_id'])
+
+            for pointer in execution.proxy.pointers.get():
+                pointer.delete()
+
+            for activity in execution.proxy.actors.get():
+                activity.delete()
+
+            for form in execution.proxy.forms.get():
+                form.delete()
+
+            collection = self.get_mongo()[
+                self.config['MONGO_EXECUTION_COLLECTION']
+            ]
+            collection.update_one({
+                'execution_id': execution.id
+                },
+                {'$set': {
+                    'status': 'cancelled',
+                    'finished_at': datetime.now()
+                }}
+            )
+
+            execution.delete()
+
         try:
             self.call(message, channel)
         except ModelNotFoundError as e:
@@ -39,6 +65,7 @@ class Handler:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, message: dict, channel):
+
         execution, pointer, xml, cur_node, actor = self.recover_step(message)
 
         to_queue = []  # pointers to be sent to the queue

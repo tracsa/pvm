@@ -458,3 +458,27 @@ def test_call_trigger_recover(config, mongo, models):
             'user_id': old_user.id,
         }],
     }
+
+
+def test_call__handler_delete_process(config, mongo):
+    handler = Handler(config)
+    channel = MagicMock()
+    method = {'delivery_tag': True}
+    properties = ""
+    pointer = make_pointer('exit_request.2018-03-20.xml', 'requester')
+    execution = pointer.proxy.execution.get()
+    body = '{"command":"cancelled", "execution_id":"%s", "pointer_id":"%s"}'\
+        % (execution.id, pointer.id)
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+            'started_at': datetime(2018, 4, 1, 21, 45),
+            'finished_at': None,
+            'status': 'ongoing',
+            'execution_id': execution.id
+        })
+
+    handler.__call__(channel, method, properties, body)
+    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+    assert reg['execution_id'] == execution.id
+    assert reg['status'] == "cancelled"
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2

@@ -409,11 +409,6 @@ def test_start_process_simple(client, models, mocker, config, mongo):
     assert reg2['status'] == 'ongoing'
 
 def test_start_process_all_default_input(client, models, mocker, config, mongo):
-    mocker.patch(
-        'pika.adapters.blocking_connection.'
-        'BlockingChannel.basic_publish'
-    )
-
     user = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -424,13 +419,12 @@ def test_start_process_all_default_input(client, models, mocker, config, mongo):
             {
                 'ref': 'auth-form',
                 'data': {
-                    'name': 'tenía que salir al baño',
                 },
             },
         ],
     }))
 
-    print (res)
+    print (res.data)
     assert False
 
 def test_exit_request_requirements(client, models):

@@ -17,12 +17,14 @@
             label="Nombre"
             name="name"
             placeholder="Jon Snow"
+            default="Jon snow"
           />
 
           <input
             label="Fecha de nacimiento"
             type="datetime"
             name="datetime"
+            default="2018-04-04"
           />
 
           <input
@@ -34,7 +36,8 @@
           <input
             label="Marque sus intereses"
             type="checkbox"
-            name="interests">
+            name="interests"
+            default=["science","sports"]>
             <option value="science">Ciencia</option>
             <option value="sports">Deportes</option>
             <option value="music">Música</option>
@@ -54,7 +57,8 @@
           <input
             type="select"
             label="Emita su voto"
-            name="elections">
+            name="elections"
+            default="amlo">
             <option value="amlo">Andres Manuel López Obrador</option>
             <option value="meade">José Antonio Meade Kuribreña</option>
             <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>

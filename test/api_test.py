@@ -408,6 +408,30 @@ def test_start_process_simple(client, models, mocker, config, mongo):
     assert reg['execution']['id'] == reg2['id']
     assert reg2['status'] == 'ongoing'
 
+def test_start_process_all_default_input(client, models, mocker, config, mongo):
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
+
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'all-default-input',
+        'form_array': [
+            {
+                'ref': 'auth-form',
+                'data': {
+                    'name': 'tenía que salir al baño',
+                },
+            },
+        ],
+    }))
+
+    print (res)
+    assert False
 
 def test_exit_request_requirements(client, models):
     # first requirement is to have authentication

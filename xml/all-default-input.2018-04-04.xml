@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process-spec>
+  <process-info>
+    <author>OgAstorga</author>
+    <date>2018-04-04</date>
+    <name>Todos los inputs</name>
+    <description>Proceso que pide todos los tipos de entrada y después no hace nada</description>
+    <public>true</public>
+    <start-node>inputs-node</start-node>
+  </process-info>
+  <process>
+    <node id="inputs-node" class="decision">
+      <form-array>
+        <form id="auth-form">
+          <input
+            type="text"
+            label="Nombre"
+            name="name"
+            placeholder="Jon Snow"
+          />
+
+          <input
+            label="Fecha de nacimiento"
+            type="datetime"
+            name="datetime"
+          />
+
+          <input
+            label="Un secreto"
+            type="password"
+            name="secret"
+          />
+
+          <input
+            label="Marque sus intereses"
+            type="checkbox"
+            name="interests">
+            <option value="science">Ciencia</option>
+            <option value="sports">Deportes</option>
+            <option value="music">Música</option>
+            <option value="nature">Naturaleza</option>
+            <option value="thecnology">Tecnología</option>
+          </input>
+
+          <input
+            label="Género?"
+            type="radio"
+            name="gender"
+            default="male">
+            <option value="male">Masculino</option>
+            <option value="female">Femenino</option>
+          </input>
+
+          <input
+            type="select"
+            label="Emita su voto"
+            name="elections">
+            <option value="amlo">Andres Manuel López Obrador</option>
+            <option value="meade">José Antonio Meade Kuribreña</option>
+            <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>
+            <option value="anaya">Ricardo Anaya Cortés</option>
+          </input>
+        </form>
+      </form-array>
+    </node>
+  </process>
+</process-spec>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-04-13</date>
+    <name>Computes a name based on a {{ field }}</name>
+    <public>false</public>
+    <description>Uses string interpolation to build the execution's name</description>
+    <start-node>start-node</start-node>
+  </process-info>
+  <process>
+    <node id="start-node" class="simple">
+      <form-array>
+        <form id="form">
+          <input type="text" name="field" required="required" />
+        </form>
+      </form-array>
+    </node>
+    <connector from="start-node" to="end-node" />
+    <node id="end-node" class="end" />
+  </process>
+</process-spec>

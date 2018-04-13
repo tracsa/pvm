@@ -12,7 +12,7 @@ def test_unexistent_backend(client):
     assert json.loads(res.data) == {
         'errors': [{
             'detail': '500 Internal Server Error: Could not import provider '
-                'module cacahuate.auth.backends.{}'.format(mth),
+                      'module cacahuate.auth.backends.{}'.format(mth),
             'where': 'server',
         }],
     }

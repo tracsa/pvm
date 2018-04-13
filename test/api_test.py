@@ -559,6 +559,50 @@ def test_list_processes(client):
     }
 
 
+def test_list_processes_multiple(client):
+    res = client.get('/v1/process')
+
+    body = json.loads(res.data)
+    exit_req = list(filter(
+        lambda xml: xml['id'] == 'form-multiple', body['data']
+    ))[0]
+
+    assert res.status_code == 200
+    assert exit_req == {
+        'id': 'form-multiple',
+        'version': '2018-04-08',
+        'author': 'categulario',
+        'date': '2018-04-08',
+        'name': 'Con un formulario múltiple',
+        'description':
+            'Este proceso tiene un formulario que puede enviar muchas copias',
+        'versions': ['2018-04-08'],
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'inputs': [
+                    {
+                        'type': 'text',
+                        'name': 'name',
+                        'required': True,
+                    },
+                ],
+            },
+            {
+                'ref': 'multiple-form',
+                'multiple': 'multiple',
+                'inputs': [
+                    {
+                        'type': 'text',
+                        'name': 'phone',
+                        'required': True,
+                    },
+                ],
+            },
+        ],
+    }
+
+
 @pytest.mark.skip
 def test_read_process(client):
     res = client.get('/v1/process/exit_request')

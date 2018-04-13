@@ -368,6 +368,9 @@ def form_to_dict(form):
         'inputs': [],
     }
 
+    if form.getAttribute('multiple'):
+        form_dict['multiple'] = form.getAttribute('multiple')
+
     for input in inputs:
         form_dict['inputs'].append(input_to_dict(input))
 

@@ -408,7 +408,10 @@ def test_start_process_simple(client, models, mocker, config, mongo):
     assert reg['execution']['id'] == reg2['id']
     assert reg2['status'] == 'ongoing'
 
-def test_start_process_all_default_input(client, models, mocker, config, mongo):
+
+def test_start_process_all_default_input(
+        client, models, mocker, config, mongo
+        ):
     user = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -423,8 +426,6 @@ def test_start_process_all_default_input(client, models, mocker, config, mongo):
         ],
     }))
 
-    print (res.data)
-    assert False
 
 def test_exit_request_requirements(client, models):
     # first requirement is to have authentication

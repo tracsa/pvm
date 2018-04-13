@@ -23,13 +23,13 @@ def validate_input(form_index: int, input, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
     input_type = input.get('type')
-    if type(value) is not str and type(value) is not list and type(value) is not dict and input.get('default'):
+    if type(value) is not str and type(value) is not list\
+       and type(value) is not dict and input.get('default'):
         value = input.get('default')
         if input_type == 'checkbox' and type(value) is not list:
                 value = ast.literal_eval(value)
         if input_type == 'file' and type(value) is dict:
             value = json.dumps(value)
-
 
     if input.get('required') and (value == '' or value is None):
         raise RequiredInputError(form_index, input.get('name'))

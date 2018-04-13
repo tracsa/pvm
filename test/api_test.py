@@ -410,9 +410,7 @@ def test_start_process_simple(client, models, mocker, config, mongo):
     assert reg2['status'] == 'ongoing'
 
 
-def test_start_process_all_default_input(
-        client, models, mocker, config, mongo
-        ):
+def test_start_process_all_default_input(client, models, mongo):
     user = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{

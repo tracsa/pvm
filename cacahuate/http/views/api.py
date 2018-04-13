@@ -44,7 +44,7 @@ def store_forms(collected_forms, execution):
     for ref, form_description in collected_forms:
         form_data = dict(map(
             lambda x: (x['name'], x['value']),
-            form_description[1]
+            form_description
         ))
 
         ques = Questionaire(ref=ref, data=form_data).save()
@@ -52,7 +52,7 @@ def store_forms(collected_forms, execution):
         forms.append({
             'ref': ref,
             'data': form_data,
-            'form': form_description[1],
+            'form': form_description,
         })
 
     return forms

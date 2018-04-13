@@ -1,7 +1,8 @@
 from cacahuate.auth.base import BaseHierarchyProvider
-from cacahuate.auth.backends.hardcoded import HardcodedUser
 from cacahuate.errors import HierarchyError
 from cacahuate.models import User
+
+from .hardcoded_login import HardcodedUser
 
 
 class HardcodedHierarchyProvider(BaseHierarchyProvider):

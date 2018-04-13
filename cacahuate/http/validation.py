@@ -169,10 +169,7 @@ def validate_form_spec(form_specs, data) -> dict:
         min = 1
 
     for index, form in get_associated_data(ref, data, min, max):
-        collected_data.append((
-            ref,
-            validate_form(form_specs, index, form['data'])
-        ))
+        collected_data.append(validate_form(form_specs, index, form['data']))
 
     return collected_data
 
@@ -228,6 +225,7 @@ def validate_auth(node, user, execution=None):
     try:
         HiPro = user_import(
             backend,
+            'HierarchyProvider',
             app.config['HIERARCHY_PROVIDERS'],
             'cacahuate.auth.hierarchy',
         )

@@ -391,7 +391,6 @@ def test_start_process_simple(client, models, mocker, config, mongo):
 
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
-    reg2 = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
@@ -405,7 +404,9 @@ def test_start_process_simple(client, models, mocker, config, mongo):
         }],
     }
 
-    assert reg['execution']['id'] == reg2['id']
+    reg2 = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+
+    assert reg2['id'] == exc.id
     assert reg2['status'] == 'ongoing'
 
 
@@ -568,6 +569,50 @@ def test_list_processes(client):
                     {
                         'type': 'text',
                         'name': 'reason',
+                        'required': True,
+                    },
+                ],
+            },
+        ],
+    }
+
+
+def test_list_processes_multiple(client):
+    res = client.get('/v1/process')
+
+    body = json.loads(res.data)
+    exit_req = list(filter(
+        lambda xml: xml['id'] == 'form-multiple', body['data']
+    ))[0]
+
+    assert res.status_code == 200
+    assert exit_req == {
+        'id': 'form-multiple',
+        'version': '2018-04-08',
+        'author': 'categulario',
+        'date': '2018-04-08',
+        'name': 'Con un formulario múltiple',
+        'description':
+            'Este proceso tiene un formulario que puede enviar muchas copias',
+        'versions': ['2018-04-08'],
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'inputs': [
+                    {
+                        'type': 'text',
+                        'name': 'name',
+                        'required': True,
+                    },
+                ],
+            },
+            {
+                'ref': 'multiple-form',
+                'multiple': 'multiple',
+                'inputs': [
+                    {
+                        'type': 'text',
+                        'name': 'phone',
                         'required': True,
                     },
                 ],
@@ -917,78 +962,6 @@ def test_log_has_form_input_data(client, models):
             "value": "yes"
         }
     ]
-
-
-def test_validate_form_multiple(client, models):
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'form-multiple',
-        'form_array': [
-            {
-                'ref': 'single-form',
-                'data': {
-                    'name': 'jorge',
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {},
-            },
-        ],
-    }))
-
-    assert res.status_code == 400
-    assert json.loads(res.data) == {
-        'errors': [
-            {
-                'detail': '\'phone\' input is required',
-                'where': 'request.body.form_array.1.phone',
-                'code': 'validation.required',
-            },
-        ]
-    }
-
-
-def test_validate_form_multiple_error_position(client, models):
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'form-multiple',
-        'form_array': [
-            {
-                'ref': 'single-form',
-                'data': {
-                    'name': 'jorge',
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '12432',
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {},
-            },
-        ],
-    }))
-
-    assert res.status_code == 400
-    assert json.loads(res.data) == {
-        'errors': [
-            {
-                'detail': '\'phone\' input is required',
-                'where': 'request.body.form_array.2.phone',
-                'code': 'validation.required',
-            },
-        ]
-    }
 
 
 def test_delete_process(config, client, mongo, mocker):

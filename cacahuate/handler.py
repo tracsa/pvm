@@ -45,7 +45,6 @@ class Handler:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, message: dict, channel):
-
         execution, pointer, xml, cur_node, actor = self.recover_step(message)
 
         to_queue = []  # pointers to be sent to the queue
@@ -227,6 +226,7 @@ class Handler:
 
         HiPro = user_import(
             backend,
+            'HierarchyProvider',
             self.config['HIERARCHY_PROVIDERS'],
             'cacahuate.auth.hierarchy',
         )

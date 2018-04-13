@@ -418,8 +418,7 @@ def test_start_process_all_default_input(client, models, mocker, config, mongo):
         'form_array': [
             {
                 'ref': 'auth-form',
-                'data': {
-                },
+                'data': {}
             },
         ],
     }))

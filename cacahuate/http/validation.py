@@ -3,9 +3,11 @@ from xml.dom.minidom import Element
 from flask import request, abort
 import os
 import sys
+import ast
 from datetime import datetime
 from functools import reduce
 from operator import and_
+import json
 
 from cacahuate.errors import ValidationErrors, InputError,\
     RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
@@ -21,6 +23,13 @@ def validate_input(form_index: int, input, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
     input_type = input.get('type')
+    if type(value) is not str and type(value) is not list and type(value) is not dict and input.get('default'):
+        value = input.get('default')
+        if input_type == 'checkbox' and type(value) is not list:
+                value = ast.literal_eval(value)
+        if input_type == 'file' and type(value) is dict:
+            value = json.dumps(value)
+
 
     if input.get('required') and (value == '' or value is None):
         raise RequiredInputError(form_index, input.get('name'))
@@ -35,8 +44,9 @@ def validate_input(form_index: int, input, value):
             raise InvalidDateError(form_index, input.get('name'))
 
     elif input_type == 'checkbox':
+
         if type(value) is not list:
-            raise RequiredListError(form_index, input.get('name'))
+            raise RequiredListError(form_index, value)
 
         list_values = [
             child_element.get('value')
@@ -131,7 +141,7 @@ def validate_form(form_specs, index, data):
             input_description = validate_input(
                 index,
                 input,
-                data.get(name)
+                data.get(name),
             )
             collected_data.append(input_description)
         except InputError as e:

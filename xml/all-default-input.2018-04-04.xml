@@ -24,20 +24,21 @@
             label="Fecha de nacimiento"
             type="datetime"
             name="datetime"
-            default="2018-04-04"
+            default="2013-02-11T18:04:21.337522Z"
           />
 
           <input
             label="Un secreto"
             type="password"
             name="secret"
+            default="dasdasd"
           />
 
           <input
             label="Marque sus intereses"
             type="checkbox"
             name="interests"
-            default=["science","sports"]>
+            default='["science","sports"]'>
             <option value="science">Ciencia</option>
             <option value="sports">Deportes</option>
             <option value="music">Música</option>
@@ -64,6 +65,7 @@
             <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>
             <option value="anaya">Ricardo Anaya Cortés</option>
           </input>
+
         </form>
       </form-array>
     </node>

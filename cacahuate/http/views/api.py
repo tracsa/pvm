@@ -6,6 +6,7 @@ from functools import reduce
 import os
 import pika
 import pymongo
+from jinja2 import Template
 
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
@@ -56,6 +57,18 @@ def store_forms(collected_forms, execution):
         })
 
     return forms
+
+
+def make_name(name_string, collected_forms):
+    context = dict(map(
+        lambda i: (i[0], dict(map(
+            lambda j: (j['name'], j['value']),
+            i[1]
+        ))),
+        collected_forms
+    ))
+
+    return Template(name_string).render(**context)
 
 
 def store_actor(node, user, execution, forms):
@@ -157,7 +170,7 @@ def start_process():
     # save the data
     execution = Execution(
         process_name=xml.filename,
-        name=xml.name,
+        name=make_name(xml.name, collected_forms),
         description=xml.description,
     ).save()
     pointer = Pointer(
@@ -195,6 +208,8 @@ def start_process():
 
     history_execution = collection.insert_one({
         'id': execution.id,
+        'name': execution.name,
+        'description': execution.description,
         'status': 'ongoing',
         'started_at': datetime.now(),
         'finished_at': None,

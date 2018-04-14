@@ -21,61 +21,65 @@ def validate_input(form_index: int, input, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
     input_type = input.get('type')
+    input_name = input.get('name')
+    input_label = input.get('label')
+    required = input.get('required')
+    options = input.get('options', [])
 
-    if input.get('required') and (value == '' or value is None):
-        raise RequiredInputError(form_index, input.get('name'))
+    if required and (value == '' or value is None):
+        raise RequiredInputError(form_index, input_name)
 
-    elif input_type == 'datetime' or input.get('type') == 'date':
+    elif input_type == 'datetime' or input_type == 'date':
         if type(value) is not str:
-            raise RequiredStrError(form_index, input.get('name'))
+            raise RequiredStrError(form_index, input_name)
 
         try:
             datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
-            raise InvalidDateError(form_index, input.get('name'))
+            raise InvalidDateError(form_index, input_name)
 
     elif input_type == 'checkbox':
         if type(value) is not list:
-            raise RequiredListError(form_index, input.get('name'))
+            raise RequiredListError(form_index, input_name)
 
         list_values = [
             child_element.get('value')
-            for child_element in input.get('options', [])
+            for child_element in options
         ]
 
         for val in value:
             if val not in list_values:
                 raise InvalidInputError(
                         form_index,
-                        input.get('name')
+                        input_name
                     )
 
     elif input_type == 'radio':
         if type(value) is not str:
-            raise RequiredStrError(form_index, input.get('name'))
+            raise RequiredStrError(form_index, input_name)
 
         list_values = [
             child_element.get('value')
-            for child_element in input.get('options', [])
+            for child_element in options
         ]
         if value not in list_values:
-            raise InvalidInputError(form_index, input.get('name'))
+            raise InvalidInputError(form_index, input_name)
 
     elif input_type == 'select':
         if type(value) is not str:
-            raise RequiredStrError(form_index, input.get('name'))
+            raise RequiredStrError(form_index, input_name)
 
         list_values = [
             child_element.get('value')
-            for child_element in input.get('options', [])
+            for child_element in options
         ]
 
         if value not in list_values:
-            raise InvalidInputError(form_index, input.get('name'))
+            raise InvalidInputError(form_index, input_name)
 
     elif input_type == 'file':
         if type(value) is not dict:
-            raise InvalidInputError(form_index, input.get('name'))
+            raise InvalidInputError(form_index, input_name)
 
         provider = input.get('provider')
         if provider == 'doqer':
@@ -90,13 +94,17 @@ def validate_input(form_index: int, input, value):
             )
 
             if not valid:
-                raise InvalidInputError(form_index, input.get('name'))
+                raise InvalidInputError(form_index, input_name)
         else:
             abort(500, 'File provider `{}` not implemented'.format(provider))
 
-    input['value'] = value
-
-    return input
+    return {
+        'name': input_name,
+        'value': value,
+        'type': input_type,
+        'options': options,
+        'label': input_label,
+    }
 
 
 def get_associated_data(ref, data, min, max):
@@ -122,7 +130,7 @@ def get_associated_data(ref, data, min, max):
 
 def validate_form(form_specs, index, data):
     errors = []
-    collected_data = []
+    collected_inputs = []
 
     for input in form_specs['inputs']:
         name = input['name']
@@ -133,14 +141,14 @@ def validate_form(form_specs, index, data):
                 input,
                 data.get(name)
             )
-            collected_data.append(input_description)
+            collected_inputs.append(input_description)
         except InputError as e:
             errors.append(e)
 
     if errors:
         raise ValidationErrors(errors)
 
-    return collected_data
+    return collected_inputs
 
 
 def validate_form_spec(form_specs, data) -> dict:
@@ -149,7 +157,7 @@ def validate_form_spec(form_specs, data) -> dict:
     '''
     ref = form_specs['ref']
     specs = form_specs['multiple']
-    collected_data = []
+    collected_specs = []
 
     if form_specs.get('multiple'):
         max = float('inf')
@@ -159,9 +167,9 @@ def validate_form_spec(form_specs, data) -> dict:
         min = 1
 
     for index, form in get_associated_data(ref, data, min, max):
-        collected_data.append(validate_form(form_specs, index, form['data']))
+        collected_specs.append(validate_form(form_specs, index, form['data']))
 
-    return collected_data
+    return collected_specs
 
 
 def validate_forms(node, json_data):

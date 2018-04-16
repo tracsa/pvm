@@ -495,6 +495,23 @@ def test_call_handler_delete_process(config, mongo, models):
     assert Activity.count() == 0
 
 
+def test_pointer_not_created_without_form():
+    assert False, 'wakeup a node that notifies multiple users, a pointer is created but no one is asociated, pointer is queued'
+
+
+def test_teardown_clears_tasks():
+    assert False, 'suppose a pointer with three users asociated, teardown should clear the three tasks'
+
+
+def test_teardown_nolast():
+    assert False, 'suppose a pointer that needs three participants, when the first one resolves the pointer is not queued'
+    assert False, 'respondant count is increased'
+    assert False, 'task for respondant is deleted'
+
+def test_teardown_last_task():
+    assert False, 'suppose a pointer with only one task left, teardown should queue it'
+
+
 def test_resistance_unexisteng_hierarchy_backend(config):
     handler = Handler(config)
 

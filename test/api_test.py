@@ -141,6 +141,8 @@ def test_continue_process_requires_user_hierarchy(client, models):
         }],
     }
 
+    assert False, 'users with a task can resolve, users without it cannot'
+
 
 def test_continue_process_requires_data(client, models):
     juan = make_user('juan', 'Juan')

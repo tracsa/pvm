@@ -375,7 +375,9 @@ def test_call_trigger_recover(config, mongo, models):
 
     def make_history(num):
         return {
-            'node_id': 'start-node',
+            'node': {
+                'id': 'start-node',
+            },
             'execution': {
                 'id': execution.id,
             },

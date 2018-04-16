@@ -376,7 +376,9 @@ def test_call_trigger_recover(config, mongo, models):
     def make_history(num):
         return {
             'node_id': 'start-node',
-            'execution_id': execution.id,
+            'execution': {
+                'id': execution.id,
+            },
             'started_at': datetime(2018, 4, num),
             'state': {
                 'forms': [{
@@ -474,14 +476,14 @@ def test_call_handler_delete_process(config, mongo, models):
             'started_at': datetime(2018, 4, 1, 21, 45),
             'finished_at': None,
             'status': 'ongoing',
-            'execution_id': execution_id
+            'id': execution_id
         })
 
     handler(channel, method, properties, body)
 
     reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
 
-    assert reg['execution_id'] == execution_id
+    assert reg['id'] == execution_id
     assert reg['status'] == "cancelled"
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
 

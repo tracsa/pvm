@@ -452,7 +452,6 @@ def list_executions():
     return jsonify(
         {
         'data': executions[0].to_json()
-        #'execut': list(json.dumps(execution)
     })
 
 

@@ -240,7 +240,7 @@ def start_process():
 
 
 @app.route('/v1/pointer', methods=['POST'])
-@requires_auth
+#@requires_auth
 @requires_json
 def continue_process():
     validate_json(request.json, ['execution_id', 'node_id'])
@@ -384,7 +384,7 @@ def one_activity(id):
 
 
 @app.route('/v1/task')
-@requires_auth
+#@requires_auth
 def task_list():
     return jsonify({
         'data': list(map(
@@ -438,3 +438,21 @@ def list_logs(id):
             ])
         )),
     }), 200
+
+
+@app.route('/v1/execution', methods=['GET'])
+def list_executions():
+
+    executions = Execution.get_all()
+    #print (executions)
+    #print (Execution.get_all()[0].to_json())
+    #cacahuate.models.Execution object at 0x7fed099da6a0
+    #'executions' just show one execution because can't be more executions at time
+
+    return jsonify(
+        {
+        'data': executions[0].to_json()
+        #'execut': list(json.dumps(execution)
+    })
+
+

@@ -440,10 +440,18 @@ def list_logs(id):
     }), 200
 
 
+
+
 @app.route('/v1/execution', methods=['GET'])
 def list_execution():
-	executions = Execution.get_all();
 
-	return jsonify({
-		"data": executions[0].to_json()
-		})
+    executions = Execution.get_all()
+    #print (executions)
+    x = []
+    for e in executions:
+        print(e.id)
+        x.append([e.to_json()])
+        
+    return jsonify({
+        "data": x
+        })

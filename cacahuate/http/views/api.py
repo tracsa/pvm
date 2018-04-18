@@ -446,10 +446,8 @@ def list_logs(id):
 def list_execution():
 
     executions = Execution.get_all()
-    #print (executions)
     x = []
     for e in executions:
-        print(e.id)
         x.append([e.to_json()])
         
     return jsonify({

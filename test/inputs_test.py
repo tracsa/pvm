@@ -354,7 +354,7 @@ def test_validate_form_multiple_error_position(client, models):
             {
                 'ref': 'multiple-form',
                 'data': {
-                    'name': '12432',
+                    'phone': '12432',
                 },
             },
             {

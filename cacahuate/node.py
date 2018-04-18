@@ -1,6 +1,6 @@
 """ Here is defined the node class and its subclasses, which define the kinds
 of directions that this virtual machine can follow """
-import case_conversion
+from case_conversion import pascalcase
 from typing import Iterator
 from xml.dom.minidom import Element
 
@@ -104,14 +104,10 @@ def make_node(element):
     if not element.getAttribute('class'):
         raise KeyError('Must have the class atrribute')
 
-    class_name = case_conversion.pascalcase(
-                                            element.getAttribute('class')
-                ) + 'Node'
+    class_name = pascalcase(element.getAttribute('class')) + 'Node'
     available_classes = __import__(__name__).node
 
     if class_name not in dir(available_classes):
         raise ValueError('Class definition not found: {}'.format(class_name))
 
-    return getattr(available_classes, class_name)(
-        element
-    )
+    return getattr(available_classes, class_name)(element)

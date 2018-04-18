@@ -1,4 +1,3 @@
-from case_conversion import pascalcase
 from coralillo.errors import ModelNotFoundError
 from datetime import datetime
 from importlib import import_module

@@ -436,10 +436,8 @@ def list_logs(id):
             collection.find(query).sort([
                 ('started_at', pymongo.DESCENDING)
             ])
-)),
-    }), 200
-
-
+        )),
+        }), 200
 
 
 @app.route('/v1/execution', methods=['GET'])
@@ -449,7 +447,6 @@ def list_execution():
     x = []
     for e in executions:
         x.append([e.to_json()])
-        
     return jsonify({
         "data": x
         })

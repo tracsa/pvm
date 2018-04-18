@@ -440,17 +440,13 @@ def list_logs(id):
     }), 200
 
 
-@app.route('/v1/execution', methods=['GET'])
+@app.route('/v1/execution/list', methods=['GET'])
 def list_execution():
-    receive = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
-    print (receive)
-    #x = []
+    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
 
     return jsonify({
         "data": list(map(
             json_prepare,
-            receive.find().sort([
-                ('started_at', pymongo.DESCENDING)
-            ])
+            collection.find()
         )),
     })

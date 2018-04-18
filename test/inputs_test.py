@@ -364,8 +364,6 @@ def test_validate_form_multiple_error_position(client, models):
         ],
     }))
 
-    print(json.loads(res.data))
-
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [

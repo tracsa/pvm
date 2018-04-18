@@ -8,6 +8,7 @@ from datetime import datetime
 from functools import reduce
 from operator import and_
 import json
+import case_conversion
 
 from cacahuate.errors import ValidationErrors, InputError,\
     RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
@@ -17,32 +18,24 @@ from cacahuate.models import User, Token
 from cacahuate.xml import resolve_params, input_to_dict, get_form_specs
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
-from cacahuate.validationClass import TextInput, DateInput,\
-    CheckboxInput, RadioInput, SelectInput, FileInput
+from cacahuate import validationClass
+# from cacahuate.validationClass import TextInput, DateInput,\
+#     CheckboxInput, RadioInput, SelectInput, FileInput
 
 
 def validate_input(form_index: int, input, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
+    import case_conversion
+
     input_type = input.get('type')
-    if input_type == 'text' or input_type == 'password':
-        text_input = TextInput(form_index, input)
-        input['value'] = text_input.validate(value)
-    elif input_type == 'datetime' or input_type == 'date':
-        date_input = DateInput(form_index, input)
-        input['value'] = date_input.validate(value)
-    elif input_type == 'checkbox':
-        checkbox_input = CheckboxInput(form_index, input)
-        input['value'] = checkbox_input.validate(value)
-    elif input_type == 'radio':
-        radio_input = RadioInput(form_index, input)
-        input['value'] = radio_input.validate(value)
-    elif input_type == 'select':
-        select_input = SelectInput(form_index, input)
-        input['value'] = select_input.validate(value)
-    elif input_type == 'file':
-        file_input = FileInput(form_index, input)
-        input['value'] = file_input.validate(value)
+
+    cls = getattr(
+                validationClass,
+                case_conversion.pascalcase(input_type) + 'Input'
+            )
+    instance = cls(form_index, input)
+    input['value'] = instance.validate(value)
     return input
 
 

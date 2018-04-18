@@ -45,6 +45,14 @@ class TextInput(Input):
         return self.value
 
 
+class PasswordInput(Input):
+    def validate(self, value):
+        super().validate(value)
+        if type(self.value) is not str:
+            raise RequiredStrError(self.form_index, value)
+        return self.value
+
+
 class CheckboxInput(Input):
     def validate(self, value):
         super().validate(value)
@@ -112,6 +120,19 @@ class FileInput(Input):
 
 
 class DateInput(Input):
+    def validate(self, value):
+        super().validate(value)
+        if type(self.value) is not str:
+            raise RequiredStrError(self.form_index, self.input.get('name'))
+
+        try:
+            datetime.strptime(self.value, "%Y-%m-%dT%H:%M:%S.%fZ")
+        except ValueError:
+            raise InvalidDateError(self.form_index, self.input.get('name'))
+        return self.value
+
+
+class DatetimeInput(Input):
     def validate(self, value):
         super().validate(value)
         if type(self.value) is not str:

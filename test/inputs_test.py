@@ -364,13 +364,15 @@ def test_validate_form_multiple_error_position(client, models):
         ],
     }))
 
-    # assert res.status_code == 400
-    # assert json.loads(res.data) == {
-    #     'errors': [
-    #         {
-    #             'detail': '\'phone\' input is required',
-    #             'where': 'request.body.form_array.2.phone',
-    #             'code': 'validation.required',
-    #         },
-    #     ]
-    # }
+    print(json.loads(res.data))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'code': 'validation.required',
+                'detail': '\'phone\' input is required',
+                'where': 'request.body.form_array.2.phone',
+            },
+        ]
+    }

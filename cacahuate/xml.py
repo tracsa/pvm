@@ -337,6 +337,7 @@ SUPPORTED_ATTRS = {
     'placeholder': str,
     'provider': str,
     'regex': str,
+    'value': str,
     'required': lambda x: bool(x),
     'type': str,
 }

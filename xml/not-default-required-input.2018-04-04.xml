@@ -4,7 +4,7 @@
     <author>OgAstorga</author>
     <date>2018-04-04</date>
     <name>Todos los inputs</name>
-    <description>Proceso de formulario que no tiene el campo required y toma el valor del atributo default</description>
+    <description>Proceso de formulario que los campos no tienen los atributos required y default, de modo que toma el atributo value del campo</description>
     <public>true</public>
     <start-node>inputs-node</start-node>
   </process-info>
@@ -16,29 +16,28 @@
             type="text"
             label="Nombre"
             name="name"
-            placeholder="Jon Snow"
-            default="Jon Snow"
+            value="Maximo Decimo Meridio"
           />
 
           <input
             label="Fecha de nacimiento"
             type="datetime"
             name="datetime"
-            default="2013-02-11T18:04:21.337522Z"
+            value="2013-02-11T18:04:21.337522Z"
           />
 
           <input
             label="Un secreto"
             type="password"
             name="secret"
-            default="dasdasd"
+            value="dasdasd"
           />
 
           <input
             label="Marque sus intereses"
             type="checkbox"
             name="interests"
-            default='["science","sports"]'>
+            value='["science","sports"]'>
             <option value="science">Ciencia</option>
             <option value="sports">Deportes</option>
             <option value="music">Música</option>
@@ -50,7 +49,7 @@
             label="Género?"
             type="radio"
             name="gender"
-            default="male">
+            value="male">
             <option value="male">Masculino</option>
             <option value="female">Femenino</option>
           </input>
@@ -59,7 +58,7 @@
             type="select"
             label="Emita su voto"
             name="elections"
-            default="amlo">
+            value="amlo">
             <option value="amlo">Andres Manuel López Obrador</option>
             <option value="meade">José Antonio Meade Kuribreña</option>
             <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>

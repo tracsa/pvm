@@ -17,95 +17,32 @@ from cacahuate.models import User, Token
 from cacahuate.xml import resolve_params, input_to_dict, get_form_specs
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
+from cacahuate.validationClass import TextInput, DateInput,\
+    CheckboxInput, RadioInput, SelectInput, FileInput
 
 
 def validate_input(form_index: int, input, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
     input_type = input.get('type')
-    if type(value) is not str and type(value) is not list\
-       and type(value) is not dict and input.get('default'):
-        value = input.get('default')
-        if input_type == 'checkbox' and type(value) is not list:
-                value = ast.literal_eval(value)
-        if input_type == 'file' and type(value) is dict:
-            value = json.dumps(value)
-
-    if input.get('required') and (value == '' or value is None):
-        raise RequiredInputError(form_index, input.get('name'))
-
-    elif input_type == 'datetime' or input.get('type') == 'date':
-        if type(value) is not str:
-            raise RequiredStrError(form_index, input.get('name'))
-
-        try:
-            datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
-        except ValueError:
-            raise InvalidDateError(form_index, input.get('name'))
-
+    if input_type == 'text' or input_type == 'password':
+        text_input = TextInput(form_index, input)
+        input['value'] = text_input.validate(value)
+    elif input_type == 'datetime' or input_type == 'date':
+        date_input = DateInput(form_index, input)
+        input['value'] = date_input.validate(value)
     elif input_type == 'checkbox':
-
-        if type(value) is not list:
-            raise RequiredListError(form_index, value)
-
-        list_values = [
-            child_element.get('value')
-            for child_element in input.get('options', [])
-        ]
-
-        for val in value:
-            if val not in list_values:
-                raise InvalidInputError(
-                        form_index,
-                        input.get('name')
-                    )
-
+        checkbox_input = CheckboxInput(form_index, input)
+        input['value'] = checkbox_input.validate(value)
     elif input_type == 'radio':
-        if type(value) is not str:
-            raise RequiredStrError(form_index, input.get('name'))
-
-        list_values = [
-            child_element.get('value')
-            for child_element in input.get('options', [])
-        ]
-        if value not in list_values:
-            raise InvalidInputError(form_index, input.get('name'))
-
+        radio_input = RadioInput(form_index, input)
+        input['value'] = radio_input.validate(value)
     elif input_type == 'select':
-        if type(value) is not str:
-            raise RequiredStrError(form_index, input.get('name'))
-
-        list_values = [
-            child_element.get('value')
-            for child_element in input.get('options', [])
-        ]
-
-        if value not in list_values:
-            raise InvalidInputError(form_index, input.get('name'))
-
+        select_input = SelectInput(form_index, input)
+        input['value'] = select_input.validate(value)
     elif input_type == 'file':
-        if type(value) is not dict:
-            raise InvalidInputError(form_index, input.get('name'))
-
-        provider = input.get('provider')
-        if provider == 'doqer':
-            valid = reduce(
-                and_,
-                map(
-                    lambda attr:
-                        attr in value and
-                        value[attr] is not None,
-                    ['id', 'mime', 'name', 'type']
-                )
-            )
-
-            if not valid:
-                raise InvalidInputError(form_index, input.get('name'))
-        else:
-            abort(500, 'File provider `{}` not implemented'.format(provider))
-
-    input['value'] = value
-
+        file_input = FileInput(form_index, input)
+        input['value'] = file_input.validate(value)
     return input
 
 

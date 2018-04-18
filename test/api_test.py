@@ -425,6 +425,32 @@ def test_start_process_all_default_input(client, models, mongo):
         ],
     }))
 
+    ques = Questionaire.get_all()[0].to_json()
+    assert res.status_code == 201
+    assert ques['data']['name'] == 'Jon Snow'
+    assert ques['data']['datetime'] == '2013-02-11T18:04:21.337522Z'
+    assert ques['data']['secret'] == 'dasdasd'
+
+
+def test_start_process_not_default_required_input(client, models, mongo):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'not-default-required-input',
+        'form_array': [
+            {
+                'ref': 'auth-form',
+                'data': {}
+            },
+        ],
+    }))
+
+    ques = Questionaire.get_all()[0].to_json()
+    assert res.status_code == 201
+    assert ques['data']['name'] == 'Maximo Decimo Meridio'
+
 
 def test_exit_request_requirements(client, models):
     # first requirement is to have authentication

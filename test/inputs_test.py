@@ -62,7 +62,7 @@ def test_datetime_error(client, models, mocker, config, mongo):
         'form_array': objeto
     }))
 
-    # assert res.status_code == 400
+    assert res.status_code == 400
 
 
 def test_visible_document_provider(client, models, mocker, config, mongo):

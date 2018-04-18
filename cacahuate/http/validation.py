@@ -19,8 +19,6 @@ from cacahuate.xml import resolve_params, input_to_dict, get_form_specs
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
 from cacahuate import validationClass
-# from cacahuate.validationClass import TextInput, DateInput,\
-#     CheckboxInput, RadioInput, SelectInput, FileInput
 
 
 def validate_input(form_index: int, input, value):

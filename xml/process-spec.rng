@@ -134,9 +134,6 @@
       <optional>
         <attribute name="provider"><text/></attribute>
       </optional>
-       <optional>
-        <attribute name="value"><text/></attribute>
-      </optional>
 
       <choice>
         <zeroOrMore>

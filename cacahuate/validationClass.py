@@ -119,19 +119,6 @@ class FileInput(Input):
         return value
 
 
-class DateInput(Input):
-    def validate(self, value):
-        super().validate(value)
-        if type(self.value) is not str:
-            raise RequiredStrError(self.form_index, self.input.get('name'))
-
-        try:
-            datetime.strptime(self.value, "%Y-%m-%dT%H:%M:%S.%fZ")
-        except ValueError:
-            raise InvalidDateError(self.form_index, self.input.get('name'))
-        return self.value
-
-
 class DatetimeInput(Input):
     def validate(self, value):
         super().validate(value)
@@ -143,6 +130,10 @@ class DatetimeInput(Input):
         except ValueError:
             raise InvalidDateError(self.form_index, self.input.get('name'))
         return self.value
+
+
+class DateInput(DatetimeInput):
+    pass
 
 
 class SelectInput(Input):

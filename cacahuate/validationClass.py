@@ -32,10 +32,11 @@ class Input(object):
     def get_default(self):
         return self.input.get('default')
 
+
 class TextInput(Input):
     def validate(self, value):
         super().validate(value)
-        if type(self.value) is not str and type(self.value) == None:
+        if type(self.value) is not str and type(self.value) is None:
             raise RequiredStrError(self.form_index, value)
         return self.value
 
@@ -48,7 +49,7 @@ class PasswordInput(TextInput):
 class CheckboxInput(Input):
     def validate(self, value):
         super().validate(value)
-        if self.value == None:
+        if self.value is None:
             self.value = []
         if type(self.value) == str:
             self.value = ast.literal_eval(self.value)
@@ -73,13 +74,13 @@ class RadioInput(Input):
     def validate(self, value):
         super().validate(value)
 
-        if type(self.value) is not str and not self.value == None:
+        if type(self.value) is not str and self.value is not None:
             raise RequiredStrError(self.form_index, self.input.get('name'))
         list_values = [
             child_element.get('value')
             for child_element in self.input.get('options', [])
         ]
-        if self.value == None:
+        if self.value is None:
             list_values.append(None)
         if self.value not in list_values:
             raise InvalidInputError(self.form_index, self.input.get('name'))
@@ -89,7 +90,7 @@ class RadioInput(Input):
 class FileInput(Input):
     def validate(self, value):
         super().validate(value)
-        if self.value == None:
+        if self.value is None:
             self.value = {}
         if type(value) is not dict:
             raise InvalidInputError(self.form_index, self.input.get('name'))
@@ -120,10 +121,10 @@ class DatetimeInput(Input):
     def validate(self, value):
         super().validate(value)
 
-        if type(self.value) is not str and type(self.value) == None:
+        if type(self.value) is not str and type(self.value) is None:
             raise RequiredStrError(self.form_index, self.input.get('name'))
-        if self.value == None:
-            self.value = str(datetime.now()).replace(' ','T')+'Z'
+        if self.value is None:
+            self.value = str(datetime.now()).replace(' ', 'T')+'Z'
         try:
             datetime.strptime(self.value, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
@@ -137,4 +138,4 @@ class DateInput(DatetimeInput):
 
 class SelectInput(RadioInput):
 
-   pass
+    pass

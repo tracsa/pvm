@@ -1000,3 +1000,40 @@ def test_status(config, client, models, mongo):
             'id': execution.id,
         },
     }
+
+def test_executions_list(client, mongo, config):
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+            'description': 'Este proceso tiene un formulario que puede enviar '
+            'muchas copias',
+            'finished_at': None,
+            'name': 'Validar identidad',
+            'started_at': '2018-04-18T19:50:17.222000+00:00',
+            'state': {
+            'actors': [],
+            'forms': []
+        },
+            'status': 'ongoing',
+
+
+        }, )
+    res = client.get('/v1/execution')
+    data = json.loads(res.data)
+    assert res.status_code == 200
+    del data['data'][0]['_id']
+    assert data == {
+        'data': [{
+            'description': 'Este proceso tiene un formulario que puede enviar muchas copias',
+            'finished_at': None,
+            'name': 'Validar identidad',
+            'started_at': '2018-04-18T19:50:17.222000+00:00',
+            'state': {
+            'actors': [],
+            'forms': []
+        },
+            'status': 'ongoing',
+
+                  }]}
+
+
+

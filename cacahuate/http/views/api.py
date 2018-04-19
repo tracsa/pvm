@@ -440,7 +440,7 @@ def list_logs(id):
     }), 200
 
 
-@app.route('/v1/execution/list', methods=['GET'])
+@app.route('/v1/execution', methods=['GET'])
 def list_execution():
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
 
@@ -449,4 +449,4 @@ def list_execution():
             json_prepare,
             collection.find()
         )),
-    })
+    }),200

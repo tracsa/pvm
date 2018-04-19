@@ -447,9 +447,11 @@ def test_start_process_not_default_required_input(client, models, mongo):
         ],
     }))
 
+    # print (res.data)
+    # assert False
     ques = Questionaire.get_all()[0].to_json()
     assert res.status_code == 201
-    assert ques['data']['name'] == 'Maximo Decimo Meridio'
+    assert ques['data']['gender'] == 'None'
 
 
 def test_exit_request_requirements(client, models):

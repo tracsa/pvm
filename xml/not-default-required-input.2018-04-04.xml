@@ -16,28 +16,24 @@
             type="text"
             label="Nombre"
             name="name"
-            value="Maximo Decimo Meridio"
           />
 
           <input
             label="Fecha de nacimiento"
             type="datetime"
             name="datetime"
-            value="2013-02-11T18:04:21.337522Z"
           />
 
           <input
             label="Un secreto"
             type="password"
             name="secret"
-            value="dasdasd"
           />
 
           <input
             label="Marque sus intereses"
             type="checkbox"
-            name="interests"
-            value='["science","sports"]'>
+            name="interests">
             <option value="science">Ciencia</option>
             <option value="sports">Deportes</option>
             <option value="music">Música</option>
@@ -48,8 +44,7 @@
           <input
             label="Género?"
             type="radio"
-            name="gender"
-            value="male">
+            name="gender">
             <option value="male">Masculino</option>
             <option value="female">Femenino</option>
           </input>
@@ -57,8 +52,7 @@
           <input
             type="select"
             label="Emita su voto"
-            name="elections"
-            value="amlo">
+            name="elections">
             <option value="amlo">Andres Manuel López Obrador</option>
             <option value="meade">José Antonio Meade Kuribreña</option>
             <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>

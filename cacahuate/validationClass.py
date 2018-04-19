@@ -27,36 +27,29 @@ class Input(object):
             self.value = self.get_default()
 
         if not self.input.get('required') and not self.input.get('default'):
-
-            self.value = self.get_value()
+            self.value = None
 
     def get_default(self):
         return self.input.get('default')
 
-    def get_value(self):
-        return self.input.get('value')
-
-
 class TextInput(Input):
     def validate(self, value):
         super().validate(value)
-        if type(self.value) is not str:
+        if type(self.value) is not str and type(self.value) == None:
             raise RequiredStrError(self.form_index, value)
         return self.value
 
 
-class PasswordInput(Input):
-    def validate(self, value):
-        super().validate(value)
-        if type(self.value) is not str:
-            raise RequiredStrError(self.form_index, value)
-        return self.value
+class PasswordInput(TextInput):
+
+    pass
 
 
 class CheckboxInput(Input):
     def validate(self, value):
         super().validate(value)
-
+        if self.value == None:
+            self.value = []
         if type(self.value) == str:
             self.value = ast.literal_eval(self.value)
         if type(self.value) is not list:
@@ -79,13 +72,15 @@ class CheckboxInput(Input):
 class RadioInput(Input):
     def validate(self, value):
         super().validate(value)
-        if type(self.value) is not str:
-            raise RequiredStrError(self.form_index, self.input.get('name'))
 
+        if type(self.value) is not str and not self.value == None:
+            raise RequiredStrError(self.form_index, self.input.get('name'))
         list_values = [
             child_element.get('value')
             for child_element in self.input.get('options', [])
         ]
+        if self.value == None:
+            list_values.append(None)
         if self.value not in list_values:
             raise InvalidInputError(self.form_index, self.input.get('name'))
         return self.value
@@ -94,6 +89,8 @@ class RadioInput(Input):
 class FileInput(Input):
     def validate(self, value):
         super().validate(value)
+        if self.value == None:
+            self.value = {}
         if type(value) is not dict:
             raise InvalidInputError(self.form_index, self.input.get('name'))
 
@@ -122,9 +119,11 @@ class FileInput(Input):
 class DatetimeInput(Input):
     def validate(self, value):
         super().validate(value)
-        if type(self.value) is not str:
-            raise RequiredStrError(self.form_index, self.input.get('name'))
 
+        if type(self.value) is not str and type(self.value) == None:
+            raise RequiredStrError(self.form_index, self.input.get('name'))
+        if self.value == None:
+            self.value = str(datetime.now()).replace(' ','T')+'Z'
         try:
             datetime.strptime(self.value, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
@@ -136,17 +135,6 @@ class DateInput(DatetimeInput):
     pass
 
 
-class SelectInput(Input):
-    def validate(self, value):
-        super().validate(value)
-        if type(self.value) is not str:
-            raise RequiredStrError(self.form_index, self.input.get('name'))
+class SelectInput(RadioInput):
 
-        list_values = [
-            child_element.get('value')
-            for child_element in self.input.get('options', [])
-        ]
-
-        if self.value not in list_values:
-            raise InvalidInputError(self.form_index, self.input.get('name'))
-        return self.value
+   pass

@@ -24,16 +24,15 @@ from cacahuate import validationClass
 def validate_input(form_index: int, input, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
-    import case_conversion
-
     input_type = input.get('type')
 
     cls = getattr(
-                validationClass,
-                case_conversion.pascalcase(input_type) + 'Input'
-            )
+        validationClass,
+        case_conversion.pascalcase(input_type) + 'Input'
+    )
     instance = cls(form_index, input)
     input['value'] = instance.validate(value)
+
     return input
 
 

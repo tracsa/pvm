@@ -1,6 +1,7 @@
 from cacahuate.auth.hierarchy.backref import BackrefHierarchyProvider
 from cacahuate.auth.base import BaseUser
 
+
 def test_backref_backend(config):
     br = BackrefHierarchyProvider(config)
 

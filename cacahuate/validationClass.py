@@ -11,91 +11,90 @@ class Input(object):
     """docstring for Input"""
     def __init__(self, form_index: int, input):
         self.form_index = form_index
-        self.input = input
-        self.input_type = input.get('type')
-        self.value = ''
+        self.requred = input.get('required')
+        self.name = input.get('name')
+        self.default = input.get('default')
 
     def validate(self, value):
-        self.value = value
-        if self.input.get('required')\
-           and (self.value == '' or self.value is None):
+        value = value
+        if input.get('required')\
+           and (value == '' or value is None):
                 raise RequiredInputError(
                     self.form_index,
-                    self.input.get('name')
+                    self.name
                 )
-        if not self.input.get('required') and self.input.get('default'):
-            self.value = self.get_default()
+        if not self.requred and self.default:
+            value = self.get_default()
 
-        if not self.input.get('required') and not self.input.get('default'):
-            self.value = None
+        if not self.requred and not self.default:
+            value = None
 
     def get_default(self):
-        return self.input.get('default')
+        return self.default
 
 
 class TextInput(Input):
     def validate(self, value):
         super().validate(value)
-        if type(self.value) is not str and type(self.value) is None:
+        if type(value) is not str and type(value) is None:
             raise RequiredStrError(self.form_index, value)
-        return self.value
+        return value
 
 
 class PasswordInput(TextInput):
-
     pass
 
 
 class CheckboxInput(Input):
     def validate(self, value):
         super().validate(value)
-        if self.value is None:
-            self.value = []
-        if type(self.value) == str:
-            self.value = ast.literal_eval(self.value)
-        if type(self.value) is not list:
-            raise RequiredListError(self.form_index, self.value)
+        if value is None:
+            value = []
+        if type(value) == str:
+            value = ast.literal_eval(value)
+        if type(value) is not list:
+            raise RequiredListError(self.form_index, value)
 
         list_values = [
             child_element.get('value')
-            for child_element in self.input.get('options', [])
+            for child_element in self.options
         ]
 
-        for val in self.value:
+        for val in value:
             if val not in list_values:
                 raise InvalidInputError(
                     self.form_index,
-                    self.input.get('name')
+                    self.name
                 )
-        return self.value
+        return value
 
 
 class RadioInput(Input):
     def validate(self, value):
         super().validate(value)
 
-        if type(self.value) is not str and self.value is not None:
-            raise RequiredStrError(self.form_index, self.input.get('name'))
+        if type(value) is not str and value is not None:
+            raise RequiredStrError(self.form_index, self.name)
         list_values = [
             child_element.get('value')
-            for child_element in self.input.get('options', [])
+            for child_element in self.options
         ]
-        if self.value is None:
+        if value is None:
             list_values.append(None)
-        if self.value not in list_values:
-            raise InvalidInputError(self.form_index, self.input.get('name'))
-        return self.value
+        if value not in list_values:
+            raise InvalidInputError(self.form_index, self.name)
+        return value
 
 
 class FileInput(Input):
     def validate(self, value):
         super().validate(value)
-        if self.value is None:
-            self.value = {}
+        if value is None:
+            value = {}
         if type(value) is not dict:
-            raise InvalidInputError(self.form_index, self.input.get('name'))
+            raise InvalidInputError(self.form_index, self.name)
 
-        provider = self.input.get('provider')
+        provider = self.provider
         if provider == 'doqer':
             valid = reduce(
                 and_,
@@ -110,7 +109,7 @@ class FileInput(Input):
             if not valid:
                 raise InvalidInputError(
                     self.form_index,
-                    self.input.get('name')
+                    self.name
                 )
         else:
             abort(500, 'File provider `{}` not implemented'.format(provider))
@@ -121,15 +120,15 @@ class DatetimeInput(Input):
     def validate(self, value):
         super().validate(value)
 
-        if type(self.value) is not str and type(self.value) is None:
-            raise RequiredStrError(self.form_index, self.input.get('name'))
-        if self.value is None:
-            self.value = str(datetime.now()).replace(' ', 'T')+'Z'
+        if type(value) is not str and type(value) is None:
+            raise RequiredStrError(self.form_index, self.name)
+        if value is None:
+            value = str(datetime.now()).replace(' ', 'T')+'Z'
         try:
-            datetime.strptime(self.value, "%Y-%m-%dT%H:%M:%S.%fZ")
+            datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
-            raise InvalidDateError(self.form_index, self.input.get('name'))
-        return self.value
+            raise InvalidDateError(self.form_index, self.name)
+        return value
 
 
 class DateInput(DatetimeInput):
@@ -137,5 +136,4 @@ class DateInput(DatetimeInput):
 
 
 class SelectInput(RadioInput):
-
     pass

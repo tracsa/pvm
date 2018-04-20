@@ -256,9 +256,9 @@ def test_continue_process(client, models, mocker, config):
                                     "value": "no"
                                 }
                             ],
-                            "required": True,
                             "type": "radio",
-                            "value": "yes"
+                            "value": "yes",
+                            'label': None,
                         }
                     ],
                     'data': {
@@ -984,7 +984,6 @@ def test_log_has_form_input_data(client, models):
                     "value": "no"
                 }
             ],
-            "required": True,
             "type": "select",
             "value": "yes"
         }

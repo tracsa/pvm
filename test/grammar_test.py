@@ -2,7 +2,7 @@ from cacahuate.grammar import Condition
 from cacahuate.models import Execution, Questionaire
 
 
-def test_condition(models):
+def test_condition():
     exc = Execution().save()
     form1 = Questionaire(ref='form1', data={'answer': 'yes'}).save()
     form2 = Questionaire(ref='form2', data={'answer': 'no'}).save()

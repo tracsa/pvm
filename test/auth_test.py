@@ -47,7 +47,7 @@ def test_login(client):
     assert 'token' in data['data']
 
 
-def test_login_token(client, models):
+def test_login_token(client):
     res = client.post('/v1/auth/signin/hardcoded', data={
         'username': 'juan',
         'password': '123456',

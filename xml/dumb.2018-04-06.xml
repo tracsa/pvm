@@ -37,7 +37,7 @@
         <name>Segundo paso :o</name>
         <description>Te asignas más chamba</description>
       </node-info>
-      <auth-filter backend="self">
+      <auth-filter backend="backref">
         <param name="identifier" type="ref">user#requester</param>
       </auth-filter>
       <form-array>
@@ -64,7 +64,7 @@
         <name>Tercer paso :c</name>
         <description>Mueres</description>
       </node-info>
-      <auth-filter backend="self">
+      <auth-filter backend="backref">
         <param name="identifier" type="ref">user#requester</param>
       </auth-filter>
       <form-array>

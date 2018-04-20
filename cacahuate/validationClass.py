@@ -11,22 +11,24 @@ class Input(object):
     """docstring for Input"""
     def __init__(self, form_index: int, input):
         self.form_index = form_index
-        self.requred = input.get('required')
+        self.required = input.get('required')
         self.name = input.get('name')
         self.default = input.get('default')
+        self.options = input.get('options', [])
+        self.provider = input.get('provider')
 
     def validate(self, value):
         value = value
-        if input.get('required')\
+        if self.required\
            and (value == '' or value is None):
                 raise RequiredInputError(
                     self.form_index,
                     self.name
                 )
-        if not self.requred and self.default:
+        if not self.required and self.default:
             value = self.get_default()
 
-        if not self.requred and not self.default:
+        if not self.required and not self.default:
             value = None
 
     def get_default(self):

@@ -452,6 +452,7 @@ def test_start_process_not_default_required_input(client, models, mongo):
     ques = Questionaire.get_all()[0].to_json()
     assert res.status_code == 201
     assert ques['data']['gender'] == 'None'
+    assert ques['data']['name'] == 'None'
 
 
 def test_exit_request_requirements(client, models):

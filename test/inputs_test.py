@@ -1,6 +1,8 @@
 from datetime import datetime
 from flask import json
 
+from cacahuate.models import Questionaire
+
 from .utils import make_auth, make_activity, make_pointer, make_user
 
 
@@ -374,3 +376,97 @@ def test_validate_form_multiple_error_position(client, models):
             },
         ]
     }
+
+
+def test_store_form_multiple(config, client, models, mongo):
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'jorge',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '1111',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '2222',
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201
+
+    # Questionaires are ok
+    assert Questionaire.count() == 3
+
+    qs = Questionaire.q().filter(ref='single-form').one()
+
+    assert qs.data == {
+        'name': 'jorge',
+    }
+
+    qa = sorted(
+        Questionaire.q().filter(ref='multiple-form').all(),
+        key=lambda i: i.data['phone']
+    )
+
+    assert qa[0].data['phone'] == '1111'
+    assert qa[1].data['phone'] == '2222'
+
+    # history has the two inputs
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+
+    assert reg['actors'][0]['forms'] == [
+        {
+            'ref': 'single-form',
+            'data': {
+                'name': 'jorge',
+            },
+            'form': [{
+                'label': None,
+                'options': [],
+                'name': 'name',
+                'type': 'text',
+                'value': 'jorge',
+            }],
+        },
+        {
+            'ref': 'multiple-form',
+            'data': {
+                'phone': '1111',
+            },
+            'form': [{
+                'label': None,
+                'options': [],
+                'name': 'phone',
+                'type': 'text',
+                'value': '1111',
+            }],
+        },
+        {
+            'ref': 'multiple-form',
+            'data': {
+                'phone': '2222',
+            },
+            'form': [{
+                'label': None,
+                'options': [],
+                'name': 'phone',
+                'type': 'text',
+                'value': '2222',
+            }],
+        },
+    ]

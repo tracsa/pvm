@@ -60,7 +60,7 @@ def get_associated_data(ref, data, min, max):
 
 def validate_form(form_specs, index, data):
     errors = []
-    collected_data = []
+    collected_inputs = []
 
     for input in form_specs['inputs']:
         name = input['name']
@@ -71,14 +71,14 @@ def validate_form(form_specs, index, data):
                 input,
                 data.get(name),
             )
-            collected_data.append(input_description)
+            collected_inputs.append(input_description)
         except InputError as e:
             errors.append(e)
 
     if errors:
         raise ValidationErrors(errors)
 
-    return collected_data
+    return collected_inputs
 
 
 def validate_form_spec(form_specs, data) -> dict:
@@ -87,7 +87,7 @@ def validate_form_spec(form_specs, data) -> dict:
     '''
     ref = form_specs['ref']
     specs = form_specs['multiple']
-    collected_data = []
+    collected_specs = []
 
     if form_specs.get('multiple'):
         max = float('inf')
@@ -97,9 +97,9 @@ def validate_form_spec(form_specs, data) -> dict:
         min = 1
 
     for index, form in get_associated_data(ref, data, min, max):
-        collected_data.append(validate_form(form_specs, index, form['data']))
+        collected_specs.append(validate_form(form_specs, index, form['data']))
 
-    return collected_data
+    return collected_specs
 
 
 def validate_forms(node, json_data):

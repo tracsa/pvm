@@ -1,4 +1,3 @@
-from case_conversion import pascalcase
 from coralillo.errors import ModelNotFoundError
 from datetime import datetime
 from importlib import import_module
@@ -188,8 +187,8 @@ class Handler:
         # finds most recent registry for this node
         collection = mongo[self.config['MONGO_HISTORY_COLLECTION']]
         prev_state = next(collection.find({
-            'execution_id': execution.id,
-            'node_id': node.element.getAttribute('id'),
+            'execution.id': execution.id,
+            'node.id': node.element.getAttribute('id'),
         }).sort([
             ('started_at', pymongo.DESCENDING)
         ]))
@@ -368,7 +367,7 @@ class Handler:
         ]
 
         collection.update_one({
-            'execution_id': execution.id
+            'id': execution.id
         }, {
             '$set': {
                 'status': 'cancelled',

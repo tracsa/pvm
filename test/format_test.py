@@ -5,7 +5,7 @@ from cacahuate.models import Execution
 from .utils import make_auth, make_user
 
 
-def test_interpolated_name(config, client, models, mongo):
+def test_interpolated_name(config, client, mongo):
     juan = make_user('juan', 'Juan')
     name = 'Computes a name based on a Cow'
 

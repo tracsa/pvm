@@ -8,7 +8,7 @@ from cacahuate.models import Pointer, Execution, Activity, Questionaire
 from .utils import make_auth, make_activity, make_pointer, make_user
 
 
-def test_continue_process_asks_for_user(client, models):
+def test_continue_process_asks_for_user(client):
     res = client.post('/v1/pointer')
 
     assert res.status_code == 401
@@ -70,7 +70,7 @@ def test_continue_process_asks_living_objects(client):
     }
 
 
-def test_continue_process_requires_valid_node(client, models):
+def test_continue_process_requires_valid_node(client):
     user = make_user('juan', 'Juan')
     exc = Execution(
         process_name='decision.2018-02-27',
@@ -95,7 +95,7 @@ def test_continue_process_requires_valid_node(client, models):
     }
 
 
-def test_continue_process_requires_living_pointer(client, models):
+def test_continue_process_requires_living_pointer(client):
     user = make_user('juan', 'Juan')
     exc = Execution(
         process_name='decision.2018-02-27',
@@ -120,7 +120,7 @@ def test_continue_process_requires_living_pointer(client, models):
     }
 
 
-def test_continue_process_requires_user_hierarchy(client, models):
+def test_continue_process_requires_user_hierarchy(client):
     ''' a node whose auth has a filter must be completed by a person matching
     the filter '''
     user = make_user('juan', 'Juan')
@@ -142,7 +142,7 @@ def test_continue_process_requires_user_hierarchy(client, models):
     }
 
 
-def test_continue_process_requires_data(client, models):
+def test_continue_process_requires_data(client):
     juan = make_user('juan', 'Juan')
     act = Activity(ref='requester').save()
     act.proxy.user.set(juan)
@@ -169,7 +169,7 @@ def test_continue_process_requires_data(client, models):
     }
 
 
-def test_continue_process(client, models, mocker, config):
+def test_continue_process(client, mocker, config):
     mocker.patch(
         'pika.adapters.blocking_connection.'
         'BlockingChannel.basic_publish'
@@ -283,7 +283,7 @@ def test_continue_process(client, models, mocker, config):
     assert pointer.id == ptr.id
 
 
-def test_start_process_simple_requires(client, models, mongo, config):
+def test_start_process_simple_requires(client, mongo, config):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -341,7 +341,7 @@ def test_start_process_simple_requires(client, models, mongo, config):
     assert Questionaire.count() == 0
 
 
-def test_start_process_simple(client, models, mocker, config, mongo):
+def test_start_process_simple(client, mocker, config, mongo):
     mocker.patch(
         'pika.adapters.blocking_connection.'
         'BlockingChannel.basic_publish'
@@ -455,7 +455,7 @@ def test_start_process_not_default_required_input(client, models, mongo):
     assert ques['data']['name'] == 'None'
 
 
-def test_exit_request_requirements(client, models):
+def test_exit_request_requirements(client):
     # first requirement is to have authentication
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
@@ -498,7 +498,7 @@ def test_exit_request_requirements(client, models):
     assert Activity.count() == 0
 
 
-def test_exit_request_start(client, models, mocker, mongo, config):
+def test_exit_request_start(client, mocker, mongo, config):
     user = make_user('juan', 'Juan')
 
     assert Execution.count() == 0
@@ -674,7 +674,7 @@ def test_list_activities_requires(client):
     assert res.status_code == 401
 
 
-def test_list_activities(client, models):
+def test_list_activities(client):
     '''Given 4 activities, two for the current user and two for
     another, list only the two belonging to him or her'''
     juan = make_user('juan', 'Juan')
@@ -703,7 +703,7 @@ def test_activity_requires(client):
     assert res.status_code == 401
 
 
-def test_activity_wrong_activity(client, models):
+def test_activity_wrong_activity(client):
     # validate user authentication correct but bad activity
     juan = make_user('juan', 'Juan')
     other = make_user('other', 'Otero')
@@ -723,7 +723,7 @@ def test_activity_wrong_activity(client, models):
     assert res.status_code == 403
 
 
-def test_activity(client, models):
+def test_activity(client):
     # validate user authentication correct with correct activity
     juan = make_user('juan', 'Juan')
 
@@ -767,7 +767,6 @@ def test_logs_activity(mongo, client, config):
     res = client.get('/v1/log/15asbs?node_id=mid-node')
 
     ans = json.loads(res.data)
-    del ans['data'][0]['_id']
 
     assert res.status_code == 200
     assert ans == {
@@ -796,7 +795,7 @@ def test_task_list_requires_auth(client):
     }
 
 
-def test_task_list(client, models):
+def test_task_list(client):
     juan = make_user('user', 'User')
 
     pointer = make_pointer('exit_request.2018-03-20.xml', 'manager')
@@ -810,13 +809,13 @@ def test_task_list(client, models):
     }
 
 
-def test_task_read_requires_auth(client, models):
+def test_task_read_requires_auth(client):
     res = client.get('/v1/task/foo')
 
     assert res.status_code == 401
 
 
-def test_task_read_requires_real_pointer(client, models):
+def test_task_read_requires_real_pointer(client):
     juan = make_user('juan', 'Juan')
 
     res = client.get('/v1/task/foo', headers=make_auth(juan))
@@ -824,7 +823,7 @@ def test_task_read_requires_real_pointer(client, models):
     assert res.status_code == 404
 
 
-def test_task_read_requires_assigned_task(client, models):
+def test_task_read_requires_assigned_task(client):
     ptr = make_pointer('dumb.2018-04-06.xml', 'node2')
     juan = make_user('juan', 'Juan')
 
@@ -833,7 +832,7 @@ def test_task_read_requires_assigned_task(client, models):
     assert res.status_code == 403
 
 
-def test_task_read(client, models):
+def test_task_read(client):
     ptr = make_pointer('dumb.2018-04-06.xml', 'node2')
     juan = make_user('juan', 'Juan')
     juan.proxy.tasks.set([ptr])
@@ -883,7 +882,7 @@ def test_task_read(client, models):
     }
 
 
-def test_execution_has_node_info(client, models):
+def test_execution_has_node_info(client):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -912,7 +911,7 @@ def test_execution_has_node_info(client, models):
     assert ptr.description == 'Te asignas chamba'
 
 
-def test_log_has_node_info(client, models):
+def test_log_has_node_info(client):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -944,7 +943,7 @@ def test_log_has_node_info(client, models):
     assert data['execution']['description'] == 'Te asigna una tarea a ti mismo'
 
 
-def test_log_has_form_input_data(client, models):
+def test_log_has_form_input_data(client):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -1022,17 +1021,17 @@ def test_delete_process(config, client, mongo, mocker):
     }
 
 
-def test_status_notfound(client, models):
+def test_status_notfound(client):
     res = client.get('/v1/execution/doo')
 
     assert res.status_code == 404
 
 
-def test_status(config, client, models, mongo):
+def test_status(config, client, mongo):
     ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
     execution = ptr.proxy.execution.get()
 
-    oid = mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({
+    mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({
         'id': execution.id,
     })
 
@@ -1041,7 +1040,23 @@ def test_status(config, client, models, mongo):
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': {
-            '_id': str(oid.inserted_id),
             'id': execution.id,
         },
+    }
+
+
+def test_execution_list(client, mongo, config):
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        'status': 'ongoing',
+    })
+
+    res = client.get('/v1/execution')
+    data = json.loads(res.data)
+
+    assert res.status_code == 200
+
+    assert data == {
+        'data': [{
+            'status': 'ongoing',
+        }],
     }

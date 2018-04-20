@@ -40,7 +40,7 @@ def test_find_next_element_normal(config):
     assert next_node.element.getAttribute('id') == 'end-node'
 
 
-def test_find_next_element_decision_yes(config, models):
+def test_find_next_element_decision_yes(config):
     ''' given an if and asociated data, retrieves the next element '''
     xml = Xml.load(config, 'decision')
     exc = Execution().save()
@@ -60,7 +60,7 @@ def test_find_next_element_decision_yes(config, models):
     assert next_node.element.getAttribute('id') == 'Cuptax0WTCL1ueCy'
 
 
-def test_find_next_element_decision_no(config, models):
+def test_find_next_element_decision_no(config):
     ''' given an if and asociated data, retrieves the next element, negative
     variant '''
     xml = Xml.load(config, 'decision')

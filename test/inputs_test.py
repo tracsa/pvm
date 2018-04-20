@@ -6,7 +6,7 @@ from cacahuate.models import Questionaire
 from .utils import make_auth, make_activity, make_pointer, make_user
 
 
-def test_all_inputs(client, models, config, mongo):
+def test_all_inputs(client, config, mongo):
     user = make_user('juan', 'Juan')
 
     objeto = [
@@ -40,7 +40,7 @@ def test_all_inputs(client, models, config, mongo):
     assert actor['forms'][0]['data'] == objeto[0]['data']
 
 
-def test_datetime_error(client, models, mocker, config, mongo):
+def test_datetime_error(client, mocker, config, mongo):
     objeto = [
         {
             'ref': 'auth-form',
@@ -67,7 +67,7 @@ def test_datetime_error(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_visible_document_provider(client, models, mocker, config, mongo):
+def test_visible_document_provider(client, mocker, config, mongo):
     res = client.get('/v1/process')
 
     body = json.loads(res.data)
@@ -92,7 +92,7 @@ def test_visible_document_provider(client, models, mocker, config, mongo):
     }
 
 
-def test_allow_document(client, models, mocker, config, mongo):
+def test_allow_document(client, mocker, config, mongo):
     form_array = [
         {
             'ref': 'doc-form',
@@ -118,7 +118,7 @@ def test_allow_document(client, models, mocker, config, mongo):
     assert res.status_code == 201
 
 
-def test_deny_invalid_document(client, models, mocker, config, mongo):
+def test_deny_invalid_document(client, mocker, config, mongo):
     form_array = [
         {
             'ref': 'doc-form',
@@ -159,7 +159,7 @@ def test_deny_invalid_document(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_check_errors(client, models, mocker, config, mongo):
+def test_check_errors(client, mocker, config, mongo):
     objeto = [
         {
             'ref': 'auth-form',
@@ -208,7 +208,7 @@ def test_check_errors(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_radio_errors(client, models, mocker, config, mongo):
+def test_radio_errors(client, mocker, config, mongo):
     objeto = [
         {
             'ref': 'auth-form',
@@ -257,7 +257,7 @@ def test_radio_errors(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_select_errors(client, models, mocker, config, mongo):
+def test_select_errors(client, mocker, config, mongo):
     objeto = [
         {
             'ref': 'auth-form',
@@ -306,7 +306,7 @@ def test_select_errors(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_validate_form_multiple(client, models):
+def test_validate_form_multiple(client):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -339,7 +339,7 @@ def test_validate_form_multiple(client, models):
     }
 
 
-def test_validate_form_multiple_error_position(client, models):
+def test_validate_form_multiple_error_position(client):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -378,7 +378,7 @@ def test_validate_form_multiple_error_position(client, models):
     }
 
 
-def test_store_form_multiple(config, client, models, mongo):
+def test_store_form_multiple(config, client, mongo):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{

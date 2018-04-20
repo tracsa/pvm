@@ -722,7 +722,6 @@ def test_logs_activity(mongo, client, config):
     res = client.get('/v1/log/15asbs?node_id=mid-node')
 
     ans = json.loads(res.data)
-    del ans['data'][0]['_id']
 
     assert res.status_code == 200
     assert ans == {
@@ -987,7 +986,7 @@ def test_status(config, client, mongo):
     ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
     execution = ptr.proxy.execution.get()
 
-    oid = mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({
+    mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({
         'id': execution.id,
     })
 
@@ -996,43 +995,23 @@ def test_status(config, client, mongo):
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': {
-            '_id': str(oid.inserted_id),
             'id': execution.id,
         },
     }
 
 
-def test_executions_list(client, mongo, config):
-
+def test_execution_list(client, mongo, config):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
-            'description': 'Este proceso tiene un formulario que puede enviar '
-            'muchas copias',
-            'finished_at': None,
-            'name': 'Validar identidad',
-            'started_at': '2018-04-18T19:50:17.222000+00:00',
-            'state': {
-                'actors': [],
-                'forms': []
-                     },
-            'status': 'ongoing',
+        'status': 'ongoing',
+    })
 
-
-        }, )
     res = client.get('/v1/execution')
     data = json.loads(res.data)
+
     assert res.status_code == 200
-    del data['data'][0]['_id']
+
     assert data == {
         'data': [{
-            'description': 'Este proceso tiene un formulario que puede enviar '
-            'muchas copias',
-            'finished_at': None,
-            'name': 'Validar identidad',
-            'started_at': '2018-04-18T19:50:17.222000+00:00',
-            'state': {
-                'actors': [],
-                'forms': []
-                     },
             'status': 'ongoing',
-
-                  }]}
+        }],
+    }

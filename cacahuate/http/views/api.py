@@ -30,7 +30,7 @@ DATE_FIELDS = [
 
 def json_prepare(obj):
     if obj.get('_id'):
-        obj['_id'] = str(obj['_id'])
+        del obj['_id']
 
     for field in DATE_FIELDS:
         if obj.get(field) and type(obj[field]) == datetime:
@@ -96,6 +96,18 @@ def index():
         }
     elif request.method == 'POST':
         return request.json
+
+
+@app.route('/v1/execution', methods=['GET'])
+def execution_list():
+    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+
+    return jsonify({
+        "data": list(map(
+            json_prepare,
+            collection.find()
+        )),
+    })
 
 
 @app.route('/v1/execution/<id>', methods=['GET'])
@@ -437,16 +449,4 @@ def list_logs(id):
                 ('started_at', pymongo.DESCENDING)
             ])
         )),
-    }), 200
-
-
-@app.route('/v1/execution', methods=['GET'])
-def list_execution():
-    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
-
-    return jsonify({
-        "data": list(map(
-            json_prepare,
-            collection.find()
-        )),
-    }), 200
+    })

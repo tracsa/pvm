@@ -31,6 +31,7 @@ def validate_input(form_index: int, input, value):
         case_conversion.pascalcase(input_type) + 'Input'
     )
     instance = cls(form_index, input)
+
     input['value'] = instance.validate(value)
 
     return input

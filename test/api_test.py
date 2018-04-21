@@ -258,7 +258,7 @@ def test_continue_process(client, mocker, config):
                             ],
                             "type": "radio",
                             "value": "yes",
-                            'label': None,
+                            "required": True,
                         }
                     ],
                     'data': {
@@ -410,7 +410,7 @@ def test_start_process_simple(client, mocker, config, mongo):
     assert reg2['status'] == 'ongoing'
 
 
-def test_start_process_all_default_input(client, models, mongo):
+def test_start_process_all_default_input(client, mongo):
     user = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -432,7 +432,7 @@ def test_start_process_all_default_input(client, models, mongo):
     assert ques['data']['secret'] == 'dasdasd'
 
 
-def test_start_process_not_default_required_input(client, models, mongo):
+def test_start_process_not_default_required_input(client, mongo):
     user = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{

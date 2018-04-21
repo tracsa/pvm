@@ -24,7 +24,7 @@
             label="Fecha de nacimiento"
             type="datetime"
             name="datetime"
-            default="2013-02-11T18:04:21.337522Z"
+            default="now"
           />
 
           <input

@@ -18,29 +18,19 @@ class Input(object):
         self.provider = input.get('provider')
 
     def validate(self, value):
-        value = value
-        if self.required\
-           and (value == '' or value is None):
-                raise RequiredInputError(
-                    self.form_index,
-                    self.name
-                )
-        if not self.required and self.default:
-            value = self.get_default()
+        value = value or self.get_default()
 
-        if not self.required and not self.default:
-            value = None
+        if self.required and (value == '' or value is None):
+            raise RequiredInputError(self.form_index, self.name)
+
+        return value
 
     def get_default(self):
         return self.default
 
 
 class TextInput(Input):
-    def validate(self, value):
-        super().validate(value)
-        if type(value) is not str and type(value) is None:
-            raise RequiredStrError(self.form_index, value)
-        return value
+    pass
 
 
 class PasswordInput(TextInput):
@@ -119,18 +109,25 @@ class FileInput(Input):
 
 
 class DatetimeInput(Input):
-    def validate(self, value):
-        super().validate(value)
 
-        if type(value) is not str and type(value) is None:
-            raise RequiredStrError(self.form_index, self.name)
-        if value is None:
-            value = str(datetime.now()).replace(' ', 'T')+'Z'
+    def validate(self, value):
+        value = value or self.get_default()
+
+        if not value and self.required:
+            raise RequiredInputError(self.form_index, self.name)
+
         try:
             datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
             raise InvalidDateError(self.form_index, self.name)
+
         return value
+
+    def get_default(self):
+        if self.default == 'now':
+            return datetime.now().isoformat() + 'Z'
+
+        return ''
 
 
 class DateInput(DatetimeInput):

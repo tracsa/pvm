@@ -470,3 +470,66 @@ def test_store_form_multiple(config, client, mongo):
             }],
         },
     ]
+
+
+def test_default_inputs(client, mongo):
+    ''' do not send any value. Values set must be defaults '''
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'all-default-input',
+        'form_array': [
+            {
+                'ref': 'auth-form',
+                'data': {}
+            },
+        ],
+    }))
+
+    ques = Questionaire.get_all()[0].to_json()
+
+    assert res.status_code == 201
+
+    # text
+    assert ques['data']['name'] == 'Jon Snow'
+    # datetime
+    assert (datetime.strptime(
+        ques['data']['datetime'],
+        "%Y-%m-%dT%H:%M:%S.%fZ"
+    ) - datetime.now()).total_seconds() < 2
+    # password
+    assert ques['data']['secret'] == 'dasdasd'
+    # checkbox
+    assert False
+    # radio
+    assert False
+    # select
+    assert False
+    # file
+    assert False
+
+
+def test_required_inputs_with_defaults(client, mongo):
+    ''' all inputs are required but all of them have defaults '''
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'not-default-required-input',
+        'form_array': [
+            {
+                'ref': 'auth-form',
+                'data': {}
+            },
+        ],
+    }))
+
+    # print (res.data)
+    # assert False
+    ques = Questionaire.get_all()[0].to_json()
+    assert res.status_code == 201
+    assert ques['data']['gender'] == 'None'
+    assert ques['data']['name'] == 'None'

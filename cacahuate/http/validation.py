@@ -32,9 +32,11 @@ def validate_input(form_index: int, input, value):
     )
     instance = cls(form_index, input)
 
-    input['value'] = instance.validate(value)
+    res = {**input}
 
-    return input
+    res['value'] = instance.validate(value)
+
+    return res
 
 
 def get_associated_data(ref, data, min, max):

@@ -436,11 +436,11 @@ def test_store_form_multiple(config, client, mongo):
                 'name': 'jorge',
             },
             'form': [{
-                'label': None,
                 'options': [],
                 'name': 'name',
                 'type': 'text',
                 'value': 'jorge',
+                'required': True,
             }],
         },
         {
@@ -449,11 +449,11 @@ def test_store_form_multiple(config, client, mongo):
                 'phone': '1111',
             },
             'form': [{
-                'label': None,
                 'options': [],
                 'name': 'phone',
                 'type': 'text',
                 'value': '1111',
+                'required': True,
             }],
         },
         {
@@ -462,11 +462,11 @@ def test_store_form_multiple(config, client, mongo):
                 'phone': '2222',
             },
             'form': [{
-                'label': None,
                 'options': [],
                 'name': 'phone',
                 'type': 'text',
                 'value': '2222',
+                'required': True,
             }],
         },
     ]

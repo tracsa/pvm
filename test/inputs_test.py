@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask import json
+import pytest
 
 from cacahuate.models import Questionaire
 
@@ -472,11 +473,14 @@ def test_store_form_multiple(config, client, mongo):
     ]
 
 
+@pytest.mark.skip
 def test_can_send_no_form(client):
     ''' assert that a form that passes valudation does not ask for information
     in terms of the form count '''
     assert False
 
+
+@pytest.mark.skip
 def test_default_inputs(client):
     ''' do not send any value. Values set must be defaults '''
     user = make_user('juan', 'Juan')
@@ -516,6 +520,7 @@ def test_default_inputs(client):
     assert False
 
 
+@pytest.mark.skip
 def test_required_inputs_with_defaults(client):
     ''' all inputs are required but all of them have defaults '''
     user = make_user('juan', 'Juan')

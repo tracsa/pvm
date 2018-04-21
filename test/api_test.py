@@ -939,7 +939,8 @@ def test_log_has_form_input_data(client):
                 }
             ],
             "type": "select",
-            "value": "yes"
+            "value": "yes",
+            "required": True,
         }
     ]
 

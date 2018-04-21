@@ -473,6 +473,9 @@ def test_store_form_multiple(config, client, mongo):
 
 
 def test_can_send_no_form(client):
+    ''' assert that a form that passes valudation does not ask for information
+    in terms of the form count '''
+    assert False
 
 def test_default_inputs(client):
     ''' do not send any value. Values set must be defaults '''

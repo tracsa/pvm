@@ -18,7 +18,7 @@ from cacahuate.models import User, Token
 from cacahuate.xml import resolve_params, input_to_dict, get_form_specs
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
-from cacahuate import validationClass
+from cacahuate import inputs
 
 
 def validate_input(form_index: int, input, value):
@@ -27,7 +27,7 @@ def validate_input(form_index: int, input, value):
     input_type = input.get('type')
 
     cls = getattr(
-        validationClass,
+        inputs,
         case_conversion.pascalcase(input_type) + 'Input'
     )
     instance = cls(form_index, input)

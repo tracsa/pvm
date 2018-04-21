@@ -1,12 +1,13 @@
 from datetime import datetime
 from flask import json
+import pytest
 
 from cacahuate.models import Questionaire
 
 from .utils import make_auth, make_activity, make_pointer, make_user
 
 
-def test_all_inputs(client, models, config, mongo):
+def test_all_inputs(client, config, mongo):
     user = make_user('juan', 'Juan')
 
     objeto = [
@@ -40,7 +41,7 @@ def test_all_inputs(client, models, config, mongo):
     assert actor['forms'][0]['data'] == objeto[0]['data']
 
 
-def test_datetime_error(client, models, mocker, config, mongo):
+def test_datetime_error(client, mocker, config):
     objeto = [
         {
             'ref': 'auth-form',
@@ -67,7 +68,7 @@ def test_datetime_error(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_visible_document_provider(client, models, mocker, config, mongo):
+def test_visible_document_provider(client, mocker, config):
     res = client.get('/v1/process')
 
     body = json.loads(res.data)
@@ -92,7 +93,7 @@ def test_visible_document_provider(client, models, mocker, config, mongo):
     }
 
 
-def test_allow_document(client, models, mocker, config, mongo):
+def test_allow_document(client, mocker, config):
     form_array = [
         {
             'ref': 'doc-form',
@@ -118,7 +119,7 @@ def test_allow_document(client, models, mocker, config, mongo):
     assert res.status_code == 201
 
 
-def test_deny_invalid_document(client, models, mocker, config, mongo):
+def test_deny_invalid_document(client, mocker, config):
     form_array = [
         {
             'ref': 'doc-form',
@@ -159,7 +160,7 @@ def test_deny_invalid_document(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_check_errors(client, models, mocker, config, mongo):
+def test_check_errors(client, mocker, config):
     objeto = [
         {
             'ref': 'auth-form',
@@ -208,7 +209,7 @@ def test_check_errors(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_radio_errors(client, models, mocker, config, mongo):
+def test_radio_errors(client, mocker, config):
     objeto = [
         {
             'ref': 'auth-form',
@@ -257,7 +258,7 @@ def test_radio_errors(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_select_errors(client, models, mocker, config, mongo):
+def test_select_errors(client, mocker, config):
     objeto = [
         {
             'ref': 'auth-form',
@@ -306,7 +307,7 @@ def test_select_errors(client, models, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_validate_form_multiple(client, models):
+def test_validate_form_multiple(client):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -339,7 +340,7 @@ def test_validate_form_multiple(client, models):
     }
 
 
-def test_validate_form_multiple_error_position(client, models):
+def test_validate_form_multiple_error_position(client):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -370,15 +371,15 @@ def test_validate_form_multiple_error_position(client, models):
     assert json.loads(res.data) == {
         'errors': [
             {
+                'code': 'validation.required',
                 'detail': '\'phone\' input is required',
                 'where': 'request.body.form_array.2.phone',
-                'code': 'validation.required',
             },
         ]
     }
 
 
-def test_store_form_multiple(config, client, models, mongo):
+def test_store_form_multiple(config, client, mongo):
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -436,11 +437,11 @@ def test_store_form_multiple(config, client, models, mongo):
                 'name': 'jorge',
             },
             'form': [{
-                'label': None,
                 'options': [],
                 'name': 'name',
                 'type': 'text',
                 'value': 'jorge',
+                'required': True,
             }],
         },
         {
@@ -449,11 +450,11 @@ def test_store_form_multiple(config, client, models, mongo):
                 'phone': '1111',
             },
             'form': [{
-                'label': None,
                 'options': [],
                 'name': 'phone',
                 'type': 'text',
                 'value': '1111',
+                'required': True,
             }],
         },
         {
@@ -462,11 +463,98 @@ def test_store_form_multiple(config, client, models, mongo):
                 'phone': '2222',
             },
             'form': [{
-                'label': None,
                 'options': [],
                 'name': 'phone',
                 'type': 'text',
                 'value': '2222',
+                'required': True,
             }],
         },
     ]
+
+
+@pytest.mark.skip
+def test_can_send_no_form(client):
+    ''' assert that a form that passes valudation does not ask for information
+    in terms of the form count '''
+    assert False
+
+
+@pytest.mark.skip
+def test_default_inputs(client):
+    ''' do not send any value. Values set must be defaults '''
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'all-default-input',
+        'form_array': [
+            {
+                'ref': 'auth-form',
+                'data': {}
+            },
+        ],
+    }))
+
+    ques = Questionaire.get_all()[0].to_json()
+
+    assert res.status_code == 201
+
+    # text
+    assert ques['data']['name'] == 'Jon Snow'
+    # datetime
+    assert (datetime.strptime(
+        ques['data']['datetime'],
+        "%Y-%m-%dT%H:%M:%S.%fZ"
+    ) - datetime.now()).total_seconds() < 2
+    # password
+    assert ques['data']['secret'] == 'dasdasd'
+    # checkbox
+    assert False
+    # radio
+    assert False
+    # select
+    assert False
+    # file
+    assert False
+
+
+@pytest.mark.skip
+def test_required_inputs_with_defaults(client):
+    ''' all inputs are required but all of them have defaults '''
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'not-default-required-input',
+        'form_array': [
+            {
+                'ref': 'auth-form',
+                'data': {}
+            },
+        ],
+    }))
+
+    ques = Questionaire.get_all()[0].to_json()
+
+    assert res.status_code == 201
+
+    # text
+    assert ques['data']['name'] == 'Jon Snow'
+    # datetime
+    assert (datetime.strptime(
+        ques['data']['datetime'],
+        "%Y-%m-%dT%H:%M:%S.%fZ"
+    ) - datetime.now()).total_seconds() < 2
+    # password
+    assert ques['data']['secret'] == 'dasdasd'
+    # checkbox
+    assert False
+    # radio
+    assert False
+    # select
+    assert False
+    # file
+    assert False

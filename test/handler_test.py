@@ -31,7 +31,7 @@ def test_parse_message(config):
     }
 
 
-def test_recover_step(config, models):
+def test_recover_step(config):
     handler = Handler(config)
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     exc = ptr.proxy.execution.get()
@@ -68,7 +68,7 @@ def test_recover_step(config, models):
     assert node.element.getAttribute('id') == 'mid-node'
 
 
-def test_create_pointer(config, models):
+def test_create_pointer(config):
     handler = Handler(config)
 
     ele = Document().createElement('node')
@@ -106,7 +106,7 @@ def test_create_pointer(config, models):
     assert execution.proxy.pointers.count() == 1
 
 
-def test_wakeup(config, models, mongo):
+def test_wakeup(config, mongo):
     ''' the first stage in a node's lifecycle '''
     # setup stuff
     handler = Handler(config)
@@ -174,7 +174,7 @@ def test_wakeup(config, models, mongo):
     assert task.proxy.execution.get().id == execution.id
 
 
-def test_teardown(config, models, mongo):
+def test_teardown(config, mongo):
     ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
 
@@ -282,7 +282,7 @@ def test_teardown(config, models, mongo):
     assert manager2.proxy.tasks.count() == 0
 
 
-def test_teardown_start_process(config, models, mongo):
+def test_teardown_start_process(config, mongo):
     ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
 
@@ -337,7 +337,7 @@ def test_teardown_start_process(config, models, mongo):
     }]
 
 
-def test_finish_execution(config, models, mongo):
+def test_finish_execution(config, mongo):
     handler = Handler(config)
 
     p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
@@ -360,7 +360,7 @@ def test_finish_execution(config, models, mongo):
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
 
 
-def test_call_trigger_recover(config, mongo, models):
+def test_call_trigger_recover(config, mongo):
     handler = Handler(config)
     channel = MagicMock()
     pointer = make_pointer('cyclic.2018-04-11.xml', 'jump-node')
@@ -464,7 +464,7 @@ def test_call_trigger_recover(config, mongo, models):
     }
 
 
-def test_call_handler_delete_process(config, mongo, models):
+def test_call_handler_delete_process(config, mongo):
     handler = Handler(config)
     channel = MagicMock()
     method = {'delivery_tag': True}

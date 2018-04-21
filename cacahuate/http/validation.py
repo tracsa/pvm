@@ -3,9 +3,12 @@ from xml.dom.minidom import Element
 from flask import request, abort
 import os
 import sys
+import ast
 from datetime import datetime
 from functools import reduce
 from operator import and_
+import json
+import case_conversion
 
 from cacahuate.errors import ValidationErrors, InputError,\
     RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
@@ -15,96 +18,25 @@ from cacahuate.models import User, Token
 from cacahuate.xml import resolve_params, input_to_dict, get_form_specs
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
+from cacahuate import inputs
 
 
 def validate_input(form_index: int, input, value):
     ''' Validates the given value against the requirements specified by the
     input element '''
     input_type = input.get('type')
-    input_name = input.get('name')
-    input_label = input.get('label')
-    required = input.get('required')
-    options = input.get('options', [])
 
-    if required and (value == '' or value is None):
-        raise RequiredInputError(form_index, input_name)
+    cls = getattr(
+        inputs,
+        case_conversion.pascalcase(input_type) + 'Input'
+    )
+    instance = cls(form_index, input)
 
-    elif input_type == 'datetime' or input_type == 'date':
-        if type(value) is not str:
-            raise RequiredStrError(form_index, input_name)
+    res = {**input}
 
-        try:
-            datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
-        except ValueError:
-            raise InvalidDateError(form_index, input_name)
+    res['value'] = instance.validate(value)
 
-    elif input_type == 'checkbox':
-        if type(value) is not list:
-            raise RequiredListError(form_index, input_name)
-
-        list_values = [
-            child_element.get('value')
-            for child_element in options
-        ]
-
-        for val in value:
-            if val not in list_values:
-                raise InvalidInputError(
-                        form_index,
-                        input_name
-                    )
-
-    elif input_type == 'radio':
-        if type(value) is not str:
-            raise RequiredStrError(form_index, input_name)
-
-        list_values = [
-            child_element.get('value')
-            for child_element in options
-        ]
-        if value not in list_values:
-            raise InvalidInputError(form_index, input_name)
-
-    elif input_type == 'select':
-        if type(value) is not str:
-            raise RequiredStrError(form_index, input_name)
-
-        list_values = [
-            child_element.get('value')
-            for child_element in options
-        ]
-
-        if value not in list_values:
-            raise InvalidInputError(form_index, input_name)
-
-    elif input_type == 'file':
-        if type(value) is not dict:
-            raise InvalidInputError(form_index, input_name)
-
-        provider = input.get('provider')
-        if provider == 'doqer':
-            valid = reduce(
-                and_,
-                map(
-                    lambda attr:
-                        attr in value and
-                        value[attr] is not None,
-                    ['id', 'mime', 'name', 'type']
-                )
-            )
-
-            if not valid:
-                raise InvalidInputError(form_index, input_name)
-        else:
-            abort(500, 'File provider `{}` not implemented'.format(provider))
-
-    return {
-        'name': input_name,
-        'value': value,
-        'type': input_type,
-        'options': options,
-        'label': input_label,
-    }
+    return res
 
 
 def get_associated_data(ref, data, min, max):
@@ -139,7 +71,7 @@ def validate_form(form_specs, index, data):
             input_description = validate_input(
                 index,
                 input,
-                data.get(name)
+                data.get(name),
             )
             collected_inputs.append(input_description)
         except InputError as e:

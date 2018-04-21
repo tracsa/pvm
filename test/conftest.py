@@ -5,7 +5,7 @@ import pytest
 import sys
 from pymongo import MongoClient
 
-from cacahuate.models import bind_models
+from cacahuate.models import bind_models as bimo
 
 TESTING_SETTINGS = {
     'LOGIN_PROVIDERS': {
@@ -32,8 +32,21 @@ def config():
     return con
 
 
-@pytest.fixture
-def models():
+@pytest.fixture(autouse=True)
+def clear_mongo():
+    con = config()
+    client = MongoClient()
+    db = client[con['MONGO_DBNAME']]
+
+    collection = db[con['MONGO_HISTORY_COLLECTION']]
+    collection.drop()
+
+    collection_execution = db[con['MONGO_EXECUTION_COLLECTION']]
+    collection_execution.drop()
+
+
+@pytest.fixture(autouse=True)
+def bind_models():
     ''' Binds the models to a coralillo engine, returns nothing '''
     con = config()
     engine = Engine(
@@ -43,7 +56,7 @@ def models():
     )
     engine.lua.drop(args=['*'])
 
-    bind_models(engine)
+    bimo(engine)
 
 
 @pytest.fixture
@@ -61,11 +74,5 @@ def mongo():
     con = config()
     client = MongoClient()
     db = client[con['MONGO_DBNAME']]
-
-    collection = db[con['MONGO_HISTORY_COLLECTION']]
-    collection.drop()
-
-    collection_execution = db[con['MONGO_EXECUTION_COLLECTION']]
-    collection_execution.drop()
 
     return db

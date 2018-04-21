@@ -40,7 +40,7 @@ def test_all_inputs(client, config, mongo):
     assert actor['forms'][0]['data'] == objeto[0]['data']
 
 
-def test_datetime_error(client, mocker, config, mongo):
+def test_datetime_error(client, mocker, config):
     objeto = [
         {
             'ref': 'auth-form',
@@ -67,7 +67,7 @@ def test_datetime_error(client, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_visible_document_provider(client, mocker, config, mongo):
+def test_visible_document_provider(client, mocker, config):
     res = client.get('/v1/process')
 
     body = json.loads(res.data)
@@ -92,7 +92,7 @@ def test_visible_document_provider(client, mocker, config, mongo):
     }
 
 
-def test_allow_document(client, mocker, config, mongo):
+def test_allow_document(client, mocker, config):
     form_array = [
         {
             'ref': 'doc-form',
@@ -118,7 +118,7 @@ def test_allow_document(client, mocker, config, mongo):
     assert res.status_code == 201
 
 
-def test_deny_invalid_document(client, mocker, config, mongo):
+def test_deny_invalid_document(client, mocker, config):
     form_array = [
         {
             'ref': 'doc-form',
@@ -159,7 +159,7 @@ def test_deny_invalid_document(client, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_check_errors(client, mocker, config, mongo):
+def test_check_errors(client, mocker, config):
     objeto = [
         {
             'ref': 'auth-form',
@@ -208,7 +208,7 @@ def test_check_errors(client, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_radio_errors(client, mocker, config, mongo):
+def test_radio_errors(client, mocker, config):
     objeto = [
         {
             'ref': 'auth-form',
@@ -257,7 +257,7 @@ def test_radio_errors(client, mocker, config, mongo):
     assert res.status_code == 400
 
 
-def test_select_errors(client, mocker, config, mongo):
+def test_select_errors(client, mocker, config):
     objeto = [
         {
             'ref': 'auth-form',
@@ -472,7 +472,9 @@ def test_store_form_multiple(config, client, mongo):
     ]
 
 
-def test_default_inputs(client, mongo):
+def test_can_send_no_form(client):
+
+def test_default_inputs(client):
     ''' do not send any value. Values set must be defaults '''
     user = make_user('juan', 'Juan')
 
@@ -511,7 +513,7 @@ def test_default_inputs(client, mongo):
     assert False
 
 
-def test_required_inputs_with_defaults(client, mongo):
+def test_required_inputs_with_defaults(client):
     ''' all inputs are required but all of them have defaults '''
     user = make_user('juan', 'Juan')
 
@@ -527,9 +529,24 @@ def test_required_inputs_with_defaults(client, mongo):
         ],
     }))
 
-    # print (res.data)
-    # assert False
     ques = Questionaire.get_all()[0].to_json()
+
     assert res.status_code == 201
-    assert ques['data']['gender'] == 'None'
-    assert ques['data']['name'] == 'None'
+
+    # text
+    assert ques['data']['name'] == 'Jon Snow'
+    # datetime
+    assert (datetime.strptime(
+        ques['data']['datetime'],
+        "%Y-%m-%dT%H:%M:%S.%fZ"
+    ) - datetime.now()).total_seconds() < 2
+    # password
+    assert ques['data']['secret'] == 'dasdasd'
+    # checkbox
+    assert False
+    # radio
+    assert False
+    # select
+    assert False
+    # file
+    assert False

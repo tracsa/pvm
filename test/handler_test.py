@@ -61,7 +61,7 @@ def test_recover_step(config):
     assert pointer in execution.proxy.pointers
 
     conn = next(xmliter)
-    assert conn.tagName == 'connector'
+    assert conn.tagName == 'node'
     assert conn.getAttribute('from') == 'mid-node'
     assert conn.getAttribute('to') == 'end-node'
 

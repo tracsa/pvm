@@ -33,70 +33,7 @@ class SimpleNode(Node):
 
     def next(self, xml: Xml, execution) -> ['Node']:
         ''' just find the next node in the graph '''
-        def find_node(e):
-            if e.tagName != 'connector':
-                return False
-
-            return e.getAttribute('from') == self.element.getAttribute('id')
-
-        conn = xml.find(find_node)
-
-        return [(False, make_node(xml.find(
-            lambda e: e.getAttribute('id') == conn.getAttribute('to')
-        )))]
-
-
-class DecisionNode(Node):
-
-    def next(self, xml: Xml, execution) -> ['Node']:
-        ''' find node whose value corresponds to the answer '''
-        def find_node(el):
-            if el.tagName != 'connector':
-                return False
-
-            if el.getAttribute('from') != self.element.getAttribute('id'):
-                return False
-
-            cons = el.getElementsByTagName('condition')
-
-            if len(cons) != 1:
-                return False
-
-            con = cons[0]
-
-            return Condition(execution).parse(get_text(con))
-
-        try:
-            conn = xml.find(find_node)
-        except ElementNotFound:
-            raise IncompleteBranch(
-                'Either not all branches for this desition are defined or '
-                'there is not enough information in the asociated data'
-            )
-
-        return [(False, make_node(xml.find(
-            lambda e: e.getAttribute('id') == conn.getAttribute('to')
-        )))]
-
-
-class GotoNode(Node):
-
-    def next(self, xml: Xml, execution) -> ['Node']:
-        ''' tries to find an element back in time '''
-        def find_node(e):
-            if e.tagName != 'connector':
-                return False
-
-            return e.getAttribute('from') == self.element.getAttribute('id')
-
-        conn = xml.find(find_node)
-
-        rewinded = Xml(xml.config, xml.filename)
-        del xml
-
-        return [(True, make_node(rewinded.find(
-            lambda e: e.getAttribute('id') == conn.getAttribute('to')
-        )))]
+        return [(False, make_node(next(xml))]
 
 
 def make_node(element):

@@ -9,9 +9,7 @@
   </process-info>
   <process>
     <node id="start-node" class="simple"/>
-    <connector from="start-node" to="mid-node" />
     <node id="mid-node" class="simple" />
-    <connector from="mid-node" to="end-node" />
     <node id="end-node" class="end" />
   </process>
 </process-spec>

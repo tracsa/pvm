@@ -15,8 +15,6 @@
       </form-array>
     </node>
 
-    <connector from="requester" to="manager" />
-
     <node id="manager" class="decision">
       <auth-filter backend="hardcoded">
         <param name="identifier" type="ref">user#requester</param>
@@ -33,10 +31,6 @@
       </form-array>
     </node>
 
-    <connector from="manager" to="security">
-      <condition>#auth-form.auth=="yes"</condition>
-    </connector>
-
     <node id="security" class="simple">
       <auth-filter backend="hardcoded">
         <param name="ou">Security</param>
@@ -49,16 +43,11 @@
       </form-array>
     </node>
 
-    <connector from="manager" to="noauth">
-    </connector>
-
     <node id="noauth" class="end">
       <auth-filter backend="hardcoded">
         <param name="ou">Security</param>
       </auth-filter>
     </node>
-
-    <connector from="seurity" to="end" />
 
     <node id="end" class="end"></node>
   </process>

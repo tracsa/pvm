@@ -17,9 +17,5 @@
         </form>
       </form-array>
     </node>
-
-    <connector from="form-node" to="end" />
-
-    <node id="end" class="end"></node>
   </process>
 </process-spec>

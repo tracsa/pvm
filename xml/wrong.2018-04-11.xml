@@ -17,33 +17,23 @@
       </form-array>
     </node>
 
-    <connector from="start-node" to="noprov">
-      <condition>#form.choice == "noprov"</condition>
-    </connector>
     <node id="noprov" class="end">
+      <condition>#form.choice == "noprov"</condition>
       <auth-filter backend="noexist" />
     </node>
 
-    <connector from="start-node" to="return">
-      <condition>#form.choice == "return"</condition>
-    </connector>
     <node id="return" class="end">
+      <condition>#form.choice == "return"</condition>
       <auth-filter backend="badreturn">
         <param name="opt">return</param>
       </auth-filter>
     </node>
 
-    <connector from="start-node" to="item">
-      <condition>#form.choice == "item"</condition>
-    </connector>
     <node id="item" class="end">
+      <condition>#form.choice == "item"</condition>
       <auth-filter backend="badreturn">
         <param name="opt">item</param>
       </auth-filter>
     </node>
-
-    <connector from="start-node" to="nonode">
-      <condition>#form.choice == "nonode"</condition>
-    </connector>
   </process>
 </process-spec>

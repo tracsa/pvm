@@ -48,9 +48,7 @@ def test_make_iterator(config):
     xml = Xml.load(config, 'simple')
 
     expected_nodes = [
-        'connector',
         'node',
-        'connector',
         'node',
     ]
 
@@ -66,32 +64,12 @@ def test_find(config):
     assert start.tagName == 'node'
     assert start.getAttribute('id') == 'start-node'
 
-    conn = xml.find(
-        lambda e:
-        e.tagName == 'connector' and
-            e.getAttribute('from') == start.getAttribute('id')
-    )
-
-    assert conn.tagName == 'connector'
-    assert conn.getAttribute('from') == 'start-node'
-    assert conn.getAttribute('to') == 'mid-node'
-
     echo = xml.find(
         lambda e: e.getAttribute('id') == conn.getAttribute('to')
     )
 
     assert echo.tagName == 'node'
     assert echo.getAttribute('id') == 'mid-node'
-
-    conn = xml.find(
-        lambda e:
-        e.tagName == 'connector' and
-            e.getAttribute('from') == echo.getAttribute('id')
-    )
-
-    assert conn.tagName == 'connector'
-    assert conn.getAttribute('from') == 'mid-node'
-    assert conn.getAttribute('to') == 'end-node'
 
     end = xml.find(
         lambda e: e.getAttribute('id') == conn.getAttribute('to')

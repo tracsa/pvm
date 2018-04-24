@@ -496,7 +496,7 @@ def test_call_handler_delete_process(config, mongo):
 
 
 def test_pointer_not_created_without_form():
-    assert False, 'wakeup a node that notifies multiple users, a pointer is created but no one is asociated, pointer is queued'
+    assert False, 'wakeup a node that notifies multiple users but 0 respondants are required, pointer is queued'
 
 
 def test_teardown_clears_tasks():
@@ -507,6 +507,7 @@ def test_teardown_nolast():
     assert False, 'suppose a pointer that needs three participants, when the first one resolves the pointer is not queued'
     assert False, 'respondant count is increased'
     assert False, 'task for respondant is deleted'
+
 
 def test_teardown_last_task():
     assert False, 'suppose a pointer with only one task left, teardown should queue it'

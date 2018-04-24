@@ -73,7 +73,7 @@ def test_continue_process_asks_living_objects(client):
 def test_continue_process_requires_valid_node(client):
     user = make_user('juan', 'Juan')
     exc = Execution(
-        process_name='decision.2018-02-27',
+        process_name='simple.2018-02-19.xml',
     ).save()
 
     res = client.post('/v1/pointer', headers={**{
@@ -98,14 +98,14 @@ def test_continue_process_requires_valid_node(client):
 def test_continue_process_requires_living_pointer(client):
     user = make_user('juan', 'Juan')
     exc = Execution(
-        process_name='decision.2018-02-27',
+        process_name='simple.2018-02-19.xml',
     ).save()
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': '57TJ0V3nur6m7wvv',
+        'node_id': 'mid-node',
     }))
 
     assert res.status_code == 400
@@ -124,7 +124,7 @@ def test_continue_process_requires_user_hierarchy(client):
     ''' a node whose auth has a filter must be completed by a person matching
     the filter '''
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ def test_continue_process_requires_data(client):
     act.proxy.user.set(juan)
 
     manager = make_user('juan_manager', 'Juanote')
-    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     manager.proxy.tasks.set([ptr])
 
     act.proxy.execution.set(ptr.proxy.execution.get())
@@ -163,7 +163,7 @@ def test_continue_process_requires_data(client):
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': "form count lower than expected for ref auth-form",
+            'detail': "form count lower than expected for ref mid-form",
             'where': 'request.body.form_array',
         }],
     }
@@ -177,7 +177,7 @@ def test_continue_process(client, mocker, config):
 
     juan = make_user('juan', 'Juan')
     manager = make_user('juan_manager', 'Juanote')
-    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     manager.proxy.tasks.set([ptr])
     exc = ptr.proxy.execution.get()
 
@@ -190,7 +190,7 @@ def test_continue_process(client, mocker, config):
         'node_id': ptr.node_id,
         'form_array': [
             {
-                'ref': 'auth-form',
+                'ref': 'mid-form',
                 'data': {
                     'auth': 'yes',
                 },
@@ -207,9 +207,9 @@ def test_continue_process(client, mocker, config):
 
     assert exc.proxy.actors.count() == 2
 
-    activity = next(exc.proxy.actors.q().filter(ref='manager'))
+    activity = next(exc.proxy.actors.q().filter(ref='mid-node'))
 
-    assert activity.ref == 'manager'
+    assert activity.ref == 'mid-node'
     assert activity.proxy.user.get() == manager
 
     # form is attached
@@ -219,7 +219,7 @@ def test_continue_process(client, mocker, config):
 
     form = forms[0]
 
-    assert form.ref == 'auth-form'
+    assert form.ref == 'mid-form'
     assert form.data == {
         'auth': 'yes',
     }
@@ -235,14 +235,14 @@ def test_continue_process(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'actor': {
-            'ref': 'manager',
+            'ref': 'mid-node',
             'user': {
                 'identifier': 'juan_manager',
                 'human_name': 'Juanote',
             },
             'forms': [
                 {
-                    'ref': 'auth-form',
+                    'ref': 'mid-form',
                     'form': [
                         {
                             "name": "auth",
@@ -410,12 +410,12 @@ def test_start_process_simple(client, mocker, config, mongo):
     assert reg2['status'] == 'ongoing'
 
 
-def test_exit_request_requirements(client):
+def test_simple_requirements(client):
     # first requirement is to have authentication
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
     }, data=json.dumps({
-        'process_name': 'exit_request',
+        'process_name': 'simple',
     }))
 
     assert res.status_code == 401
@@ -438,7 +438,7 @@ def test_exit_request_requirements(client):
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'exit_request',
+        'process_name': 'simple',
     }))
 
     assert res.status_code == 400
@@ -453,7 +453,7 @@ def test_exit_request_requirements(client):
     assert Activity.count() == 0
 
 
-def test_exit_request_start(client, mocker, mongo, config):
+def test_simple_start(client, mocker, mongo, config):
     user = make_user('juan', 'Juan')
 
     assert Execution.count() == 0
@@ -462,7 +462,7 @@ def test_exit_request_start(client, mocker, mongo, config):
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'exit_request',
+        'process_name': 'simple',
         'form_array': [
             {
                 'ref': 'exit-form',
@@ -526,12 +526,12 @@ def test_list_processes(client):
 
     body = json.loads(res.data)
     exit_req = list(filter(
-        lambda xml: xml['id'] == 'exit_request', body['data']
+        lambda xml: xml['id'] == 'simple', body['data']
     ))[0]
 
     assert res.status_code == 200
     assert exit_req == {
-        'id': 'exit_request',
+        'id': 'simple',
         'version': '2018-03-20',
         'author': 'categulario',
         'date': '2018-03-20',
@@ -605,12 +605,12 @@ def test_list_processes_multiple(client):
 
 @pytest.mark.skip
 def test_read_process(client):
-    res = client.get('/v1/process/exit_request')
+    res = client.get('/v1/process/simple')
 
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': {
-            'name': 'exit_request.2018-03-20',
+            'name': 'simple.2018-02-19.xml',
         },
     }
 
@@ -619,7 +619,7 @@ def test_read_process(client):
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': {
-            'name': 'exit_request.2018-03-20',
+            'name': 'simple.2018-02-19.xml',
         },
     }
 
@@ -636,7 +636,7 @@ def test_list_activities(client):
     other = make_user('other', 'Otero')
 
     exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
+        process_name='simple.2018-02-19.xml',
     ).save()
 
     act = make_activity('requester', juan, exc)
@@ -664,7 +664,7 @@ def test_activity_wrong_activity(client):
     other = make_user('other', 'Otero')
 
     exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
+        process_name='simple.2018-02-19.xml',
     ).save()
 
     act = make_activity('requester', juan, exc)
@@ -753,7 +753,7 @@ def test_task_list_requires_auth(client):
 def test_task_list(client):
     juan = make_user('user', 'User')
 
-    pointer = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    pointer = make_pointer('simple.2018-02-19.xml', 'mid-node')
     juan.proxy.tasks.set([pointer])
 
     res = client.get('/v1/task', headers=make_auth(juan))
@@ -951,7 +951,7 @@ def test_delete_process(config, client, mongo, mocker):
         'BlockingChannel.basic_publish'
     )
 
-    p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    p_0 = make_pointer('simple.2018-02-19.xml', 'mid-node')
     execution = p_0.proxy.execution.get()
 
     juan = make_user('juan', 'Juan')
@@ -984,7 +984,7 @@ def test_status_notfound(client):
 
 
 def test_status(config, client, mongo):
-    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     execution = ptr.proxy.execution.get()
 
     mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({

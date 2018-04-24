@@ -111,7 +111,7 @@ def test_wakeup(config, mongo):
     # setup stuff
     handler = Handler(config)
 
-    pointer = make_pointer('exit_request.2018-03-20.xml', 'requester')
+    pointer = make_pointer('simple.2018-02-19.xml', 'requester')
     execution = pointer.proxy.execution.get()
     juan = User(identifier='juan').save()
     manager = User(identifier='juan_manager').save()
@@ -178,7 +178,7 @@ def test_teardown(config, mongo):
     ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
 
-    p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    p_0 = make_pointer('simple.2018-02-19.xml', 'manager')
     execution = p_0.proxy.execution.get()
 
     juan = User(identifier='juan').save()
@@ -286,7 +286,7 @@ def test_teardown_start_process(config, mongo):
     ''' second and last stage of a node's lifecycle '''
     handler = Handler(config)
 
-    p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    p_0 = make_pointer('simple.2018-02-19.xml', 'manager')
     execution = p_0.proxy.execution.get()
 
     manager = User(identifier='manager').save()
@@ -340,7 +340,7 @@ def test_teardown_start_process(config, mongo):
 def test_finish_execution(config, mongo):
     handler = Handler(config)
 
-    p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    p_0 = make_pointer('simple.2018-02-19.xml', 'manager')
     execution = p_0.proxy.execution.get()
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
@@ -469,7 +469,7 @@ def test_call_handler_delete_process(config, mongo):
     channel = MagicMock()
     method = {'delivery_tag': True}
     properties = ""
-    pointer = make_pointer('exit_request.2018-03-20.xml', 'requester')
+    pointer = make_pointer('simple.2018-02-19.xml', 'requester')
     execution_id = pointer.proxy.execution.get().id
     body = '{"command":"cancel", "execution_id":"%s", "pointer_id":"%s"}'\
         % (execution_id, pointer.id)

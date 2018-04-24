@@ -149,7 +149,7 @@ def test_form_to_dict(config):
 
 
 def test_resolve_params(config):
-    xml = Xml.load(config, 'exit_request.2018-03-20.xml')
+    xml = Xml.load(config, 'simple.2018-02-19.xml')
 
     el = xml.find(lambda e: e.getAttribute('id') == 'manager')
     filter_node = el.getElementsByTagName('auth-filter')[0]

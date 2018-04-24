@@ -33,7 +33,7 @@ class SimpleNode(Node):
 
     def next(self, xml: Xml, execution) -> ['Node']:
         ''' just find the next node in the graph '''
-        return [(False, make_node(next(xml))]
+        return [(False, make_node(next(xml)))]
 
 
 def make_node(element):

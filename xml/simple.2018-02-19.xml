@@ -9,7 +9,12 @@
   </process-info>
   <process>
     <node id="start-node" class="simple"/>
-    <node id="mid-node" class="simple" />
-    <node id="end-node" class="end" />
+    <node id="mid-node" class="simple">
+      <form-array>
+        <form id="mid-form">
+          <input type="text" name="data" />
+        </form>
+      </form-array>
+    </node>
   </process>
 </process-spec>

@@ -5,7 +5,6 @@
     <name>Todos los inputs</name>
     <description>Proceso que pide todos los tipos de entrada y después no hace nada</description>
     <public>true</public>
-    <start-node>inputs-node</start-node>
   </process-info>
   <process>
     <node id="foo">

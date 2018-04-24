@@ -6,7 +6,6 @@
     <name>Validar identidad</name>
     <description>This process asks for a file</description>
     <public>true</public>
-    <start-node>document-node</start-node>
   </process-info>
   <process>
     <node id="document-node" class="decision">

@@ -13,7 +13,6 @@ XML_ATTRIBUTES = {
     'date': str,
     'name': str,
     'description': lambda x: x,
-    'start-node': lambda x: x,
 }
 
 
@@ -52,17 +51,16 @@ class Xml:
 
             setattr(self, attr, func(get_text(node)))
 
-        start_node_id = getattr(self, 'start-node')
         self.start_node_consumed = True
 
         try:
             self.start_node = self.find(
-                lambda e: e.getAttribute('id') == start_node_id
+                lambda e: e.tagName == 'node'
             )
             self.start_node_consumed = False
         except ElementNotFound:
             raise MalformedProcess(
-                'Process does not have the start node'
+                'Process does not have nodes'
             )
 
     @classmethod

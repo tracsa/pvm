@@ -329,7 +329,7 @@ def test_start_process_simple_requires(client, mongo, config):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'Process does not have the start node',
+                'detail': 'Process does not have nodes',
                 'where': 'request.body.process_name',
             },
         ],

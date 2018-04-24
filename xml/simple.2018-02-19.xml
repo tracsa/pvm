@@ -6,7 +6,6 @@
     <name>Simplest process ever</name>
     <public>false</public>
     <description>A simple process that does nothing</description>
-    <start-node>start-node</start-node>
   </process-info>
   <process>
     <node id="start-node" class="simple"/>

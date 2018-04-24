@@ -5,7 +5,6 @@
     <name>La decisión</name>
     <description>Proceso que inicia con una decisión</description>
     <public>true</public>
-    <start-node>decision-node</start-node>
   </process-info>
   <process>
     <node id="decision-node" class="decision">

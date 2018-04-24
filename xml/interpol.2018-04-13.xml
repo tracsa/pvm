@@ -6,7 +6,6 @@
     <name>Computes a name based on a {{ form.field }}</name>
     <public>false</public>
     <description>Uses string interpolation to build the execution's name</description>
-    <start-node>start-node</start-node>
   </process-info>
   <process>
     <node id="start-node" class="simple">

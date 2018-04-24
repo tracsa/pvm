@@ -6,7 +6,6 @@
     <name>Sin conectores</name>
     <public>false</public>
     <description>Un proceso sin conectores</description>
-    <start-node>A</start-node>
   </process-info>
     <process>
         <node id="A" />

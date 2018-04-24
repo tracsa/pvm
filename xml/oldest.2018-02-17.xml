@@ -5,7 +5,6 @@
         <name>Oldest process v2</name>
         <public>false</public>
         <description>A process for testing loading</description>
-        <start-node>a</start-node>
     </process-info>
     <process>
       <node id="a" />

@@ -6,7 +6,6 @@
     <name>Todos los inputs</name>
     <description>Proceso de formulario que no tiene el campo required y toma el valor del atributo default</description>
     <public>true</public>
-    <start-node>inputs-node</start-node>
   </process-info>
   <process>
     <node id="inputs-node" class="decision">

@@ -6,8 +6,7 @@ import simplejson as json
 from cacahuate.errors import ProcessNotFound
 from xml.dom.minidom import parse
 from cacahuate.models import Execution, User, Activity
-from cacahuate.xml import Xml, etree_from_list, nodes_from, has_no_incoming, \
-    has_edges, topological_sort, resolve_params, form_to_dict
+from cacahuate.xml import Xml, resolve_params, form_to_dict
 
 
 def test_load_not_found(config):

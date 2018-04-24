@@ -5,7 +5,6 @@
     <name>A process that asks a question</name>
     <public>false</public>
     <description>The simplest decision</description>
-    <start-node>vhK8ZcR4Z260T3pz</start-node>
   </process-info>
   <process>
     <node id="vhK8ZcR4Z260T3pz" class="simple" />

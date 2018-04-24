@@ -5,7 +5,6 @@
     <name>Failing, wrong process</name>
     <public>false</public>
     <description>Created for testing the resistance of the handler against faulty hierarchy providers</description>
-    <start-node>start-node</start-node>
   </process-info>
   <process>
     <node id="start-node" class="decision">

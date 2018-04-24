@@ -5,7 +5,6 @@
     <name>Autorización de salida de personal</name>
     <description>Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.</description>
     <public>true</public>
-    <start-node>requester</start-node>
   </process-info>
   <process>
     <node id="requester" class="simple">

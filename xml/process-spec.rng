@@ -19,7 +19,6 @@
           </choice>
         </element>
         <element name="description"><text/></element>
-        <element name="start-node"><text/></element>
       </interleave>
     </element>
   </define>
@@ -27,12 +26,9 @@
   <define name="process">
     <element name="process">
       <interleave>
-        <zeroOrMore>
+        <oneOrMore>
           <ref name="node"/>
-        </zeroOrMore>
-        <zeroOrMore>
-          <ref name="connector"/>
-        </zeroOrMore>
+        </oneOrMore>
       </interleave>
     </element>
   </define>

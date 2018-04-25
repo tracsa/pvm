@@ -4,15 +4,26 @@
     <author>categulario</author>
     <date>2018-02-19</date>
     <name>Simplest process ever</name>
-    <public>false</public>
+    <public>true</public>
     <description>A simple process that does nothing</description>
   </process-info>
   <process>
-    <node id="start-node" class="simple"/>
+    <node id="start-node" class="simple">
+      <node-info>
+        <name>Primer paso</name>
+        <description>Resolver una tarea</description>
+      </node-info>
+      <form-array>
+        <form id="start-form">
+          <input type="text" name="data" required="required" label="Info" />
+        </form>
+      </form-array>
+    </node>
+
     <node id="mid-node" class="simple">
       <form-array>
         <form id="mid-form">
-          <input type="text" name="data" />
+          <input type="text" name="data" required="required" />
         </form>
       </form-array>
     </node>

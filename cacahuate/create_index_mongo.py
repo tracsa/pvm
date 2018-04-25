@@ -17,4 +17,3 @@ def create_index(config):
     history.create_index("execution.id")
     history.create_index("started_at")
     history.create_index("finished_at")
-

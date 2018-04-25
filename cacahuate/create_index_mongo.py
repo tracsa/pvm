@@ -1,6 +1,7 @@
-from flask import Flask,current_app
+from flask import Flask, current_app
 from flask_pymongo import PyMongo
 import pymongo
+
 
 def create_index(config):
 
@@ -28,5 +29,3 @@ def create_index(config):
 
         '''list indexes '''
         # execution.index_information()
-
-

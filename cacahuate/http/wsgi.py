@@ -2,6 +2,8 @@ from flask import Flask
 from flask_coralillo import Coralillo
 from flask_cors import CORS
 from flask_pymongo import PyMongo
+from cacahuate.indexes import create_indexes
+
 import os
 import time
 
@@ -27,6 +29,7 @@ bind_models(cora._engine)
 
 # The database
 mongo = PyMongo(app)
+create_indexes(app.config)
 
 # Url converters
 import cacahuate.http.converters  # noqa

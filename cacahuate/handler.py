@@ -298,7 +298,7 @@ class Handler:
 
     def get_mongo(self):
         if self.mongo is None:
-            client = MongoClient()
+            client = MongoClient(self.config['MONGO_URI'])
             db = client[self.config['MONGO_DBNAME']]
 
             self.mongo = db

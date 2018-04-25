@@ -236,14 +236,6 @@ class Handler:
         )
 
         if type(husers) != list:
-            collection = mongo[self.config['MONGO_EXECUTION_COLLECTION']]
-            collection.update_one({
-                'id': pointer.proxy.execution.get().id,
-            }, {
-                '$set': {
-                    'state': 'failure',
-                },
-            })
             raise MisconfiguredProvider('Provider returned non list')
 
         channel.exchange_declare(
@@ -306,7 +298,7 @@ class Handler:
 
     def get_mongo(self):
         if self.mongo is None:
-            client = MongoClient()
+            client = MongoClient(self.config['MONGO_URI'])
             db = client[self.config['MONGO_DBNAME']]
 
             self.mongo = db

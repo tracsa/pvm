@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 from cacahuate.loop import Loop
-from cacahuate.create_index_mongo import create_index
+from cacahuate.indexes import create_indexes
 from cacahuate.models import bind_models
-from flask_pymongo import PyMongo
-from cacahuate.http.wsgi import app, mongo
 from coralillo import Engine
 from itacate import Config
-import pymongo
 import time
 import os
 
@@ -34,7 +31,10 @@ def main():
         db=config['REDIS_DB'],
     )
     bind_models(eng)
-    create_index(config)
+
+    # Create mongo indexes
+    create_indexes(config)
+
     # start the loop
     loop = Loop(config)
     loop.start()

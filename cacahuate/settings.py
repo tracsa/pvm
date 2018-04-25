@@ -18,6 +18,7 @@ RABBIT_CONSUMER_TAG = 'cacahuate_consumer_1'
 RABBIT_NO_ACK = True
 
 # Mongodb
+MONGO_URI = 'mongodb://localhost/cacahuate'
 MONGO_DBNAME = 'cacahuate'
 MONGO_HISTORY_COLLECTION = 'history'
 MONGO_EXECUTION_COLLECTION = 'execution'

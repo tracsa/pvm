@@ -20,7 +20,7 @@ def test_load_process(config):
     xml = Xml.load(config, 'simple')
 
     assert xml.filename == 'simple.2018-02-19.xml'
-    assert xml.public is False
+    assert xml.public is True
 
 
 def test_load_last_matching_process(config):
@@ -65,22 +65,22 @@ def test_find(config):
     assert start.getAttribute('id') == 'start-node'
 
     echo = xml.find(
-        lambda e: e.getAttribute('id') == conn.getAttribute('to')
+        lambda e: e.getAttribute('id') == 'mid-node'
     )
 
     assert echo.tagName == 'node'
     assert echo.getAttribute('id') == 'mid-node'
 
     end = xml.find(
-        lambda e: e.getAttribute('id') == conn.getAttribute('to')
+        lambda e: e.getAttribute('id') == 'final-node'
     )
 
     assert end.tagName == 'node'
-    assert end.getAttribute('id') == 'end-node'
+    assert end.getAttribute('id') == 'final-node'
 
 
 def test_form_to_dict(config):
-    xml = parse(os.path.join(config['XML_PATH'], 'testing_forms.xml'))
+    xml = parse(os.path.join(config['XML_PATH'], 'all-inputs.2018-04-04.xml'))
     forms = xml.getElementsByTagName('form')
 
     dict_forms = list(map(

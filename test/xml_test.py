@@ -151,12 +151,12 @@ def test_form_to_dict(config):
 def test_resolve_params(config):
     xml = Xml.load(config, 'simple.2018-02-19.xml')
 
-    el = xml.find(lambda e: e.getAttribute('id') == 'manager')
+    el = xml.find(lambda e: e.getAttribute('id') == 'mid-node')
     filter_node = el.getElementsByTagName('auth-filter')[0]
 
     execution = Execution().save()
     juan = User(identifier='juan').save()
-    act = Activity(ref='requester').save()
+    act = Activity(ref='start-node').save()
     act.proxy.user.set(juan)
     act.proxy.execution.set(execution)
 

@@ -21,11 +21,18 @@
     </node>
 
     <node id="mid-node" class="simple">
+      <auth-filter backend="hardcoded">
+        <param name="identifier" type="ref">user#start-node</param>
+        <param name="relation">manager</param>
+      </auth-filter>
       <form-array>
         <form id="mid-form">
           <input type="text" name="data" required="required" />
         </form>
       </form-array>
+    </node>
+
+    <node id="final-node" class="simple">
     </node>
   </process>
 </process-spec>

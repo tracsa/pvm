@@ -7,7 +7,7 @@
     <description>Created for testing the resistance of the handler against faulty hierarchy providers</description>
   </process-info>
   <process>
-    <node id="start-node" class="decision">
+    <node id="start-node" class="simple">
       <form-array>
         <form id="form">
           <input type="select" name="choice">

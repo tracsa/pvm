@@ -246,7 +246,7 @@ def test_continue_process(client, mocker, config):
                     'form': [
                         {
                             "name": "data",
-                            "options": [ ],
+                            "options": [],
                             "type": "text",
                             "value": "yes",
                             "required": True,
@@ -884,7 +884,8 @@ def test_log_has_node_info(client):
 
     assert data['execution']['id'] == execution_id
     assert data['execution']['name'] == 'Simplest process ever'
-    assert data['execution']['description'] == 'A simple process that does nothing'
+    assert data['execution']['description'] == \
+        'A simple process that does nothing'
 
 
 def test_log_has_form_input_data(client):

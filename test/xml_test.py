@@ -145,10 +145,22 @@ def test_form_to_dict(config):
                 "required": True,
                 "label": "Emita su voto",
                 "options": [
-                    {"value": "amlo", "label": "Andres Manuel López Obrador"},
-                    {"value": "meade", "label": "José Antonio Meade Kuribreña"},
-                    {"value": "marguarita", "label": "Margarita Ester Zavala Gómez del Campo"},
-                    {"value": "anaya", "label": "Ricardo Anaya Cortés"},
+                    {
+                        "value": "amlo",
+                        "label": "Andres Manuel López Obrador",
+                    },
+                    {
+                        "value": "meade",
+                        "label": "José Antonio Meade Kuribreña",
+                    },
+                    {
+                        "value": "marguarita",
+                        "label": "Margarita Ester Zavala Gómez del Campo",
+                    },
+                    {
+                        "value": "anaya",
+                        "label": "Ricardo Anaya Cortés",
+                    },
                 ],
             },
         ]

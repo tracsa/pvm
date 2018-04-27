@@ -99,7 +99,11 @@ def validate_form_spec(form_specs, data) -> dict:
         min = 1
 
     for index, form in get_associated_data(ref, data, min, max):
-        collected_specs.append(validate_form(form_specs, index, form.get('data', {})))
+        collected_specs.append(validate_form(
+            form_specs,
+            index,
+            form.get('data', {})
+        ))
 
     return collected_specs
 

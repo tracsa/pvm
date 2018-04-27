@@ -73,7 +73,7 @@ def test_continue_process_asks_living_objects(client):
 def test_continue_process_requires_valid_node(client):
     user = make_user('juan', 'Juan')
     exc = Execution(
-        process_name='decision.2018-02-27',
+        process_name='simple.2018-02-19.xml',
     ).save()
 
     res = client.post('/v1/pointer', headers={**{
@@ -98,14 +98,14 @@ def test_continue_process_requires_valid_node(client):
 def test_continue_process_requires_living_pointer(client):
     user = make_user('juan', 'Juan')
     exc = Execution(
-        process_name='decision.2018-02-27',
+        process_name='simple.2018-02-19.xml',
     ).save()
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': '57TJ0V3nur6m7wvv',
+        'node_id': 'mid-node',
     }))
 
     assert res.status_code == 400
@@ -124,7 +124,7 @@ def test_continue_process_requires_user_hierarchy(client):
     ''' a node whose auth has a filter must be completed by a person matching
     the filter '''
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ def test_continue_process_requires_data(client):
     act.proxy.user.set(juan)
 
     manager = make_user('juan_manager', 'Juanote')
-    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     manager.proxy.tasks.set([ptr])
 
     act.proxy.execution.set(ptr.proxy.execution.get())
@@ -163,7 +163,7 @@ def test_continue_process_requires_data(client):
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': "form count lower than expected for ref auth-form",
+            'detail': "form count lower than expected for ref mid-form",
             'where': 'request.body.form_array',
         }],
     }
@@ -177,7 +177,7 @@ def test_continue_process(client, mocker, config):
 
     juan = make_user('juan', 'Juan')
     manager = make_user('juan_manager', 'Juanote')
-    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     manager.proxy.tasks.set([ptr])
     exc = ptr.proxy.execution.get()
 
@@ -190,9 +190,9 @@ def test_continue_process(client, mocker, config):
         'node_id': ptr.node_id,
         'form_array': [
             {
-                'ref': 'auth-form',
+                'ref': 'mid-form',
                 'data': {
-                    'auth': 'yes',
+                    'data': 'yes',
                 },
             },
         ],
@@ -207,9 +207,9 @@ def test_continue_process(client, mocker, config):
 
     assert exc.proxy.actors.count() == 2
 
-    activity = next(exc.proxy.actors.q().filter(ref='manager'))
+    activity = next(exc.proxy.actors.q().filter(ref='mid-node'))
 
-    assert activity.ref == 'manager'
+    assert activity.ref == 'mid-node'
     assert activity.proxy.user.get() == manager
 
     # form is attached
@@ -219,9 +219,9 @@ def test_continue_process(client, mocker, config):
 
     form = forms[0]
 
-    assert form.ref == 'auth-form'
+    assert form.ref == 'mid-form'
     assert form.data == {
-        'auth': 'yes',
+        'data': 'yes',
     }
 
     # rabbit is called
@@ -235,34 +235,25 @@ def test_continue_process(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'actor': {
-            'ref': 'manager',
+            'ref': 'mid-node',
             'user': {
                 'identifier': 'juan_manager',
                 'human_name': 'Juanote',
             },
             'forms': [
                 {
-                    'ref': 'auth-form',
+                    'ref': 'mid-form',
                     'form': [
                         {
-                            "name": "auth",
-                            "options": [
-                                {
-                                    "label": "\u00c1ndale mijito, ve",
-                                    "value": "yes"
-                                },
-                                {
-                                    "label": "Ni madres",
-                                    "value": "no"
-                                }
-                            ],
-                            "type": "radio",
+                            "name": "data",
+                            "options": [],
+                            "type": "text",
                             "value": "yes",
                             "required": True,
                         }
                     ],
                     'data': {
-                        'auth': 'yes',
+                        'data': 'yes',
                     },
                 },
             ],
@@ -329,7 +320,7 @@ def test_start_process_simple_requires(client, mongo, config):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'Process does not have the start node',
+                'detail': 'Process does not have nodes',
                 'where': 'request.body.process_name',
             },
         ],
@@ -353,6 +344,12 @@ def test_start_process_simple(client, mocker, config, mongo):
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'simple',
+        'form_array': [{
+            'ref': 'start-form',
+            'data': {
+                'data': 'yes',
+            },
+        }],
     }))
 
     assert res.status_code == 201
@@ -397,7 +394,12 @@ def test_start_process_simple(client, mocker, config, mongo):
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
     assert reg['state'] == {
-        'forms': [],
+        'forms': [{
+            'ref': 'start-form',
+            'data': {
+                'data': 'yes',
+            },
+        }],
         'actors': [{
             'ref': 'start-node',
             'user_id': juan.id,
@@ -410,12 +412,12 @@ def test_start_process_simple(client, mocker, config, mongo):
     assert reg2['status'] == 'ongoing'
 
 
-def test_exit_request_requirements(client):
+def test_simple_requirements(client):
     # first requirement is to have authentication
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
     }, data=json.dumps({
-        'process_name': 'exit_request',
+        'process_name': 'simple',
     }))
 
     assert res.status_code == 401
@@ -438,13 +440,13 @@ def test_exit_request_requirements(client):
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'exit_request',
+        'process_name': 'simple',
     }))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': "form count lower than expected for ref exit-form",
+            'detail': "form count lower than expected for ref start-form",
             'where': 'request.body.form_array',
         }],
     }
@@ -453,7 +455,7 @@ def test_exit_request_requirements(client):
     assert Activity.count() == 0
 
 
-def test_exit_request_start(client, mocker, mongo, config):
+def test_simple_start(client, mocker, mongo, config):
     user = make_user('juan', 'Juan')
 
     assert Execution.count() == 0
@@ -462,12 +464,12 @@ def test_exit_request_start(client, mocker, mongo, config):
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'exit_request',
+        'process_name': 'simple',
         'form_array': [
             {
-                'ref': 'exit-form',
+                'ref': 'start-form',
                 'data': {
-                    'reason': 'tenía que salir al baño',
+                    'data': 'yes',
                 },
             },
         ],
@@ -487,7 +489,7 @@ def test_exit_request_start(client, mocker, mongo, config):
 
     activity = actors[0]
 
-    assert activity.ref == 'requester'
+    assert activity.ref == 'start-node'
     assert activity.proxy.user.get() == user
 
     # form is attached
@@ -497,9 +499,9 @@ def test_exit_request_start(client, mocker, mongo, config):
 
     form = forms[0]
 
-    assert form.ref == 'exit-form'
+    assert form.ref == 'start-form'
     assert form.data == {
-        'reason': 'tenía que salir al baño',
+        'data': 'yes',
     }
 
     # mongo has a registry
@@ -507,14 +509,14 @@ def test_exit_request_start(client, mocker, mongo, config):
 
     assert reg['state'] == {
         'forms': [{
-            'ref': 'exit-form',
+            'ref': 'start-form',
             'data': {
-                'reason': 'tenía que salir al baño',
+                'data': 'yes',
             },
         }],
         'actors': [
             {
-                'ref': 'requester',
+                'ref': 'start-node',
                 'user_id': user.id,
             }
         ],
@@ -526,32 +528,27 @@ def test_list_processes(client):
 
     body = json.loads(res.data)
     exit_req = list(filter(
-        lambda xml: xml['id'] == 'exit_request', body['data']
+        lambda xml: xml['id'] == 'simple', body['data']
     ))[0]
 
     assert res.status_code == 200
     assert exit_req == {
-        'id': 'exit_request',
-        'version': '2018-03-20',
+        'id': 'simple',
+        'version': '2018-02-19',
         'author': 'categulario',
-        'date': '2018-03-20',
-        'name': 'Petición de salida',
-        'description':
-            'Este proceso es iniciado por un empleado que quiere salir'
-            ' temporalmente de la empresa (e.g. a comer). La autorización'
-            ' llega a su supervisor, quien autoriza o rechaza la salida, '
-            'evento que es notificado de nuevo al empleado y finalmente '
-            'a los guardias, uno de los cuales notifica que el empleado '
-            'salió de la empresa.',
-        'versions': ['2018-03-20'],
+        'date': '2018-02-19',
+        'name': 'Simplest process ever',
+        'description': 'A simple process that does nothing',
+        'versions': ['2018-02-19'],
         'form_array': [
             {
-                'ref': 'exit-form',
+                'ref': 'start-form',
                 'inputs': [
                     {
                         'type': 'text',
-                        'name': 'reason',
+                        'name': 'data',
                         'required': True,
+                        'label': 'Info',
                     },
                 ],
             },
@@ -603,25 +600,24 @@ def test_list_processes_multiple(client):
     }
 
 
-@pytest.mark.skip
 def test_read_process(client):
-    res = client.get('/v1/process/exit_request')
 
+    res = client.get('/v1/process/name?name=oldest&version=2018-02-14')
+    data = json.loads(res.data)
     assert res.status_code == 200
-    assert json.loads(res.data) == {
-        'data': {
-            'name': 'exit_request.2018-03-20',
-        },
-    }
+    assert data['data']['name'] == 'Oldest process'
+    assert data['data']['version'] == '2018-02-14'
 
-    res = client.get('/v1/process/oldest?v=2018-02-14')
-
+    res = client.get('/v1/process/name?name=oldest')
+    data = json.loads(res.data)
     assert res.status_code == 200
-    assert json.loads(res.data) == {
-        'data': {
-            'name': 'exit_request.2018-03-20',
-        },
-    }
+    assert data['data']['name'] == 'Oldest process v2'
+    assert data['data']['version'] == '2018-02-17'
+
+    res = client.get('/v1/process/name?name=prueba')
+    data = json.loads(res.data)
+    assert res.status_code == 404
+    assert data['errors'][0]['detail'] == 'prueba process does not exist'
 
 
 def test_list_activities_requires(client):
@@ -636,7 +632,7 @@ def test_list_activities(client):
     other = make_user('other', 'Otero')
 
     exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
+        process_name='simple.2018-02-19.xml',
     ).save()
 
     act = make_activity('requester', juan, exc)
@@ -664,7 +660,7 @@ def test_activity_wrong_activity(client):
     other = make_user('other', 'Otero')
 
     exc = Execution(
-        process_name='exit_request.2018-03-20.xml',
+        process_name='simple.2018-02-19.xml',
     ).save()
 
     act = make_activity('requester', juan, exc)
@@ -753,7 +749,7 @@ def test_task_list_requires_auth(client):
 def test_task_list(client):
     juan = make_user('user', 'User')
 
-    pointer = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    pointer = make_pointer('simple.2018-02-19.xml', 'mid-node')
     juan.proxy.tasks.set([pointer])
 
     res = client.get('/v1/task', headers=make_auth(juan))
@@ -779,7 +775,7 @@ def test_task_read_requires_real_pointer(client):
 
 
 def test_task_read_requires_assigned_task(client):
-    ptr = make_pointer('dumb.2018-04-06.xml', 'node2')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     juan = make_user('juan', 'Juan')
 
     res = client.get('/v1/task/{}'.format(ptr.id), headers=make_auth(juan))
@@ -788,7 +784,7 @@ def test_task_read_requires_assigned_task(client):
 
 
 def test_task_read(client):
-    ptr = make_pointer('dumb.2018-04-06.xml', 'node2')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     juan = make_user('juan', 'Juan')
     juan.proxy.tasks.set([ptr])
     execution = ptr.proxy.execution.get()
@@ -812,23 +808,12 @@ def test_task_read(client):
             },
             'form_array': [
                 {
-                    'ref': 'formulario2',
+                    'ref': 'mid-form',
                     'inputs': [
                         {
-                            'label': '¿Asignarme más chamba?',
-                            'name': 'continue',
+                            'name': 'data',
                             'required': True,
-                            'type': 'select',
-                            'options': [
-                                {
-                                    'label': 'Simona la changa',
-                                    'value': 'yes',
-                                },
-                                {
-                                    'label': 'Nel pastel',
-                                    'value': 'no',
-                                },
-                            ],
+                            'type': 'text',
                         },
                     ],
                 },
@@ -843,12 +828,12 @@ def test_execution_has_node_info(client):
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'dumb',
+        'process_name': 'simple',
         'form_array': [
             {
-                'ref': 'formulario',
+                'ref': 'start-form',
                 'data': {
-                    'continue': 'yes',
+                    'data': 'yes',
                 },
             },
         ],
@@ -859,11 +844,11 @@ def test_execution_has_node_info(client):
     exe = Execution.get_all()[0]
     ptr = Pointer.get_all()[0]
 
-    assert exe.name == 'Proceso simple'
-    assert exe.description == 'Te asigna una tarea a ti mismo'
+    assert exe.name == 'Simplest process ever'
+    assert exe.description == 'A simple process that does nothing'
 
-    assert ptr.name == 'Primer paso ;)'
-    assert ptr.description == 'Te asignas chamba'
+    assert ptr.name == 'Primer paso'
+    assert ptr.description == 'Resolver una tarea'
 
 
 def test_log_has_node_info(client):
@@ -872,16 +857,19 @@ def test_log_has_node_info(client):
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'dumb',
+        'process_name': 'simple',
         'form_array': [
             {
-                'ref': 'formulario',
+                'ref': 'start-form',
                 'data': {
-                    'continue': 'yes',
+                    'data': 'yes',
                 },
             },
         ],
     }))
+
+    assert res.status_code == 201
+
     body = json.loads(res.data)
     execution_id = body['data']['id']
 
@@ -889,13 +877,14 @@ def test_log_has_node_info(client):
     body = json.loads(res.data)
     data = body['data'][0]
 
-    assert data['node']['id'] == 'requester'
-    assert data['node']['name'] == 'Primer paso ;)'
-    assert data['node']['description'] == 'Te asignas chamba'
+    assert data['node']['id'] == 'start-node'
+    assert data['node']['name'] == 'Primer paso'
+    assert data['node']['description'] == 'Resolver una tarea'
 
     assert data['execution']['id'] == execution_id
-    assert data['execution']['name'] == 'Proceso simple'
-    assert data['execution']['description'] == 'Te asigna una tarea a ti mismo'
+    assert data['execution']['name'] == 'Simplest process ever'
+    assert data['execution']['description'] == \
+        'A simple process that does nothing'
 
 
 def test_log_has_form_input_data(client):
@@ -904,12 +893,12 @@ def test_log_has_form_input_data(client):
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'dumb',
+        'process_name': 'simple',
         'form_array': [
             {
-                'ref': 'formulario',
+                'ref': 'start-form',
                 'data': {
-                    'continue': 'yes',
+                    'data': 'yes',
                 },
             },
         ],
@@ -926,19 +915,10 @@ def test_log_has_form_input_data(client):
 
     assert data['actors'][0]['forms'][0]['form'] == [
         {
-            "label": "\u00bfAsignarme la chamba?",
-            "name": "continue",
-            "options": [
-                {
-                    "label": "Simona la changa",
-                    "value": "yes"
-                },
-                {
-                    "label": "Nel pastel",
-                    "value": "no"
-                }
-            ],
-            "type": "select",
+            "label": "Info",
+            "name": "data",
+            'options': [],
+            "type": "text",
             "value": "yes",
             "required": True,
         }
@@ -951,7 +931,7 @@ def test_delete_process(config, client, mongo, mocker):
         'BlockingChannel.basic_publish'
     )
 
-    p_0 = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    p_0 = make_pointer('simple.2018-02-19.xml', 'mid-node')
     execution = p_0.proxy.execution.get()
 
     juan = make_user('juan', 'Juan')
@@ -984,7 +964,7 @@ def test_status_notfound(client):
 
 
 def test_status(config, client, mongo):
-    ptr = make_pointer('exit_request.2018-03-20.xml', 'manager')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     execution = ptr.proxy.execution.get()
 
     mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({

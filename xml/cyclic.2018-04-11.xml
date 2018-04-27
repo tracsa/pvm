@@ -5,32 +5,26 @@
     <name>Cyclic Process</name>
     <public>false</public>
     <description>Smallest Cyclic process</description>
-    <start-node>start-node</start-node>
   </process-info>
   <process>
-    <node id="start-node" class="decision">
+    <node id="start-node" class="simple">
       <form-array>
-        <form id="decision">
-          <input type="radio" name="continue">
-            <option value="yes">Si</option>
-            <option value="no">No</option>
-          </input>
+        <form id="work">
+          <input type="text" name="task"></input>
         </form>
       </form-array>
     </node>
 
-    <connector from="start-node" to="end-node">
-      <condition>#decision.continue == "no"</condition>
-    </connector>
-
-    <node id="end-node" class="end" />
-
-    <connector from="start-node" to="jump-node">
-      <condition>#decision.continue == "yes"</condition>
-    </connector>
-
-    <node id="jump-node" class="goto" />
-
-    <connector from="jump-node" to="start-node"/>
+    <node id="approval-node" class="simple">
+      <form-array>
+        <form id="validate-simple">
+          <input type="approval">
+            <dependencies>
+              <dep>work.task</dep>
+            </dependencies>
+          </input>
+        </form>
+      </form-array>
+    </node>
   </process>
 </process-spec>

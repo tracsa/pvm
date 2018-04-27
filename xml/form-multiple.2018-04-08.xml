@@ -5,7 +5,6 @@
     <name>Con un formulario múltiple</name>
     <description>Este proceso tiene un formulario que puede enviar muchas copias</description>
     <public>true</public>
-    <start-node>form-node</start-node>
   </process-info>
   <process>
     <node id="form-node" class="simple">
@@ -18,9 +17,5 @@
         </form>
       </form-array>
     </node>
-
-    <connector from="form-node" to="end" />
-
-    <node id="end" class="end"></node>
   </process>
 </process-spec>

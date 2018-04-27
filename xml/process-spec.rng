@@ -19,7 +19,6 @@
           </choice>
         </element>
         <element name="description"><text/></element>
-        <element name="start-node"><text/></element>
       </interleave>
     </element>
   </define>
@@ -27,12 +26,9 @@
   <define name="process">
     <element name="process">
       <interleave>
-        <zeroOrMore>
+        <oneOrMore>
           <ref name="node"/>
-        </zeroOrMore>
-        <zeroOrMore>
-          <ref name="connector"/>
-        </zeroOrMore>
+        </oneOrMore>
       </interleave>
     </element>
   </define>
@@ -40,16 +36,6 @@
   <define name="node">
     <element name="node">
       <attribute name="id"><text/></attribute>
-      <optional>
-        <attribute name="class">
-        <choice>
-          <value>end</value>
-          <value>simple</value>
-          <value>decision</value>
-          <value>goto</value>
-        </choice>
-       </attribute>
-      </optional>
 
       <optional>
         <element name="node-info">
@@ -80,18 +66,6 @@
               </zeroOrMore>
             </element>
           </zeroOrMore>
-        </element>
-      </optional>
-    </element>
-  </define>
-
-  <define name="connector">
-    <element name="connector">
-      <attribute name="from"><text/></attribute>
-      <attribute name="to"><text/></attribute>
-      <optional>
-        <element name="condition">
-          <text/>
         </element>
       </optional>
     </element>

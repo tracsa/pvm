@@ -6,7 +6,6 @@
     <name>Todos los inputs</name>
     <description>Proceso que pide todos los tipos de entrada y después no hace nada</description>
     <public>true</public>
-    <start-node>inputs-node</start-node>
   </process-info>
   <process>
     <node id="inputs-node" class="decision">
@@ -35,6 +34,15 @@
           />
 
           <input
+            label="Género?"
+            type="radio"
+            name="gender"
+            required="required">
+            <option value="male">Masculino</option>
+            <option value="female">Femenino</option>
+          </input>
+
+          <input
             label="Marque sus intereses"
             type="checkbox"
             name="interests"
@@ -44,16 +52,6 @@
             <option value="music">Música</option>
             <option value="nature">Naturaleza</option>
             <option value="thecnology">Tecnología</option>
-          </input>
-
-          <input
-            label="Género?"
-            type="radio"
-            name="gender"
-            default="male"
-            required="required">
-            <option value="male">Masculino</option>
-            <option value="female">Femenino</option>
           </input>
 
           <input

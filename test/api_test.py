@@ -600,25 +600,24 @@ def test_list_processes_multiple(client):
     }
 
 
-@pytest.mark.skip
 def test_read_process(client):
-    res = client.get('/v1/process/simple')
 
+    res = client.get('/v1/process/oldest?version=2018-02-14')
+    data = json.loads(res.data)
     assert res.status_code == 200
-    assert json.loads(res.data) == {
-        'data': {
-            'name': 'simple.2018-02-19.xml',
-        },
-    }
+    assert data['data']['name'] == 'Oldest process'
+    assert data['data']['version'] == '2018-02-14'
 
-    res = client.get('/v1/process/oldest?v=2018-02-14')
-
+    res = client.get('/v1/process/oldest')
+    data = json.loads(res.data)
     assert res.status_code == 200
-    assert json.loads(res.data) == {
-        'data': {
-            'name': 'simple.2018-02-19.xml',
-        },
-    }
+    assert data['data']['name'] == 'Oldest process v2'
+    assert data['data']['version'] == '2018-02-17'
+
+    res = client.get('/v1/process/prueba')
+    data = json.loads(res.data)
+    assert res.status_code == 404
+    assert data['errors'][0]['detail'] == 'prueba process does not exist'
 
 
 def test_list_activities_requires(client):

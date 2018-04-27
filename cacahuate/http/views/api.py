@@ -355,10 +355,10 @@ def list_process():
 def find_process():
     if request.method == 'GET':
         name = request.args.get('name')
-        version = request.args.get('version','')
+        version = request.args.get('version', '')
         if version:
-            version =".{}".format(version)
-        process_name = "{}{}".format(name,version)
+            version = ".{}".format(version)
+        process_name = "{}{}".format(name, version)
         try:
             xml = Xml.load(app.config, process_name)
         except ProcessNotFound as e:

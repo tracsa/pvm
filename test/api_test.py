@@ -619,6 +619,7 @@ def test_read_process(client):
     assert res.status_code == 404
     assert data['errors'][0]['detail'] == 'prueba process does not exist'
 
+
 def test_list_activities_requires(client):
     res = client.get('/v1/activity')
     assert res.status_code == 401

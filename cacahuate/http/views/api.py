@@ -351,10 +351,9 @@ def list_process():
     })
 
 
-@app.route('/v1/process/name', methods=['GET'])
-def find_process():
+@app.route('/v1/process/<name>', methods=['GET'])
+def find_process(name):
     if request.method == 'GET':
-        name = request.args.get('name')
         version = request.args.get('version', '')
         if version:
             version = ".{}".format(version)

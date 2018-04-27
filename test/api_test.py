@@ -602,19 +602,19 @@ def test_list_processes_multiple(client):
 
 def test_read_process(client):
 
-    res = client.get('/v1/process/name?name=oldest&version=2018-02-14')
+    res = client.get('/v1/process/oldest?version=2018-02-14')
     data = json.loads(res.data)
     assert res.status_code == 200
     assert data['data']['name'] == 'Oldest process'
     assert data['data']['version'] == '2018-02-14'
 
-    res = client.get('/v1/process/name?name=oldest')
+    res = client.get('/v1/process/oldest')
     data = json.loads(res.data)
     assert res.status_code == 200
     assert data['data']['name'] == 'Oldest process v2'
     assert data['data']['version'] == '2018-02-17'
 
-    res = client.get('/v1/process/name?name=prueba')
+    res = client.get('/v1/process/prueba')
     data = json.loads(res.data)
     assert res.status_code == 404
     assert data['errors'][0]['detail'] == 'prueba process does not exist'

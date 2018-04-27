@@ -89,60 +89,67 @@ def test_form_to_dict(config):
     ))
 
     assert dict_forms[0] == {
-        'ref': 'text-input',
+        'ref': 'auth-form',
         'inputs': [
             {
-                'type': 'text',
-                'name': 'ccn',
-                'regex': '[0-9]{16}',
-                'label': 'credit card number',
-            },
-        ],
-    }
-
-    assert dict_forms[1] == {
-        "ref": "two-inputs",
-        "inputs": [
-            {
                 "type": "text",
-                "name": "firstname"
+                "name": "name",
+                "label": "Nombre",
+                "required": True,
+                "placeholder": "Jon Snow",
             },
             {
-                "type": "text",
-                "name": "surname"
-            }
-        ]
-    }
-
-    assert dict_forms[2] == {
-        "ref": "select",
-        "inputs": [
+                'type': 'datetime',
+                'name': 'datetime',
+                'label': 'Fecha de nacimiento',
+                "required": True,
+            },
+            {
+                "label": "Un secreto",
+                "type": "password",
+                "name": "secret",
+                "required": True,
+            },
             {
                 "type": "radio",
-                "name": "auth",
+                "name": "gender",
                 "required": True,
-                "label": "Le das chance?",
+                "label": "Género?",
                 "options": [
                     {
-                        "value": "yes",
-                        "label": "Ándale mijito, ve",
+                        "value": "male",
+                        "label": "Masculino",
                     },
                     {
-                        "value": "no",
-                        "label": "Ni madres",
+                        "value": "female",
+                        "label": "Femenino",
                     },
                 ],
             },
-        ]
-    }
-
-    assert dict_forms[3] == {
-        "ref": "with-helper",
-        "inputs": [
             {
-                "type": "password",
-                "name": "password",
-                "helper": "10 alfanumeric chars",
+                "type": "checkbox",
+                "name": "interests",
+                "required": True,
+                "label": "Marque sus intereses",
+                "options": [
+                    {"value": "science", "label": "Ciencia"},
+                    {"value": "sports", "label": "Deportes"},
+                    {"value": "music", "label": "Música"},
+                    {"value": "nature", "label": "Naturaleza"},
+                    {"value": "thecnology", "label": "Tecnología"},
+                ],
+            },
+            {
+                "type": "select",
+                "name": "elections",
+                "required": True,
+                "label": "Emita su voto",
+                "options": [
+                    {"value": "amlo", "label": "Andres Manuel López Obrador"},
+                    {"value": "meade", "label": "José Antonio Meade Kuribreña"},
+                    {"value": "marguarita", "label": "Margarita Ester Zavala Gómez del Campo"},
+                    {"value": "anaya", "label": "Ricardo Anaya Cortés"},
+                ],
             },
         ]
     }

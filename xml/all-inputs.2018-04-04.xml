@@ -34,6 +34,15 @@
           />
 
           <input
+            label="Género?"
+            type="radio"
+            name="gender"
+            required="required">
+            <option value="male">Masculino</option>
+            <option value="female">Femenino</option>
+          </input>
+
+          <input
             label="Marque sus intereses"
             type="checkbox"
             name="interests"
@@ -43,16 +52,6 @@
             <option value="music">Música</option>
             <option value="nature">Naturaleza</option>
             <option value="thecnology">Tecnología</option>
-          </input>
-
-          <input
-            label="Género?"
-            type="radio"
-            name="gender"
-            default="male"
-            required="required">
-            <option value="male">Masculino</option>
-            <option value="female">Femenino</option>
           </input>
 
           <input

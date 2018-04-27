@@ -1016,3 +1016,16 @@ def test_execution_list(client, mongo, config):
             'status': 'ongoing',
         }],
     }
+
+
+def test_start_process_error_405(client, mongo, config):
+    juan = make_user('juan', 'Juan')
+
+    res = client.put('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data='{}')
+
+    data = json.loads(res.data)
+    assert res.status_code == 405
+    assert data['errors'][0]['detail'] == \
+        "The method is not allowed for the requested URL."

@@ -600,7 +600,6 @@ def test_list_processes_multiple(client):
     }
 
 
-@pytest.mark.skip
 def test_read_process(client):
     res = client.get('/v1/process/simple')
 

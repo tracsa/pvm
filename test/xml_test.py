@@ -6,7 +6,7 @@ import simplejson as json
 from cacahuate.errors import ProcessNotFound
 from xml.dom.minidom import parse
 from cacahuate.models import Execution, User, Activity
-from cacahuate.xml import Xml, resolve_params, form_to_dict
+from cacahuate.xml import Xml, form_to_dict
 
 
 def test_load_not_found(config):
@@ -164,22 +164,4 @@ def test_form_to_dict(config):
                 ],
             },
         ]
-    }
-
-
-def test_resolve_params(config):
-    xml = Xml.load(config, 'simple.2018-02-19.xml')
-
-    el = xml.find(lambda e: e.getAttribute('id') == 'mid-node')
-    filter_node = el.getElementsByTagName('auth-filter')[0]
-
-    execution = Execution().save()
-    juan = User(identifier='juan').save()
-    act = Activity(ref='start-node').save()
-    act.proxy.user.set(juan)
-    act.proxy.execution.set(execution)
-
-    assert resolve_params(filter_node, execution) == {
-        'identifier': 'juan',
-        'relation': 'manager',
     }

@@ -15,7 +15,7 @@ from cacahuate.errors import ValidationErrors, InputError,\
     RequiredListError, RequiredStrError, MisconfiguredProvider
 from cacahuate.http.errors import BadRequest, Unauthorized, Forbidden
 from cacahuate.models import User, Token
-from cacahuate.xml import resolve_params, input_to_dict, get_form_specs
+from cacahuate.xml import input_to_dict, get_form_specs
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
 from cacahuate import inputs
@@ -153,12 +153,9 @@ def validate_auth(node, user, execution=None):
     if len(auth) == 0:
         return
 
-    auth_node = auth[0]
-    backend = auth_node.getAttribute('backend')
-
     try:
         HiPro = user_import(
-            backend,
+            node.auth_backend,
             'HierarchyProvider',
             app.config['HIERARCHY_PROVIDERS'],
             'cacahuate.auth.hierarchy',
@@ -169,7 +166,7 @@ def validate_auth(node, user, execution=None):
     hipro = HiPro(app.config)
 
     try:
-        hipro.validate_user(user, **resolve_params(auth_node, execution))
+        hipro.validate_user(user, **node.resolve_params(execution))
     except HierarchyError:
         raise Forbidden([{
             'detail': 'The provided credentials do not match the specified'

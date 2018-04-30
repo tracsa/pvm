@@ -1,21 +1,13 @@
 from xml.dom.minidom import Document
 import pytest
 
-from cacahuate.node import make_node, Node
 from cacahuate.xml import Xml
+from cacahuate.node import make_node, Action
 from cacahuate.models import Execution, Questionaire
 
 
-def test_make_node_requires_class():
-    element = Document().createElement('node')
-
-    with pytest.raises(KeyError) as e:
-        make_node(element)
-
-
 def test_make_node_requires_existent_class():
-    element = Document().createElement('node')
-    element.setAttribute('class', 'foo')
+    element = Document().createElement('foo')
 
     with pytest.raises(ValueError) as e:
         make_node(element)
@@ -40,7 +32,6 @@ def test_find_next_element_normal(config):
     assert next_node.element.getAttribute('id') == 'final-node'
 
 
-@pytest.mark.skip
 def test_find_next_element_condition(config):
     ''' finding next element runs a node whose condition is satisfied '''
     xml = Xml.load(config, 'decision')
@@ -61,7 +52,6 @@ def test_find_next_element_condition(config):
     assert next_node.element.getAttribute('id') == 'Cuptax0WTCL1ueCy'
 
 
-@pytest.mark.skip
 def test_find_next_element_condition_unsatisfied(config):
     ''' given an if and asociated data, retrieves the next element, negative
     variant '''

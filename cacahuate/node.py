@@ -131,7 +131,9 @@ class Exit(Node):
 def make_node(element):
     ''' returns a build Node object given an Element object '''
     if element.tagName not in NODES:
-        raise ValueError('Class definition not found for node: {}'.format(class_name))
+        raise ValueError(
+            'Class definition not found for node: {}'.format(element.tagName)
+        )
 
     class_name = pascalcase(element.tagName)
     available_classes = __import__(__name__).node

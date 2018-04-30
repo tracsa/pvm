@@ -20,6 +20,7 @@ from cacahuate.models import Execution, Pointer, User, Token, Activity, \
     Questionaire
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict
+from cacahuate.node import make_node
 
 
 DATE_FIELDS = [
@@ -169,7 +170,7 @@ def start_process():
             'where': 'request.body.process_name',
         }])
 
-    start_point = xml.start_node
+    start_point = make_node(xml.start_node)
 
     # Check for authorization
     validate_auth(start_point, g.user)
@@ -345,8 +346,8 @@ def list_process():
             map(
                 add_form,
                 Xml.list(app.config),
-              )
-        ))
+            )
+        )),
     })
 
 

@@ -148,9 +148,7 @@ def validate_json(json_data: dict, req: list):
 
 
 def validate_auth(node, user, execution=None):
-    auth = node.getElementsByTagName('auth-filter')
-
-    if len(auth) == 0:
+    if not node.auth_backend:
         return
 
     try:

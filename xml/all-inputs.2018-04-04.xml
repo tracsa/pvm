@@ -8,7 +8,7 @@
     <public>true</public>
   </process-info>
   <process>
-    <node id="inputs-node" class="decision">
+    <action id="inputs-node" >
       <form-array>
         <form id="auth-form">
           <input
@@ -66,6 +66,6 @@
           </input>
         </form>
       </form-array>
-    </node>
+    </action>
   </process>
 </process-spec>

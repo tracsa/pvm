@@ -8,7 +8,7 @@
     <description>A process for testing of various decision mechanisms</description>
   </process-info>
   <process>
-    <node id="start-node" class="simple">
+    <action id="start-node" >
       <form-array>
         <form id="start-form">
           <input type="select" name="should_exec" required="required" label="Should exec?">
@@ -17,18 +17,15 @@
           </input>
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <node id="mid-node" class="simple">
+    <action id="mid-node" >
       <condition>#start-form.should_exec == "yes"</condition>
       <form-array>
         <form id="mid-form">
           <input type="text" name="data" required="required" />
         </form>
       </form-array>
-    </node>
-
-    <end></end>
-
+    </action>
   </process>
 </process-spec>

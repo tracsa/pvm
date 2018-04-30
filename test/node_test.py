@@ -28,7 +28,7 @@ def test_find_next_element_normal(config):
 
     assert xml.filename == 'simple.2018-02-19.xml'
 
-    current_node = make_node(xml.find(
+    current_node = Action(xml.find(
         lambda e: e.getAttribute('id') == 'mid-node'
     ))
 
@@ -50,7 +50,7 @@ def test_find_next_element_condition(config):
 
     assert xml.filename == 'decision.2018-04-26.xml'
 
-    current_node = make_node(xml.find(
+    current_node = Action(xml.find(
         lambda e:
         e.tagName == 'node' and e.getAttribute('id') == '57TJ0V3nur6m7wvv'
     ))
@@ -72,7 +72,7 @@ def test_find_next_element_condition_unsatisfied(config):
 
     assert xml.filename == 'decision.2018-02-27.xml'
 
-    current_node = make_node(xml.find(
+    current_node = Action(xml.find(
         lambda e:
         e.tagName == 'node' and e.getAttribute('id') == '57TJ0V3nur6m7wvv'
     ))
@@ -81,6 +81,10 @@ def test_find_next_element_condition_unsatisfied(config):
 
     assert is_backwards is False
     assert next_node.element.getAttribute('id') == 'mj88CNZUaBdvLV83'
+
+
+def test_find_next_element_data_invalidation(config):
+    assert False
 
 
 @pytest.mark.skip(reason="no way of currently testing this")
@@ -104,22 +108,26 @@ def test_find_next_element_join_ready():
     assert False
 
 
-@pytest.mark.skip
-def test_find_next_element_end(config):
+def test_find_next_element_end_explicit(config):
     ''' given an end element, return end signal '''
     xml = Xml.load(config, 'decision')
     exc = Execution().save()
 
     assert xml.filename == 'decision.2018-04-26.xml'
 
-    current_node = make_node(xml.find(
+    current_node = Action(xml.find(
         lambda e:
-        e.tagName == 'end'
+        e.tagName == 'exit'
     ))
 
     nodes = current_node.next(xml, exc)
 
     assert nodes == []
+
+
+def test_find_next_element_end_implicit(config):
+    ''' happens when the process gets to the final node '''
+    assert False
 
 
 @pytest.mark.skip(reason="no way of currently testing this")
@@ -141,7 +149,7 @@ def test_find_next_element_goto(config):
     xml = Xml.load(config, 'cyclic')
     exc = Execution().save()
 
-    current_node = make_node(xml.find(
+    current_node = Action(xml.find(
         lambda e: e.getAttribute('id') == 'jump-node'
     ))
 

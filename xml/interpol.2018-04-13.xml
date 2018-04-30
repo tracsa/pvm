@@ -8,12 +8,12 @@
     <description>Uses string interpolation to build the execution's name</description>
   </process-info>
   <process>
-    <node id="start-node" class="simple">
+    <action id="start-node" >
       <form-array>
         <form id="form">
           <input type="text" name="field" required="required" />
         </form>
       </form-array>
-    </node>
+    </action>
   </process>
 </process-spec>

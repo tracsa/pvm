@@ -7,7 +7,7 @@
     <description>Created for testing the resistance of the handler against faulty hierarchy providers</description>
   </process-info>
   <process>
-    <node id="start-node" class="simple">
+    <action id="start-node" >
       <form-array>
         <form id="form">
           <input type="select" name="choice">
@@ -15,25 +15,25 @@
           </input>
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <node id="noprov" class="end">
+    <action id="noprov" >
       <condition>#form.choice == "noprov"</condition>
       <auth-filter backend="noexist" />
-    </node>
+    </action>
 
-    <node id="return" class="end">
+    <action id="return" >
       <condition>#form.choice == "return"</condition>
       <auth-filter backend="badreturn">
         <param name="opt">return</param>
       </auth-filter>
-    </node>
+    </action>
 
-    <node id="item" class="end">
+    <action id="item" >
       <condition>#form.choice == "item"</condition>
       <auth-filter backend="badreturn">
         <param name="opt">item</param>
       </auth-filter>
-    </node>
+    </action>
   </process>
 </process-spec>

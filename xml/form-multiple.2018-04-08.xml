@@ -7,7 +7,7 @@
     <public>true</public>
   </process-info>
   <process>
-    <node id="form-node" class="simple">
+    <action id="form-node" >
       <form-array>
         <form id="single-form">
           <input type="text" name="name" required="required" />
@@ -16,6 +16,6 @@
           <input type="text" name="phone" required="required" />
         </form>
       </form-array>
-    </node>
+    </action>
   </process>
 </process-spec>

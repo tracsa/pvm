@@ -19,7 +19,7 @@ from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer, User, Token, Activity, \
     Questionaire
 from cacahuate.rabbit import get_channel
-from cacahuate.xml import Xml, form_to_dict, get_node_info
+from cacahuate.xml import Xml, form_to_dict
 
 
 DATE_FIELDS = [
@@ -177,8 +177,6 @@ def start_process():
     # check if there are any forms present
     collected_forms = validate_forms(start_point, request.json)
 
-    node_info = get_node_info(start_point)
-
     # save the data
     execution = Execution(
         process_name=xml.filename,
@@ -187,7 +185,8 @@ def start_process():
     ).save()
     pointer = Pointer(
         node_id=start_point.getAttribute('id'),
-        **node_info,
+        name=start_point.name,
+        description=start_point.description,
     ).save()
     pointer.proxy.execution.set(execution)
 

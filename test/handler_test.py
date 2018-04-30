@@ -6,8 +6,8 @@ import pytest
 import simplejson as json
 
 from cacahuate.handler import Handler
-from cacahuate.node import Node, make_node
 from cacahuate.models import Execution, Pointer, User, Activity, Questionaire
+from cacahuate.node import Action
 
 from .utils import make_pointer, make_activity, make_user
 
@@ -60,7 +60,7 @@ def test_recover_step(config):
     assert pointer.id == pointer.id
     assert pointer in execution.proxy.pointers
 
-    assert node.element.getAttribute('id') == 'mid-node'
+    assert node.id == 'mid-node'
 
 
 def test_create_pointer(config):
@@ -86,7 +86,7 @@ def test_create_pointer(config):
 
     ele.appendChild(node_info_el)
 
-    node = make_node(ele)
+    node = Action(ele)
     exc = Execution.validate(
         process_name='simple.2018-02-19.xml',
         name='nombre',

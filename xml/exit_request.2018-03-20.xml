@@ -7,15 +7,15 @@
     <public>true</public>
   </process-info>
   <process>
-    <node id="requester" class="simple">
+    <action id="requester" >
       <form-array>
         <form id="exit-form">
           <input type="text" name="reason" required="required" />
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <node id="manager" class="decision">
+    <action id="manager" >
       <auth-filter backend="hardcoded">
         <param name="identifier" type="ref">user#requester</param>
         <param name="relation">manager</param>
@@ -29,9 +29,9 @@
           </input>
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <node id="security" class="simple">
+    <action id="security" >
       <auth-filter backend="hardcoded">
         <param name="ou">Security</param>
       </auth-filter>
@@ -41,14 +41,12 @@
           <input type="checkbox" name="confirmed" />
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <node id="noauth" class="end">
+    <action id="noauth" >
       <auth-filter backend="hardcoded">
         <param name="ou">Security</param>
       </auth-filter>
-    </node>
-
-    <node id="end" class="end"></node>
+    </action>
   </process>
 </process-spec>

@@ -15,6 +15,8 @@ XML_ATTRIBUTES = {
     'description': lambda x: x,
 }
 
+NODES = ('action', 'exit')
+
 
 class Xml:
 
@@ -55,7 +57,7 @@ class Xml:
 
         try:
             self.start_node = self.find(
-                lambda e: e.tagName == 'node'
+                lambda e: e.tagName == 'action'
             )
             self.start_node_consumed = False
         except ElementNotFound:
@@ -89,7 +91,7 @@ class Xml:
         by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed
         for this task. '''
 
-        ITERABLES = ('node', 'process-info', 'end')
+        ITERABLES = ('process-info', ) +  NODES
 
         try:
             for event, node in self.parser:
@@ -166,29 +168,6 @@ class Xml:
             'description': self.description,
             'versions': self.versions,
         }
-
-
-def resolve_params(filter_node, execution=None):
-    computed_params = {}
-
-    for param in filter_node.getElementsByTagName('param'):
-        if execution is not None and param.getAttribute('type') == 'ref':
-            user_ref = get_text(param).split('#')[1].strip()
-
-            try:
-                actor = next(
-                    execution.proxy.actors.q().filter(ref=user_ref)
-                )
-
-                value = actor.proxy.user.get().identifier
-            except StopIteration:
-                value = None
-        else:
-            value = get_text(param)
-
-        computed_params[param.getAttribute('name')] = value
-
-    return computed_params
 
 
 def get_node_info(node):

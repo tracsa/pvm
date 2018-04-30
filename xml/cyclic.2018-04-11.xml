@@ -7,15 +7,15 @@
     <description>Smallest Cyclic process</description>
   </process-info>
   <process>
-    <node id="start-node" class="simple">
+    <action id="start-node" >
       <form-array>
         <form id="work">
           <input type="text" name="task"></input>
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <node id="approval-node" class="simple">
+    <action id="approval-node" >
       <form-array>
         <form id="validate-simple">
           <input type="approval">
@@ -25,6 +25,6 @@
           </input>
         </form>
       </form-array>
-    </node>
+    </action>
   </process>
 </process-spec>

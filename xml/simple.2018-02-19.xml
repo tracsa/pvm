@@ -8,7 +8,7 @@
     <description>A simple process that does nothing</description>
   </process-info>
   <process>
-    <node id="start-node" class="simple">
+    <action id="start-node">
       <node-info>
         <name>Primer paso</name>
         <description>Resolver una tarea</description>
@@ -18,9 +18,9 @@
           <input type="text" name="data" required="required" label="Info" />
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <node id="mid-node" class="simple">
+    <action id="mid-node">
       <auth-filter backend="hardcoded">
         <param name="identifier" type="ref">user#start-node</param>
         <param name="relation">manager</param>
@@ -30,9 +30,9 @@
           <input type="text" name="data" required="required" />
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <node id="final-node" class="simple">
-    </node>
+    <action id="final-node">
+    </action>
   </process>
 </process-spec>

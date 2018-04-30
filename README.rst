@@ -69,7 +69,7 @@ TODO
     - unfilled, valid, invalid
 * la ejecución de un nodo depende de su condición
 * ciudadanos de primera clase:
-    - <node>
+    - <action>
     - <subprocess>
     - <end>
 * quitar símbolo de gato de los condicionales en todas partes

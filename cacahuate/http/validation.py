@@ -64,14 +64,12 @@ def validate_form(form_specs, index, data):
     errors = []
     collected_inputs = []
 
-    for input in form_specs['inputs']:
-        name = input['name']
-
+    for input in form_specs.inputs:
         try:
             input_description = validate_input(
                 index,
                 input,
-                data.get(name),
+                data.get(input.name),
             )
             collected_inputs.append(input_description)
         except InputError as e:
@@ -87,18 +85,16 @@ def validate_form_spec(form_specs, data) -> dict:
     ''' Validates the given data against the spec contained in form. In case of
     failure raises an exception. In case of success returns the validated data.
     '''
-    ref = form_specs['ref']
-    specs = form_specs['multiple']
     collected_specs = []
 
-    if form_specs.get('multiple'):
+    if form_specs.multiple:
         max = float('inf')
         min = 0
     else:
         max = 1
         min = 1
 
-    for index, form in get_associated_data(ref, data, min, max):
+    for index, form in get_associated_data(form_specs.ref, data, min, max):
         collected_specs.append(validate_form(
             form_specs,
             index,
@@ -118,11 +114,11 @@ def validate_forms(node, json_data):
     collected_forms = []
     errors = []
 
-    for form_specs in get_form_specs(node):
+    for form in node.form_array:
         try:
-            for data in validate_form_spec(form_specs, json_data):
+            for data in validate_form_spec(form, json_data):
                 # because a form might have multiple responses
-                collected_forms.append((form_specs['ref'], data))
+                collected_forms.append((form['ref'], data))
         except ValidationErrors as e:
             errors += e.errors
 

@@ -5,19 +5,30 @@ from datetime import datetime
 from functools import reduce
 from operator import and_
 import ast
+from case_conversion import pascalcase
+
+INPUTS = [
+    'text',
+    'password',
+    'checkbox',
+    'radio',
+    'file',
+    'datetime',
+    'date',
+    'select',
+]
 
 
 class Input(object):
     """docstring for Input"""
-    def __init__(self, form_index: int, input):
-        self.form_index = form_index
-        self.required = input.get('required')
-        self.name = input.get('name')
-        self.default = input.get('default')
-        self.options = input.get('options', [])
-        self.provider = input.get('provider')
+    def __init__(self, element):
+        self.required = element.getAttribute('required')
+        self.name = element.getAttribute('name')
+        self.default = element.getAttribute('default')
+        self.options = element.getAttribute('options') or []
+        self.provider = element.getAttribute('provider')
 
-    def validate(self, value):
+    def validate(self, value, form_index):
         value = value or self.get_default()
 
         if self.required and (value == '' or value is None):
@@ -136,3 +147,18 @@ class DateInput(DatetimeInput):
 
 class SelectInput(RadioInput):
     pass
+
+
+def make_input(element):
+    ''' returns a build Input object given an Element object '''
+    classattr = element.getAttribute('type')
+
+    if classattr not in INPUTS:
+        raise ValueError(
+            'Class definition not found for input: {}'.format(classattr)
+        )
+
+    class_name = pascalcase(classattr) + 'Input'
+    available_classes = __import__(__name__).inputs
+
+    return getattr(available_classes, class_name)(element)

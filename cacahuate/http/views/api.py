@@ -73,7 +73,7 @@ def make_name(name_string, collected_forms):
 
 
 def store_actor(node, user, execution, forms):
-    auth_ref = node.getAttribute('id')
+    auth_ref = node.id
     activity = Activity(ref=auth_ref).save()
     activity.proxy.user.set(g.user)
     activity.proxy.execution.set(execution)
@@ -272,7 +272,9 @@ def continue_process():
     xml = Xml.load(app.config, execution.process_name)
 
     try:
-        continue_point = xml.find(lambda e: e.getAttribute('id') == node_id)
+        continue_point = make_node(
+            xml.find(lambda e: e.getAttribute('id') == node_id)
+        )
     except ElementNotFound as e:
         raise BadRequest([{
             'detail': 'node_id is not a valid node',

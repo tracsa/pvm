@@ -1,5 +1,5 @@
-""" Here is defined the node class and its subclasses, which define the kinds
-of directions that this virtual machine can follow """
+''' This file defines some basic classes that map the behaviour of the
+equivalent xml nodes '''
 from case_conversion import pascalcase
 from typing import Iterator
 from xml.dom.minidom import Element
@@ -9,14 +9,28 @@ from cacahuate.xml import get_text, NODES
 from cacahuate.logger import log
 from cacahuate.grammar import Condition
 from cacahuate.errors import ElementNotFound, IncompleteBranch
+from cacahuate.inputs import make_input
 
 
 class AuthParam:
 
-    def __init__(self, param):
-        self.name = param.getAttribute('name')
-        self.value = get_text(param)
-        self.type = param.getAttribute('type')
+    def __init__(self, element):
+        self.name = element.getAttribute('name')
+        self.value = get_text(element)
+        self.type = element.getAttribute('type')
+
+
+class Form:
+
+    def __init__(self, element):
+        self.ref = element.getAttribute('id')
+        self.multiple = element.getAttribute('multiple')
+
+        # Load inputs
+        self.inputs = []
+
+        for input_el in element.getElementsByTagName('input'):
+            self.inputs.append(make_input(input_el))
 
 
 class Node:
@@ -70,6 +84,15 @@ class Action(Node):
                 lambda x: AuthParam(x),
                 filter_node.getElementsByTagName('param')
             ))
+
+        # Form resolving
+        self.form_array = []
+
+        form_array = element.getElementsByTagName('form-array')
+
+        if len(form_array) > 0:
+            for form_el in form_array[0].getElementsByTagName('form'):
+                self.form_array.append(Form(form_el))
 
     def is_async(self):
         return True

@@ -21,24 +21,6 @@ from cacahuate.utils import user_import
 from cacahuate import inputs
 
 
-def validate_input(form_index: int, input, value):
-    ''' Validates the given value against the requirements specified by the
-    input element '''
-    input_type = input.get('type')
-
-    cls = getattr(
-        inputs,
-        case_conversion.pascalcase(input_type) + 'Input'
-    )
-    instance = cls(form_index, input)
-
-    res = {**input}
-
-    res['value'] = instance.validate(value)
-
-    return res
-
-
 def get_associated_data(ref, data, min, max):
     count = 0
     forms = []
@@ -66,11 +48,14 @@ def validate_form(form_specs, index, data):
 
     for input in form_specs.inputs:
         try:
-            input_description = validate_input(
-                index,
-                input,
+            value = input.validate(
                 data.get(input.name),
+                index,
             )
+
+            input_description = input.to_json()
+            input_description['value'] = value
+
             collected_inputs.append(input_description)
         except InputError as e:
             errors.append(e)
@@ -118,7 +103,7 @@ def validate_forms(node, json_data):
         try:
             for data in validate_form_spec(form, json_data):
                 # because a form might have multiple responses
-                collected_forms.append((form['ref'], data))
+                collected_forms.append((form.ref, data))
         except ValidationErrors as e:
             errors += e.errors
 

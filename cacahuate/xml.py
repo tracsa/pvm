@@ -91,7 +91,7 @@ class Xml:
         by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed
         for this task. '''
 
-        ITERABLES = ('process-info', ) +  NODES
+        ITERABLES = ('process-info', ) + NODES
 
         try:
             for event, node in self.parser:

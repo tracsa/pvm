@@ -21,12 +21,12 @@ INPUTS = [
 
 class Input(object):
     """docstring for Input"""
+
     def __init__(self, element):
-        self.required = element.getAttribute('required')
+        self.type = element.getAttribute('type')
+        self.required = element.getAttribute('required') == 'required'
         self.name = element.getAttribute('name')
-        self.default = element.getAttribute('default')
-        self.options = element.getAttribute('options') or []
-        self.provider = element.getAttribute('provider')
+        self.default = element.getAttribute('default') or None
 
     def validate(self, value, form_index):
         value = value or self.get_default()
@@ -39,6 +39,14 @@ class Input(object):
     def get_default(self):
         return self.default
 
+    def to_json(self):
+        return {
+            'type': self.type,
+            'required': self.required,
+            'name': self.name,
+            'default': self.get_default(),
+        }
+
 
 class TextInput(Input):
     pass
@@ -48,7 +56,23 @@ class PasswordInput(TextInput):
     pass
 
 
-class CheckboxInput(Input):
+class FiniteOptionInput(Input):
+
+    def __init__(self, element):
+        super().__init__(element)
+
+        self.options = element.getAttribute('options') or []
+
+    def to_json(self):
+        json_data = super().to_json()
+
+        json_data['options'] = self.options
+
+        return json_data
+
+
+class CheckboxInput(FiniteOptionInput):
+
     def validate(self, value):
         super().validate(value)
         if value is None:
@@ -72,7 +96,8 @@ class CheckboxInput(Input):
         return value
 
 
-class RadioInput(Input):
+class RadioInput(FiniteOptionInput):
+
     def validate(self, value):
         super().validate(value)
 
@@ -89,7 +114,12 @@ class RadioInput(Input):
         return value
 
 
+class SelectInput(RadioInput):
+    pass
+
+
 class FileInput(Input):
+
     def validate(self, value):
         super().validate(value)
         if value is None:
@@ -142,10 +172,6 @@ class DatetimeInput(Input):
 
 
 class DateInput(DatetimeInput):
-    pass
-
-
-class SelectInput(RadioInput):
     pass
 
 

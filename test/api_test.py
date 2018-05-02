@@ -246,10 +246,10 @@ def test_continue_process(client, mocker, config):
                     'form': [
                         {
                             "name": "data",
-                            "options": [],
                             "type": "text",
                             "value": "yes",
                             "required": True,
+                            'default': None,
                         }
                     ],
                     'data': {

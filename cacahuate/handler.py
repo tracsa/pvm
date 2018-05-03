@@ -11,7 +11,7 @@ from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
 from cacahuate.logger import log
 from cacahuate.models import Execution, Pointer, Questionaire, Activity, User
 from cacahuate.xml import Xml
-from cacahuate.node import Action, make_node
+from cacahuate.node import make_node, Exit
 from cacahuate.auth.base import BaseUser
 
 
@@ -82,6 +82,9 @@ class Handler:
 
     def next(self, xml, cur_node, execution):
         ''' Given a position in the script, return the next position '''
+        if isinstance(cur_node, Exit):
+            return []
+
         try:
             # Return next node by simple adjacency
             element = next(xml)
@@ -329,7 +332,7 @@ class Handler:
             execution,
             pointer,
             xml,
-            Action(point),
+            make_node(point),
             message.get('actor'),
         )
 

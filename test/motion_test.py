@@ -66,27 +66,39 @@ def test_find_next_element_condition_unsatisfied(config):
     assert values[0].id == 'final-node'
 
 
-def test_find_next_element_data_invalidation(config):
-    assert False
-
-
 def test_find_next_element_end_explicit(config):
     ''' given an end element, return end signal '''
-    xml = Xml.load(config, 'decision')
-    exc = Execution().save()
+    xml = Xml.load(config, 'exit')
+    handler = Handler(config)
+    execution = Execution().save()
 
-    assert xml.filename == 'decision.2018-04-26.xml'
+    assert xml.filename == 'exit.2018-05-03.xml'
 
     current_node = make_node(xml.find(
-        lambda e:
-        e.tagName == 'exit'
+        lambda e: e.tagName == 'exit'
     ))
 
-    nodes = current_node.next(xml, exc)
+    nodes = handler.next(xml, current_node, execution)
 
     assert nodes == []
 
 
 def test_find_next_element_end_implicit(config):
     ''' happens when the process gets to the final node '''
+    xml = Xml.load(config, 'exit')
+    handler = Handler(config)
+    execution = Execution().save()
+
+    assert xml.filename == 'exit.2018-05-03.xml'
+
+    current_node = make_node(xml.find(
+        lambda e: e.getAttribute('id') == 'final-node'
+    ))
+
+    nodes = handler.next(xml, current_node, execution)
+
+    assert nodes == []
+
+
+def test_find_next_element_data_invalidation(config):
     assert False

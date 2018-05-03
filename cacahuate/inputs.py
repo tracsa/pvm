@@ -27,12 +27,13 @@ class Input(object):
         self.required = element.getAttribute('required') == 'required'
         self.name = element.getAttribute('name')
         self.default = element.getAttribute('default') or None
+        self.label = element.getAttribute('label') or self.name
 
     def validate(self, value, form_index):
         value = value or self.get_default()
 
         if self.required and (value == '' or value is None):
-            raise RequiredInputError(self.form_index, self.name)
+            raise RequiredInputError(form_index, self.name)
 
         return value
 
@@ -45,6 +46,7 @@ class Input(object):
             'required': self.required,
             'name': self.name,
             'default': self.get_default(),
+            'label': self.label,
         }
 
 
@@ -73,14 +75,14 @@ class FiniteOptionInput(Input):
 
 class CheckboxInput(FiniteOptionInput):
 
-    def validate(self, value):
-        super().validate(value)
+    def validate(self, value, form_index):
+        super().validate(value, form_index)
         if value is None:
             value = []
         if type(value) == str:
             value = ast.literal_eval(value)
         if type(value) is not list:
-            raise RequiredListError(self.form_index, value)
+            raise RequiredListError(form_index, value)
 
         list_values = [
             child_element.get('value')
@@ -90,7 +92,7 @@ class CheckboxInput(FiniteOptionInput):
         for val in value:
             if val not in list_values:
                 raise InvalidInputError(
-                    self.form_index,
+                    form_index,
                     self.name
                 )
         return value
@@ -98,11 +100,11 @@ class CheckboxInput(FiniteOptionInput):
 
 class RadioInput(FiniteOptionInput):
 
-    def validate(self, value):
-        super().validate(value)
+    def validate(self, value, form_index):
+        super().validate(value, form_index)
 
         if type(value) is not str and value is not None:
-            raise RequiredStrError(self.form_index, self.name)
+            raise RequiredStrError(form_index, self.name)
         list_values = [
             child_element.get('value')
             for child_element in self.options
@@ -110,7 +112,7 @@ class RadioInput(FiniteOptionInput):
         if value is None:
             list_values.append(None)
         if value not in list_values:
-            raise InvalidInputError(self.form_index, self.name)
+            raise InvalidInputError(form_index, self.name)
         return value
 
 
@@ -120,12 +122,12 @@ class SelectInput(RadioInput):
 
 class FileInput(Input):
 
-    def validate(self, value):
-        super().validate(value)
+    def validate(self, value, form_index):
+        super().validate(value, form_index)
         if value is None:
             value = {}
         if type(value) is not dict:
-            raise InvalidInputError(self.form_index, self.name)
+            raise InvalidInputError(form_index, self.name)
 
         provider = self.provider
         if provider == 'doqer':
@@ -141,7 +143,7 @@ class FileInput(Input):
 
             if not valid:
                 raise InvalidInputError(
-                    self.form_index,
+                    form_index,
                     self.name
                 )
         else:
@@ -151,16 +153,18 @@ class FileInput(Input):
 
 class DatetimeInput(Input):
 
-    def validate(self, value):
+    def validate(self, value, form_index):
+        super().validate(value, form_index)
+
         value = value or self.get_default()
 
         if not value and self.required:
-            raise RequiredInputError(self.form_index, self.name)
+            raise RequiredInputError(form_index, self.name)
 
         try:
             datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
-            raise InvalidDateError(self.form_index, self.name)
+            raise InvalidDateError(form_index, self.name)
 
         return value
 

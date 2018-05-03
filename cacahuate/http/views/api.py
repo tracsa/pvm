@@ -185,7 +185,7 @@ def start_process():
         description=xml.description,
     ).save()
     pointer = Pointer(
-        node_id=start_point.getAttribute('id'),
+        node_id=start_point.id,
         name=start_point.name,
         description=start_point.description,
     ).save()
@@ -209,9 +209,7 @@ def start_process():
             'name': execution.name,
             'description': execution.description,
         },
-        'node': {**{
-            'id': start_point.getAttribute('id'),
-        }, **node_info},
+        'node': start_point.to_json(),
         'actors': [actor],
         'state': execution.get_state(),
     })

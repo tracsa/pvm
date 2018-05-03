@@ -250,6 +250,7 @@ def test_continue_process(client, mocker, config):
                             "value": "yes",
                             "required": True,
                             'default': None,
+                            'label': 'data',
                         }
                     ],
                     'data': {
@@ -917,11 +918,11 @@ def test_log_has_form_input_data(client):
         {
             "label": "Info",
             "name": "data",
-            'options': [],
             "type": "text",
             "value": "yes",
             "required": True,
-        }
+            'default': None,
+        },
     ]
 
 

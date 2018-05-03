@@ -97,7 +97,7 @@ class FiniteOptionInput(Input):
         json_data = super().to_json()
 
         json_data['options'] = list(map(
-            lambda o:o.to_json(),
+            lambda o: o.to_json(),
             self.options
         ))
 

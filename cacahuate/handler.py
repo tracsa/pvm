@@ -317,7 +317,7 @@ class Handler:
         if execution is None:
             raise InconsistentState('Found an orphan pointer')
 
-        xml = Xml.load(self.config, execution.process_name)
+        xml = Xml.load(self.config, execution.process_name, direct=True)
 
         assert execution.process_name == xml.filename, 'Inconsistent pointer'
 

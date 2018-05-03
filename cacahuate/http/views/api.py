@@ -267,7 +267,7 @@ def continue_process():
             'where': 'request.body.execution_id',
         }])
 
-    xml = Xml.load(app.config, execution.process_name)
+    xml = Xml.load(app.config, execution.process_name, direct=True)
 
     try:
         continue_point = make_node(
@@ -438,7 +438,11 @@ def task_read(id):
         }])
 
     forms = []
-    xml = Xml.load(app.config, pointer.proxy.execution.get().process_name)
+    xml = Xml.load(
+        app.config,
+        pointer.proxy.execution.get().process_name,
+        direct=True
+    )
     node = xml.find(lambda e: e.getAttribute('id') == pointer.node_id)
 
     for form in node.getElementsByTagName('form'):

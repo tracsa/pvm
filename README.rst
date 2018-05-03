@@ -80,3 +80,4 @@ TODO
 * considerar ids en nodos, no deberían ser necesarios
 * obligar llenado ordenado de formularios
   - cambiar validación acorde a eso
+* modificar funcion Xml.load para especificar versión como un argumento aparte

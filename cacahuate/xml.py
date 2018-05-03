@@ -78,11 +78,27 @@ class Xml:
             # skip looking for the most recent version
             return Xml(config, common_name)
 
+        try:
+            name, version = common_name.split('.')
+        except ValueError:
+            name, version = common_name, None
+
         files = reversed(sorted(os.listdir(config['XML_PATH'])))
 
         for filename in files:
-            if filename.startswith(common_name):
-                return Xml(config, filename)
+            try:
+                fname, fversion, _ = filename.split('.')
+            except ValueError:
+                # Process with malformed name, sorry
+                continue
+
+            if fname == name:
+                if version:
+                    if fversion == version:
+                        return Xml(config, filename)
+                else:
+                    return Xml(config, filename)
+
         else:
             raise ProcessNotFound(common_name)
 

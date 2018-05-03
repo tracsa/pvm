@@ -33,6 +33,14 @@ def test_load_last_matching_process(config):
     assert xml.public is False
 
 
+def test_load_respects_name(config):
+    ''' if there are two xmls whose name starts with the same prefix, the one
+    matching the exact name should be resolved '''
+    xml = Xml.load(config, 'exit')
+
+    assert xml.filename == 'exit.2018-05-03.xml'
+
+
 def test_load_specific_version(config):
     ''' one should be able to request a specific version of a process,
     thus overriding the process described by the previous test '''
@@ -48,8 +56,8 @@ def test_make_iterator(config):
     xml = Xml.load(config, 'simple')
 
     expected_nodes = [
-        'node',
-        'node',
+        'action',
+        'action',
     ]
 
     for given, expected in zip(xml, expected_nodes):
@@ -61,21 +69,21 @@ def test_find(config):
 
     start = xml.start_node
 
-    assert start.tagName == 'node'
+    assert start.tagName == 'action'
     assert start.getAttribute('id') == 'start-node'
 
     echo = xml.find(
         lambda e: e.getAttribute('id') == 'mid-node'
     )
 
-    assert echo.tagName == 'node'
+    assert echo.tagName == 'action'
     assert echo.getAttribute('id') == 'mid-node'
 
     end = xml.find(
         lambda e: e.getAttribute('id') == 'final-node'
     )
 
-    assert end.tagName == 'node'
+    assert end.tagName == 'action'
     assert end.getAttribute('id') == 'final-node'
 
 

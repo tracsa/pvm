@@ -27,5 +27,7 @@
         </form>
       </form-array>
     </action>
+
+    <action id="final-node" />
   </process>
 </process-spec>

@@ -31,45 +31,39 @@ def test_find_next_element_normal(config):
     assert values[0].id == 'final-node'
 
 
+@pytest.mark.skip
 def test_find_next_element_condition(config):
     ''' finding next element runs a node whose condition is satisfied '''
     xml = Xml.load(config, 'decision')
-    exc = Execution().save()
-    form = Questionaire(ref="fork", data={'proceed': 'yes'}).save()
-    form.proxy.execution.set(exc)
-
-    assert xml.filename == 'decision.2018-04-26.xml'
+    handler = Handler(config)
+    execution = Execution().save()
 
     current_node = make_node(xml.find(
-        lambda e:
-        e.tagName == 'node' and e.getAttribute('id') == '57TJ0V3nur6m7wvv'
+        lambda e: e.getAttribute('id') == 'start-node'
     ))
 
-    is_backwards, next_node = current_node.next(xml, exc)[0]
+    values = handler.next(xml, current_node, execution)
 
-    assert is_backwards is False
-    assert next_node.element.getAttribute('id') == 'Cuptax0WTCL1ueCy'
+    assert len(values) == 1
+    assert values[0].id == 'mid-node'
 
 
+@pytest.mark.skip
 def test_find_next_element_condition_unsatisfied(config):
     ''' given an if and asociated data, retrieves the next element, negative
     variant '''
     xml = Xml.load(config, 'decision')
-    exc = Execution().save()
-    form = Questionaire(ref="fork", data={'proceed': 'no'}).save()
-    form.proxy.execution.set(exc)
-
-    assert xml.filename == 'decision.2018-02-27.xml'
+    handler = Handler(config)
+    execution = Execution().save()
 
     current_node = make_node(xml.find(
-        lambda e:
-        e.tagName == 'node' and e.getAttribute('id') == '57TJ0V3nur6m7wvv'
+        lambda e: e.getAttribute('id') == 'start-node'
     ))
 
-    is_backwards, next_node = current_node.next(xml, exc)[0]
+    values = handler.next(xml, current_node, execution)
 
-    assert is_backwards is False
-    assert next_node.element.getAttribute('id') == 'mj88CNZUaBdvLV83'
+    assert len(values) == 1
+    assert values[0].id == 'final-node'
 
 
 def test_find_next_element_data_invalidation(config):

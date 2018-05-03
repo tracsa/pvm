@@ -38,8 +38,10 @@
             type="radio"
             name="gender"
             required="required">
-            <option value="male">Masculino</option>
-            <option value="female">Femenino</option>
+            <options>
+              <option value="male">Masculino</option>
+              <option value="female">Femenino</option>
+            </options>
           </input>
 
           <input
@@ -47,11 +49,13 @@
             type="checkbox"
             name="interests"
             required="required">
-            <option value="science">Ciencia</option>
-            <option value="sports">Deportes</option>
-            <option value="music">Música</option>
-            <option value="nature">Naturaleza</option>
-            <option value="thecnology">Tecnología</option>
+            <options>
+              <option value="science">Ciencia</option>
+              <option value="sports">Deportes</option>
+              <option value="music">Música</option>
+              <option value="nature">Naturaleza</option>
+              <option value="thecnology">Tecnología</option>
+            </options>
           </input>
 
           <input
@@ -59,10 +63,12 @@
             label="Emita su voto"
             name="elections"
             required="required">
-            <option value="amlo">Andres Manuel López Obrador</option>
-            <option value="meade">José Antonio Meade Kuribreña</option>
-            <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>
-            <option value="anaya">Ricardo Anaya Cortés</option>
+            <options>
+              <option value="amlo">Andres Manuel López Obrador</option>
+              <option value="meade">José Antonio Meade Kuribreña</option>
+              <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>
+              <option value="anaya">Ricardo Anaya Cortés</option>
+            </options>
           </input>
         </form>
       </form-array>

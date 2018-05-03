@@ -1,11 +1,13 @@
-from cacahuate.errors import ValidationErrors, InputError,\
-    RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
-    RequiredListError, RequiredStrError, MisconfiguredProvider
+from case_conversion import pascalcase
 from datetime import datetime
 from functools import reduce
 from operator import and_
 import ast
-from case_conversion import pascalcase
+
+from cacahuate.errors import ValidationErrors, InputError,\
+    RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
+    RequiredListError, RequiredStrError, MisconfiguredProvider
+from cacahuate.xml import get_text
 
 INPUTS = [
     'text',
@@ -19,7 +21,20 @@ INPUTS = [
 ]
 
 
-class Input(object):
+class Option:
+
+    def __init__(self, element):
+        self.label = get_text(element)
+        self.value = element.getAttribute('value')
+
+    def to_json(self):
+        return {
+            'label': self.label,
+            'value': self.value,
+        }
+
+
+class Input:
     """docstring for Input"""
 
     def __init__(self, element):
@@ -63,12 +78,28 @@ class FiniteOptionInput(Input):
     def __init__(self, element):
         super().__init__(element)
 
-        self.options = element.getAttribute('options') or []
+        self.options = []
+
+        opttag = element.getElementsByTagName('options')
+
+        if len(opttag) > 0:
+            for opt in opttag[0].getElementsByTagName('option'):
+                self.options.append(Option(opt))
+
+    def __contains__(self, item):
+        for opt in self.options:
+            if opt.value == item:
+                return True
+
+        return False
 
     def to_json(self):
         json_data = super().to_json()
 
-        json_data['options'] = self.options
+        json_data['options'] = list(map(
+            lambda o:o.to_json(),
+            self.options
+        ))
 
         return json_data
 
@@ -77,6 +108,7 @@ class CheckboxInput(FiniteOptionInput):
 
     def validate(self, value, form_index):
         super().validate(value, form_index)
+
         if value is None:
             value = []
         if type(value) == str:
@@ -84,17 +116,13 @@ class CheckboxInput(FiniteOptionInput):
         if type(value) is not list:
             raise RequiredListError(form_index, value)
 
-        list_values = [
-            child_element.get('value')
-            for child_element in self.options
-        ]
-
         for val in value:
-            if val not in list_values:
+            if val not in self:
                 raise InvalidInputError(
                     form_index,
                     self.name
                 )
+
         return value
 
 
@@ -105,14 +133,10 @@ class RadioInput(FiniteOptionInput):
 
         if type(value) is not str and value is not None:
             raise RequiredStrError(form_index, self.name)
-        list_values = [
-            child_element.get('value')
-            for child_element in self.options
-        ]
-        if value is None:
-            list_values.append(None)
-        if value not in list_values:
+
+        if value not in self:
             raise InvalidInputError(form_index, self.name)
+
         return value
 
 
@@ -122,21 +146,26 @@ class SelectInput(RadioInput):
 
 class FileInput(Input):
 
+    def __init__(self, element):
+        super().__init__(element)
+
+        self.provider = element.getAttribute('provider')
+
     def validate(self, value, form_index):
         super().validate(value, form_index)
+
         if value is None:
             value = {}
         if type(value) is not dict:
             raise InvalidInputError(form_index, self.name)
 
         provider = self.provider
+
         if provider == 'doqer':
             valid = reduce(
                 and_,
                 map(
-                    lambda attr:
-                        attr in value and
-                        value[attr] is not None,
+                    lambda attr: attr in value and value[attr] is not None,
                     ['id', 'mime', 'name', 'type']
                 )
             )

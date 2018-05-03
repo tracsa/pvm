@@ -78,3 +78,5 @@ TODO
     - no aprobar sube al primer elemento inválido
     - información inválida nunca pasa validación de formulario
 * considerar ids en nodos, no deberían ser necesarios
+* obligar llenado ordenado de formularios
+  - cambiar validación acorde a eso

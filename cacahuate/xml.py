@@ -124,7 +124,7 @@ class Xml:
                 return element
 
         raise ElementNotFound(
-            'node or edge matching the given condition was not found'
+            'node matching the given condition was not found'
         )
 
     @classmethod

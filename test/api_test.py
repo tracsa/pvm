@@ -6,7 +6,9 @@ import pytest
 from cacahuate.handler import Handler
 from cacahuate.models import Pointer, Execution, Activity, Questionaire
 
-from .utils import make_auth, make_activity, make_pointer, make_user
+from .utils import make_auth, make_activity, make_pointer, make_user, make_date
+
+EXECUTION_ID = '15asbs'
 
 
 def test_continue_process_asks_for_user(client):
@@ -682,7 +684,7 @@ def test_logs_activity(mongo, client, config):
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
-            'id': "15asbs",
+            'id': EXECUTION_ID,
         },
         'node': {
             'id': 'mid-node',
@@ -693,14 +695,14 @@ def test_logs_activity(mongo, client, config):
         'started_at': datetime(2018, 4, 1, 21, 50),
         'finished_at': None,
         'execution': {
-            'id': "15asbs",
+            'id': EXECUTION_ID,
         },
         'node': {
             'id': '4g9lOdPKmRUf2',
         },
     })
 
-    res = client.get('/v1/log/15asbs?node_id=mid-node')
+    res = client.get('/v1/log/{}?node_id=mid-node'.format(EXECUTION_ID))
 
     ans = json.loads(res.data)
 
@@ -710,7 +712,7 @@ def test_logs_activity(mongo, client, config):
             'started_at': '2018-04-01T21:45:00+00:00',
             'finished_at': None,
             'execution': {
-                'id': '15asbs',
+                'id': EXECUTION_ID,
             },
             'node': {
                 'id': 'mid-node',
@@ -996,176 +998,87 @@ def test_start_process_error_405(client, mongo, config):
         "The method is not allowed for the requested URL."
 
 
-def test_time_process(client, mongo, config):
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
-        'started_at': datetime.now(),
-        'finished_at': (datetime.now()+timedelta(
-                days=1, hours=2, minutes=20, seconds=45
-            )
-        ),
-        'execution': {
-            'id': "15asbs",
-        },
-        'node': {
-            'id': 'test1-node',
-        },
-    })
+def test_node_statistics(client, mongo, config):
+    def make_node_reg(node_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'execution': {
+                'id': EXECUTION_ID,
+            },
+            'node': {
+                'id': node_id,
+            },
+        }
 
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
-        'started_at': datetime.now(),
-        'finished_at': (datetime.now()+timedelta(
-                days=4, hours=1, minutes=10, seconds=15
-                )
-        ),
-        'execution': {
-            'id': "15asbs",
-        },
-        'node': {
-            'id': 'test2-node',
-        },
-    })
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_many([
+        make_node_reg('test1', make_date(), make_date()),
+        make_node_reg('test2', make_date(), make_date()),
+        make_node_reg('test1', make_date(), make_date()),
+        make_node_reg('test2', make_date(), make_date()),
+        make_node_reg('test2', make_date(), None),
+    ])
 
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
-        'started_at': datetime.now(),
-        'finished_at': (datetime.now()+timedelta(
-                days=9, hours=15, minutes=5, seconds=55
-                )
-        ),
-        'execution': {
-            'id': "15asbs",
-        },
-        'node': {
-            'id': 'test4-node',
-        },
-    })
+    res = client.get('/v1/process/{}/statistics'.format(EXECUTION_ID))
 
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
-        'started_at': datetime.now(),
-        'finished_at': (datetime.now()+timedelta(
-                days=6, hours=3, minutes=30, seconds=45
-                )
-        ),
-        'execution': {
-            'id': "15asbs",
-        },
-        'node': {
-            'id': 'test3-node',
-        },
-    })
-
-    res = client.get('/v1/process/15asbs/statistic')
-    data = json.loads(res.data)
-
-    min_time = data['data'][0]['min']
-    millis = int(min_time*1000)
-    seconds = (millis/1000) % 60
-    seconds = int(seconds)
-    minutes = (millis/(1000*60)) % 60
-    minutes = int(minutes)
-    hours = (millis/(1000*60*60)) % 24
-    hours = int(hours)
-    days = (millis/(1000*60*60*24))
-    days = int(days)
-
-    assert days == 1
-    assert hours == 2
-    assert minutes == 20
-    assert seconds == 45
-
-    min_time = data['data'][0]['max']
-    millis = int(min_time*1000)
-    seconds = (millis/1000) % 60
-    seconds = int(seconds)
-    minutes = (millis/(1000*60)) % 60
-    minutes = int(minutes)
-    hours = (millis/(1000*60*60)) % 24
-    hours = int(hours)
-    days = (millis/(1000*60*60*24))
-    days = int(days)
-
-    assert days == 9
-    assert hours == 15
-    assert minutes == 5
-    assert seconds == 55
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': [
+            {
+                'id': 'test1',
+                'average': 124,
+                'max': 123,
+                'min': 123,
+            },
+            {
+                'id': 'test2',
+                'average': 124,
+                'max': 123,
+                'min': 123,
+            },
+        ],
+    }
 
 
-def test_list_time_process(client, mongo, config):
+def test_process_statistics(client, mongo, config):
+    def make_exec_reg(process_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'status': 'finished',
+            'process': {
+                'id': process_id,
+                'version': 'v1',
+            },
+        }
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
-        'started_at': datetime.now(),
-        'finished_at': (datetime.now()+timedelta(
-                days=3, hours=14, minutes=40, seconds=5
-                )
-        ),
-        'status': 'finished',
-        'id': 'odlekifjdnth'
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_many([
+        make_exec_reg('p1', make_date(), make_date()),
+        make_exec_reg('p2', make_date(), make_date()),
+        make_exec_reg('p1', make_date(), make_date()),
+        make_exec_reg('p2', make_date(), make_date()),
+    ])
 
-    })
+    res = client.get('/v1/process/statistics')
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
-        'started_at': datetime.now(),
-        'finished_at': (datetime.now()+timedelta(
-                days=2, hours=4, minutes=10, seconds=35
-                )
-        ),
-        'status': 'finished',
-        'id': 'dlsmdjgidps'
-
-    })
-
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
-        'started_at': datetime.now(),
-        'finished_at': (datetime.now()+timedelta(
-                days=6, hours=7, minutes=43, seconds=18
-                )
-        ),
-        'status': 'finished',
-        'id': 'ldkfijrjfhd'
-
-    })
-
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
-        'started_at': datetime.now(),
-        'finished_at': (datetime.now()+timedelta(
-                days=5, hours=25, minutes=12, seconds=15
-                )
-        ),
-        'status': 'finished',
-        'id': 'lfkdirjfhdsl'
-
-    })
-
-    res = client.get('/v1/process/statistic/10')
-    data = json.loads(res.data)
-
-    min_time = data['data'][0]['min']
-    millis = int(min_time*1000)
-    seconds = (millis/1000) % 60
-    seconds = int(seconds)
-    minutes = (millis/(1000*60)) % 60
-    minutes = int(minutes)
-    hours = (millis/(1000*60*60)) % 24
-    hours = int(hours)
-    days = (millis/(1000*60*60*24))
-    days = int(days)
-
-    assert days == 2
-    assert hours == 4
-    assert minutes == 10
-    assert seconds == 35
-
-    min_time = data['data'][0]['max']
-    millis = int(min_time*1000)
-    seconds = (millis/1000) % 60
-    seconds = int(seconds)
-    minutes = (millis/(1000*60)) % 60
-    minutes = int(minutes)
-    hours = (millis/(1000*60*60)) % 24
-    hours = int(hours)
-    days = (millis/(1000*60*60*24))
-    days = int(days)
-
-    assert days == 6
-    assert hours == 7
-    assert minutes == 43
-    assert seconds == 18
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': [
+            {
+                'process': {
+                    'id': 'p1',
+                },
+                'average': 123,
+                'min': 123,
+                'max': 123,
+            },
+            {
+                'process': {
+                    'id': 'p2',
+                },
+                'average': 123,
+                'min': 123,
+                'max': 123,
+            },
+        ],
+    }

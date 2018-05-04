@@ -6,10 +6,9 @@
     <name>Todos los inputs</name>
     <description>Proceso que pide todos los tipos de entrada y después no hace nada</description>
     <public>true</public>
-    <start-node>inputs-node</start-node>
   </process-info>
   <process>
-    <node id="inputs-node" class="decision">
+    <action id="inputs-node" >
       <form-array>
         <form id="auth-form">
           <input
@@ -35,25 +34,28 @@
           />
 
           <input
+            label="Género?"
+            type="radio"
+            name="gender"
+            required="required">
+            <options>
+              <option value="male">Masculino</option>
+              <option value="female">Femenino</option>
+            </options>
+          </input>
+
+          <input
             label="Marque sus intereses"
             type="checkbox"
             name="interests"
             required="required">
-            <option value="science">Ciencia</option>
-            <option value="sports">Deportes</option>
-            <option value="music">Música</option>
-            <option value="nature">Naturaleza</option>
-            <option value="thecnology">Tecnología</option>
-          </input>
-
-          <input
-            label="Género?"
-            type="radio"
-            name="gender"
-            default="male"
-            required="required">
-            <option value="male">Masculino</option>
-            <option value="female">Femenino</option>
+            <options>
+              <option value="science">Ciencia</option>
+              <option value="sports">Deportes</option>
+              <option value="music">Música</option>
+              <option value="nature">Naturaleza</option>
+              <option value="thecnology">Tecnología</option>
+            </options>
           </input>
 
           <input
@@ -61,13 +63,15 @@
             label="Emita su voto"
             name="elections"
             required="required">
-            <option value="amlo">Andres Manuel López Obrador</option>
-            <option value="meade">José Antonio Meade Kuribreña</option>
-            <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>
-            <option value="anaya">Ricardo Anaya Cortés</option>
+            <options>
+              <option value="amlo">Andres Manuel López Obrador</option>
+              <option value="meade">José Antonio Meade Kuribreña</option>
+              <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>
+              <option value="anaya">Ricardo Anaya Cortés</option>
+            </options>
           </input>
         </form>
       </form-array>
-    </node>
+    </action>
   </process>
 </process-spec>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-05-03</date>
+    <name>Test exit mechanisms</name>
+    <public>false</public>
+    <description>Test exit mechanisms</description>
+  </process-info>
+  <process>
+    <action id="start-node"></action>
+
+    <exit />
+
+    <action id="final-node"></action>
+  </process>
+</process-spec>

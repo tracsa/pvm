@@ -5,46 +5,34 @@
     <name>Failing, wrong process</name>
     <public>false</public>
     <description>Created for testing the resistance of the handler against faulty hierarchy providers</description>
-    <start-node>start-node</start-node>
   </process-info>
   <process>
-    <node id="start-node" class="decision">
+    <action id="start-node" >
       <form-array>
         <form id="form">
           <input type="select" name="choice">
-            <option value="noprov">Unexistent provider</option>
+            <options>
+              <option value="noprov">Unexistent provider</option>
+            </options>
           </input>
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <connector from="start-node" to="noprov">
-      <condition>#form.choice == "noprov"</condition>
-    </connector>
-    <node id="noprov" class="end">
+    <action id="noprov" >
       <auth-filter backend="noexist" />
-    </node>
+    </action>
 
-    <connector from="start-node" to="return">
-      <condition>#form.choice == "return"</condition>
-    </connector>
-    <node id="return" class="end">
+    <action id="return" >
       <auth-filter backend="badreturn">
         <param name="opt">return</param>
       </auth-filter>
-    </node>
+    </action>
 
-    <connector from="start-node" to="item">
-      <condition>#form.choice == "item"</condition>
-    </connector>
-    <node id="item" class="end">
+    <action id="item" >
       <auth-filter backend="badreturn">
         <param name="opt">item</param>
       </auth-filter>
-    </node>
-
-    <connector from="start-node" to="nonode">
-      <condition>#form.choice == "nonode"</condition>
-    </connector>
+    </action>
   </process>
 </process-spec>

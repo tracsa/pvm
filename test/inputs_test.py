@@ -17,8 +17,8 @@ def test_all_inputs(client, config, mongo):
                 'name': 'Algo',
                 'datetime': datetime.now().isoformat()+'Z',
                 'secret': '123456',
+                'gender': 'female',
                 'interests': ['science', 'music'],
-                'gender': 'male',
                 'elections': 'amlo',
             },
         },
@@ -32,6 +32,7 @@ def test_all_inputs(client, config, mongo):
     }))
 
     assert res.status_code == 201
+
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
     actor = reg['actors'][0]
@@ -437,11 +438,12 @@ def test_store_form_multiple(config, client, mongo):
                 'name': 'jorge',
             },
             'form': [{
-                'options': [],
                 'name': 'name',
                 'type': 'text',
                 'value': 'jorge',
                 'required': True,
+                'label': 'name',
+                'default': None,
             }],
         },
         {
@@ -450,11 +452,12 @@ def test_store_form_multiple(config, client, mongo):
                 'phone': '1111',
             },
             'form': [{
-                'options': [],
                 'name': 'phone',
                 'type': 'text',
                 'value': '1111',
                 'required': True,
+                'default': None,
+                'label': 'phone',
             }],
         },
         {
@@ -463,11 +466,12 @@ def test_store_form_multiple(config, client, mongo):
                 'phone': '2222',
             },
             'form': [{
-                'options': [],
                 'name': 'phone',
                 'type': 'text',
                 'value': '2222',
                 'required': True,
+                'default': None,
+                'label': 'phone',
             }],
         },
     ]

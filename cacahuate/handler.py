@@ -10,10 +10,9 @@ from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
     MisconfiguredProvider
 from cacahuate.logger import log
 from cacahuate.models import Execution, Pointer, Questionaire, Activity, User
-from cacahuate.node import make_node, Node
-from cacahuate.xml import Xml, resolve_params, get_node_info
+from cacahuate.xml import Xml
+from cacahuate.node import make_node, Exit
 from cacahuate.auth.base import BaseUser
-from cacahuate.utils import user_import
 
 
 class Handler:
@@ -50,13 +49,9 @@ class Handler:
 
         # node's lifetime ends here
         self.teardown(pointer, actor)
-        next_nodes = cur_node.next(xml, execution)
+        next_nodes = self.next(xml, cur_node, execution)
 
-        for is_backwards, node in next_nodes:
-            # Nodes that come from the past have special threatment
-            if is_backwards:
-                self.recover_state(node, execution)
-
+        for node in next_nodes:
             # node's begining of life
             pointer = self.wakeup(node, execution, channel)
 
@@ -85,6 +80,20 @@ class Handler:
                 ),
             )
 
+    def next(self, xml, cur_node, execution):
+        ''' Given a position in the script, return the next position '''
+        if isinstance(cur_node, Exit):
+            return []
+
+        try:
+            # Return next node by simple adjacency
+            element = next(xml)
+
+            return [make_node(element)]
+        except StopIteration:
+            # End of process
+            return []
+
     def wakeup(self, node, execution, channel):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
@@ -93,10 +102,9 @@ class Handler:
         pointer = self.create_pointer(node, execution)
         log.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,
-            node.element.getAttribute('id'),
+            node.id,
             execution.id,
         ))
-        is_async = len(node.element.getElementsByTagName('form-array')) > 0
 
         # notify someone
         notified_users = self.notify_users(node, pointer, channel)
@@ -112,16 +120,14 @@ class Handler:
                 'name': execution.name,
                 'description': execution.description,
             },
-            'node': {**{
-                'id': node.element.getAttribute('id'),
-            }, **get_node_info(node.element)},
+            'node': node.to_json(),
             'notified_users': notified_users,
             'actors': [],
             'state': execution.get_state(),
         })
 
         # nodes with forms are not queued
-        if not is_async:
+        if not node.is_async():
             return pointer
 
     def teardown(self, pointer, actor):
@@ -214,26 +220,7 @@ class Handler:
         })
 
     def notify_users(self, node, pointer, channel):
-        filter_q = node.element.getElementsByTagName('auth-filter')
-
-        if len(filter_q) == 0:
-            return []
-
-        filter_node = filter_q[0]
-
-        backend = filter_node.getAttribute('backend')
-
-        HiPro = user_import(
-            backend,
-            'HierarchyProvider',
-            self.config['HIERARCHY_PROVIDERS'],
-            'cacahuate.auth.hierarchy',
-        )
-
-        hierarchy_provider = HiPro(self.config)
-        husers = hierarchy_provider.find_users(
-            **resolve_params(filter_node, pointer.proxy.execution.get())
-        )
+        husers = node.get_actors(self.config, pointer.proxy.execution.get())
 
         if type(husers) != list:
             raise MisconfiguredProvider('Provider returned non list')
@@ -262,7 +249,7 @@ class Handler:
                 log.debug('Notified user {} via {} about n:{} e:{}'.format(
                     user.identifier,
                     medium,
-                    node.element.getAttribute('id'),
+                    node.id,
                     pointer.proxy.execution.get().id,
                 ))
                 channel.basic_publish(
@@ -308,14 +295,13 @@ class Handler:
     def get_contact_channels(self, user: BaseUser):
         return [('email', {'email': user.get_x_info('email')})]
 
-    def create_pointer(self, node: Node, execution: Execution):
+    def create_pointer(self, node, execution: Execution):
         ''' Given a node, its process, and a specific execution of the former
         create a persistent pointer to the current execution state '''
-        node_info = node.element.getElementsByTagName('node-info')
-
         pointer = Pointer(
-            node_id=node.element.getAttribute('id'),
-            **get_node_info(node.element),
+            node_id=node.id,
+            name=node.name,
+            description=node.description,
         ).save()
 
         pointer.proxy.execution.set(execution)
@@ -334,7 +320,7 @@ class Handler:
         if execution is None:
             raise InconsistentState('Found an orphan pointer')
 
-        xml = Xml.load(self.config, execution.process_name)
+        xml = Xml.load(self.config, execution.process_name, direct=True)
 
         assert execution.process_name == xml.filename, 'Inconsistent pointer'
 

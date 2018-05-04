@@ -478,30 +478,34 @@ def list_logs(id):
 
 @app.route('/v1/process/<id>/statistic', methods=['GET'])
 def time_process(id):
-
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
     query = [
         {"$match": {"execution.id": id}},
+        {"$limit": app.config['LIMIT_DEFAULT_QUERY']},
         {"$project": {
-            "conjunct": "$execution.id", "difference_time": {
-                "$subtract": ["$finished_at", "$started_at"]
-            }
+            "conjunct": "$execution.id",
+            "difference_time": {
+                "$subtract": ["$finished_at", "$started_at"],
+            },
         }},
         {"$group": {
-                "_id": "$conjunct", "max": {
-                    "$max": {
-                        "$divide": ["$difference_time", 1000]
-                    }
-                },  "min": {
-                        "$min": {
-                            "$divide": ["$difference_time", 1000]
-                        }
-                    }, "average": {
-                        "$avg": {
-                            "$divide": ["$difference_time", 1000]
-                        }
-                    }
-        }}
+            "_id": "$conjunct",
+            "max": {
+                "$max": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+            "min": {
+                "$min": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+            "average": {
+                "$avg": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+        }},
     ]
 
     return jsonify({
@@ -514,7 +518,6 @@ def time_process(id):
 
 @app.route('/v1/process/statistic', methods=['GET'])
 def list_time_process():
-
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
     query = [
         {"$match": {"status": "finished"}},
@@ -524,20 +527,23 @@ def list_time_process():
             }
         }},
         {"$group": {
-                "_id": "$status", "max": {
-                    "$max": {
-                        "$divide": ["$difference_time", 1000]
-                    }
-                }, "min": {
-                        "$min": {
-                            "$divide": ["$difference_time", 1000]
-                        }
-                    }, "average": {
-                        "$avg": {
-                            "$divide": ["$difference_time", 1000]
-                        }
-                    }
-        }}
+            "_id": "$status",
+            "max": {
+                "$max": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+            "min": {
+                "$min": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+            "average": {
+                "$avg": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+        }},
     ]
 
     return jsonify({

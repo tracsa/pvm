@@ -511,9 +511,9 @@ def time_process(id):
         )),
     })
 
-
-@app.route('/v1/process/statistic', methods=['GET'])
-def list_time_process():
+@app.route('/v1/process/statistic/', methods=['GET'])
+@app.route('/v1/process/statistic/<limit>', methods=['GET'])
+def list_time_process(limit=app.config['LIMIT_DEFAULT_QUERY']):
 
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
     query = [

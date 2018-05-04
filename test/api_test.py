@@ -1135,7 +1135,7 @@ def test_list_time_process(client, mongo, config):
 
     })
 
-    res = client.get('/v1/process/statistic')
+    res = client.get('/v1/process/statistic/10')
     data = json.loads(res.data)
 
     min_time = data['data'][0]['min']

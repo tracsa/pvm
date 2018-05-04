@@ -4,15 +4,35 @@
     <author>categulario</author>
     <date>2018-02-19</date>
     <name>Simplest process ever</name>
-    <public>false</public>
+    <public>true</public>
     <description>A simple process that does nothing</description>
-    <start-node>start-node</start-node>
   </process-info>
   <process>
-    <node id="start-node" class="simple"/>
-    <connector from="start-node" to="mid-node" />
-    <node id="mid-node" class="simple" />
-    <connector from="mid-node" to="end-node" />
-    <node id="end-node" class="end" />
+    <action id="start-node">
+      <node-info>
+        <name>Primer paso</name>
+        <description>Resolver una tarea</description>
+      </node-info>
+      <form-array>
+        <form id="start-form">
+          <input type="text" name="data" required="required" label="Info" />
+        </form>
+      </form-array>
+    </action>
+
+    <action id="mid-node">
+      <auth-filter backend="hardcoded">
+        <param name="identifier" type="ref">user#start-node</param>
+        <param name="relation">manager</param>
+      </auth-filter>
+      <form-array>
+        <form id="mid-form">
+          <input type="text" name="data" required="required" />
+        </form>
+      </form-array>
+    </action>
+
+    <action id="final-node">
+    </action>
   </process>
 </process-spec>

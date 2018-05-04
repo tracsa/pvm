@@ -6,10 +6,9 @@
     <name>Todos los inputs</name>
     <description>Proceso de formulario que no tiene el campo required y toma el valor del atributo default</description>
     <public>true</public>
-    <start-node>inputs-node</start-node>
   </process-info>
   <process>
-    <node id="inputs-node" class="decision">
+    <action id="inputs-node" >
       <form-array>
         <form id="auth-form">
           <input
@@ -39,11 +38,13 @@
             type="checkbox"
             name="interests"
             default='["science","sports"]'>
-            <option value="science">Ciencia</option>
-            <option value="sports">Deportes</option>
-            <option value="music">Música</option>
-            <option value="nature">Naturaleza</option>
-            <option value="thecnology">Tecnología</option>
+            <options>
+              <option value="science">Ciencia</option>
+              <option value="sports">Deportes</option>
+              <option value="music">Música</option>
+              <option value="nature">Naturaleza</option>
+              <option value="thecnology">Tecnología</option>
+            </options>
           </input>
 
           <input
@@ -51,8 +52,10 @@
             type="radio"
             name="gender"
             default="male">
-            <option value="male">Masculino</option>
-            <option value="female">Femenino</option>
+            <options>
+              <option value="male">Masculino</option>
+              <option value="female">Femenino</option>
+            </options>
           </input>
 
           <input
@@ -60,14 +63,16 @@
             label="Emita su voto"
             name="elections"
             default="amlo">
-            <option value="amlo">Andres Manuel López Obrador</option>
-            <option value="meade">José Antonio Meade Kuribreña</option>
-            <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>
-            <option value="anaya">Ricardo Anaya Cortés</option>
+            <options>
+              <option value="amlo">Andres Manuel López Obrador</option>
+              <option value="meade">José Antonio Meade Kuribreña</option>
+              <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>
+              <option value="anaya">Ricardo Anaya Cortés</option>
+            </options>
           </input>
 
         </form>
       </form-array>
-    </node>
+    </action>
   </process>
 </process-spec>

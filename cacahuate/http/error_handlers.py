@@ -30,6 +30,16 @@ def handle_404(e):
     }), e.code
 
 
+@app.errorhandler(405)
+def handle_404(e):
+    return jsonify({
+        'errors': [{
+            'detail': e.description,
+            'where': 'request.url',
+        }],
+    }), e.code
+
+
 @app.errorhandler(401)
 def handle_401(e):
     return jsonify({

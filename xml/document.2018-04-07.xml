@@ -6,10 +6,9 @@
     <name>Validar identidad</name>
     <description>This process asks for a file</description>
     <public>true</public>
-    <start-node>document-node</start-node>
   </process-info>
   <process>
-    <node id="document-node" class="decision">
+    <action id="document-node" >
       <form-array>
         <form id="doc-form">
           <input
@@ -21,6 +20,6 @@
           />
         </form>
       </form-array>
-    </node>
+    </action>
   </process>
 </process-spec>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-04-26</date>
+    <name>Decision</name>
+    <public>true</public>
+    <description>A process for testing of various decision mechanisms</description>
+  </process-info>
+  <process>
+    <action id="start-node" >
+      <form-array>
+        <form id="start-form">
+          <input type="select" name="should_exec" required="required" label="Should exec?">
+            <options>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </options>
+          </input>
+        </form>
+      </form-array>
+    </action>
+
+    <action id="mid-node" >
+      <form-array>
+        <form id="mid-form">
+          <input type="text" name="data" required="required" />
+        </form>
+      </form-array>
+    </action>
+
+    <action id="final-node" />
+  </process>
+</process-spec>

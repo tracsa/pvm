@@ -5,20 +5,17 @@
     <name>Petición de salida</name>
     <description>Este proceso es iniciado por un empleado que quiere salir temporalmente de la empresa (e.g. a comer). La autorización llega a su supervisor, quien autoriza o rechaza la salida, evento que es notificado de nuevo al empleado y finalmente a los guardias, uno de los cuales notifica que el empleado salió de la empresa.</description>
     <public>true</public>
-    <start-node>requester</start-node>
   </process-info>
   <process>
-    <node id="requester" class="simple">
+    <action id="requester" >
       <form-array>
         <form id="exit-form">
           <input type="text" name="reason" required="required" />
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <connector from="requester" to="manager" />
-
-    <node id="manager" class="decision">
+    <action id="manager" >
       <auth-filter backend="hardcoded">
         <param name="identifier" type="ref">user#requester</param>
         <param name="relation">manager</param>
@@ -27,18 +24,16 @@
       <form-array>
         <form id="auth-form">
           <input type="radio" name="auth" required="required">
-            <option value="yes">Ándale mijito, ve</option>
-            <option value="no">Ni madres</option>
+            <options>
+              <option value="yes">Ándale mijito, ve</option>
+              <option value="no">Ni madres</option>
+            </options>
           </input>
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <connector from="manager" to="security">
-      <condition>#auth-form.auth=="yes"</condition>
-    </connector>
-
-    <node id="security" class="simple">
+    <action id="security" >
       <auth-filter backend="hardcoded">
         <param name="ou">Security</param>
       </auth-filter>
@@ -48,19 +43,12 @@
           <input type="checkbox" name="confirmed" />
         </form>
       </form-array>
-    </node>
+    </action>
 
-    <connector from="manager" to="noauth">
-    </connector>
-
-    <node id="noauth" class="end">
+    <action id="noauth" >
       <auth-filter backend="hardcoded">
         <param name="ou">Security</param>
       </auth-filter>
-    </node>
-
-    <connector from="seurity" to="end" />
-
-    <node id="end" class="end"></node>
+    </action>
   </process>
 </process-spec>

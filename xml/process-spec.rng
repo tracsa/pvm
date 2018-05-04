@@ -19,7 +19,6 @@
           </choice>
         </element>
         <element name="description"><text/></element>
-        <element name="start-node"><text/></element>
       </interleave>
     </element>
   </define>
@@ -27,29 +26,19 @@
   <define name="process">
     <element name="process">
       <interleave>
+        <oneOrMore>
+          <ref name="action"/>
+        </oneOrMore>
         <zeroOrMore>
-          <ref name="node"/>
-        </zeroOrMore>
-        <zeroOrMore>
-          <ref name="connector"/>
+          <ref name="exit" />
         </zeroOrMore>
       </interleave>
     </element>
   </define>
 
-  <define name="node">
-    <element name="node">
+  <define name="action">
+    <element name="action">
       <attribute name="id"><text/></attribute>
-      <optional>
-        <attribute name="class">
-        <choice>
-          <value>end</value>
-          <value>simple</value>
-          <value>decision</value>
-          <value>goto</value>
-        </choice>
-       </attribute>
-      </optional>
 
       <optional>
         <element name="node-info">
@@ -61,7 +50,13 @@
       </optional>
 
       <optional>
-        <ref name="auth-filter"/>
+        <element name="auth-filter">
+          <attribute name="backend"><text/></attribute>
+          <zeroOrMore>
+            <ref name="param"/>
+          </zeroOrMore>
+          <empty/>
+        </element>
       </optional>
 
       <optional>
@@ -85,23 +80,12 @@
     </element>
   </define>
 
-  <define name="connector">
-    <element name="connector">
-      <attribute name="from"><text/></attribute>
-      <attribute name="to"><text/></attribute>
-      <optional>
-        <element name="condition">
-          <text/>
-        </element>
-      </optional>
-    </element>
-  </define>
-
   <define name="input">
     <element name="input">
       <attribute name="name"><text/></attribute>
       <attribute name="type">
         <choice>
+          <value>approval</value>
           <value>text</value>
           <value>datetime</value>
           <value>password</value>
@@ -135,25 +119,32 @@
         <attribute name="provider"><text/></attribute>
       </optional>
 
-      <choice>
-        <zeroOrMore>
-          <element name="option">
-            <attribute name="value"><text/></attribute>
-            <text/>
-          </element>
-        </zeroOrMore>
-        <empty/>
-      </choice>
+      <optional>
+        <element name="options">
+          <zeroOrMore>
+            <element name="option">
+              <attribute name="value"><text/></attribute>
+              <text/>
+            </element>
+          </zeroOrMore>
+        </element>
+      </optional>
+
+      <optional>
+        <element name="dependencies">
+          <zeroOrMore>
+            <element name="dep">
+              <text/>
+            </element>
+          </zeroOrMore>
+        </element>
+      </optional>
     </element>
   </define>
 
-  <define name="auth-filter">
-    <element name="auth-filter">
-      <attribute name="backend"><text/></attribute>
-      <zeroOrMore>
-        <ref name="param"/>
-      </zeroOrMore>
-      <empty/>
+  <define name="exit">
+    <element name="exit">
+      <empty />
     </element>
   </define>
 

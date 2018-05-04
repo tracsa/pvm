@@ -72,7 +72,6 @@ TODO
     - <validation>
     - <subprocess>
     - <end>
-* quitar símbolo de gato de los condicionales en todas partes
 * probar input tipo aprobación
     - aprobar camina hacia enfrente
     - no aprobar sube al primer elemento inválido

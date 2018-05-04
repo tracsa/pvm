@@ -310,23 +310,6 @@ def test_start_process_simple_requires(client, mongo, config):
         ],
     }
 
-    # we need a process able to load
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'nostart',
-    }))
-
-    assert res.status_code == 422
-    assert json.loads(res.data) == {
-        'errors': [
-            {
-                'detail': 'Process does not have nodes',
-                'where': 'request.body.process_name',
-            },
-        ],
-    }
-
     # no registry should be created yet
     assert mongo[config["MONGO_HISTORY_COLLECTION"]].count() == 0
     assert Activity.count() == 0

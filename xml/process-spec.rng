@@ -27,14 +27,17 @@
     <element name="process">
       <interleave>
         <oneOrMore>
-          <ref name="node"/>
+          <ref name="action"/>
         </oneOrMore>
+        <zeroOrMore>
+          <ref name="exit" />
+        </zeroOrMore>
       </interleave>
     </element>
   </define>
 
-  <define name="node">
-    <element name="node">
+  <define name="action">
+    <element name="action">
       <attribute name="id"><text/></attribute>
 
       <optional>
@@ -47,7 +50,13 @@
       </optional>
 
       <optional>
-        <ref name="auth-filter"/>
+        <element name="auth-filter">
+          <attribute name="backend"><text/></attribute>
+          <zeroOrMore>
+            <ref name="param"/>
+          </zeroOrMore>
+          <empty/>
+        </element>
       </optional>
 
       <optional>
@@ -76,6 +85,7 @@
       <attribute name="name"><text/></attribute>
       <attribute name="type">
         <choice>
+          <value>approval</value>
           <value>text</value>
           <value>datetime</value>
           <value>password</value>
@@ -109,25 +119,32 @@
         <attribute name="provider"><text/></attribute>
       </optional>
 
-      <choice>
-        <zeroOrMore>
-          <element name="option">
-            <attribute name="value"><text/></attribute>
-            <text/>
-          </element>
-        </zeroOrMore>
-        <empty/>
-      </choice>
+      <optional>
+        <element name="options">
+          <zeroOrMore>
+            <element name="option">
+              <attribute name="value"><text/></attribute>
+              <text/>
+            </element>
+          </zeroOrMore>
+        </element>
+      </optional>
+
+      <optional>
+        <element name="dependencies">
+          <zeroOrMore>
+            <element name="dep">
+              <text/>
+            </element>
+          </zeroOrMore>
+        </element>
+      </optional>
     </element>
   </define>
 
-  <define name="auth-filter">
-    <element name="auth-filter">
-      <attribute name="backend"><text/></attribute>
-      <zeroOrMore>
-        <ref name="param"/>
-      </zeroOrMore>
-      <empty/>
+  <define name="exit">
+    <element name="exit">
+      <empty />
     </element>
   </define>
 

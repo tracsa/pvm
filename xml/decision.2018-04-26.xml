@@ -12,15 +12,16 @@
       <form-array>
         <form id="start-form">
           <input type="select" name="should_exec" required="required" label="Should exec?">
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
+            <options>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </options>
           </input>
         </form>
       </form-array>
     </action>
 
     <action id="mid-node" >
-      <condition>#start-form.should_exec == "yes"</condition>
       <form-array>
         <form id="mid-form">
           <input type="text" name="data" required="required" />

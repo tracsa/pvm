@@ -7,6 +7,6 @@
         <description>A process for testing loading</description>
     </process-info>
     <process>
-      <action />
+      <action id="start" />
     </process>
 </process-spec>

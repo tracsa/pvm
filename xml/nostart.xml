@@ -7,5 +7,6 @@
         <description>A process that is not able to load</description>
     </process-info>
     <process>
+      <action id="start" />
     </process>
 </process-spec>

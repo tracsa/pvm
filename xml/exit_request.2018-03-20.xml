@@ -24,8 +24,10 @@
       <form-array>
         <form id="auth-form">
           <input type="radio" name="auth" required="required">
-            <option value="yes">Ándale mijito, ve</option>
-            <option value="no">Ni madres</option>
+            <options>
+              <option value="yes">Ándale mijito, ve</option>
+              <option value="no">Ni madres</option>
+            </options>
           </input>
         </form>
       </form-array>

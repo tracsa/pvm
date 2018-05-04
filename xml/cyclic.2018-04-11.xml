@@ -18,7 +18,7 @@
     <action id="approval-node" >
       <form-array>
         <form id="validate-simple">
-          <input type="approval">
+          <input name="aprove" type="approval">
             <dependencies>
               <dep>work.task</dep>
             </dependencies>

@@ -11,26 +11,25 @@
       <form-array>
         <form id="form">
           <input type="select" name="choice">
-            <option value="noprov">Unexistent provider</option>
+            <options>
+              <option value="noprov">Unexistent provider</option>
+            </options>
           </input>
         </form>
       </form-array>
     </action>
 
     <action id="noprov" >
-      <condition>#form.choice == "noprov"</condition>
       <auth-filter backend="noexist" />
     </action>
 
     <action id="return" >
-      <condition>#form.choice == "return"</condition>
       <auth-filter backend="badreturn">
         <param name="opt">return</param>
       </auth-filter>
     </action>
 
     <action id="item" >
-      <condition>#form.choice == "item"</condition>
       <auth-filter backend="badreturn">
         <param name="opt">item</param>
       </auth-filter>

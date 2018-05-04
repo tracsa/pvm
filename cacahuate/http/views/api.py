@@ -11,7 +11,6 @@ from jinja2 import Template
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
     Forbidden
-from cacahuate.http.forms import ContinueProcess
 from cacahuate.http.middleware import requires_json, requires_auth
 from cacahuate.http.validation import validate_forms, validate_json, \
     validate_auth

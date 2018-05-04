@@ -81,3 +81,4 @@ TODO
 * obligar llenado ordenado de formularios
   - cambiar validación acorde a eso
 * modificar funcion Xml.load para especificar versión como un argumento aparte
+* la invalidación en multiauth invalida las respuestas de todos los usuarios

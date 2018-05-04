@@ -6,7 +6,7 @@ op: "==" -> op_eq
 expr: ref
     | string
 
-ref: "#" obj_id "." member
+ref: obj_id "." member
 
 obj_id: variable
 member: variable

@@ -480,7 +480,6 @@ def list_logs(id):
 def time_process(id):
 
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
-
     query = [
         {"$match": {"execution.id": id}},
         {"$project": {
@@ -517,7 +516,6 @@ def time_process(id):
 def list_time_process():
 
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
-
     query = [
         {"$match": {"status": "finished"}},
         {"$limit": app.config['LIMIT_DEFAULT_QUERY']},

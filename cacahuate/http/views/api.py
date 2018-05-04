@@ -19,7 +19,8 @@ from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer, User, Token, Activity, \
     Questionaire
 from cacahuate.rabbit import get_channel
-from cacahuate.xml import Xml, form_to_dict, get_node_info
+from cacahuate.xml import Xml, form_to_dict
+from cacahuate.node import make_node
 
 
 DATE_FIELDS = [
@@ -72,7 +73,7 @@ def make_name(name_string, collected_forms):
 
 
 def store_actor(node, user, execution, forms):
-    auth_ref = node.getAttribute('id')
+    auth_ref = node.id
     activity = Activity(ref=auth_ref).save()
     activity.proxy.user.set(g.user)
     activity.proxy.execution.set(execution)
@@ -169,15 +170,13 @@ def start_process():
             'where': 'request.body.process_name',
         }])
 
-    start_point = xml.start_node
+    start_point = make_node(xml.start_node)
 
     # Check for authorization
     validate_auth(start_point, g.user)
 
     # check if there are any forms present
     collected_forms = validate_forms(start_point, request.json)
-
-    node_info = get_node_info(start_point)
 
     # save the data
     execution = Execution(
@@ -186,8 +185,9 @@ def start_process():
         description=xml.description,
     ).save()
     pointer = Pointer(
-        node_id=start_point.getAttribute('id'),
-        **node_info,
+        node_id=start_point.id,
+        name=start_point.name,
+        description=start_point.description,
     ).save()
     pointer.proxy.execution.set(execution)
 
@@ -209,9 +209,7 @@ def start_process():
             'name': execution.name,
             'description': execution.description,
         },
-        'node': {**{
-            'id': start_point.getAttribute('id'),
-        }, **node_info},
+        'node': start_point.to_json(),
         'actors': [actor],
         'state': execution.get_state(),
     })
@@ -269,10 +267,12 @@ def continue_process():
             'where': 'request.body.execution_id',
         }])
 
-    xml = Xml.load(app.config, execution.process_name)
+    xml = Xml.load(app.config, execution.process_name, direct=True)
 
     try:
-        continue_point = xml.find(lambda e: e.getAttribute('id') == node_id)
+        continue_point = make_node(
+            xml.find(lambda e: e.getAttribute('id') == node_id)
+        )
     except ElementNotFound as e:
         raise BadRequest([{
             'detail': 'node_id is not a valid node',
@@ -346,9 +346,29 @@ def list_process():
             map(
                 add_form,
                 Xml.list(app.config),
-              )
-        ))
+            )
+        )),
     })
+
+
+@app.route('/v1/process/<name>', methods=['GET'])
+def find_process(name):
+    if request.method == 'GET':
+        version = request.args.get('version', '')
+        if version:
+            version = ".{}".format(version)
+        process_name = "{}{}".format(name, version)
+        try:
+            xml = Xml.load(app.config, process_name)
+        except ProcessNotFound as e:
+            raise NotFound([{
+                'detail': '{} process does not exist'
+                          .format(process_name),
+                'where': 'request.body.process_name',
+            }])
+        return jsonify({
+            'data': xml.to_json()
+        })
 
 
 @app.route('/v1/activity', methods=['GET'])
@@ -418,7 +438,11 @@ def task_read(id):
         }])
 
     forms = []
-    xml = Xml.load(app.config, pointer.proxy.execution.get().process_name)
+    xml = Xml.load(
+        app.config,
+        pointer.proxy.execution.get().process_name,
+        direct=True
+    )
     node = xml.find(lambda e: e.getAttribute('id') == pointer.node_id)
 
     for form in node.getElementsByTagName('form'):

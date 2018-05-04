@@ -4,12 +4,9 @@
         <date>2018-03-21</date>
         <name>a process without start node</name>
         <public>false</public>
-        <description>A process without start node</description>
-        <start-node>foo</start-node>
+        <description>A process that is not able to load</description>
     </process-info>
     <process>
-        <node id="mid-node" class="simple"/>
-        <connector from="mid-node" to="end-node" />
-        <node id="end-node" class="end" />
+      <action id="start" />
     </process>
 </process-spec>

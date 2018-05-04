@@ -13,8 +13,9 @@ XML_ATTRIBUTES = {
     'date': str,
     'name': str,
     'description': lambda x: x,
-    'start-node': lambda x: x,
 }
+
+NODES = ('action', 'exit')
 
 
 class Xml:
@@ -52,17 +53,16 @@ class Xml:
 
             setattr(self, attr, func(get_text(node)))
 
-        start_node_id = getattr(self, 'start-node')
         self.start_node_consumed = True
 
         try:
             self.start_node = self.find(
-                lambda e: e.getAttribute('id') == start_node_id
+                lambda e: e.tagName == 'action'
             )
             self.start_node_consumed = False
         except ElementNotFound:
             raise MalformedProcess(
-                'Process does not have the start node'
+                'Process does not have nodes'
             )
 
     @classmethod
@@ -78,11 +78,27 @@ class Xml:
             # skip looking for the most recent version
             return Xml(config, common_name)
 
+        try:
+            name, version = common_name.split('.')
+        except ValueError:
+            name, version = common_name, None
+
         files = reversed(sorted(os.listdir(config['XML_PATH'])))
 
         for filename in files:
-            if filename.startswith(common_name):
-                return Xml(config, filename)
+            try:
+                fname, fversion, _ = filename.split('.')
+            except ValueError:
+                # Process with malformed name, sorry
+                continue
+
+            if fname == name:
+                if version:
+                    if fversion == version:
+                        return Xml(config, filename)
+                else:
+                    return Xml(config, filename)
+
         else:
             raise ProcessNotFound(common_name)
 
@@ -91,7 +107,7 @@ class Xml:
         by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed
         for this task. '''
 
-        ITERABLES = ('node', 'connector', 'process-info')
+        ITERABLES = ('process-info', ) + NODES
 
         try:
             for event, node in self.parser:
@@ -124,7 +140,7 @@ class Xml:
                 return element
 
         raise ElementNotFound(
-            'node or edge matching the given condition was not found'
+            'node matching the given condition was not found'
         )
 
     @classmethod
@@ -168,29 +184,6 @@ class Xml:
             'description': self.description,
             'versions': self.versions,
         }
-
-
-def resolve_params(filter_node, execution=None):
-    computed_params = {}
-
-    for param in filter_node.getElementsByTagName('param'):
-        if execution is not None and param.getAttribute('type') == 'ref':
-            user_ref = get_text(param).split('#')[1].strip()
-
-            try:
-                actor = next(
-                    execution.proxy.actors.q().filter(ref=user_ref)
-                )
-
-                value = actor.proxy.user.get().identifier
-            except StopIteration:
-                value = None
-        else:
-            value = get_text(param)
-
-        computed_params[param.getAttribute('name')] = value
-
-    return computed_params
 
 
 def get_node_info(node):
@@ -272,61 +265,6 @@ def get_form_specs(node):
         })
 
     return specs
-
-
-@comment
-def etree_from_list(root: Element, nodes: [Element]) -> 'ElementTree':
-    ''' Returns a built ElementTree from the list of its members '''
-    root = Element(root.tag, attrib=root.attrib)
-    root.extend(nodes)
-
-    return ElementTree(root)
-
-
-@comment
-def nodes_from(node: Element, graph):
-    ''' returns an iterator over the (node, edge)s that can be reached from
-    node '''
-    for edge in graph.findall(".//*[@from='{}']".format(node.attrib['id'])):
-        yield (graph.find(".//*[@id='{}']".format(edge.attrib['to'])), edge)
-
-
-@comment
-def has_no_incoming(node: Element, graph: 'root Element'):
-    ''' returns true if this node has no edges pointing to it '''
-    return len(graph.findall(".//*[@to='{}']".format(node.attrib['id']))) == 0
-
-
-@comment
-def has_edges(graph: 'root Element'):
-    ''' returns true if the graph still has edge elements '''
-    return len(graph.findall("./connector")) > 0
-
-
-@comment
-def topological_sort(start_node: Element, graph: 'Element') -> 'ElementTree':
-    ''' sorts topologically the given xml element tree, source:
-    https://en.wikipedia.org/wiki/Topological_sorting '''
-    sorted_elements = []  # Empty list that will contain the sorted elements
-    no_incoming = [(start_node, None)]  # (node, edge that points to this node)
-
-    while len(no_incoming) > 0:
-        node, edge = no_incoming.pop()
-
-        if edge is not None:
-            sorted_elements.append(edge)
-        sorted_elements.append(node)
-
-        for m, edge in nodes_from(node, graph=graph):
-            graph.remove(edge)
-
-            if has_no_incoming(m, graph):
-                no_incoming.append((m, edge))
-
-    if has_edges(graph) > 0:
-        raise Exception('graph is cyclic')
-
-    return etree_from_list(graph, sorted_elements)
 
 
 SUPPORTED_ATTRS = {

@@ -518,7 +518,6 @@ def time_process(id):
 
 @app.route('/v1/process/statistics', methods=['GET'])
 def list_time_process():
-
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
     query = [
         {"$match": {"status": "finished"}},

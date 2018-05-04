@@ -23,6 +23,8 @@ MONGO_DBNAME = 'cacahuate'
 MONGO_HISTORY_COLLECTION = 'history'
 MONGO_EXECUTION_COLLECTION = 'execution'
 
+LIMIT_DEFAULT_QUERY = 20
+
 # Time stuff
 TIMEZONE = 'UTC'
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timedelta
 from flask import json, jsonify
 import pika
 import pytest
@@ -1029,3 +1030,178 @@ def test_start_process_error_405(client, mongo, config):
     assert res.status_code == 405
     assert data['errors'][0]['detail'] == \
         "The method is not allowed for the requested URL."
+
+
+def test_time_process(client, mongo, config):
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+        'started_at': datetime.now(),
+        'finished_at': (datetime.now()+timedelta(
+                days=1, hours=2, minutes=20, seconds=45
+            )
+        ),
+        'execution': {
+            'id': "15asbs",
+        },
+        'node': {
+            'id': 'test1-node',
+        },
+    })
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+        'started_at': datetime.now(),
+        'finished_at': (datetime.now()+timedelta(
+                days=4, hours=1, minutes=10, seconds=15
+                )
+        ),
+        'execution': {
+            'id': "15asbs",
+        },
+        'node': {
+            'id': 'test2-node',
+        },
+    })
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+        'started_at': datetime.now(),
+        'finished_at': (datetime.now()+timedelta(
+                days=9, hours=15, minutes=5, seconds=55
+                )
+        ),
+        'execution': {
+            'id': "15asbs",
+        },
+        'node': {
+            'id': 'test4-node',
+        },
+    })
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+        'started_at': datetime.now(),
+        'finished_at': (datetime.now()+timedelta(
+                days=6, hours=3, minutes=30, seconds=45
+                )
+        ),
+        'execution': {
+            'id': "15asbs",
+        },
+        'node': {
+            'id': 'test3-node',
+        },
+    })
+
+    res = client.get('/v1/process/15asbs/statistic')
+    data = json.loads(res.data)
+
+    min_time = data['data'][0]['min']
+    millis = int(min_time*1000)
+    seconds = (millis/1000) % 60
+    seconds = int(seconds)
+    minutes = (millis/(1000*60)) % 60
+    minutes = int(minutes)
+    hours = (millis/(1000*60*60)) % 24
+    hours = int(hours)
+    days = (millis/(1000*60*60*24))
+    days = int(days)
+
+    assert days == 1
+    assert hours == 2
+    assert minutes == 20
+    assert seconds == 45
+
+    min_time = data['data'][0]['max']
+    millis = int(min_time*1000)
+    seconds = (millis/1000) % 60
+    seconds = int(seconds)
+    minutes = (millis/(1000*60)) % 60
+    minutes = int(minutes)
+    hours = (millis/(1000*60*60)) % 24
+    hours = int(hours)
+    days = (millis/(1000*60*60*24))
+    days = int(days)
+
+    assert days == 9
+    assert hours == 15
+    assert minutes == 5
+    assert seconds == 55
+
+
+def test_list_time_process(client, mongo, config):
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        'started_at': datetime.now(),
+        'finished_at': (datetime.now()+timedelta(
+                days=3, hours=14, minutes=40, seconds=5
+                )
+        ),
+        'status': 'finished',
+        'id': 'odlekifjdnth'
+
+    })
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        'started_at': datetime.now(),
+        'finished_at': (datetime.now()+timedelta(
+                days=2, hours=4, minutes=10, seconds=35
+                )
+        ),
+        'status': 'finished',
+        'id': 'dlsmdjgidps'
+
+    })
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        'started_at': datetime.now(),
+        'finished_at': (datetime.now()+timedelta(
+                days=6, hours=7, minutes=43, seconds=18
+                )
+        ),
+        'status': 'finished',
+        'id': 'ldkfijrjfhd'
+
+    })
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        'started_at': datetime.now(),
+        'finished_at': (datetime.now()+timedelta(
+                days=5, hours=25, minutes=12, seconds=15
+                )
+        ),
+        'status': 'finished',
+        'id': 'lfkdirjfhdsl'
+
+    })
+
+    res = client.get('/v1/process/statistic')
+    data = json.loads(res.data)
+
+    min_time = data['data'][0]['min']
+    millis = int(min_time*1000)
+    seconds = (millis/1000) % 60
+    seconds = int(seconds)
+    minutes = (millis/(1000*60)) % 60
+    minutes = int(minutes)
+    hours = (millis/(1000*60*60)) % 24
+    hours = int(hours)
+    days = (millis/(1000*60*60*24))
+    days = int(days)
+
+    assert days == 2
+    assert hours == 4
+    assert minutes == 10
+    assert seconds == 35
+
+    min_time = data['data'][0]['max']
+    millis = int(min_time*1000)
+    seconds = (millis/1000) % 60
+    seconds = int(seconds)
+    minutes = (millis/(1000*60)) % 60
+    minutes = int(minutes)
+    hours = (millis/(1000*60*60)) % 24
+    hours = int(hours)
+    days = (millis/(1000*60*60*24))
+    days = int(days)
+
+    assert days == 6
+    assert hours == 7
+    assert minutes == 43
+    assert seconds == 18

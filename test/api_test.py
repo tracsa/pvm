@@ -1004,7 +1004,7 @@ def test_node_statistics(client, mongo, config):
             'started_at': started_at,
             'finished_at': finished_at,
             'execution': {
-                'id': EXECUTION_ID,
+                'id': config["EXECUTION_ID_TEST"],
             },
             'node': {
                 'id': node_id,
@@ -1012,29 +1012,32 @@ def test_node_statistics(client, mongo, config):
         }
 
     mongo[config["MONGO_HISTORY_COLLECTION"]].insert_many([
-        make_node_reg('test1', make_date(), make_date()),
-        make_node_reg('test2', make_date(), make_date()),
-        make_node_reg('test1', make_date(), make_date()),
-        make_node_reg('test2', make_date(), make_date()),
+        make_node_reg('test1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
+        make_node_reg('test2', make_date(), make_date(2018, 5, 10, 6, 3, 3)),
+        make_node_reg('test1', make_date(), make_date(2018, 5, 10, 8, 2, 9)),
+        make_node_reg('test2', make_date(), make_date(2018, 5, 10, 3, 4, 5)),
         make_node_reg('test2', make_date(), None),
     ])
 
-    res = client.get('/v1/process/{}/statistics'.format(EXECUTION_ID))
-
+    res = client.get('/v1/process/{}/statistics'.format(
+        config["EXECUTION_ID_TEST"]
+    ))
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
             {
-                'id': 'test1',
-                'average': 124,
-                'max': 123,
-                'min': 123,
+                'average': 540217.5,
+                'execution_id': 'execution_test',
+                'max': 547329.0,
+                'min': 533106.0,
+                'node': 'test1'
             },
             {
-                'id': 'test2',
-                'average': 124,
-                'max': 123,
-                'min': 123,
+                'average': 534814.0,
+                'execution_id': 'execution_test',
+                'max': 540183.0,
+                'min': 529445.0,
+                'node': 'test2'
             },
         ],
     }
@@ -1053,10 +1056,10 @@ def test_process_statistics(client, mongo, config):
         }
 
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_many([
-        make_exec_reg('p1', make_date(), make_date()),
-        make_exec_reg('p2', make_date(), make_date()),
-        make_exec_reg('p1', make_date(), make_date()),
-        make_exec_reg('p2', make_date(), make_date()),
+        make_exec_reg('p1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
+        make_exec_reg('p2', make_date(), make_date(2018, 5, 10, 10, 34, 32)),
+        make_exec_reg('p1', make_date(), make_date(2018, 5, 11, 22, 41, 10)),
+        make_exec_reg('p2', make_date(), make_date(2018, 6, 23, 8, 15, 1)),
     ])
 
     res = client.get('/v1/process/statistics')
@@ -1065,20 +1068,17 @@ def test_process_statistics(client, mongo, config):
     assert json.loads(res.data) == {
         'data': [
             {
-                'process': {
-                    'id': 'p1',
-                },
-                'average': 123,
-                'min': 123,
-                'max': 123,
+                'average': 609788.0,
+                'max': 686470.0,
+                'min': 533106.0,
+                'process': 'p1',
             },
             {
-                'process': {
-                    'id': 'p2',
-                },
-                'average': 123,
-                'min': 123,
-                'max': 123,
+                'average': 2453086.5,
+                'max': 4349701.0,
+                'min': 556472.0,
+                'process': 'p2',
             },
+
         ],
     }

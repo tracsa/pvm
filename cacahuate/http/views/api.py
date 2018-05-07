@@ -483,13 +483,16 @@ def time_process(id):
         {"$match": {"execution.id": id}},
         {"$limit": app.config['LIMIT_DEFAULT_QUERY']},
         {"$project": {
-            "conjunct": "$execution.id",
+            "execution": "$execution.id",
+            "node": "$node.id",
             "difference_time": {
                 "$subtract": ["$finished_at", "$started_at"],
             },
         }},
         {"$group": {
-            "_id": "$conjunct",
+            "_id": {"execution": "$execution", "node": "$node"},
+            "execution_id": {"$first": "$execution"},
+            "node": {"$first": "$node"},
             "max": {
                 "$max": {
                     "$divide": ["$difference_time", 1000],
@@ -506,6 +509,7 @@ def time_process(id):
                 },
             },
         }},
+        {"$sort": {"execution": 1, "node": 1}}
     ]
 
     return jsonify({
@@ -521,13 +525,16 @@ def list_time_process():
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
     query = [
         {"$match": {"status": "finished"}},
+
         {"$limit": app.config['LIMIT_DEFAULT_QUERY']},
-        {"$project": {"status": "$status", "difference_time": {
+        {"$project": {"difference_time": {
             "$subtract": ["$finished_at", "$started_at"]
-            }
+            }, "process":{"id": "$process.id"},
         }},
+
         {"$group": {
-            "_id": "$status",
+            "_id": "$process.id",
+            "process": {"$first": "$process.id"},
             "max": {
                 "$max": {
                     "$divide": ["$difference_time", 1000],
@@ -543,7 +550,9 @@ def list_time_process():
                     "$divide": ["$difference_time", 1000],
                 },
             },
+
         }},
+        {"$sort": {"process": 1}}
     ]
 
     return jsonify({

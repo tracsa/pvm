@@ -1,5 +1,5 @@
 from ldap3 import Server, Connection, ALL
-from ldap3.core.exceptions import LDAPBindError, LDAPSocketOpenError, LDAPCursorError
+from ldap3.core.exceptions import LDAPBindError, LDAPSocketOpenError
 
 from cacahuate.auth.base import BaseAuthProvider, BaseUser
 from cacahuate.errors import AuthenticationError
@@ -57,7 +57,11 @@ class LdapAuthProvider(BaseAuthProvider):
         except LDAPBindError:
             raise AuthenticationError
 
-        conn.search(base, '(CN={})'.format(username), attributes=['mail', 'givenName', 'sn'])
+        conn.search(
+            base,
+            '(CN={})'.format(username),
+            attributes=['mail', 'givenName', 'sn']
+        )
 
         entry = conn.entries[0]
 

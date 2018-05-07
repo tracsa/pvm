@@ -27,7 +27,8 @@ def signin(backend):
 
     return jsonify({
         'data': {
-            'username': user.identifier,
+            'username': backend_user.get_identifier(),
+            'humanname': backend_user.get_human_name(),
             'token': token.token,
         }
     })

@@ -9,7 +9,6 @@ from functools import reduce
 from operator import and_
 import json
 import case_conversion
-import re
 
 from cacahuate.errors import ValidationErrors, InputError,\
     RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
@@ -46,29 +45,13 @@ def validate_form(form_specs, index, data):
     return collected_inputs
 
 
-def get_form_limits(attr):
-    answer = (1, 1)
-
-    if attr:
-        nums = re.compile(r'\d+').findall(attr)
-        nums = list(map(lambda x: int(x), nums))
-        if len(nums) == 1:
-            answer = (nums[0], nums[0])
-        elif len(nums) == 2:
-            answer = (nums[0], nums[1])
-        else:
-            answer = (0, float('inf'))
-
-    return answer
-
-
 def validate_form_spec(form_specs, associated_data) -> dict:
     ''' Validates the given data against the spec contained in form. In case of
     failure raises an exception. In case of success returns the validated data.
     '''
     collected_specs = []
 
-    min, max = get_form_limits(form_specs.multiple)
+    min, max = form_specs.multiple
 
     if len(associated_data) < min:
         raise BadRequest([{

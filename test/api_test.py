@@ -1004,7 +1004,7 @@ def test_node_statistics(client, mongo, config):
             'started_at': started_at,
             'finished_at': finished_at,
             'execution': {
-                'id': config["EXECUTION_ID_TEST"],
+                'id': EXECUTION_ID,
             },
             'node': {
                 'id': node_id,
@@ -1019,22 +1019,20 @@ def test_node_statistics(client, mongo, config):
         make_node_reg('test2', make_date(), None),
     ])
 
-    res = client.get('/v1/process/{}/statistics'.format(
-        config["EXECUTION_ID_TEST"]
-    ))
+    res = client.get('/v1/process/{}/statistics'.format(EXECUTION_ID))
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
             {
                 'average': 540217.5,
-                'execution_id': 'execution_test',
+                'execution_id': EXECUTION_ID,
                 'max': 547329.0,
                 'min': 533106.0,
                 'node': 'test1'
             },
             {
                 'average': 534814.0,
-                'execution_id': 'execution_test',
+                'execution_id': EXECUTION_ID,
                 'max': 540183.0,
                 'min': 529445.0,
                 'node': 'test2'

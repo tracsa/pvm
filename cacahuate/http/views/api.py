@@ -480,7 +480,7 @@ def time_process(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
     query = [
         {"$match": {"execution.id": id}},
-        {"$limit": app.config['LIMIT_DEFAULT_QUERY']},
+        {"$limit": app.config['DEFAULT_LIMIT']},
         {"$project": {
             "execution": "$execution.id",
             "node": "$node.id",
@@ -525,7 +525,7 @@ def list_time_process():
     query = [
         {"$match": {"status": "finished"}},
 
-        {"$limit": app.config['LIMIT_DEFAULT_QUERY']},
+        {"$limit": app.config['DEFAULT_LIMIT']},
         {"$project": {"difference_time": {
             "$subtract": ["$finished_at", "$started_at"]
             }, "process":{"id": "$process.id"},

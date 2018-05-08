@@ -23,8 +23,8 @@ MONGO_DBNAME = 'cacahuate'
 MONGO_HISTORY_COLLECTION = 'history'
 MONGO_EXECUTION_COLLECTION = 'execution'
 
-LIMIT_DEFAULT_QUERY = 20
-EXECUTION_ID_TEST = 'execution_test'
+# Pagination
+DEFAULT_LIMIT = 20
 
 # Time stuff
 TIMEZONE = 'UTC'

@@ -72,11 +72,10 @@ TODO
     - <validation>
     - <subprocess>
     - <end>
-* probar input tipo aprobación
+* probar nodo tipo aprobación
     - aprobar camina hacia enfrente
     - no aprobar sube al primer elemento inválido
     - información inválida nunca pasa validación de formulario
-* obligar llenado ordenado de formularios
-    - cambiar validación acorde a eso
-* modificar funcion Xml.load para especificar versión como un argumento aparte
+    - después de una regresión, nodos que ya pasen validacion se saltan
 * la invalidación en multiauth invalida las respuestas de todos los usuarios
+* modificar funcion Xml.load para especificar versión como un argumento aparte

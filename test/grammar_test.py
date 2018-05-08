@@ -11,6 +11,6 @@ def test_condition():
 
     con = Condition(exc)
 
-    assert con.parse('#form1.answer=="yes"')
-    assert not con.parse('#form1.answer == "no"')
-    assert con.parse('#form2.answer =="no"')
+    assert con.parse('form1.answer=="yes"')
+    assert not con.parse('form1.answer == "no"')
+    assert con.parse('form2.answer =="no"')

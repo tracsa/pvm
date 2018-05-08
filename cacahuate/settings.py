@@ -44,6 +44,7 @@ REDIS_DB = 0
 LDAP_URI = "ldap://localhost:389"
 LDAP_SSL = True
 LDAP_DOMAIN = "local"
+LDAP_BASE = "DC=local"
 
 # custom login providers
 LOGIN_PROVIDERS = {

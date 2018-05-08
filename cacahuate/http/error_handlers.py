@@ -31,7 +31,7 @@ def handle_404(e):
 
 
 @app.errorhandler(405)
-def handle_404(e):
+def handle_405(e):
     return jsonify({
         'errors': [{
             'detail': e.description,

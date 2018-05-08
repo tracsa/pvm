@@ -67,17 +67,16 @@ TODO
 
 * Cada campo de un formulario puede estar en uno de tres estados:
     - unfilled, valid, invalid
-* la ejecución de un nodo depende de su condición
 * ciudadanos de primera clase:
     - <action>
+    - <validation>
     - <subprocess>
     - <end>
-* quitar símbolo de gato de los condicionales en todas partes
 * probar input tipo aprobación
     - aprobar camina hacia enfrente
     - no aprobar sube al primer elemento inválido
     - información inválida nunca pasa validación de formulario
-* considerar ids en nodos, no deberían ser necesarios
 * obligar llenado ordenado de formularios
   - cambiar validación acorde a eso
 * modificar funcion Xml.load para especificar versión como un argumento aparte
+* la invalidación en multiauth invalida las respuestas de todos los usuarios

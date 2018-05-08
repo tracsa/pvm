@@ -25,7 +25,7 @@ class Form:
 
     def __init__(self, element):
         self.ref = element.getAttribute('id')
-        self.calc_range(element)
+        self.multiple = self.calc_range(element.getAttribute('multiple'))
 
         # Load inputs
         self.inputs = []
@@ -33,8 +33,7 @@ class Form:
         for input_el in element.getElementsByTagName('input'):
             self.inputs.append(make_input(input_el))
 
-    def calc_range(self, element):
-        attr = element.getAttribute('multiple')
+    def calc_range(self, attr):
         range = (1, 1)
 
         if attr:
@@ -47,7 +46,7 @@ class Form:
             else:
                 range = (0, float('inf'))
 
-        self.multiple = range
+        return range
 
 
 class Node:

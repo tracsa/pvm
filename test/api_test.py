@@ -1,11 +1,14 @@
 from datetime import datetime
+from datetime import timedelta
 from flask import json, jsonify
 import pika
 import pytest
 from cacahuate.handler import Handler
 from cacahuate.models import Pointer, Execution, Activity, Questionaire
 
-from .utils import make_auth, make_activity, make_pointer, make_user
+from .utils import make_auth, make_activity, make_pointer, make_user, make_date
+
+EXECUTION_ID = '15asbs'
 
 
 def test_continue_process_asks_for_user(client):
@@ -507,6 +510,82 @@ def test_simple_start(client, mocker, mongo, config):
     }
 
 
+def test_start_with_correct_form_order(client, mocker, mongo, config):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'og',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201
+
+
+def test_start_with_incorrect_form_order(client, mocker, mongo, config):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'og',
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+
+
 def test_list_processes(client):
     res = client.get('/v1/process')
 
@@ -571,7 +650,7 @@ def test_list_processes_multiple(client):
             },
             {
                 'ref': 'multiple-form',
-                'multiple': 'multiple',
+                'multiple': '1-10',
                 'inputs': [
                     {
                         'type': 'text',
@@ -681,7 +760,7 @@ def test_logs_activity(mongo, client, config):
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
-            'id': "15asbs",
+            'id': EXECUTION_ID,
         },
         'node': {
             'id': 'mid-node',
@@ -692,14 +771,14 @@ def test_logs_activity(mongo, client, config):
         'started_at': datetime(2018, 4, 1, 21, 50),
         'finished_at': None,
         'execution': {
-            'id': "15asbs",
+            'id': EXECUTION_ID,
         },
         'node': {
             'id': '4g9lOdPKmRUf2',
         },
     })
 
-    res = client.get('/v1/log/15asbs?node_id=mid-node')
+    res = client.get('/v1/log/{}?node_id=mid-node'.format(EXECUTION_ID))
 
     ans = json.loads(res.data)
 
@@ -709,7 +788,7 @@ def test_logs_activity(mongo, client, config):
             'started_at': '2018-04-01T21:45:00+00:00',
             'finished_at': None,
             'execution': {
-                'id': '15asbs',
+                'id': EXECUTION_ID,
             },
             'node': {
                 'id': 'mid-node',
@@ -993,3 +1072,87 @@ def test_start_process_error_405(client, mongo, config):
     assert res.status_code == 405
     assert data['errors'][0]['detail'] == \
         "The method is not allowed for the requested URL."
+
+
+def test_node_statistics(client, mongo, config):
+    def make_node_reg(node_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'execution': {
+                'id': EXECUTION_ID,
+            },
+            'node': {
+                'id': node_id,
+            },
+        }
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_many([
+        make_node_reg('test1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
+        make_node_reg('test2', make_date(), make_date(2018, 5, 10, 6, 3, 3)),
+        make_node_reg('test1', make_date(), make_date(2018, 5, 10, 8, 2, 9)),
+        make_node_reg('test2', make_date(), make_date(2018, 5, 10, 3, 4, 5)),
+        make_node_reg('test2', make_date(), None),
+    ])
+
+    res = client.get('/v1/process/{}/statistics'.format(EXECUTION_ID))
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': [
+            {
+                'average': 540217.5,
+                'execution_id': EXECUTION_ID,
+                'max': 547329.0,
+                'min': 533106.0,
+                'node': 'test1'
+            },
+            {
+                'average': 534814.0,
+                'execution_id': EXECUTION_ID,
+                'max': 540183.0,
+                'min': 529445.0,
+                'node': 'test2'
+            },
+        ],
+    }
+
+
+def test_process_statistics(client, mongo, config):
+    def make_exec_reg(process_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'status': 'finished',
+            'process': {
+                'id': process_id,
+                'version': 'v1',
+            },
+        }
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_many([
+        make_exec_reg('p1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
+        make_exec_reg('p2', make_date(), make_date(2018, 5, 10, 10, 34, 32)),
+        make_exec_reg('p1', make_date(), make_date(2018, 5, 11, 22, 41, 10)),
+        make_exec_reg('p2', make_date(), make_date(2018, 6, 23, 8, 15, 1)),
+    ])
+
+    res = client.get('/v1/process/statistics')
+
+    assert res.status_code == 200
+    assert json.loads(res.data) == {
+        'data': [
+            {
+                'average': 609788.0,
+                'max': 686470.0,
+                'min': 533106.0,
+                'process': 'p1',
+            },
+            {
+                'average': 2453086.5,
+                'max': 4349701.0,
+                'min': 556472.0,
+                'process': 'p2',
+            },
+
+        ],
+    }

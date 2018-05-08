@@ -7,7 +7,6 @@ from cacahuate.indexes import create_indexes
 import os
 import time
 
-from cacahuate.http.forms import bind_forms
 from cacahuate.models import bind_models
 
 # The flask application
@@ -24,7 +23,6 @@ time.tzset()
 
 # Bind the database
 cora = Coralillo(app)
-bind_forms(cora._engine)
 bind_models(cora._engine)
 
 # The database

@@ -11,7 +11,6 @@ from jinja2 import Template
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
     Forbidden
-from cacahuate.http.forms import ContinueProcess
 from cacahuate.http.middleware import requires_json, requires_auth
 from cacahuate.http.validation import validate_forms, validate_json, \
     validate_auth
@@ -472,5 +471,92 @@ def list_logs(id):
             collection.find(query).sort([
                 ('started_at', pymongo.DESCENDING)
             ])
+        )),
+    })
+
+
+@app.route('/v1/process/<id>/statistics', methods=['GET'])
+def time_process(id):
+    collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
+    query = [
+        {"$match": {"execution.id": id}},
+        {"$limit": app.config['DEFAULT_LIMIT']},
+        {"$project": {
+            "execution": "$execution.id",
+            "node": "$node.id",
+            "difference_time": {
+                "$subtract": ["$finished_at", "$started_at"],
+            },
+        }},
+        {"$group": {
+            "_id": {"execution": "$execution", "node": "$node"},
+            "execution_id": {"$first": "$execution"},
+            "node": {"$first": "$node"},
+            "max": {
+                "$max": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+            "min": {
+                "$min": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+            "average": {
+                "$avg": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+        }},
+        {"$sort": {"execution": 1, "node": 1}}
+    ]
+
+    return jsonify({
+        "data": list(map(
+            json_prepare,
+            collection.aggregate(query)
+        )),
+    })
+
+
+@app.route('/v1/process/statistics', methods=['GET'])
+def list_time_process():
+    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+    query = [
+        {"$match": {"status": "finished"}},
+
+        {"$limit": app.config['DEFAULT_LIMIT']},
+        {"$project": {"difference_time": {
+            "$subtract": ["$finished_at", "$started_at"]
+            }, "process":{"id": "$process.id"},
+        }},
+
+        {"$group": {
+            "_id": "$process.id",
+            "process": {"$first": "$process.id"},
+            "max": {
+                "$max": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+            "min": {
+                "$min": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+            "average": {
+                "$avg": {
+                    "$divide": ["$difference_time", 1000],
+                },
+            },
+
+        }},
+        {"$sort": {"process": 1}}
+    ]
+
+    return jsonify({
+        "data": list(map(
+            json_prepare,
+            collection.aggregate(query)
         )),
     })

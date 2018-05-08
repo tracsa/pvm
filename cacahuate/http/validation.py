@@ -9,6 +9,7 @@ from functools import reduce
 from operator import and_
 import json
 import case_conversion
+import re
 
 from cacahuate.errors import ValidationErrors, InputError,\
     RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
@@ -19,27 +20,6 @@ from cacahuate.xml import input_to_dict, get_form_specs
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
 from cacahuate import inputs
-
-
-def get_associated_data(ref, data, min, max):
-    count = 0
-    forms = []
-
-    for index, form in enumerate(data.get('form_array', [])):
-        if form['ref'] == ref:
-            forms.append((index, form))
-            count += 1
-
-        if count == max:
-            break
-
-    if count < min:
-        raise BadRequest([{
-            'detail': 'form count lower than expected for ref {}'.format(ref),
-            'where': 'request.body.form_array',
-        }])
-
-    return forms
 
 
 def validate_form(form_specs, index, data):
@@ -66,20 +46,43 @@ def validate_form(form_specs, index, data):
     return collected_inputs
 
 
-def validate_form_spec(form_specs, data) -> dict:
+def get_form_limits(attr):
+    answer = (1, 1)
+
+    if attr:
+        nums = re.compile(r'\d+').findall(attr)
+        nums = list(map(lambda x: int(x), nums))
+        if len(nums) == 1:
+            answer = (nums[0], nums[0])
+        elif len(nums) == 2:
+            answer = (nums[0], nums[1])
+        else:
+            answer = (0, float('inf'))
+
+    return answer
+
+
+def validate_form_spec(form_specs, associated_data) -> dict:
     ''' Validates the given data against the spec contained in form. In case of
     failure raises an exception. In case of success returns the validated data.
     '''
     collected_specs = []
 
-    if form_specs.multiple:
-        max = float('inf')
-        min = 0
-    else:
-        max = 1
-        min = 1
+    min, max = get_form_limits(form_specs.multiple)
 
-    for index, form in get_associated_data(form_specs.ref, data, min, max):
+    if len(associated_data) < min:
+        raise BadRequest([{
+            'detail': 'form count lower than expected for ref {}'.format(form_specs.ref),
+            'where': 'request.body.form_array',
+        }])
+
+    if len(associated_data) > max:
+        raise BadRequest([{
+            'detail': 'form count higher than expected for ref {}'.format(form_specs.ref),
+            'where': 'request.body.form_array',
+        }])
+
+    for index, form in associated_data:
         collected_specs.append(validate_form(
             form_specs,
             index,
@@ -99,11 +102,22 @@ def validate_forms(node, json_data):
     collected_forms = []
     errors = []
 
-    for form in node.form_array:
+    index = 0
+    form_array = json_data.get('form_array', [])
+    for form_specs in node.form_array:
+        # Ignore unexpected forms
+        while len(form_array) > index and form_array[index]['ref'] != form_specs.ref:
+            index += 1;
+
+        # Collect expected forms
+        forms = []
+        while len(form_array) > index and form_array[index]['ref'] == form_specs.ref:
+            forms.append((index, form_array[index]))
+            index += 1
+
         try:
-            for data in validate_form_spec(form, json_data):
-                # because a form might have multiple responses
-                collected_forms.append((form.ref, data))
+            for data in validate_form_spec(form_specs, forms):
+                collected_forms.append((form_specs.ref, data))
         except ValidationErrors as e:
             errors += e.errors
 

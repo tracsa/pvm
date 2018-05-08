@@ -12,7 +12,7 @@
         <form id="single-form">
           <input type="text" name="name" required="required" />
         </form>
-        <form id="multiple-form" multiple="multiple">
+        <form id="multiple-form" multiple="1-10">
           <input type="text" name="phone" required="required" />
         </form>
       </form-array>

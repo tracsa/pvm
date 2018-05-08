@@ -72,13 +72,17 @@ def validate_form_spec(form_specs, associated_data) -> dict:
 
     if len(associated_data) < min:
         raise BadRequest([{
-            'detail': 'form count lower than expected for ref {}'.format(form_specs.ref),
+            'detail': 'form count lower than expected for ref {}'.format(
+                form_specs.ref
+            ),
             'where': 'request.body.form_array',
         }])
 
     if len(associated_data) > max:
         raise BadRequest([{
-            'detail': 'form count higher than expected for ref {}'.format(form_specs.ref),
+            'detail': 'form count higher than expected for ref {}'.format(
+                form_specs.ref
+            ),
             'where': 'request.body.form_array',
         }])
 
@@ -105,19 +109,21 @@ def validate_forms(node, json_data):
     index = 0
     form_array = json_data.get('form_array', [])
     for form_specs in node.form_array:
+        ref = form_specs.ref
+
         # Ignore unexpected forms
-        while len(form_array) > index and form_array[index]['ref'] != form_specs.ref:
-            index += 1;
+        while len(form_array) > index and form_array[index]['ref'] != ref:
+            index += 1
 
         # Collect expected forms
         forms = []
-        while len(form_array) > index and form_array[index]['ref'] == form_specs.ref:
+        while len(form_array) > index and form_array[index]['ref'] == ref:
             forms.append((index, form_array[index]))
             index += 1
 
         try:
             for data in validate_form_spec(form_specs, forms):
-                collected_forms.append((form_specs.ref, data))
+                collected_forms.append((ref, data))
         except ValidationErrors as e:
             errors += e.errors
 

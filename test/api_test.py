@@ -1131,7 +1131,7 @@ def test_process_statistics_pagination(client, mongo, config):
         make_exec_reg('p2', make_date(), make_date(2018, 6, 23, 8, 15, 1)),
     ])
 
-    res = client.get('/v1/process/statistics?offset=1&limit=1')
+    res = client.get('/v1/process/statistics?offset=1&limit=asdasd')
 
     assert res.status_code == 200
-    assert len(json.loads(res.data)['data']) == 1
+    assert len(json.loads(res.data)['data']) == 2

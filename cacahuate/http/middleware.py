@@ -67,7 +67,11 @@ def requires_auth(view):
 def limit_offset(view):
     @wraps(view)
     def wrapper(*args, **kwargs):
-        g.offset = int(request.args.get('offset', app.config['MONGO_OFFSET_COLLECTION']))
-        g.limit = int(request.args.get('limit', app.config['MONGO_LIMIT_COLLECTION']))
+        g.offset = int(request.args.get(
+            'offset', app.config['MONGO_OFFSET_COLLECTION']
+        ))
+        g.limit = int(request.args.get(
+            'limit', app.config['MONGO_LIMIT_COLLECTION']
+        ))
         return view(*args, **kwargs)
     return wrapper

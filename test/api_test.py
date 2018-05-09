@@ -1004,7 +1004,7 @@ def test_node_statistics(client, mongo, config):
             'started_at': started_at,
             'finished_at': finished_at,
             'execution': {
-                'id': EXECUTION_ID,
+                'id': config['EXECUTION_ID_TEST'],
             },
             'node': {
                 'id': node_id,
@@ -1019,20 +1019,22 @@ def test_node_statistics(client, mongo, config):
         make_node_reg('test2', make_date(), None),
     ])
 
-    res = client.get('/v1/process/{}/statistics'.format(EXECUTION_ID))
+    res = client.get('/v1/process/{}/statistics'.format(
+        config['EXECUTION_ID_TEST']
+    ))
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
             {
                 'average': 540217.5,
-                'execution_id': EXECUTION_ID,
+                'execution_id': config['EXECUTION_ID_TEST'],
                 'max': 547329.0,
                 'min': 533106.0,
                 'node': 'test1'
             },
             {
                 'average': 534814.0,
-                'execution_id': EXECUTION_ID,
+                'execution_id': config['EXECUTION_ID_TEST'],
                 'max': 540183.0,
                 'min': 529445.0,
                 'node': 'test2'
@@ -1081,13 +1083,14 @@ def test_process_statistics(client, mongo, config):
         ],
     }
 
-def test_node_statistics(client, mongo, config):
+
+def test_node_statistics_pagination(client, mongo, config):
     def make_node_reg(node_id, started_at, finished_at):
         return {
             'started_at': started_at,
             'finished_at': finished_at,
             'execution': {
-                'id': EXECUTION_ID,
+                'id': config['EXECUTION_ID_TEST'],
             },
             'node': {
                 'id': node_id,
@@ -1102,8 +1105,11 @@ def test_node_statistics(client, mongo, config):
         make_node_reg('test2', make_date(), None),
     ])
 
-    res = client.get('/v1/process/{}/statistics/pagination'.format(EXECUTION_ID))
+    res = client.get('/v1/process/{}/statistics?offset=1&limit=2'.format(
+        config['EXECUTION_ID_TEST']
+    ))
     assert res.status_code == 200
+    assert len(json.loads(res.data)['data']) == 2
 
 
 def test_process_statistics_pagination(client, mongo, config):
@@ -1125,9 +1131,7 @@ def test_process_statistics_pagination(client, mongo, config):
         make_exec_reg('p2', make_date(), make_date(2018, 6, 23, 8, 15, 1)),
     ])
 
-    res = client.get('/v1/process/statistics/pagination')
+    res = client.get('/v1/process/statistics?offset=1&limit=1')
 
     assert res.status_code == 200
-
-    print (json.loads(res.data))
-    assert False
+    assert len(json.loads(res.data)['data']) == 1

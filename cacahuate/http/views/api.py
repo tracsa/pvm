@@ -476,7 +476,6 @@ def list_logs(id):
     })
 
 
-
 @app.route('/v1/process/<id>/statistics', methods=['GET'])
 @limit_offset
 def time_process(id):

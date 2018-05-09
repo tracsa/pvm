@@ -24,6 +24,9 @@ MONGO_HISTORY_COLLECTION = 'history'
 MONGO_EXECUTION_COLLECTION = 'execution'
 LIMIT_DEFAULT_QUERY = 20
 
+# Pagination
+DEFAULT_LIMIT = 20
+
 # Time stuff
 TIMEZONE = 'UTC'
 
@@ -42,6 +45,7 @@ REDIS_DB = 0
 LDAP_URI = "ldap://localhost:389"
 LDAP_SSL = True
 LDAP_DOMAIN = "local"
+LDAP_BASE = "DC=local"
 
 # custom login providers
 LOGIN_PROVIDERS = {

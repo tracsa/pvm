@@ -440,8 +440,28 @@ def test_start_process(client, mocker, config, mongo):
 
 
 def test_regression_requirements(client):
-    assert False, 'execution_id is valid'
-    assert False, 'node_id is valid'
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    exc = ptr.proxy.execution.get()
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': 'execution_id is required',
+                'code': 'validation.required',
+                'where': 'request.body.execution_id',
+            },
+        ],
+    }
+
     assert False, 'response is either approved or rejected'
     assert False, 'if response is rejected at least one field is present'
     assert False, 'all the fields present are listed in this nodes dependencies'

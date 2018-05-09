@@ -160,6 +160,11 @@ class Action(Node):
         }
 
 
+class Validation(Node):
+
+    pass
+
+
 class Exit(Node):
     ''' A node that kills an execution with some status '''
 

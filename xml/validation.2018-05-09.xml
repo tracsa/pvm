@@ -1,0 +1,24 @@
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-05-09</date>
+    <name>Validation</name>
+    <public>false</public>
+    <description>A process with a validation node</description>
+  </process-info>
+  <process>
+    <action id="start-node">
+      <form-array>
+        <form id="work">
+          <input type="text" name="task"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <validation id="approval-node" >
+      <dependencies>
+        <dep>work.task</dep>
+      </dependencies>
+    </validation>
+  </process>
+</process-spec>

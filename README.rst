@@ -72,10 +72,5 @@ TODO
     - <validation>
     - <subprocess>
     - <end>
-* probar nodo tipo aprobación
-    - aprobar camina hacia enfrente
-    - no aprobar sube al primer elemento inválido
-    - información inválida nunca pasa validación de formulario
-    - después de una regresión, nodos que ya pasen validacion se saltan
 * la invalidación en multiauth invalida las respuestas de todos los usuarios
 * modificar funcion Xml.load para especificar versión como un argumento aparte

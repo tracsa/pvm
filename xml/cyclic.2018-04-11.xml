@@ -15,16 +15,10 @@
       </form-array>
     </action>
 
-    <action id="approval-node" >
-      <form-array>
-        <form id="validate-simple">
-          <input name="aprove" type="approval">
-            <dependencies>
-              <dep>work.task</dep>
-            </dependencies>
-          </input>
-        </form>
-      </form-array>
-    </action>
+    <validation id="approval-node" >
+      <dependencies>
+        <dep>work.task</dep>
+      </dependencies>
+    </validation>
   </process>
 </process-spec>

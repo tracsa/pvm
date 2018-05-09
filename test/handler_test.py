@@ -491,6 +491,26 @@ def test_call_handler_delete_process(config, mongo):
     assert Activity.count() == 0
 
 
+def test_approval():
+    ''' tests that a validation node can go forward on approval '''
+    assert False
+
+
+def test_reject():
+    ''' tests that a rejection moves the pointer to a backward position '''
+    assert False
+
+
+def test_rejected_doesnt_repeat():
+    ''' asserts that a pointer moved to the past doesn't repeat a task that
+    wasn't invalidated by the rejection '''
+
+
+def test_rejected_repeats():
+    ''' asserts that a pointer moved to the past repeats the nodes that were
+    invalidated '''
+
+
 def test_resistance_unexisteng_hierarchy_backend(config):
     handler = Handler(config)
 

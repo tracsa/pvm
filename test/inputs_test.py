@@ -562,3 +562,79 @@ def test_required_inputs_with_defaults(client):
     assert False
     # file
     assert False
+
+
+def test_start_with_correct_form_order(client, mocker, mongo, config):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'og',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201
+
+
+def test_start_with_incorrect_form_order(client, mocker, mongo, config):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'og',
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400

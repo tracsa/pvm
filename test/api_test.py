@@ -278,7 +278,47 @@ def test_continue_process(client, mocker, config):
     assert pointer.id == ptr.id
 
 
-def test_start_process_simple_requires(client, mongo, config):
+def test_start_process_requirements(client):
+    # first requirement is to have authentication
+    res = client.post('/v1/execution', headers={
+        'Content-Type': 'application/json',
+    }, data=json.dumps({
+        'process_name': 'simple',
+    }))
+
+    assert res.status_code == 401
+    assert 'WWW-Authenticate' in res.headers
+    assert res.headers['WWW-Authenticate'] == \
+        'Basic realm="User Visible Realm"'
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }],
+    }
+
+    assert Execution.count() == 0
+    assert Activity.count() == 0
+
+    # next, validate the form data
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'simple',
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': "form count lower than expected for ref start-form",
+            'where': 'request.body.form_array',
+        }],
+    }
+
+    assert Execution.count() == 0
+    assert Activity.count() == 0
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -319,7 +359,7 @@ def test_start_process_simple_requires(client, mongo, config):
     assert Questionaire.count() == 0
 
 
-def test_start_process_simple(client, mocker, config, mongo):
+def test_start_process(client, mocker, config, mongo):
     mocker.patch(
         'pika.adapters.blocking_connection.'
         'BlockingChannel.basic_publish'
@@ -399,191 +439,20 @@ def test_start_process_simple(client, mocker, config, mongo):
     assert reg2['status'] == 'ongoing'
 
 
-def test_simple_requirements(client):
-    # first requirement is to have authentication
-    res = client.post('/v1/execution', headers={
-        'Content-Type': 'application/json',
-    }, data=json.dumps({
-        'process_name': 'simple',
-    }))
-
-    assert res.status_code == 401
-    assert 'WWW-Authenticate' in res.headers
-    assert res.headers['WWW-Authenticate'] == \
-        'Basic realm="User Visible Realm"'
-    assert json.loads(res.data) == {
-        'errors': [{
-            'detail': 'You must provide basic authorization headers',
-            'where': 'request.authorization',
-        }],
-    }
-
-    assert Execution.count() == 0
-    assert Activity.count() == 0
-
-    # next, validate the form data
-    user = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'simple',
-    }))
-
-    assert res.status_code == 400
-    assert json.loads(res.data) == {
-        'errors': [{
-            'detail': "form count lower than expected for ref start-form",
-            'where': 'request.body.form_array',
-        }],
-    }
-
-    assert Execution.count() == 0
-    assert Activity.count() == 0
+def test_regression_approval():
+    ''' the api for an approval '''
+    assert False
 
 
-def test_simple_start(client, mocker, mongo, config):
-    user = make_user('juan', 'Juan')
-
-    assert Execution.count() == 0
-    assert Activity.count() == 0
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'simple',
-        'form_array': [
-            {
-                'ref': 'start-form',
-                'data': {
-                    'data': 'yes',
-                },
-            },
-        ],
-    }))
-
-    assert res.status_code == 201
-
-    exc = Execution.get_all()[0]
-
-    assert json.loads(res.data) == {
-        'data': exc.to_json(),
-    }
-    # user is attached
-    actors = exc.proxy.actors.get()
-
-    assert len(actors) == 1
-
-    activity = actors[0]
-
-    assert activity.ref == 'start-node'
-    assert activity.proxy.user.get() == user
-
-    # form is attached
-    forms = exc.proxy.forms.get()
-
-    assert len(forms) == 1
-
-    form = forms[0]
-
-    assert form.ref == 'start-form'
-    assert form.data == {
-        'data': 'yes',
-    }
-
-    # mongo has a registry
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
-
-    assert reg['state'] == {
-        'forms': [{
-            'ref': 'start-form',
-            'data': {
-                'data': 'yes',
-            },
-        }],
-        'actors': [
-            {
-                'ref': 'start-node',
-                'user_id': user.id,
-            }
-        ],
-    }
+def test_regression_reject_requirements():
+    ''' the api for a reject must ensure that the rejected fields are present
+    in the description of the node'''
+    assert False
 
 
-def test_start_with_correct_form_order(client, mocker, mongo, config):
-    user = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'form-multiple',
-        'form_array': [
-            {
-                'ref': 'single-form',
-                'data': {
-                    'name': 'og',
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-        ],
-    }))
-
-    assert res.status_code == 201
-
-
-def test_start_with_incorrect_form_order(client, mocker, mongo, config):
-    user = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'form-multiple',
-        'form_array': [
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-            {
-                'ref': 'single-form',
-                'data': {
-                    'name': 'og',
-                },
-            },
-        ],
-    }))
-
-    assert res.status_code == 400
+def test_regression_reject():
+    ''' the api for a reject '''
+    assert False
 
 
 def test_list_processes(client):
@@ -664,7 +533,6 @@ def test_list_processes_multiple(client):
 
 
 def test_read_process(client):
-
     res = client.get('/v1/process/oldest?version=2018-02-14')
     data = json.loads(res.data)
     assert res.status_code == 200
@@ -823,21 +691,20 @@ def test_task_list(client):
     }
 
 
-def test_task_read_requires_auth(client):
+def test_task_read_requires(client):
+    # auth
     res = client.get('/v1/task/foo')
 
     assert res.status_code == 401
 
-
-def test_task_read_requires_real_pointer(client):
+    # real pointer
     juan = make_user('juan', 'Juan')
 
     res = client.get('/v1/task/foo', headers=make_auth(juan))
 
     assert res.status_code == 404
 
-
-def test_task_read_requires_assigned_task(client):
+    # assigned task
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     juan = make_user('juan', 'Juan')
 

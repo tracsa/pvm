@@ -278,7 +278,7 @@ def test_continue_process(client, mocker, config):
     assert pointer.id == ptr.id
 
 
-def test_start_process_requirements(client):
+def test_start_process_requirements(client, mongo, config):
     # first requirement is to have authentication
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
@@ -439,20 +439,72 @@ def test_start_process(client, mocker, config, mongo):
     assert reg2['status'] == 'ongoing'
 
 
-def test_regression_approval():
+def test_regression_requirements(client):
+    assert False, 'execution_id is valid'
+    assert False, 'node_id is valid'
+    assert False, 'response is either approved or rejected'
+    assert False, 'if response is rejected at least one field is present'
+    assert False, 'all the fields present are listed in this nodes dependencies'
+
+
+def test_regression_approval(client):
     ''' the api for an approval '''
-    assert False
+    juan = make_user('juan', 'Juan')
 
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'execution_id': '',
+        'node_id': '',
+        'response': 'approved',
+        'comment': 'a comment',
+    }))
 
-def test_regression_reject_requirements():
-    ''' the api for a reject must ensure that the rejected fields are present
-    in the description of the node'''
-    assert False
+    assert res.status_code == 202
+
+    assert False, 'comment is saved'
+    assert False, 'message is queued'
 
 
 def test_regression_reject():
     ''' the api for a reject '''
-    assert False
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'execution_id': '',
+        'node_id': '',
+        'response': 'rejected',
+        'comment': 'a comment',
+        'fields': [{
+            'ref': '',
+        }],
+    }))
+
+    assert res.status_code == 202
+
+    assert False, 'comment is saved'
+    assert False, 'message is queued'
+
+
+def test_regression_patch():
+    ''' patch arbitrary data and cause a regression '''
+    juan = make_user('juan', 'Juan')
+
+    res = client.patch('/v1/execution/{}'.format(execution.id), headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'comment': 'a comment',
+        'fields': [{
+            'ref': '',
+        }],
+    }))
+
+    assert res.status_code == 202
+
+    assert False, 'comment is saved'
+    assert False, 'message is queued'
 
 
 def test_list_processes(client):

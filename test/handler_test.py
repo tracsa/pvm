@@ -491,7 +491,7 @@ def test_call_handler_delete_process(config, mongo):
     assert Activity.count() == 0
 
 
-def test_approval():
+def test_approve():
     ''' tests that a validation node can go forward on approval '''
     assert False
 
@@ -504,11 +504,18 @@ def test_reject():
 def test_rejected_doesnt_repeat():
     ''' asserts that a pointer moved to the past doesn't repeat a task that
     wasn't invalidated by the rejection '''
+    assert False
 
 
 def test_rejected_repeats():
     ''' asserts that a pointer moved to the past repeats the nodes that were
     invalidated '''
+    assert False
+
+
+def test_patch():
+    ''' ensure that a patch request moves the pointer accordingly '''
+    assert False
 
 
 def test_resistance_unexisteng_hierarchy_backend(config):

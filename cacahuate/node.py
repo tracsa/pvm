@@ -1,5 +1,6 @@
 ''' This file defines some basic classes that map the behaviour of the
 equivalent xml nodes '''
+import re
 from case_conversion import pascalcase
 from typing import Iterator
 from xml.dom.minidom import Element
@@ -24,13 +25,28 @@ class Form:
 
     def __init__(self, element):
         self.ref = element.getAttribute('id')
-        self.multiple = element.getAttribute('multiple')
+        self.multiple = self.calc_range(element.getAttribute('multiple'))
 
         # Load inputs
         self.inputs = []
 
         for input_el in element.getElementsByTagName('input'):
             self.inputs.append(make_input(input_el))
+
+    def calc_range(self, attr):
+        range = (1, 1)
+
+        if attr:
+            nums = re.compile(r'\d+').findall(attr)
+            nums = list(map(lambda x: int(x), nums))
+            if len(nums) == 1:
+                range = (nums[0], nums[0])
+            elif len(nums) == 2:
+                range = (nums[0], nums[1])
+            else:
+                range = (0, float('inf'))
+
+        return range
 
 
 class Node:

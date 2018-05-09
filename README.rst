@@ -65,12 +65,4 @@ You can use any wsgi-compliant server, like gunicorn, to run this:
 TODO
 ----
 
-* Cada campo de un formulario puede estar en uno de tres estados:
-    - unfilled, valid, invalid
-* ciudadanos de primera clase:
-    - <action>
-    - <validation>
-    - <subprocess>
-    - <end>
-* la invalidación en multiauth invalida las respuestas de todos los usuarios
 * modificar funcion Xml.load para especificar versión como un argumento aparte

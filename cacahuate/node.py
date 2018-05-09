@@ -5,12 +5,14 @@ from case_conversion import pascalcase
 from typing import Iterator
 from xml.dom.minidom import Element
 
+from cacahuate.errors import ElementNotFound, IncompleteBranch, \
+    ValidationErrors, RequiredInputError, InvalidInputError
+from cacahuate.grammar import Condition
+from cacahuate.inputs import make_input
+from cacahuate.logger import log
 from cacahuate.utils import user_import
 from cacahuate.xml import get_text, NODES
-from cacahuate.logger import log
-from cacahuate.grammar import Condition
-from cacahuate.errors import ElementNotFound, IncompleteBranch
-from cacahuate.inputs import make_input
+from cacahuate.http.errors import BadRequest
 
 
 class AuthParam:
@@ -48,6 +50,29 @@ class Form:
 
         return range
 
+    def validate(self, index, data):
+        errors = []
+        collected_inputs = []
+
+        for input in self.inputs:
+            try:
+                value = input.validate(
+                    data.get(input.name),
+                    index,
+                )
+
+                input_description = input.to_json()
+                input_description['value'] = value
+
+                collected_inputs.append(input_description)
+            except InputError as e:
+                errors.append(e)
+
+        if errors:
+            raise ValidationErrors(errors)
+
+        return collected_inputs
+
 
 class Node:
     ''' An XML tag that represents an action or instruction for the virtual
@@ -58,6 +83,9 @@ class Node:
             setattr(self, attrname, value)
 
     def is_async(self):
+        raise NotImplementedError('Must be implemented in subclass')
+
+    def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
 
@@ -152,6 +180,74 @@ class Action(Node):
             **self.resolve_params(execution)
         )
 
+    def validate_form_spec(self, form_specs, associated_data) -> dict:
+        ''' Validates the given data against the spec contained in form. In case of
+        failure raises an exception. In case of success returns the validated data.
+        '''
+        collected_specs = []
+
+        min, max = form_specs.multiple
+
+        if len(associated_data) < min:
+            raise BadRequest([{
+                'detail': 'form count lower than expected for ref {}'.format(
+                    form_specs.ref
+                ),
+                'where': 'request.body.form_array',
+            }])
+
+        if len(associated_data) > max:
+            raise BadRequest([{
+                'detail': 'form count higher than expected for ref {}'.format(
+                    form_specs.ref
+                ),
+                'where': 'request.body.form_array',
+            }])
+
+        for index, form in associated_data:
+            collected_specs.append(form_specs.validate(
+                index,
+                form.get('data', {})
+            ))
+
+        return collected_specs
+
+    def validate_input(self, json_data):
+        if 'form_array' in json_data and type(json_data['form_array']) != list:
+            raise BadRequest({
+                'detail': 'form_array has wrong type',
+                'where': 'request.body.form_array',
+            })
+
+        collected_forms = []
+        errors = []
+
+        index = 0
+        form_array = json_data.get('form_array', [])
+        for form_specs in self.form_array:
+            ref = form_specs.ref
+
+            # Ignore unexpected forms
+            while len(form_array) > index and form_array[index]['ref'] != ref:
+                index += 1
+
+            # Collect expected forms
+            forms = []
+            while len(form_array) > index and form_array[index]['ref'] == ref:
+                forms.append((index, form_array[index]))
+                index += 1
+
+            try:
+                for data in self.validate_form_spec(form_specs, forms):
+                    collected_forms.append((ref, data))
+            except ValidationErrors as e:
+                errors += e.errors
+
+        if len(errors) > 0:
+            raise BadRequest(ValidationErrors(errors).to_json())
+
+        return collected_forms
+
     def to_json(self):
         return {
             'id': self.id,
@@ -162,7 +258,20 @@ class Action(Node):
 
 class Validation(Node):
 
-    pass
+    VALID_RESPONSES = ('accept', 'reject')
+
+    def validate_input(self, json_data):
+        if 'response' not in json_data:
+            raise RequiredInputError('response', 'request.body.response')
+
+        if json_data['response'] not in self.VALID_RESPONSES:
+            raise InvalidInputError('response', 'request.body.response')
+
+        if json_data['response'] == 'reject':
+            if 'fields' not in json_data:
+                raise RequiredInputError('fields', 'request.body.fields')
+
+        return []
 
 
 class Exit(Node):

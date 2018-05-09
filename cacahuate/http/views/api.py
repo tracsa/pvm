@@ -12,7 +12,7 @@ from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
     Forbidden
 from cacahuate.http.middleware import requires_json, requires_auth
-from cacahuate.http.validation import validate_forms, validate_json, \
+from cacahuate.http.validation import validate_json, \
     validate_auth
 from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer, User, Token, Activity, \
@@ -175,7 +175,7 @@ def start_process():
     validate_auth(start_point, g.user)
 
     # check if there are any forms present
-    collected_forms = validate_forms(start_point, request.json)
+    collected_forms = start_point.validate_input(request.json)
 
     # save the data
     execution = Execution(
@@ -296,7 +296,7 @@ def continue_process():
         }])
 
     # Validate asociated forms
-    collected_forms = validate_forms(continue_point, request.json)
+    collected_forms = continue_point.validate_input(request.json)
 
     # save the data
     actor = store_actor(

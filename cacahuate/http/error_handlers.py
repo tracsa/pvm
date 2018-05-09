@@ -3,6 +3,7 @@ from flask import jsonify
 
 from cacahuate.http.wsgi import app
 from cacahuate.http.errors import JsonReportedException
+from cacahuate.errors import InputError
 
 
 @app.errorhandler(JsonReportedException)
@@ -18,6 +19,13 @@ def handle_model_not_found(e):
             'where': 'request.url',
         }],
     }), 404
+
+
+@app.errorhandler(InputError)
+def handle_input_error(e):
+    return jsonify({
+        'errors': [e.to_json()],
+    }), 400
 
 
 @app.errorhandler(404)

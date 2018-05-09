@@ -5,6 +5,8 @@ import pika
 import pytest
 from cacahuate.handler import Handler
 from cacahuate.models import Pointer, Execution, Activity, Questionaire
+from random import choice
+from string import ascii_letters
 
 from .utils import make_auth, make_activity, make_pointer, make_user, make_date
 
@@ -37,12 +39,12 @@ def test_continue_process_requires(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'execution_id is required',
+                'detail': "'execution_id' is required",
                 'code': 'validation.required',
                 'where': 'request.body.execution_id',
             },
             {
-                'detail': 'node_id is required',
+                'detail': "'node_id' is required",
                 'code': 'validation.required',
                 'where': 'request.body.node_id',
             },
@@ -329,7 +331,7 @@ def test_start_process_requirements(client, mongo, config):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'process_name is required',
+                'detail': "'process_name' is required",
                 'where': 'request.body.process_name',
                 'code': 'validation.required',
             },
@@ -443,6 +445,7 @@ def test_regression_requirements(client):
     user = make_user('juan', 'Juan')
     ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
     exc = ptr.proxy.execution.get()
+    user.proxy.tasks.add(ptr)
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
@@ -455,16 +458,153 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'execution_id is required',
+                'detail': "'response' is required",
                 'code': 'validation.required',
-                'where': 'request.body.execution_id',
+                'where': 'request.body.response',
             },
         ],
     }
 
-    assert False, 'response is either approved or rejected'
-    assert False, 'if response is rejected at least one field is present'
-    assert False, 'all the fields present are listed in this nodes dependencies'
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': ''.join(choice(ascii_letters) for c in range(10)),
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'response' value invalid",
+                'code': 'validation.invalid',
+                'where': 'request.body.response',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'fields' is required",
+                'code': 'validation.required',
+                'where': 'request.body.fields',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+        'fields': 'de',
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'fields' value invalid",
+                'code': 'validation.invalid',
+                'where': 'request.body.fields',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+        'fields': [],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'fields' is required",
+                'code': 'validation.required',
+                'where': 'request.body.fields',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+        'fields': ['de'],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'fields' is invalid",
+                'code': 'validation.invalid',
+                'where': 'request.body.fields.0',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+        'fields': [{
+        }],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'ref' is required",
+                'code': 'validation.required',
+                'where': 'request.body.fields.0.ref',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+        'fields': [{
+            'ref': 'de',
+        }],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'ref' is invalid",
+                'code': 'validation.invalid',
+                'where': 'request.body.fields.0.ref',
+            },
+        ],
+    }
 
 
 def test_regression_approval(client):

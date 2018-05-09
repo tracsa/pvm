@@ -23,6 +23,12 @@ MONGO_DBNAME = 'cacahuate'
 MONGO_HISTORY_COLLECTION = 'history'
 MONGO_EXECUTION_COLLECTION = 'execution'
 LIMIT_DEFAULT_QUERY = 20
+MONGO_LIMIT_COLLECTION = 20
+MONGO_OFFSET_COLLECTION = 0
+EXECUTION_ID_TEST = 'simple'
+
+# Pagination
+DEFAULT_LIMIT = 20
 
 # Time stuff
 TIMEZONE = 'UTC'
@@ -42,6 +48,7 @@ REDIS_DB = 0
 LDAP_URI = "ldap://localhost:389"
 LDAP_SSL = True
 LDAP_DOMAIN = "local"
+LDAP_BASE = "DC=local"
 
 # custom login providers
 LOGIN_PROVIDERS = {

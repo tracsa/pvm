@@ -2,6 +2,7 @@ from base64 import b64encode
 from cacahuate.models import Execution, Pointer, User, Token, Activity
 from random import choice
 from string import ascii_letters
+from datetime import datetime
 
 
 def make_user(identifier, name):
@@ -45,3 +46,7 @@ def make_activity(ref, user, execution):
     act.proxy.execution.set(execution)
 
     return act
+
+
+def make_date(year=2018, month=5, day=4, hour=0, minute=0, second=0):
+    return datetime(year, month, day, hour, minute, second)

@@ -1080,3 +1080,54 @@ def test_process_statistics(client, mongo, config):
 
         ],
     }
+
+def test_node_statistics(client, mongo, config):
+    def make_node_reg(node_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'execution': {
+                'id': EXECUTION_ID,
+            },
+            'node': {
+                'id': node_id,
+            },
+        }
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_many([
+        make_node_reg('test1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
+        make_node_reg('test2', make_date(), make_date(2018, 5, 10, 6, 3, 3)),
+        make_node_reg('test1', make_date(), make_date(2018, 5, 10, 8, 2, 9)),
+        make_node_reg('test2', make_date(), make_date(2018, 5, 10, 3, 4, 5)),
+        make_node_reg('test2', make_date(), None),
+    ])
+
+    res = client.get('/v1/process/{}/statistics/pagination'.format(EXECUTION_ID))
+    assert res.status_code == 200
+
+
+def test_process_statistics_pagination(client, mongo, config):
+    def make_exec_reg(process_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'status': 'finished',
+            'process': {
+                'id': process_id,
+                'version': 'v1',
+            },
+        }
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_many([
+        make_exec_reg('p1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
+        make_exec_reg('p2', make_date(), make_date(2018, 5, 10, 10, 34, 32)),
+        make_exec_reg('p1', make_date(), make_date(2018, 5, 11, 22, 41, 10)),
+        make_exec_reg('p2', make_date(), make_date(2018, 6, 23, 8, 15, 1)),
+    ])
+
+    res = client.get('/v1/process/statistics/pagination')
+
+    assert res.status_code == 200
+
+    print (json.loads(res.data))
+    assert False

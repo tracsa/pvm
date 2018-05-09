@@ -22,6 +22,8 @@ MONGO_URI = 'mongodb://localhost/cacahuate'
 MONGO_DBNAME = 'cacahuate'
 MONGO_HISTORY_COLLECTION = 'history'
 MONGO_EXECUTION_COLLECTION = 'execution'
+MONGO_LIMIT_COLLECTION = 1
+MONGO_OFFSET_COLLECTION = 3
 
 # Pagination
 DEFAULT_LIMIT = 20

@@ -82,6 +82,11 @@ class RequiredListError(InputError):
     code = 'validation.required_list'
 
 
+class RequiredDictError(InputError):
+    detail = "'{input}' must be an object"
+    code = 'validation.required_dict'
+
+
 class RequiredStrError(InputError):
     detail = "'{input}' required a str"
     code = 'validation.required_str'

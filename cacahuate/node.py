@@ -6,7 +6,8 @@ from typing import Iterator
 from xml.dom.minidom import Element
 
 from cacahuate.errors import ElementNotFound, IncompleteBranch, \
-    ValidationErrors, RequiredInputError, InvalidInputError
+    ValidationErrors, RequiredInputError, InvalidInputError, InputError, \
+    RequiredListError, RequiredDictError
 from cacahuate.grammar import Condition
 from cacahuate.inputs import make_input
 from cacahuate.logger import log
@@ -260,6 +261,13 @@ class Validation(Node):
 
     VALID_RESPONSES = ('accept', 'reject')
 
+    def validate_field(self, field, index):
+        if type(field) != dict:
+            raise RequiredDictError(
+                'fields.{}'.format(index),
+                'request.body.fields.{}'.format(index)
+            )
+
     def validate_input(self, json_data):
         if 'response' not in json_data:
             raise RequiredInputError('response', 'request.body.response')
@@ -270,6 +278,19 @@ class Validation(Node):
         if json_data['response'] == 'reject':
             if 'fields' not in json_data:
                 raise RequiredInputError('fields', 'request.body.fields')
+
+            if type(json_data['fields']) is not list:
+                raise RequiredListError('fields', 'request.body.fields')
+
+            for index, field in enumerate(json_data['fields']):
+                errors = []
+                try:
+                    self.validate_field(field, index)
+                except InputError as e:
+                    errors.append(e.to_json())
+
+                if errors:
+                    raise BadRequest(errors)
 
         return []
 

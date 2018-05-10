@@ -516,28 +516,8 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields' value invalid",
-                'code': 'validation.invalid',
-                'where': 'request.body.fields',
-            },
-        ],
-    }
-
-    res = client.post('/v1/pointer', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
-        'execution_id': exc.id,
-        'node_id': 'approval-node',
-        'response': 'reject',
-        'fields': [],
-    }))
-
-    assert res.status_code == 400
-    assert json.loads(res.data) == {
-        'errors': [
-            {
-                'detail': "'fields' is required",
-                'code': 'validation.required',
+                'detail': "'fields' must be a list",
+                'code': 'validation.required_list',
                 'where': 'request.body.fields',
             },
         ],
@@ -556,8 +536,8 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields' is invalid",
-                'code': 'validation.invalid',
+                'detail': "'fields.0' must be an object",
+                'code': 'validation.required_dict',
                 'where': 'request.body.fields.0',
             },
         ],

@@ -557,7 +557,7 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'ref' is required",
+                'detail': "'fields.0.ref' is required",
                 'code': 'validation.required',
                 'where': 'request.body.fields.0.ref',
             },
@@ -579,7 +579,7 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'ref' is invalid",
+                'detail': "'fields.0.ref' value invalid",
                 'code': 'validation.invalid',
                 'where': 'request.body.fields.0.ref',
             },

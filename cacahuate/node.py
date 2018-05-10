@@ -83,20 +83,6 @@ class Node:
         for attrname, value in element.attributes.items():
             setattr(self, attrname, value)
 
-    def is_async(self):
-        raise NotImplementedError('Must be implemented in subclass')
-
-    def validate_input(self, json_data):
-        raise NotImplementedError('Must be implemented in subclass')
-
-
-class Action(Node):
-    ''' A node from the process's graph. It is initialized from an Element
-    '''
-
-    def __init__(self, element):
-        super().__init__(element)
-
         # node info
         node_info = element.getElementsByTagName('node-info')
 
@@ -129,6 +115,20 @@ class Action(Node):
                 lambda x: AuthParam(x),
                 filter_node.getElementsByTagName('param')
             ))
+
+    def is_async(self):
+        raise NotImplementedError('Must be implemented in subclass')
+
+    def validate_input(self, json_data):
+        raise NotImplementedError('Must be implemented in subclass')
+
+
+class Action(Node):
+    ''' A node from the process's graph. It is initialized from an Element
+    '''
+
+    def __init__(self, element):
+        super().__init__(element)
 
         # Form resolving
         self.form_array = []
@@ -261,11 +261,35 @@ class Validation(Node):
 
     VALID_RESPONSES = ('accept', 'reject')
 
+    def __init__(self, element):
+        super().__init__(element)
+
+        # Dependency resolving
+        self.dependencies = []
+
+        deps_node = element.getElementsByTagName('dependencies')
+
+        if len(deps_node) > 0:
+            for dep_node in deps_node[0].getElementsByTagName('dep'):
+                self.dependencies.append(get_text(dep_node))
+
     def validate_field(self, field, index):
         if type(field) != dict:
             raise RequiredDictError(
                 'fields.{}'.format(index),
                 'request.body.fields.{}'.format(index)
+            )
+
+        if 'ref' not in field:
+            raise RequiredInputError(
+                'fields.{}.ref'.format(index),
+                'request.body.fields.{}.ref'.format(index)
+            )
+
+        if field['ref'] not in self.dependencies:
+            raise InvalidInputError(
+                'fields.{}.ref'.format(index),
+                'request.body.fields.{}.ref'.format(index)
             )
 
     def validate_input(self, json_data):

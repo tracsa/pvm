@@ -74,14 +74,13 @@ def pagination(view):
             'offset', app.config['PAGINATION_OFFSET']
         )
 
-        if not type(limit) == int:
+        if not type(limit) == int and not limit.isdigit():
             limit = app.config['PAGINATION_LIMIT']
 
-        if not type(offset) == int:
+        if not type(offset) == int and not offset.isdigit():
             offset = app.config['PAGINATION_OFFSET']
 
-        g.offset = offset
-        g.limit = limit
-
+        g.offset = int(offset)
+        g.limit = int(limit)
         return view(*args, **kwargs)
     return wrapper

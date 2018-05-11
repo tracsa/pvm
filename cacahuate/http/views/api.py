@@ -100,13 +100,14 @@ def index():
 
 
 @app.route('/v1/execution', methods=['GET'])
+@pagination
 def execution_list():
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
 
     return jsonify({
         "data": list(map(
             json_prepare,
-            collection.find()
+            collection.find().skip(g.offset).limit(g.limit)
         )),
     })
 
@@ -212,6 +213,7 @@ def start_process():
         'node': start_point.to_json(),
         'actors': [actor],
         'state': execution.get_state(),
+        'process_id': execution.process_name
     })
 
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
@@ -458,6 +460,7 @@ def task_read(id):
 
 
 @app.route('/v1/log/<id>', methods=['GET'])
+@pagination
 def list_logs(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
     node_id = request.args.get('node_id')
@@ -469,7 +472,7 @@ def list_logs(id):
     return jsonify({
         "data": list(map(
             json_prepare,
-            collection.find(query).sort([
+            collection.find(query).skip(g.offset).limit(g.limit).sort([
                 ('started_at', pymongo.DESCENDING)
             ])
         )),
@@ -477,23 +480,20 @@ def list_logs(id):
 
 
 @app.route('/v1/process/<id>/statistics', methods=['GET'])
-@pagination
 def time_process(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
     query = [
-        {"$match": {"execution.id": id}},
-        {"$skip": g.offset},
-        {"$limit": g.limit},
+        {"$match": {"process_id": id}},
         {"$project": {
-            "execution": "$execution.id",
+            "process_id": "$process_id",
             "node": "$node.id",
             "difference_time": {
                 "$subtract": ["$finished_at", "$started_at"],
             },
         }},
         {"$group": {
-            "_id": {"execution": "$execution", "node": "$node"},
-            "execution_id": {"$first": "$execution"},
+            "_id": {"process_id": "$process_id", "node": "$node"},
+            "process_id": {"$first": "$process_id"},
             "node": {"$first": "$node"},
             "max": {
                 "$max": {

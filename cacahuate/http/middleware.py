@@ -64,19 +64,22 @@ def requires_auth(view):
     return wrapper
 
 
-def limit_offset(view):
+def pagination(view):
     @wraps(view)
     def wrapper(*args, **kwargs):
         limit = request.args.get(
-            'limit', app.config['MONGO_LIMIT_COLLECTION']
+            'limit', app.config['PAGINATION_LIMIT']
         )
         offset = request.args.get(
-            'offset', app.config['MONGO_OFFSET_COLLECTION']
+            'offset', app.config['PAGINATION_OFFSET']
         )
+
         if not type(limit) == int:
-            limit = app.config['MONGO_LIMIT_COLLECTION']
+            limit = app.config['PAGINATION_LIMIT']
+
         if not type(offset) == int:
-            offset = app.config['MONGO_OFFSET_COLLECTION']
+            offset = app.config['PAGINATION_OFFSET']
+
         g.offset = offset
         g.limit = limit
 

@@ -12,7 +12,7 @@ from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
     Forbidden
 from cacahuate.http.middleware import requires_json, requires_auth, \
-    limit_offset
+    pagination
 from cacahuate.http.validation import validate_forms, validate_json, \
     validate_auth
 from cacahuate.http.wsgi import app, mongo
@@ -477,7 +477,7 @@ def list_logs(id):
 
 
 @app.route('/v1/process/<id>/statistics', methods=['GET'])
-@limit_offset
+@pagination
 def time_process(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
     query = [
@@ -524,7 +524,7 @@ def time_process(id):
 
 
 @app.route('/v1/process/statistics', methods=['GET'])
-@limit_offset
+@pagination
 def list_time_process():
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
     query = [

@@ -587,35 +587,67 @@ def test_regression_requirements(client):
     }
 
 
-def test_regression_approval(client):
+def test_regression_approval(client, mocker, config):
     ''' the api for an approval '''
-    juan = make_user('juan', 'Juan')
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
+
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    exc = ptr.proxy.execution.get()
+    user.proxy.tasks.add(ptr)
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'execution_id': '',
-        'node_id': '',
-        'response': 'approved',
-        'comment': 'a comment',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'accept',
+        'comment': 'I like the previous work',
     }))
 
     assert res.status_code == 202
 
-    assert False, 'comment is saved'
-    assert False, 'message is queued'
+    # rabbit is called
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.BlockingChannel.basic_publish \
+        .call_args[1]
+
+    json_message = {
+        'command': 'accept',
+        'pointer_id': ptr.id,
+        'actor': {
+            'ref': 'approval-node',
+            'user': {
+                'identifier': 'juan',
+                'human_name': 'Juan',
+            },
+        },
+        'comment': 'I like the previous work',
+    }
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == json_message
 
 
 def test_regression_reject():
     ''' the api for a reject '''
-    juan = make_user('juan', 'Juan')
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    exc = ptr.proxy.execution.get()
+    user.proxy.tasks.add(ptr)
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
+    }, **make_auth(user)}, data=json.dumps({
         'execution_id': '',
         'node_id': '',
-        'response': 'rejected',
+        'response': 'reject',
         'comment': 'a comment',
         'fields': [{
             'ref': '',
@@ -626,6 +658,11 @@ def test_regression_reject():
 
     assert False, 'comment is saved'
     assert False, 'message is queued'
+
+
+def test_regression_patch_requirements():
+    assert False, 'fields are present'
+    assert False, 'every field is valid'
 
 
 def test_regression_patch():

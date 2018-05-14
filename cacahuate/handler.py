@@ -124,6 +124,7 @@ class Handler:
             'notified_users': notified_users,
             'actors': [],
             'state': execution.get_state(),
+            'process_id': execution.process_name
         })
 
         # nodes with forms are not queued

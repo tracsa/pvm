@@ -1205,11 +1205,10 @@ def test_pagination_execution_log(client, mongo, config):
         make_exec_reg('p8', make_date(), make_date(2018, 6, 14, 7, 8, 1)),
     ])
 
-    res = client.get('/v1/execution?offset=2&limit=2')
-
+    res = client.get('/v1/process/statistics?offset=2&limit=2')
     assert res.status_code == 200
-    assert json.loads(res.data)['data'][0]["process"]["id"] == 'p3'
-    assert json.loads(res.data)['data'][1]["process"]["id"] == 'p4'
+    assert json.loads(res.data)['data'][0]["process"] == 'p3'
+    assert json.loads(res.data)['data'][1]["process"] == 'p4'
     assert len(json.loads(res.data)['data']) == 2
 
 

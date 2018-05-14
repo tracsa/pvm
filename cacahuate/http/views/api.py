@@ -71,18 +71,10 @@ def make_name(name_string, collected_forms):
     return Template(name_string).render(**context)
 
 
-def store_actor(node, user, execution, forms):
-    auth_ref = node.id
-    activity = Activity(ref=auth_ref).save()
-    activity.proxy.user.set(g.user)
-    activity.proxy.execution.set(execution)
-
+def store_actor(ref, user, forms):
     return {
-        'ref': auth_ref,
-        'user': {
-            'identifier': g.user.identifier,
-            'human_name': g.user.human_name,
-        },
+        'ref': ref,
+        'user': user.to_json(),
         'forms': forms,
     }
 
@@ -190,10 +182,15 @@ def start_process():
     ).save()
     pointer.proxy.execution.set(execution)
 
+    # create activity
+    auth_ref = start_point.id
+    activity = Activity(ref=auth_ref).save()
+    activity.proxy.user.set(g.user)
+    activity.proxy.execution.set(execution)
+
     actor = store_actor(
-        start_point,
+        start_point.id,
         g.user,
-        execution,
         store_forms(collected_forms, execution)
     )
 
@@ -215,7 +212,7 @@ def start_process():
 
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
 
-    history_execution = collection.insert_one({
+    collection.insert_one({
         'id': execution.id,
         'name': execution.name,
         'description': execution.description,
@@ -300,9 +297,8 @@ def continue_process():
 
     # save the data
     actor = store_actor(
-        continue_point,
+        node_id,
         g.user,
-        execution,
         store_forms(collected_forms, execution)
     )
 
@@ -314,7 +310,7 @@ def continue_process():
         body=json.dumps({
             'command': 'step',
             'pointer_id': pointer.id,
-            'actor':  actor,
+            'actor': actor,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,

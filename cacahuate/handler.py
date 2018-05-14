@@ -141,6 +141,11 @@ class Handler:
         }
 
         if actor is not None:
+            # store activity
+            activity = Activity(ref=pointer.node_id).save()
+            activity.proxy.user.set(User.get_by('identifier', actor['identifier']))
+            activity.proxy.execution.set(pointer.proxy.execution.get())
+
             update_query['$push'] = {
                 'actors': actor,
             }

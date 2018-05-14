@@ -208,15 +208,6 @@ def test_continue_process(client, mocker, config):
         'data': 'accepted',
     }
 
-    # user is attached
-
-    assert exc.proxy.actors.count() == 2
-
-    activity = next(exc.proxy.actors.q().filter(ref='mid-node'))
-
-    assert activity.ref == 'mid-node'
-    assert activity.proxy.user.get() == manager
-
     # form is attached
     forms = exc.proxy.forms.get()
 
@@ -242,6 +233,7 @@ def test_continue_process(client, mocker, config):
         'actor': {
             'ref': 'mid-node',
             'user': {
+                '_type': 'user',
                 'identifier': 'juan_manager',
                 'human_name': 'Juanote',
             },
@@ -268,7 +260,9 @@ def test_continue_process(client, mocker, config):
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
-    assert json.loads(args['body']) == json_message
+    body = json.loads(args['body'])
+    del body['actor']['user']['id']
+    assert body == json_message
 
     # makes a useful call for the handler
     handler = Handler(config)
@@ -617,7 +611,9 @@ def test_regression_approval(client, mocker, config):
     args = pika.adapters.blocking_connection.BlockingChannel.basic_publish \
         .call_args[1]
 
-    json_message = {
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
         'command': 'accept',
         'pointer_id': ptr.id,
         'actor': {
@@ -629,10 +625,6 @@ def test_regression_approval(client, mocker, config):
         },
         'comment': 'I like the previous work',
     }
-
-    assert args['exchange'] == ''
-    assert args['routing_key'] == config['RABBIT_QUEUE']
-    assert json.loads(args['body']) == json_message
 
 
 def test_regression_reject():

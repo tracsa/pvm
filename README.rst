@@ -66,3 +66,4 @@ TODO
 ----
 
 * modificar funcion Xml.load para especificar versión como un argumento aparte
+* considerar eliminar el estado de colección history

@@ -480,13 +480,10 @@ def list_logs(id):
 
 
 @app.route('/v1/process/<id>/statistics', methods=['GET'])
-@pagination
-def time_process(id):
+def node_statistics(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
     query = [
         {"$match": {"process_id": id}},
-        {"$skip": g.offset},
-        {"$limit": g.limit},
         {"$project": {
             "process_id": "$process_id",
             "node": "$node.id",
@@ -527,7 +524,7 @@ def time_process(id):
 
 @app.route('/v1/process/statistics', methods=['GET'])
 @pagination
-def list_time_process():
+def process_statistics():
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
     query = [
         {"$match": {"status": "finished"}},

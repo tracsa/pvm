@@ -82,5 +82,6 @@ def pagination(view):
 
         g.offset = int(offset)
         g.limit = int(limit)
+
         return view(*args, **kwargs)
     return wrapper

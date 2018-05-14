@@ -123,7 +123,6 @@ class Handler:
             'node': node.to_json(),
             'notified_users': notified_users,
             'actors': [],
-            'state': execution.get_state(),
         })
 
         # nodes with forms are not queued
@@ -188,41 +187,6 @@ class Handler:
 
         for form in execution.proxy.forms.get():
             form.delete()
-
-    def recover_state(self, node, execution):
-        ''' recovers the lost state '''
-        self.delete_related_objects(execution)
-
-        mongo = self.get_mongo()
-
-        # finds most recent registry for this node
-        collection = mongo[self.config['MONGO_HISTORY_COLLECTION']]
-        prev_state = next(collection.find({
-            'execution.id': execution.id,
-            'node.id': node.element.getAttribute('id'),
-        }).sort([
-            ('started_at', pymongo.DESCENDING)
-        ]))
-
-        # restores froms and actors from that time
-        for form_data in prev_state['state']['forms']:
-            q = Questionaire(**form_data).save()
-            q.proxy.execution.set(execution)
-
-        for act_data in prev_state['state']['actors']:
-            a = Activity(**act_data).save()
-            a.proxy.execution.set(execution)
-            a.proxy.user.set(User.get(act_data['user_id']))
-
-        # sets state in mongo
-        collection = mongo[self.config['MONGO_EXECUTION_COLLECTION']]
-        collection.update_one({
-            'id': execution.id,
-        }, {
-            '$set': {
-                'state': execution.get_state(),
-            },
-        })
 
     def notify_users(self, node, pointer, channel):
         husers = node.get_actors(self.config, pointer.proxy.execution.get())

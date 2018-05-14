@@ -138,26 +138,14 @@ def test_wakeup(config, mongo):
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
-    del reg['_id']
-
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert reg['finished_at'] is None
     assert reg['execution']['id'] == execution.id
     assert reg['node']['id'] == 'mid-node'
     assert reg['actors'] == []
     assert reg['notified_users'] == [manager.to_json()]
-    assert reg['state'] == {
-        'forms': [{
-            'ref': 'start-form',
-            'data': {
-                'data': 'why not',
-            },
-        }],
-        'actors': [{
-            'ref': 'start-node',
-            'user_id': juan.id,
-        }],
-    }
+    with pytest.raises(KeyError):
+        reg['state']
 
     # tasks where asigned
     assert manager.proxy.tasks.count() == 1
@@ -200,22 +188,6 @@ def test_teardown(config, mongo):
             'id': p_0.node_id,
         },
         'actors': [],
-        'state': {
-            'forms': [
-                {
-                    'ref': 'exit-form',
-                    'data': {
-                        'reason': 'quiero salir',
-                    },
-                },
-            ],
-            'actors': [
-                {
-                    'ref': 'requester',
-                    'user_id': juan.id,
-                },
-            ],
-        },
     })
 
     channel = MagicMock()
@@ -240,8 +212,6 @@ def test_teardown(config, mongo):
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
-    del reg['_id']
-
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == execution.id
@@ -255,22 +225,8 @@ def test_teardown(config, mongo):
             },
         }],
     }]
-    assert reg['state'] == {
-        'forms': [
-            {
-                'ref': 'exit-form',
-                'data': {
-                    'reason': 'quiero salir',
-                },
-            },
-        ],
-        'actors': [
-            {
-                'ref': 'requester',
-                'user_id': juan.id,
-            },
-        ],
-    }
+    with pytest.raises(KeyError):
+        reg['state']
 
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0
@@ -390,18 +346,6 @@ def test_call_trigger_recover(config, mongo):
                 'id': execution.id,
             },
             'started_at': datetime(2018, 4, num),
-            'state': {
-                'forms': [{
-                    'ref': 'old',
-                    'data': {
-                        'a': str(num),
-                    },
-                }],
-                'actors': [{
-                    'ref': 'start-node',
-                    'user_id': old_user.id,
-                }],
-            },
         }
 
     # insert some noisy registers in mongo for this node
@@ -414,15 +358,6 @@ def test_call_trigger_recover(config, mongo):
     mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({
         'id': execution.id,
         'status': 'ongoing',
-        'state': {
-            'forms': [{
-                'a': '0',
-            }],
-            'actors': [{
-                'ref': 'present',
-                'user': old_user.to_json(),
-            }],
-        },
     })
 
     # this is what we test
@@ -458,18 +393,8 @@ def test_call_trigger_recover(config, mongo):
 
     assert reg['status'] == 'ongoing'
     assert reg['id'] == execution.id
-    assert reg['state'] == {
-        'forms': [{
-            'ref': 'old',
-            'data': {
-                'a': '3',
-            },
-        }],
-        'actors': [{
-            'ref': 'start-node',
-            'user_id': old_user.id,
-        }],
-    }
+    with pytest.raises(KeyError):
+        reg['state']
 
 
 def test_call_handler_delete_process(config, mongo):

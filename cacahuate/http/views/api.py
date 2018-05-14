@@ -153,10 +153,6 @@ def start_process():
         'status': 'ongoing',
         'started_at': datetime.now(),
         'finished_at': None,
-        'state': {
-            'forms': [],
-            'actors': [],
-        },
     })
 
     # trigger rabbit

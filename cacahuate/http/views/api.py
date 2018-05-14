@@ -6,7 +6,6 @@ from functools import reduce
 import os
 import pika
 import pymongo
-from jinja2 import Template
 
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
@@ -37,38 +36,6 @@ def json_prepare(obj):
             obj[field] = obj[field].isoformat()
 
     return obj
-
-
-def store_forms(collected_forms, execution):
-    forms = []
-
-    for ref, form_description in collected_forms:
-        form_data = dict(map(
-            lambda x: (x['name'], x['value']),
-            form_description
-        ))
-
-        ques = Questionaire(ref=ref, data=form_data).save()
-        ques.proxy.execution.set(execution)
-        forms.append({
-            'ref': ref,
-            'data': form_data,
-            'form': form_description,
-        })
-
-    return forms
-
-
-def make_name(name_string, collected_forms):
-    context = dict(map(
-        lambda i: (i[0], dict(map(
-            lambda j: (j['name'], j['value']),
-            i[1]
-        ))),
-        collected_forms
-    ))
-
-    return Template(name_string).render(**context)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -159,12 +126,12 @@ def start_process():
     validate_auth(start_point, g.user)
 
     # check if there are any forms present
-    collected_forms = start_point.validate_input(request.json)
+    collected_input = start_point.validate_input(request.json)
 
     # save the data
     execution = Execution(
         process_name=xml.filename,
-        name=make_name(xml.name, collected_forms),
+        name=xml.make_name(collected_input),
         description=xml.description,
     ).save()
     pointer = Pointer(
@@ -201,7 +168,7 @@ def start_process():
             'command': 'step',
             'pointer_id': pointer.id,
             'user_identifier': g.user.identifier,
-            'input': collected_forms,
+            'input': collected_input,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,
@@ -261,7 +228,7 @@ def continue_process():
         }])
 
     # Validate asociated forms
-    collected_forms = continue_point.validate_input(request.json)
+    collected_input = continue_point.validate_input(request.json)
 
     # trigger rabbit
     channel = get_channel()
@@ -272,7 +239,7 @@ def continue_process():
             'command': 'step',
             'pointer_id': pointer.id,
             'user_identifier': g.user.identifier,
-            'input': collected_forms,
+            'input': collected_input,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,

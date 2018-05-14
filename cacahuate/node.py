@@ -327,7 +327,11 @@ class Validation(Node):
                 if errors:
                     raise BadRequest(errors)
 
-        return []
+        return {
+            k: json_data[k]
+            for k in ('response', 'comment', 'fields')
+            if k in json_data
+        }
 
 
 class Exit(Node):

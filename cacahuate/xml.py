@@ -3,6 +3,7 @@ import os
 from xml.dom import pulldom
 from xml.dom.minidom import Element
 from xml.sax._exceptions import SAXParseException
+from jinja2 import Template
 
 from .errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from .mark import comment
@@ -142,6 +143,17 @@ class Xml:
         raise ElementNotFound(
             'node matching the given condition was not found'
         )
+
+    def make_name(self, collected_forms):
+        context = dict(map(
+            lambda i: (i[0], dict(map(
+                lambda j: (j['name'], j['value']),
+                i[1]
+            ))),
+            collected_forms
+        ))
+
+        return Template(self.name).render(**context)
 
     @classmethod
     def list(cls, config):

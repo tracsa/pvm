@@ -592,15 +592,23 @@ def test_regression_approval(client, mocker, config):
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
     assert json.loads(args['body']) == {
-        'command': 'accept',
+        'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'comment': 'I like the previous work',
+        'input': {
+            'response': 'accept',
+            'comment': 'I like the previous work',
+        },
     }
 
 
-def test_regression_reject():
+def test_regression_reject(client, mocker, config):
     ''' the api for a reject '''
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
+
     user = make_user('juan', 'Juan')
     ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
     exc = ptr.proxy.execution.get()
@@ -609,26 +617,47 @@ def test_regression_reject():
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
-        'execution_id': '',
-        'node_id': '',
+        'execution_id': exc.id,
+        'node_id': ptr.node_id,
         'response': 'reject',
-        'comment': 'a comment',
+        'comment': 'I dont like it',
         'fields': [{
-            'ref': '',
+            'ref': 'work.task',
         }],
     }))
 
     assert res.status_code == 202
 
-    assert False, 'comment is saved'
-    assert False, 'message is queued'
+    # rabbit is called
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.BlockingChannel.basic_publish \
+        .call_args[1]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': 'juan',
+        'input': {
+            'response': 'reject',
+            'comment': 'I dont like it',
+            'fields': [{
+                'ref': 'work.task',
+            }],
+        },
+    }
 
 
+@pytest.mark.skip
 def test_regression_patch_requirements():
     assert False, 'fields are present'
     assert False, 'every field is valid'
 
 
+@pytest.mark.skip
 def test_regression_patch():
     ''' patch arbitrary data and cause a regression '''
     juan = make_user('juan', 'Juan')
@@ -1008,44 +1037,6 @@ def test_log_has_node_info(client):
     assert data['execution']['name'] == 'Simplest process ever'
     assert data['execution']['description'] == \
         'A simple process that does nothing'
-
-
-def test_log_has_form_input_data(client):
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'simple',
-        'form_array': [
-            {
-                'ref': 'start-form',
-                'data': {
-                    'data': 'yes',
-                },
-            },
-        ],
-    }))
-
-    assert res.status_code == 201
-
-    body = json.loads(res.data)
-    execution_id = body['data']['id']
-
-    res = client.get('/v1/log/{}'.format(execution_id))
-    body = json.loads(res.data)
-    data = body['data'][0]
-
-    assert data['actors'][0]['forms'][0]['form'] == [
-        {
-            "label": "Info",
-            "name": "data",
-            "type": "text",
-            "value": "yes",
-            "required": True,
-            'default': None,
-        },
-    ]
 
 
 def test_delete_process(config, client, mongo, mocker):

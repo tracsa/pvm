@@ -6,61 +6,34 @@ import pytest
 import simplejson as json
 
 from cacahuate.handler import Handler
-from cacahuate.models import Execution, Pointer, User, Activity, Questionaire
+from cacahuate.models import Execution, Pointer, User, Questionaire, \
+    Activity, Input
 from cacahuate.node import Action
 
 from .utils import make_pointer, make_activity, make_user
-
-
-def test_parse_message(config):
-    handler = Handler(config)
-
-    with pytest.raises(ValueError):
-        handler.parse_message('not json')
-
-    with pytest.raises(KeyError):
-        handler.parse_message('{"foo":1}')
-
-    with pytest.raises(ValueError):
-        handler.parse_message('{"command":"foo"}')
-
-    msg = handler.parse_message('{"command":"step"}')
-
-    assert msg == {
-        'command': 'step',
-    }
 
 
 def test_recover_step(config):
     handler = Handler(config)
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     exc = ptr.proxy.execution.get()
+    manager = make_user('juan_manager', 'Manager')
 
-    execution, pointer, xmliter, node, *rest = \
+    pointer, user, input = \
         handler.recover_step({
             'command': 'step',
             'pointer_id': ptr.id,
-            'actors': [
-                {
-                    'ref': 'requester',
-                    'user': {'identifier': 'juan_manager'},
-                    'forms': [
-                        {
-                            'ref': 'auth-form',
-                            'data': {
-                                'auth': 'yes',
-                            },
-                        },
-                    ],
-                }
-            ],
+            'user_identifier': 'juan_manager',
+            'input': [[
+                'auth-form',
+                [{
+                    'auth': 'yes',
+                }],
+            ]],
         })
 
-    assert execution.id == exc.id
     assert pointer.id == pointer.id
-    assert pointer in execution.proxy.pointers
-
-    assert node.id == 'mid-node'
+    assert user.id == manager.id
 
 
 def test_create_pointer(config):
@@ -120,6 +93,8 @@ def test_wakeup(config, mongo):
     handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
+        'user_identifier': '',
+        'input': [],
     }, channel)
 
     # test manager is notified
@@ -159,6 +134,7 @@ def test_wakeup(config, mongo):
 
 def test_teardown(config, mongo):
     ''' second and last stage of a node's lifecycle '''
+    # test setup
     handler = Handler(config)
 
     p_0 = make_pointer('simple.2018-02-19.xml', 'mid-node')
@@ -168,15 +144,8 @@ def test_teardown(config, mongo):
     manager = User(identifier='manager').save()
     manager2 = User(identifier='manager2').save()
 
-    act = make_activity('mid-node', manager, execution)
-
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
-
-    form = Questionaire(ref='auth-form', data={
-        'auth': 'yes',
-    }).save()
-    form.proxy.execution.set(execution)
 
     mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
@@ -192,18 +161,22 @@ def test_teardown(config, mongo):
 
     channel = MagicMock()
 
+    # the thing to test
     handler.call({
         'command': 'step',
         'pointer_id': p_0.id,
-        'actor': {
-            'ref': 'a',
-            'forms': [{
-                'ref': form.ref,
-                'data': form.data,
+        'user_identifier': manager.identifier,
+        'input': [[
+            'mid-form',
+            [{
+                'name': 'data',
+                'value': 'yes',
+                'type': 'text',
             }],
-        },
+        ]],
     }, channel)
 
+    # assertions
     assert Pointer.get(p_0.id) is None
 
     assert Pointer.count() == 1
@@ -217,12 +190,18 @@ def test_teardown(config, mongo):
     assert reg['execution']['id'] == execution.id
     assert reg['node']['id'] == p_0.node_id
     assert reg['actors'] == [{
-        'ref': 'a',
+        'ref': 'mid-node',
+        'user': {
+            'identifier': 'manager',
+            'human_name': None,
+        },
         'forms': [{
-            'ref': 'auth-form',
-            'data': {
-                'auth': 'yes',
-            },
+            'ref': 'mid-form',
+            'inputs': [{
+                'type': 'text',
+                'name': 'data',
+                'value': 'yes',
+            }],
         }],
     }]
     with pytest.raises(KeyError):
@@ -232,17 +211,28 @@ def test_teardown(config, mongo):
     assert manager.proxy.tasks.count() == 0
     assert manager2.proxy.tasks.count() == 0
 
+    # activity is created
+    activities = execution.proxy.actors.get()
+
+    assert len(activities) == 1
+    assert activities[0].ref == 'mid-node'
+    assert activities[0].proxy.user.get() == manager
+
     # form is attached
-    forms = exc.proxy.forms.get()
+    forms = execution.proxy.forms.get()
 
     assert len(forms) == 1
+    assert forms[0].ref == 'mid-form'
+    assert forms[0] in activities[0].proxy.forms
 
-    form = forms[0]
+    # input is attached to form
+    inputs = Input.get_all()
 
-    assert form.ref == 'mid-form'
-    assert form.data == {
-        'data': 'yes',
-    }
+    assert len(inputs) == 1
+    assert inputs[0].name == 'data'
+    assert inputs[0].type == 'text'
+    assert inputs[0].value == 'yes'
+    assert inputs[0] in forms[0].proxy.inputs
 
 
 def test_teardown_start_process(config, mongo):

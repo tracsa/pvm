@@ -33,25 +33,49 @@ class Activity(Model):
         'cacahuate.models.User',
         inverse='activities'
     )
+    forms = fields.SetRelation(
+        'cacahuate.models.Questionaire',
+        inverse='activity'
+    )
     ref = fields.Text()
 
     def to_json(self):
         return {
             'ref': self.ref,
-            'user_id': self.proxy.user.get().id,
+            'user': self.user.to_json(fields=['identifier', 'human_name']),
+            'forms': [f.to_json() for f in self.proxy.forms.get()],
+        }
+
+
+class Input(Model):
+    name = fields.Text()
+    status = fields.Text()
+    value = fields.Text()
+    type = fields.Text()
+    form = fields.ForeignIdRelation(
+        'cacahuate.models.Questionaire',
+        inverse='inputs'
+    )
+
+    def to_json(self):
+        return {
+            'name': self.name,
+            'value': self.value,
+            'type': self.type,
         }
 
 
 class Questionaire(Model):
     ''' Represents filled forms and their data '''
     ref = fields.Text()
-    data = fields.Dict()
     execution = fields.ForeignIdRelation(Execution, inverse='forms')
+    activity = fields.ForeignIdRelation(Activity, inverse='forms')
+    inputs = fields.SetRelation(Input, inverse='form')
 
     def to_json(self):
         return {
             'ref': self.ref,
-            'data': self.data,
+            'inputs': [i.to_json() for i in self.proxy.inputs.get()],
         }
 
 

@@ -1181,7 +1181,7 @@ def test_node_statistics_pagination(client, mongo, config):
         make_node_reg('test2', make_date(), None),
     ])
 
-    res = client.get('/v1/process/{}/statistics?offset=1&limit=2'.format(
+    res = client.get('/v1/process/{}/statistics?offset=1&limit=asdasd'.format(
         config['EXECUTION_ID_TEST']
     ))
     assert res.status_code == 200

@@ -276,6 +276,18 @@ def test_teardown(config, mongo):
     assert manager.proxy.tasks.count() == 0
     assert manager2.proxy.tasks.count() == 0
 
+    # form is attached
+    forms = exc.proxy.forms.get()
+
+    assert len(forms) == 1
+
+    form = forms[0]
+
+    assert form.ref == 'mid-form'
+    assert form.data == {
+        'data': 'yes',
+    }
+
 
 def test_teardown_start_process(config, mongo):
     ''' second and last stage of a node's lifecycle '''

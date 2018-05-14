@@ -71,14 +71,6 @@ def make_name(name_string, collected_forms):
     return Template(name_string).render(**context)
 
 
-def store_actor(ref, user, forms):
-    return {
-        'ref': ref,
-        'user': user.to_json(),
-        'forms': forms,
-    }
-
-
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
 def index():
@@ -188,27 +180,14 @@ def start_process():
     activity.proxy.user.set(g.user)
     activity.proxy.execution.set(execution)
 
-    actor = store_actor(
-        start_point.id,
-        g.user,
-        store_forms(collected_forms, execution)
-    )
-
     # log to mongo
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
 
-    collection.insert_one({
-        'started_at': datetime.now(),
-        'finished_at': datetime.now(),
-        'execution': {
-            'id': execution.id,
-            'name': execution.name,
-            'description': execution.description,
-        },
-        'node': start_point.to_json(),
-        'actors': [actor],
-        'state': execution.get_state(),
-    })
+    collection.insert_one(start_point.log_entry(
+        execution,
+        activity,
+        finished_at=datetime.now(),
+    ))
 
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
 
@@ -295,13 +274,6 @@ def continue_process():
     # Validate asociated forms
     collected_forms = continue_point.validate_input(request.json)
 
-    # save the data
-    actor = store_actor(
-        node_id,
-        g.user,
-        store_forms(collected_forms, execution)
-    )
-
     # trigger rabbit
     channel = get_channel()
     channel.basic_publish(
@@ -310,7 +282,8 @@ def continue_process():
         body=json.dumps({
             'command': 'step',
             'pointer_id': pointer.id,
-            'actor': actor,
+            'user_identifier': g.user.identifier,
+            'forms': collected_forms,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,

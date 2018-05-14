@@ -208,18 +208,6 @@ def test_continue_process(client, mocker, config):
         'data': 'accepted',
     }
 
-    # form is attached
-    forms = exc.proxy.forms.get()
-
-    assert len(forms) == 1
-
-    form = forms[0]
-
-    assert form.ref == 'mid-form'
-    assert form.data == {
-        'data': 'yes',
-    }
-
     # rabbit is called
     pika.adapters.blocking_connection.BlockingChannel.\
         basic_publish.assert_called_once()
@@ -230,38 +218,27 @@ def test_continue_process(client, mocker, config):
     json_message = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'actor': {
-            'ref': 'mid-node',
-            'user': {
-                '_type': 'user',
-                'identifier': 'juan_manager',
-                'human_name': 'Juanote',
-            },
-            'forms': [
-                {
-                    'ref': 'mid-form',
-                    'form': [
-                        {
-                            "name": "data",
-                            "type": "text",
-                            "value": "yes",
-                            "required": True,
-                            'default': None,
-                            'label': 'data',
-                        }
-                    ],
-                    'data': {
-                        'data': 'yes',
-                    },
-                },
+        'user_identifier': 'juan_manager',
+        'forms': [
+            [
+                'mid-form',
+                [
+                    {
+                        "name": "data",
+                        "type": "text",
+                        "value": "yes",
+                        "required": True,
+                        'default': None,
+                        'label': 'data',
+                    }
+                ],
             ],
-        },
+        ],
     }
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
     body = json.loads(args['body'])
-    del body['actor']['user']['id']
     assert body == json_message
 
     # makes a useful call for the handler
@@ -416,18 +393,6 @@ def test_start_process(client, mocker, config, mongo):
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
-    assert reg['state'] == {
-        'forms': [{
-            'ref': 'start-form',
-            'data': {
-                'data': 'yes',
-            },
-        }],
-        'actors': [{
-            'ref': 'start-node',
-            'user_id': juan.id,
-        }],
-    }
 
     reg2 = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
 
@@ -616,13 +581,7 @@ def test_regression_approval(client, mocker, config):
     assert json.loads(args['body']) == {
         'command': 'accept',
         'pointer_id': ptr.id,
-        'actor': {
-            'ref': 'approval-node',
-            'user': {
-                'identifier': 'juan',
-                'human_name': 'Juan',
-            },
-        },
+        'user_identifier': 'juan',
         'comment': 'I like the previous work',
     }
 

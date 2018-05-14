@@ -1,9 +1,10 @@
 ''' This file defines some basic classes that map the behaviour of the
 equivalent xml nodes '''
-import re
 from case_conversion import pascalcase
+from datetime import datetime
 from typing import Iterator
 from xml.dom.minidom import Element
+import re
 
 from cacahuate.errors import ElementNotFound, IncompleteBranch, \
     ValidationErrors, RequiredInputError, InvalidInputError, InputError, \
@@ -121,6 +122,23 @@ class Node:
 
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
+
+    def log_entry(self, execution, actor, *, finished_at=None):
+        return {
+            'started_at': datetime.now(),
+            'finished_at': finished_at,
+            'execution': execution.to_json(),
+            'node': self.to_json(),
+            'actors': [actor.to_json()],
+        }
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'type': type(self).__name__.lower(),
+        }
 
 
 class Action(Node):
@@ -248,13 +266,6 @@ class Action(Node):
             raise BadRequest(ValidationErrors(errors).to_json())
 
         return collected_forms
-
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-        }
 
 
 class Validation(Node):

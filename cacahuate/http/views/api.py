@@ -174,23 +174,11 @@ def start_process():
     ).save()
     pointer.proxy.execution.set(execution)
 
-    # create activity
-    auth_ref = start_point.id
-    activity = Activity(ref=auth_ref).save()
-    activity.proxy.user.set(g.user)
-    activity.proxy.execution.set(execution)
-
     # log to mongo
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
-
-    collection.insert_one(start_point.log_entry(
-        execution,
-        activity,
-        finished_at=datetime.now(),
-    ))
+    collection.insert_one(start_point.log_entry(execution))
 
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
-
     collection.insert_one({
         'id': execution.id,
         'name': execution.name,
@@ -211,8 +199,9 @@ def start_process():
         routing_key=app.config['RABBIT_QUEUE'],
         body=json.dumps({
             'command': 'step',
-            'process': execution.process_name,
             'pointer_id': pointer.id,
+            'user_identifier': g.user.identifier,
+            'input': collected_forms,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,
@@ -283,7 +272,7 @@ def continue_process():
             'command': 'step',
             'pointer_id': pointer.id,
             'user_identifier': g.user.identifier,
-            'forms': collected_forms,
+            'input': collected_forms,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,

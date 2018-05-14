@@ -123,13 +123,13 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
-    def log_entry(self, execution, actor, *, finished_at=None):
+    def log_entry(self, execution):
         return {
             'started_at': datetime.now(),
-            'finished_at': finished_at,
+            'finished_at': None,
             'execution': execution.to_json(),
             'node': self.to_json(),
-            'actors': [actor.to_json()],
+            'actors': [],
         }
 
     def to_json(self):

@@ -219,7 +219,7 @@ def test_continue_process(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan_manager',
-        'forms': [
+        'input': [
             [
                 'mid-form',
                 [
@@ -370,8 +370,21 @@ def test_start_process(client, mocker, config, mongo):
 
     json_message = {
         'command': 'step',
-        'process': exc.process_name,
         'pointer_id': ptr.id,
+        'user_identifier': 'juan',
+        'input': [
+            [
+                'start-form',
+                [{
+                    'default': None,
+                    'label': 'Info',
+                    'required': True,
+                    'type': 'text',
+                    'value': 'yes',
+                    'name': 'data',
+                }],
+            ],
+        ],
     }
 
     assert args['exchange'] == ''
@@ -390,7 +403,7 @@ def test_start_process(client, mocker, config, mongo):
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
-    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert reg['finished_at'] is None
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
 

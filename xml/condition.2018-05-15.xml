@@ -7,13 +7,14 @@
     <description>Smallest Condition process</description>
   </process-info>
   <process>
-    <action id="start-node">
+    <action id="start-node" >
       <form-array>
         <form id="work">
           <input type="text" name="task"></input>
         </form>
       </form-array>
     </action>
+
     <if id="condition-node">
       <condition>fiuref hiur</condition>
       <body>
@@ -24,8 +25,30 @@
             </form>
           </form-array>
         </action>
+
+        <if id="condition-node">
+          <condition>fiuref hiur</condition>
+          <body>
+            <action id="start-node" >
+              <form-array>
+                <form id="work">
+                  <input type="text" name="task"></input>
+                </form>
+              </form-array>
+            </action>
+          </body>
+        </if>
+
+        <action id="start-node" >
+          <form-array>
+            <form id="work">
+              <input type="text" name="task"></input>
+            </form>
+          </form-array>
+        </action>
       </body>
     </if>
+
     <validation id="approval-node" >
       <dependencies>
         <dep>work.task</dep>

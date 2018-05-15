@@ -41,10 +41,20 @@ class Activity(Model):
 
 
 class Input(Model):
+    # input ref
+    type = fields.Text()
     name = fields.Text()
+
+    # for keeping state
     status = fields.Text()
     value = fields.Text()
-    type = fields.Text()
+    # TODO value = fields.Json()
+
+    # for rendering
+    label = fields.Text()
+    # TODO options = fields.Json()
+
+    # relations
     form = fields.ForeignIdRelation(
         'cacahuate.models.Questionaire',
         inverse='inputs'

@@ -200,8 +200,9 @@ class Action(Node):
         )
 
     def validate_form_spec(self, form_specs, associated_data) -> dict:
-        ''' Validates the given data against the spec contained in form. In case of
-        failure raises an exception. In case of success returns the validated data.
+        ''' Validates the given data against the spec contained in form.
+            In case of failure raises an exception. In case of success
+            returns the validated data.
         '''
         collected_specs = []
 

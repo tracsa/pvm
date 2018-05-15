@@ -10,9 +10,9 @@ import pymongo
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
     Forbidden
-from cacahuate.http.middleware import requires_json, requires_auth
-from cacahuate.http.validation import validate_json, \
-    validate_auth
+from cacahuate.http.middleware import requires_json, requires_auth, \
+    pagination
+from cacahuate.http.validation import validate_json, validate_auth
 from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer, User, Token, Activity, \
     Questionaire
@@ -50,13 +50,14 @@ def index():
 
 
 @app.route('/v1/execution', methods=['GET'])
+@pagination
 def execution_list():
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
 
     return jsonify({
         "data": list(map(
             json_prepare,
-            collection.find()
+            collection.find().skip(g.offset).limit(g.limit)
         )),
     })
 
@@ -153,10 +154,6 @@ def start_process():
         'status': 'ongoing',
         'started_at': datetime.now(),
         'finished_at': None,
-        'state': {
-            'forms': [],
-            'actors': [],
-        },
     })
 
     # trigger rabbit
@@ -299,9 +296,9 @@ def find_process(name):
 @requires_auth
 def list_activities():
     activities = g.user.proxy.activities.get()
-
     seen = {}
     unique = []
+
     for activity in activities:
         if activity.execution not in seen:
             seen[activity.execution] = True
@@ -309,7 +306,7 @@ def list_activities():
 
     return jsonify({
         'data': list(map(
-            lambda a: a.to_json(embed=['execution']),
+            lambda a: a.to_json(include=['*', 'execution']),
             unique
         )),
     })
@@ -335,7 +332,7 @@ def one_activity(id):
         }])
 
     return jsonify({
-        'data': activity.to_json(embed=['execution']),
+        'data': activity.to_json(include=['*', 'execution']),
     })
 
 
@@ -344,7 +341,7 @@ def one_activity(id):
 def task_list():
     return jsonify({
         'data': list(map(
-            lambda t: t.to_json(embed=['execution']),
+            lambda t: t.to_json(include=['*', 'execution']),
             g.user.proxy.tasks.get()
         )),
     })
@@ -372,7 +369,7 @@ def task_read(id):
     for form in node.getElementsByTagName('form'):
         forms.append(form_to_dict(form))
 
-    json_data = pointer.to_json(embed=['execution'])
+    json_data = pointer.to_json(include=['*', 'execution'])
 
     json_data['form_array'] = forms
 
@@ -382,6 +379,7 @@ def task_read(id):
 
 
 @app.route('/v1/log/<id>', methods=['GET'])
+@pagination
 def list_logs(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
     node_id = request.args.get('node_id')
@@ -393,7 +391,7 @@ def list_logs(id):
     return jsonify({
         "data": list(map(
             json_prepare,
-            collection.find(query).sort([
+            collection.find(query).skip(g.offset).limit(g.limit).sort([
                 ('started_at', pymongo.DESCENDING)
             ])
         )),
@@ -401,21 +399,20 @@ def list_logs(id):
 
 
 @app.route('/v1/process/<id>/statistics', methods=['GET'])
-def time_process(id):
+def node_statistics(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
     query = [
-        {"$match": {"execution.id": id}},
-        {"$limit": app.config['DEFAULT_LIMIT']},
+        {"$match": {"process_id": id}},
         {"$project": {
-            "execution": "$execution.id",
+            "process_id": "$process_id",
             "node": "$node.id",
             "difference_time": {
                 "$subtract": ["$finished_at", "$started_at"],
             },
         }},
         {"$group": {
-            "_id": {"execution": "$execution", "node": "$node"},
-            "execution_id": {"$first": "$execution"},
+            "_id": {"process_id": "$process_id", "node": "$node"},
+            "process_id": {"$first": "$process_id"},
             "node": {"$first": "$node"},
             "max": {
                 "$max": {
@@ -433,9 +430,9 @@ def time_process(id):
                 },
             },
         }},
+
         {"$sort": {"execution": 1, "node": 1}}
     ]
-
     return jsonify({
         "data": list(map(
             json_prepare,
@@ -445,12 +442,13 @@ def time_process(id):
 
 
 @app.route('/v1/process/statistics', methods=['GET'])
-def list_time_process():
+@pagination
+def process_statistics():
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
     query = [
         {"$match": {"status": "finished"}},
-
-        {"$limit": app.config['DEFAULT_LIMIT']},
+        {"$skip": g.offset},
+        {"$limit": g.limit},
         {"$project": {"difference_time": {
             "$subtract": ["$finished_at", "$started_at"]
             }, "process":{"id": "$process.id"},
@@ -476,7 +474,7 @@ def list_time_process():
             },
 
         }},
-        {"$sort": {"process": 1}}
+        {"$sort": {"process": 1}},
     ]
 
     return jsonify({

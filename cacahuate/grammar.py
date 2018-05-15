@@ -50,9 +50,9 @@ class Condition:
             try:
                 obj = next(self._execution.proxy.forms.q().filter(ref=obj_id))
             except StopIteration:
-                raise RefNotFound
+                return None
 
-            return obj.data.get(member)
+            return obj.get_value(member)
 
         def string(self, args):
             return args[0][1:-1]

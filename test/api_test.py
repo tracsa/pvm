@@ -1,6 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
-from flask import json, jsonify
+from flask import json, jsonify, g
 import pika
 import pytest
 from cacahuate.handler import Handler
@@ -1104,7 +1104,6 @@ def test_execution_list(client, mongo, config):
     data = json.loads(res.data)
 
     assert res.status_code == 200
-
     assert data == {
         'data': [{
             'status': 'ongoing',
@@ -1126,7 +1125,7 @@ def test_start_process_error_405(client, mongo, config):
 
 
 def test_node_statistics(client, mongo, config):
-    def make_node_reg(node_id, started_at, finished_at):
+    def make_node_reg(process_id,  node_id, started_at, finished_at):
         return {
             'started_at': started_at,
             'finished_at': finished_at,
@@ -1136,33 +1135,58 @@ def test_node_statistics(client, mongo, config):
             'node': {
                 'id': node_id,
             },
+            'process_id': process_id
         }
 
     mongo[config["MONGO_HISTORY_COLLECTION"]].insert_many([
-        make_node_reg('test1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
-        make_node_reg('test2', make_date(), make_date(2018, 5, 10, 6, 3, 3)),
-        make_node_reg('test1', make_date(), make_date(2018, 5, 10, 8, 2, 9)),
-        make_node_reg('test2', make_date(), make_date(2018, 5, 10, 3, 4, 5)),
-        make_node_reg('test2', make_date(), None),
+        make_node_reg(
+            'simple.2018-02-19', 'test1',
+            make_date(),
+            make_date(2018, 5, 10, 4, 5, 6)
+        ),
+        make_node_reg(
+            'simple.2018-02-19', 'test2',
+            make_date(),
+            make_date(2018, 5, 10, 6, 3, 3)
+        ),
+        make_node_reg(
+            'simple.2018-02-19', 'test1',
+            make_date(),
+            make_date(2018, 5, 10, 8, 2, 9)
+            ),
+        make_node_reg(
+            'simple.2018-02-19', 'test2',
+            make_date(),
+            make_date(2018, 5, 10, 3, 4, 5)
+        ),
+        make_node_reg(
+            'simple.2018-02-19',
+            'test2',
+            make_date(),
+            None
+        ),
     ])
 
-    res = client.get('/v1/process/{}/statistics'.format(EXECUTION_ID))
+    res = client.get('/v1/process/{}/statistics'.format(
+        'simple.2018-02-19'
+    ))
+
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
             {
                 'average': 540217.5,
-                'execution_id': EXECUTION_ID,
                 'max': 547329.0,
                 'min': 533106.0,
-                'node': 'test1'
+                'node': 'test1',
+                'process_id': 'simple.2018-02-19'
             },
             {
                 'average': 534814.0,
-                'execution_id': EXECUTION_ID,
                 'max': 540183.0,
                 'min': 529445.0,
-                'node': 'test2'
+                'node': 'test2',
+                'process_id': 'simple.2018-02-19'
             },
         ],
     }
@@ -1207,3 +1231,88 @@ def test_process_statistics(client, mongo, config):
 
         ],
     }
+
+
+def test_pagination_execution_log(client, mongo, config):
+    def make_exec_reg(process_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'status': 'finished',
+            'process': {
+                'id': process_id,
+                'version': 'v1',
+            },
+        }
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_many([
+        make_exec_reg('p1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
+        make_exec_reg('p2', make_date(), make_date(2018, 5, 10, 10, 34, 32)),
+        make_exec_reg('p3', make_date(), make_date(2018, 5, 11, 22, 41, 10)),
+        make_exec_reg('p4', make_date(), make_date(2018, 6, 23, 8, 15, 1)),
+        make_exec_reg('p5', make_date(), make_date(2018, 6, 11, 4, 5, 6)),
+        make_exec_reg('p6', make_date(), make_date(2018, 6, 12, 5, 6, 32)),
+        make_exec_reg('p7', make_date(), make_date(2018, 6, 13, 6, 7, 10)),
+        make_exec_reg('p8', make_date(), make_date(2018, 6, 14, 7, 8, 1)),
+    ])
+
+    res = client.get('/v1/process/statistics?offset=2&limit=2')
+    assert res.status_code == 200
+    assert json.loads(res.data)['data'][0]["process"] == 'p3'
+    assert json.loads(res.data)['data'][1]["process"] == 'p4'
+    assert len(json.loads(res.data)['data']) == 2
+
+
+def test_pagination_v1_log(client, mongo, config):
+
+    def make_node_reg(process_id, node_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'execution': {
+                'id': EXECUTION_ID,
+            },
+            'node': {
+                'id': node_id,
+            },
+            'process_id': process_id
+        }
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_many([
+        make_node_reg(
+            'simple.2018-02-19', 'mid-node',
+            make_date(),
+            make_date(2018, 5, 20, 5, 5, 5)
+        ),
+        make_node_reg(
+            'simple.2018-02-19', 'mid-node',
+            make_date(),
+            make_date(2018, 5, 21, 6, 6, 6)
+            ),
+        make_node_reg(
+            'simple.2018-02-19', 'mid-node',
+            make_date(),
+            make_date(2018, 5, 22, 7, 7, 7)
+        ),
+        make_node_reg(
+            'simple.2018-02-19',
+            'mid-node',
+            make_date(),
+            make_date(2018, 5, 23, 8, 8, 8)
+        ),
+        make_node_reg(
+            'simple.2018-02-19',
+            'mid-node',
+            make_date(),
+            make_date(2018, 5, 24, 9, 9, 9)
+        ),
+    ])
+
+    res = client.get(
+        '/v1/log/{}?node_id=mid-node&offset=2&limit=2'.format(EXECUTION_ID)
+    )
+    assert json.loads(res.data)['data'][0]["finished_at"] == \
+        '2018-05-22T07:07:07+00:00'
+    assert json.loads(res.data)['data'][1]["finished_at"] == \
+        '2018-05-23T08:08:08+00:00'
+    assert len(json.loads(res.data)['data']) == 2

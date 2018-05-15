@@ -131,6 +131,7 @@ class Handler:
             'node': node.to_json(),
             'notified_users': notified_users,
             'actors': [],
+            'process_id': execution.process_name
         })
 
         # nodes with forms are not queued

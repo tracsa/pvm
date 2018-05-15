@@ -130,6 +130,7 @@ class Node:
             'execution': execution.to_json(),
             'node': self.to_json(),
             'actors': [],
+            'process_id': execution.process_name,
         }
 
     def to_json(self):

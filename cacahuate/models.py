@@ -68,6 +68,15 @@ class Questionaire(Model):
     activity = fields.ForeignIdRelation(Activity, inverse='forms')
     inputs = fields.SetRelation(Input, inverse='form')
 
+    def get_value(self, member):
+        ''' returs the value of one of this form's inputs '''
+        try:
+            input = next(self.proxy.inputs.q().filter(name=member))
+
+            return input.value
+        except StopIteration:
+            return None
+
 
 class Pointer(Model):
     ''' marks a node and a execution so it can continue from there '''
@@ -81,7 +90,9 @@ class Pointer(Model):
 class User(Model):
     ''' those humans who can execute actions '''
     identifier = fields.Text(index=True)
-    human_name = fields.Text()
+    fullname = fields.Text()
+    email = fields.Text()
+
     tokens = fields.SetRelation('cacahuate.models.Token', inverse='user')
     # processes I'm participating in
     activities = fields.SetRelation(
@@ -93,6 +104,9 @@ class User(Model):
         'cacahuate.models.Pointer',
         inverse='candidates'
     )
+
+    def get_x_info(self, attr):
+        return getattr(self, attr)
 
 
 class Token(Model):

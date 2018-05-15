@@ -82,7 +82,10 @@ def test_wakeup(config, mongo):
     pointer = make_pointer('simple.2018-02-19.xml', 'start-node')
     execution = pointer.proxy.execution.get()
     juan = User(identifier='juan').save()
-    manager = User(identifier='juan_manager').save()
+    manager = User(
+        identifier='juan_manager',
+        email='hardcoded@mailinator.com'
+    ).save()
     act = make_activity('start-node', juan, execution)
     ques = Questionaire(ref='start-form', data={'data': 'why not'}).save()
     ques.proxy.execution.set(execution)
@@ -193,7 +196,7 @@ def test_teardown(config, mongo):
         'ref': 'mid-node',
         'user': {
             'identifier': 'manager',
-            'human_name': None,
+            'fullname': None,
         },
         'forms': [{
             'ref': 'mid-form',
@@ -289,28 +292,87 @@ def test_call_handler_delete_process(config, mongo):
     assert Activity.count() == 0
 
 
-def test_approve():
+@pytest.mark.skip
+def test_approve(config, mongo):
     ''' tests that a validation node can go forward on approval '''
-    assert False
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    channel = MagicMock()
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'execution': {
+            'id': execution.id,
+        },
+        'node': {
+            'id': p_0.node_id,
+        },
+        'actors': [],
+    })
+
+    # thing to test
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': {
+            'response': 'accept',
+            'comment': 'I like it',
+        },
+    }, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
+
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == 'final-node'
+
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+
+    assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert reg['execution']['id'] == ptr.execution
+    assert reg['node']['id'] == 'approval-node'
+    assert reg['actors'] == [{
+        'ref': 'mid-node',
+        'user': {
+            'identifier': 'manager',
+            'human_name': None,
+        },
+        'node': {
+            'type': 'validation',
+        },
+        'input': {
+            'response': 'accept',
+            'comment': 'I like it',
+        },
+    }]
 
 
+@pytest.mark.skip
 def test_reject():
     ''' tests that a rejection moves the pointer to a backward position '''
     assert False
 
 
+@pytest.mark.skip
 def test_rejected_doesnt_repeat():
     ''' asserts that a pointer moved to the past doesn't repeat a task that
     wasn't invalidated by the rejection '''
     assert False
 
 
+@pytest.mark.skip
 def test_rejected_repeats():
     ''' asserts that a pointer moved to the past repeats the nodes that were
     invalidated '''
     assert False
 
 
+@pytest.mark.skip
 def test_patch():
     ''' ensure that a patch request moves the pointer accordingly '''
     assert False
@@ -328,6 +390,8 @@ def test_resistance_unexisteng_hierarchy_backend(config):
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
+        'user_identifier': '',
+        'input': {},
     }))
 
 
@@ -343,6 +407,8 @@ def test_resistance_hierarchy_return(config):
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
+        'user_identifier': '',
+        'input': {},
     }))
 
 
@@ -358,6 +424,8 @@ def test_resistance_hierarchy_item(config):
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
+        'user_identifier': '',
+        'input': {},
     }))
 
 
@@ -373,6 +441,8 @@ def test_resistance_node_not_found(config):
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
+        'user_identifier': '',
+        'input': {},
     }))
 
 
@@ -383,16 +453,4 @@ def test_resistance_dead_pointer(config):
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': 'nones',
-    }))
-
-
-def test_resistance_dead_execution(config):
-    handler = Handler(config)
-
-    ptr = Pointer().save()
-
-    # this is what we test
-    handler(MagicMock(), MagicMock(), None, json.dumps({
-        'command': 'step',
-        'pointer_id': ptr.id,
     }))

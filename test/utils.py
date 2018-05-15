@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 def make_user(identifier, name):
-    u = User(identifier=identifier, human_name=name).save()
+    u = User(identifier=identifier, fullname=name).save()
     token = Token(
         token=''.join(choice(ascii_letters) for c in range(9))
     ).save()

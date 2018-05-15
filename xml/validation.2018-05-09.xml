@@ -27,5 +27,13 @@
         <dep>work.task</dep>
       </dependencies>
     </validation>
+
+    <action id="final-node">
+      <form-array>
+        <form id="confirm">
+          <input type="text" name="exit"></input>
+        </form>
+      </form-array>
+    </action>
   </process>
 </process-spec>

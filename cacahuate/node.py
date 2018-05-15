@@ -201,8 +201,9 @@ class Action(Node):
         return True
 
     def validate_form_spec(self, form_specs, associated_data) -> dict:
-        ''' Validates the given data against the spec contained in form. In case of
-        failure raises an exception. In case of success returns the validated data.
+        ''' Validates the given data against the spec contained in form.
+            In case of failure raises an exception. In case of success
+            returns the validated data.
         '''
         collected_specs = []
 
@@ -244,6 +245,7 @@ class Action(Node):
 
         index = 0
         form_array = json_data.get('form_array', [])
+
         for form_specs in self.form_array:
             ref = form_specs.ref
 

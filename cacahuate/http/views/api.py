@@ -12,8 +12,7 @@ from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
     Forbidden
 from cacahuate.http.middleware import requires_json, requires_auth, \
     pagination
-from cacahuate.http.validation import validate_forms, validate_json, \
-    validate_auth
+from cacahuate.http.validation import validate_json, validate_auth
 from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer, User, Token, Activity, \
     Questionaire

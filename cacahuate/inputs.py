@@ -126,7 +126,10 @@ class CheckboxInput(FiniteOptionInput):
             if val not in self:
                 raise InvalidInputError(
                     self.name,
-                    'request.body.form_array.{}.{}'.format(form_index, self.name)
+                    'request.body.form_array.{}.{}'.format(
+                        form_index,
+                        self.name
+                    )
                 )
 
         return value
@@ -188,7 +191,10 @@ class FileInput(Input):
             if not valid:
                 raise InvalidInputError(
                     self.name,
-                    'request.body.form_array.{}.{}'.format(form_index, self.name)
+                    'request.body.form_array.{}.{}'.format(
+                        form_index,
+                        self.name
+                    )
                 )
         else:
             abort(500, 'File provider `{}` not implemented'.format(provider))

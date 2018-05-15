@@ -165,7 +165,15 @@ class Handler:
                         i.proxy.form.set(q)
 
             update_query['$push'] = {
-                'actors': activity.to_json(),
+                'actors': activity.to_json(include=[
+                    'ref',
+                    'user.human_name',
+                    'user.identifier',
+                    'forms.ref',
+                    'forms.inputs.name',
+                    'forms.inputs.type',
+                    'forms.inputs.value',
+                ]),
             }
 
         collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]

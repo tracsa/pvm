@@ -289,11 +289,27 @@ def test_call_handler_delete_process(config, mongo):
     assert Activity.count() == 0
 
 
-def test_approve(config):
+def test_approve(config, mongo):
     ''' tests that a validation node can go forward on approval '''
+    # test setup
     handler = Handler(config)
-    ptr = make_pointer('', '')
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    channel = MagicMock()
 
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'execution': {
+            'id': execution.id,
+        },
+        'node': {
+            'id': p_0.node_id,
+        },
+        'actors': [],
+    })
+
+    # thing to test
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
@@ -303,6 +319,34 @@ def test_approve(config):
             'comment': 'I like it',
         },
     }, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
+
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == 'final-node'
+
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+
+    assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert reg['execution']['id'] == ptr.execution
+    assert reg['node']['id'] == 'approval-node'
+    assert reg['actors'] == [{
+        'ref': 'mid-node',
+        'user': {
+            'identifier': 'manager',
+            'human_name': None,
+        },
+        'node': {
+            'type': 'validation',
+        },
+        'input': {
+            'response': 'accept',
+            'comment': 'I like it',
+        },
+    }]
+
 
 def test_reject():
     ''' tests that a rejection moves the pointer to a backward position '''

@@ -193,7 +193,14 @@
 
   <define name="condition">
     <element name="condition">
-      <ref name="node-info" />
+      <text />
+    </element>
+    <ref name="body" />
+  </define>
+
+  <define name="body">
+    <element name="body">
+      <ref name="action" />
     </element>
   </define>
 </grammar>

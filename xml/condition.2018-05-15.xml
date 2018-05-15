@@ -7,7 +7,7 @@
     <description>Smallest Condition process</description>
   </process-info>
   <process>
-    <action id="start-node" >
+    <action id="start-node">
       <form-array>
         <form id="work">
           <input type="text" name="task"></input>

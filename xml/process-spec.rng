@@ -25,10 +25,21 @@
 
   <define name="process">
     <element name="process">
+        <ref name="element-recursive" />
+    </element>
+  </define>
+
+  <define name="body">
+    <element name="body">
+        <ref name="element-recursive" />
+    </element>
+  </define>
+
+  <define name="element-recursive">
       <interleave>
-        <oneOrMore>
+        <zeroOrMore>
           <ref name="action"/>
-        </oneOrMore>
+        </zeroOrMore>
         <zeroOrMore>
           <ref name="validation"/>
         </zeroOrMore>
@@ -39,7 +50,6 @@
           <ref name="if" />
         </zeroOrMore>
       </interleave>
-    </element>
   </define>
 
   <define name="action">
@@ -195,25 +205,6 @@
   <define name="condition">
     <element name="condition">
       <text />
-    </element>
-  </define>
-
-  <define name="body">
-    <element name="body">
-    <interleave>
-        <zeroOrMore>
-          <ref name="action"/>
-        </zeroOrMore>
-        <zeroOrMore>
-          <ref name="validation"/>
-        </zeroOrMore>
-        <zeroOrMore>
-          <ref name="exit" />
-        </zeroOrMore>
-        <zeroOrMore>
-          <ref name="if" />
-        </zeroOrMore>
-      </interleave>
     </element>
   </define>
 </grammar>

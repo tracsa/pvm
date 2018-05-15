@@ -25,31 +25,31 @@
 
   <define name="process">
     <element name="process">
-        <ref name="element-recursive" />
+      <ref name="element-recursive" />
     </element>
   </define>
 
   <define name="body">
     <element name="body">
-        <ref name="element-recursive" />
+      <ref name="element-recursive" />
     </element>
   </define>
 
   <define name="element-recursive">
-      <interleave>
-        <zeroOrMore>
-          <ref name="action"/>
-        </zeroOrMore>
-        <zeroOrMore>
-          <ref name="validation"/>
-        </zeroOrMore>
-        <zeroOrMore>
-          <ref name="exit" />
-        </zeroOrMore>
-        <zeroOrMore>
-          <ref name="if" />
-        </zeroOrMore>
-      </interleave>
+    <interleave>
+      <zeroOrMore>
+        <ref name="action"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="validation"/>
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="exit" />
+      </zeroOrMore>
+      <zeroOrMore>
+        <ref name="if" />
+      </zeroOrMore>
+    </interleave>
   </define>
 
   <define name="action">

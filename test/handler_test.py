@@ -289,10 +289,20 @@ def test_call_handler_delete_process(config, mongo):
     assert Activity.count() == 0
 
 
-def test_approve():
+def test_approve(config):
     ''' tests that a validation node can go forward on approval '''
-    assert False
+    handler = Handler(config)
+    ptr = make_pointer('', '')
 
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': {
+            'response': 'accept',
+            'comment': 'I like it',
+        },
+    }, channel)
 
 def test_reject():
     ''' tests that a rejection moves the pointer to a backward position '''
@@ -311,6 +321,7 @@ def test_rejected_repeats():
     assert False
 
 
+@pytest.mark.skip
 def test_patch():
     ''' ensure that a patch request moves the pointer accordingly '''
     assert False

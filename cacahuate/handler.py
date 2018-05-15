@@ -150,6 +150,7 @@ class Handler:
             execution = pointer.proxy.execution.get()
             # store activity
             activity = Activity(ref=pointer.node_id).save()
+
             activity.proxy.user.set(user)
             activity.proxy.execution.set(execution)
 

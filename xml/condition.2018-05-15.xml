@@ -1,0 +1,47 @@
+<process-spec>
+  <process-info>
+    <author>ramiggu</author>
+    <date>2018-05-15</date>
+    <name>condition Process</name>
+    <public>false</public>
+    <description>Smallest Condition process</description>
+  </process-info>
+  <process>
+    <action id="start-node" >
+      <form-array>
+        <form id="work">
+          <input type="text" name="task"></input>
+        </form>
+      </form-array>
+    </action>
+    <if id="condition-node">
+      <condition>
+        <node-info>
+          <name>Primer paso</name>
+          <description>Pasar a tarea 1</description>
+        </node-info>
+      </condition>
+    </if>
+    <validation id="approval-node" >
+      <dependencies>
+        <dep>work.task</dep>
+      </dependencies>
+    </validation>
+    <if id="condition-node">
+      <condition>
+        <node-info>
+          <name>Segundo paso</name>
+          <description>Pasar a tarea 2</description>
+        </node-info>
+      </condition>
+    </if>
+    <if id="condition-node">
+      <condition>
+        <node-info>
+          <name>Tercer paso</name>
+          <description>Pasar a tarea 3</description>
+        </node-info>
+      </condition>
+    </if>
+  </process>
+</process-spec>

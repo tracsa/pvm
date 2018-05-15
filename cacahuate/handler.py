@@ -12,7 +12,6 @@ from cacahuate.logger import log
 from cacahuate.models import Execution, Pointer, Questionaire, Activity, User
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, Exit
-from cacahuate.auth.base import BaseUser
 
 
 class Handler:
@@ -221,9 +220,9 @@ class Handler:
         })
 
     def notify_users(self, node, pointer, channel):
-        husers = node.get_actors(self.config, pointer.proxy.execution.get())
+        users = node.get_actors(self.config, pointer.proxy.execution.get())
 
-        if type(husers) != list:
+        if type(users) != list:
             raise MisconfiguredProvider('Provider returned non list')
 
         channel.exchange_declare(
@@ -233,18 +232,18 @@ class Handler:
 
         notified_users = []
 
-        for huser in husers:
-            if not isinstance(huser, BaseUser):
+        for user in users:
+            if not isinstance(user, User):
                 raise MisconfiguredProvider(
-                    'User returned by hierarchy provider is not BaseUser, '
-                    'but {}'.format(type(huser))
+                    'User returned by hierarchy provider is not User, '
+                    'but {}'.format(type(user))
                 )
-            user = huser.get_user()
+
             notified_users.append(user.to_json())
 
             user.proxy.tasks.add(pointer)
 
-            mediums = self.get_contact_channels(huser)
+            mediums = self.get_contact_channels(user)
 
             for medium, params in mediums:
                 log.debug('Notified user {} via {} about n:{} e:{}'.format(
@@ -293,7 +292,7 @@ class Handler:
 
         return self.mongo
 
-    def get_contact_channels(self, user: BaseUser):
+    def get_contact_channels(self, user: User):
         return [('email', {'email': user.get_x_info('email')})]
 
     def create_pointer(self, node, execution: Execution):

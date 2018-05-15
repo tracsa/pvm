@@ -241,7 +241,7 @@ def test_continue_process(client, mocker, config):
             'ref': 'mid-node',
             'user': {
                 'identifier': 'juan_manager',
-                'human_name': 'Juanote',
+                'fullname': 'Juanote',
             },
             'forms': [
                 {

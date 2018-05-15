@@ -82,7 +82,7 @@ def store_actor(node, user, execution, forms):
         'ref': auth_ref,
         'user': {
             'identifier': g.user.identifier,
-            'human_name': g.user.human_name,
+            'fullname': g.user.fullname,
         },
         'forms': forms,
     }

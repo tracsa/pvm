@@ -109,7 +109,10 @@ def test_wakeup(config, mongo):
     pointer = make_pointer('simple.2018-02-19.xml', 'start-node')
     execution = pointer.proxy.execution.get()
     juan = User(identifier='juan').save()
-    manager = User(identifier='juan_manager').save()
+    manager = User(
+        identifier='juan_manager',
+        email='hardcoded@mailinator.com'
+    ).save()
     act = make_activity('start-node', juan, execution)
     ques = Questionaire(ref='start-form', data={'data': 'why not'}).save()
     ques.proxy.execution.set(execution)

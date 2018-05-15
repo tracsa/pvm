@@ -1,21 +1,6 @@
-from cacahuate.auth.base import BaseAuthProvider, BaseUser
+from cacahuate.auth.base import BaseAuthProvider
 from cacahuate.errors import AuthenticationError
-
-
-class HardcodedUser(BaseUser):
-
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-    def get_identifier(self):
-        return self.username
-
-    def get_human_name(self):
-        return self.humanname
-
-    def get_x_info(self, medium):
-        return "hardcoded@mailinator.com"
+from cacahuate.models import User
 
 
 class HardcodedAuthProvider(BaseAuthProvider):
@@ -31,8 +16,13 @@ class HardcodedAuthProvider(BaseAuthProvider):
         if username != 'juan' or password != '123456':
             raise AuthenticationError
 
-        return HardcodedUser(
-            username=username,
-            humanname='Juan Peréz',
-            password=password,
-        )
+        user = User.get_by('identifier', username)
+
+        if user is None:
+            user = User(
+                identifier=username,
+                fullname='Juan Peréz',
+                email='hardcoded@mailinator.com'
+            ).save()
+
+        return user

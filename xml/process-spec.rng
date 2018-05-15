@@ -200,7 +200,20 @@
 
   <define name="body">
     <element name="body">
-      <ref name="action" />
+    <interleave>
+        <oneOrMore>
+          <ref name="action"/>
+        </oneOrMore>
+        <zeroOrMore>
+          <ref name="validation"/>
+        </zeroOrMore>
+        <zeroOrMore>
+          <ref name="exit" />
+        </zeroOrMore>
+        <zeroOrMore>
+          <ref name="if" />
+        </zeroOrMore>
+      </interleave>
     </element>
   </define>
 </grammar>

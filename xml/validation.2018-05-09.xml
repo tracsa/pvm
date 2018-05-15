@@ -1,13 +1,13 @@
 <process-spec>
   <process-info>
     <author>categulario</author>
-    <date>2018-04-10</date>
-    <name>Cyclic Process</name>
+    <date>2018-05-09</date>
+    <name>Validation</name>
     <public>false</public>
-    <description>Smallest Cyclic process</description>
+    <description>A process with a validation node</description>
   </process-info>
   <process>
-    <action id="start-node" >
+    <action id="start-node">
       <form-array>
         <form id="work">
           <input type="text" name="task"></input>
@@ -20,5 +20,13 @@
         <dep>work.task</dep>
       </dependencies>
     </validation>
+
+    <action id="final-node">
+      <form-array>
+        <form id="confirm">
+          <input type="text" name="exit"></input>
+        </form>
+      </form-array>
+    </action>
   </process>
 </process-spec>

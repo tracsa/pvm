@@ -33,14 +33,6 @@ def test_all_inputs(client, config, mongo):
 
     assert res.status_code == 201
 
-    # mongo has a registry
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
-    actor = reg['actors'][0]
-
-    assert actor['ref'] == 'inputs-node'
-    assert actor['user']['identifier'] == 'juan'
-    assert actor['forms'][0]['data'] == objeto[0]['data']
-
 
 def test_datetime_error(client, mocker, config):
     objeto = [
@@ -333,7 +325,7 @@ def test_validate_form_multiple(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': '\'phone\' input is required',
+                'detail': '\'phone\' is required',
                 'where': 'request.body.form_array.1.phone',
                 'code': 'validation.required',
             },
@@ -373,108 +365,11 @@ def test_validate_form_multiple_error_position(client):
         'errors': [
             {
                 'code': 'validation.required',
-                'detail': '\'phone\' input is required',
+                'detail': '\'phone\' is required',
                 'where': 'request.body.form_array.2.phone',
             },
         ]
     }
-
-
-def test_store_form_multiple(config, client, mongo):
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'form-multiple',
-        'form_array': [
-            {
-                'ref': 'single-form',
-                'data': {
-                    'name': 'jorge',
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '1111',
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '2222',
-                },
-            },
-        ],
-    }))
-
-    assert res.status_code == 201
-
-    # Questionaires are ok
-    assert Questionaire.count() == 3
-
-    qs = Questionaire.q().filter(ref='single-form').one()
-
-    assert qs.data == {
-        'name': 'jorge',
-    }
-
-    qa = sorted(
-        Questionaire.q().filter(ref='multiple-form').all(),
-        key=lambda i: i.data['phone']
-    )
-
-    assert qa[0].data['phone'] == '1111'
-    assert qa[1].data['phone'] == '2222'
-
-    # history has the two inputs
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
-
-    assert reg['actors'][0]['forms'] == [
-        {
-            'ref': 'single-form',
-            'data': {
-                'name': 'jorge',
-            },
-            'form': [{
-                'name': 'name',
-                'type': 'text',
-                'value': 'jorge',
-                'required': True,
-                'label': 'name',
-                'default': None,
-            }],
-        },
-        {
-            'ref': 'multiple-form',
-            'data': {
-                'phone': '1111',
-            },
-            'form': [{
-                'name': 'phone',
-                'type': 'text',
-                'value': '1111',
-                'required': True,
-                'default': None,
-                'label': 'phone',
-            }],
-        },
-        {
-            'ref': 'multiple-form',
-            'data': {
-                'phone': '2222',
-            },
-            'form': [{
-                'name': 'phone',
-                'type': 'text',
-                'value': '2222',
-                'required': True,
-                'default': None,
-                'label': 'phone',
-            }],
-        },
-    ]
 
 
 @pytest.mark.skip
@@ -562,3 +457,79 @@ def test_required_inputs_with_defaults(client):
     assert False
     # file
     assert False
+
+
+def test_start_with_correct_form_order(client, mocker, mongo, config):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'og',
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201
+
+
+def test_start_with_incorrect_form_order(client, mocker, mongo, config):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'form-multiple',
+        'form_array': [
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'multiple-form',
+                'data': {
+                    'phone': '3312345678'
+                },
+            },
+            {
+                'ref': 'single-form',
+                'data': {
+                    'name': 'og',
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400

@@ -6,61 +6,34 @@ import pytest
 import simplejson as json
 
 from cacahuate.handler import Handler
-from cacahuate.models import Execution, Pointer, User, Activity, Questionaire
+from cacahuate.models import Execution, Pointer, User, Questionaire, \
+    Activity, Input
 from cacahuate.node import Action
 
 from .utils import make_pointer, make_activity, make_user
-
-
-def test_parse_message(config):
-    handler = Handler(config)
-
-    with pytest.raises(ValueError):
-        handler.parse_message('not json')
-
-    with pytest.raises(KeyError):
-        handler.parse_message('{"foo":1}')
-
-    with pytest.raises(ValueError):
-        handler.parse_message('{"command":"foo"}')
-
-    msg = handler.parse_message('{"command":"step"}')
-
-    assert msg == {
-        'command': 'step',
-    }
 
 
 def test_recover_step(config):
     handler = Handler(config)
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     exc = ptr.proxy.execution.get()
+    manager = make_user('juan_manager', 'Manager')
 
-    execution, pointer, xmliter, node, *rest = \
+    pointer, user, input = \
         handler.recover_step({
             'command': 'step',
             'pointer_id': ptr.id,
-            'actors': [
-                {
-                    'ref': 'requester',
-                    'user': {'identifier': 'juan_manager'},
-                    'forms': [
-                        {
-                            'ref': 'auth-form',
-                            'data': {
-                                'auth': 'yes',
-                            },
-                        },
-                    ],
-                }
-            ],
+            'user_identifier': 'juan_manager',
+            'input': [[
+                'auth-form',
+                [{
+                    'auth': 'yes',
+                }],
+            ]],
         })
 
-    assert execution.id == exc.id
     assert pointer.id == pointer.id
-    assert pointer in execution.proxy.pointers
-
-    assert node.id == 'mid-node'
+    assert user.id == manager.id
 
 
 def test_create_pointer(config):
@@ -109,7 +82,10 @@ def test_wakeup(config, mongo):
     pointer = make_pointer('simple.2018-02-19.xml', 'start-node')
     execution = pointer.proxy.execution.get()
     juan = User(identifier='juan').save()
-    manager = User(identifier='juan_manager').save()
+    manager = User(
+        identifier='juan_manager',
+        email='hardcoded@mailinator.com'
+    ).save()
     act = make_activity('start-node', juan, execution)
     ques = Questionaire(ref='start-form', data={'data': 'why not'}).save()
     ques.proxy.execution.set(execution)
@@ -120,6 +96,8 @@ def test_wakeup(config, mongo):
     handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
+        'user_identifier': '',
+        'input': [],
     }, channel)
 
     # test manager is notified
@@ -132,13 +110,11 @@ def test_wakeup(config, mongo):
     assert args['routing_key'] == 'email'
     assert json.loads(args['body']) == {
         'email': 'hardcoded@mailinator.com',
-        'pointer': Pointer.get_all()[0].to_json(embed=['execution']),
+        'pointer': Pointer.get_all()[0].to_json(include=['*', 'execution']),
     }
 
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
-
-    del reg['_id']
 
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert reg['finished_at'] is None
@@ -146,18 +122,8 @@ def test_wakeup(config, mongo):
     assert reg['node']['id'] == 'mid-node'
     assert reg['actors'] == []
     assert reg['notified_users'] == [manager.to_json()]
-    assert reg['state'] == {
-        'forms': [{
-            'ref': 'start-form',
-            'data': {
-                'data': 'why not',
-            },
-        }],
-        'actors': [{
-            'ref': 'start-node',
-            'user_id': juan.id,
-        }],
-    }
+    with pytest.raises(KeyError):
+        reg['state']
 
     # tasks where asigned
     assert manager.proxy.tasks.count() == 1
@@ -171,6 +137,7 @@ def test_wakeup(config, mongo):
 
 def test_teardown(config, mongo):
     ''' second and last stage of a node's lifecycle '''
+    # test setup
     handler = Handler(config)
 
     p_0 = make_pointer('simple.2018-02-19.xml', 'mid-node')
@@ -180,15 +147,8 @@ def test_teardown(config, mongo):
     manager = User(identifier='manager').save()
     manager2 = User(identifier='manager2').save()
 
-    act = make_activity('mid-node', manager, execution)
-
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
-
-    form = Questionaire(ref='auth-form', data={
-        'auth': 'yes',
-    }).save()
-    form.proxy.execution.set(execution)
 
     mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
@@ -200,38 +160,26 @@ def test_teardown(config, mongo):
             'id': p_0.node_id,
         },
         'actors': [],
-        'state': {
-            'forms': [
-                {
-                    'ref': 'exit-form',
-                    'data': {
-                        'reason': 'quiero salir',
-                    },
-                },
-            ],
-            'actors': [
-                {
-                    'ref': 'requester',
-                    'user_id': juan.id,
-                },
-            ],
-        },
     })
 
     channel = MagicMock()
 
+    # the thing to test
     handler.call({
         'command': 'step',
         'pointer_id': p_0.id,
-        'actor': {
-            'ref': 'a',
-            'forms': [{
-                'ref': form.ref,
-                'data': form.data,
+        'user_identifier': manager.identifier,
+        'input': [[
+            'mid-form',
+            [{
+                'name': 'data',
+                'value': 'yes',
+                'type': 'text',
             }],
-        },
+        ]],
     }, channel)
 
+    # assertions
     assert Pointer.get(p_0.id) is None
 
     assert Pointer.count() == 1
@@ -240,96 +188,54 @@ def test_teardown(config, mongo):
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
-    del reg['_id']
-
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == execution.id
     assert reg['node']['id'] == p_0.node_id
     assert reg['actors'] == [{
-        'ref': 'a',
+        'ref': 'mid-node',
+        'user': {
+            'identifier': 'manager',
+            'fullname': None,
+        },
         'forms': [{
-            'ref': 'auth-form',
-            'data': {
-                'auth': 'yes',
-            },
+            'ref': 'mid-form',
+            'inputs': [{
+                'type': 'text',
+                'name': 'data',
+                'value': 'yes',
+            }],
         }],
     }]
-    assert reg['state'] == {
-        'forms': [
-            {
-                'ref': 'exit-form',
-                'data': {
-                    'reason': 'quiero salir',
-                },
-            },
-        ],
-        'actors': [
-            {
-                'ref': 'requester',
-                'user_id': juan.id,
-            },
-        ],
-    }
+    with pytest.raises(KeyError):
+        reg['state']
 
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0
     assert manager2.proxy.tasks.count() == 0
 
+    # activity is created
+    activities = execution.proxy.actors.get()
 
-def test_teardown_start_process(config, mongo):
-    ''' second and last stage of a node's lifecycle '''
-    handler = Handler(config)
+    assert len(activities) == 1
+    assert activities[0].ref == 'mid-node'
+    assert activities[0].proxy.user.get() == manager
 
-    p_0 = make_pointer('simple.2018-02-19.xml', 'mid-node')
-    execution = p_0.proxy.execution.get()
+    # form is attached
+    forms = execution.proxy.forms.get()
 
-    manager = User(identifier='manager').save()
-    manager2 = User(identifier='manager2').save()
+    assert len(forms) == 1
+    assert forms[0].ref == 'mid-form'
+    assert forms[0] in activities[0].proxy.forms
 
-    manager.proxy.tasks.set([p_0])
-    manager2.proxy.tasks.set([p_0])
+    # input is attached to form
+    inputs = Input.get_all()
 
-    form = Questionaire(ref='auth-form', data={
-        'auth': 'yes',
-    }).save()
-    form.proxy.execution.set(execution)
-
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
-        'started_at': datetime(2018, 4, 1, 21, 45),
-        'finished_at': None,
-        'execution': {
-            'id': execution.id,
-        },
-        'node': {
-            'id': p_0.node_id,
-        },
-        'actors': [{
-            'ref': 'a',
-            'forms': [],
-        }],
-    })
-
-    channel = MagicMock()
-
-    handler.call({
-        'command': 'step',
-        'pointer_id': p_0.id,
-    }, channel)
-
-    # mongo has a registry
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
-
-    del reg['_id']
-
-    assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
-    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
-    assert reg['execution']['id'] == execution.id
-    assert reg['node']['id'] == p_0.node_id
-    assert reg['actors'] == [{
-        'ref': 'a',
-        'forms': [],
-    }]
+    assert len(inputs) == 1
+    assert inputs[0].name == 'data'
+    assert inputs[0].type == 'text'
+    assert inputs[0].value == 'yes'
+    assert inputs[0] in forms[0].proxy.inputs
 
 
 def test_finish_execution(config, mongo):
@@ -353,111 +259,6 @@ def test_finish_execution(config, mongo):
 
     assert reg['status'] == 'finished'
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
-
-
-@pytest.mark.skip
-def test_call_trigger_recover(config, mongo):
-    handler = Handler(config)
-    channel = MagicMock()
-    pointer = make_pointer('cyclic.2018-04-11.xml', 'jump-node')
-    execution = pointer.proxy.execution.get()
-    old_user = make_user('old', 'Old')
-    p_user = make_user('present', 'Present')
-
-    pques = Questionaire(ref='present', data={'a': '0'}).save()
-    pques.proxy.execution.set(execution)
-
-    act = make_activity('present', p_user, execution)
-
-    def make_history(num):
-        return {
-            'node': {
-                'id': 'start-node',
-            },
-            'execution': {
-                'id': execution.id,
-            },
-            'started_at': datetime(2018, 4, num),
-            'state': {
-                'forms': [{
-                    'ref': 'old',
-                    'data': {
-                        'a': str(num),
-                    },
-                }],
-                'actors': [{
-                    'ref': 'start-node',
-                    'user_id': old_user.id,
-                }],
-            },
-        }
-
-    # insert some noisy registers in mongo for this node
-    mongo[config['MONGO_HISTORY_COLLECTION']].insert_many([
-        make_history(1),
-        make_history(3),
-        make_history(2),
-    ])
-
-    mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({
-        'id': execution.id,
-        'status': 'ongoing',
-        'state': {
-            'forms': [{
-                'a': '0',
-            }],
-            'actors': [{
-                'ref': 'present',
-                'user': old_user.to_json(),
-            }],
-        },
-    })
-
-    # this is what we test
-    handler.call({
-        'command': 'step',
-        'pointer_id': pointer.id,
-    }, channel)
-
-    # present questionary is deleted
-    with pytest.raises(StopIteration):
-        next(Questionaire.q().filter(ref='present'))
-
-    # present actor is deleted
-    with pytest.raises(StopIteration):
-        next(Activity.q().filter(ref='present'))
-
-    # Questionaries are restored
-    ques = next(Questionaire.q().filter(ref='old'))
-
-    assert ques in execution.proxy.forms
-    assert ques.data == {
-        'a': '3',
-    }, 'last version of data is recovered'
-
-    # actors are restored
-    act = next(Activity.q().filter(ref='start-node'))
-
-    assert act in execution.proxy.actors
-    assert act.proxy.user.get() == old_user
-
-    # execution collection has new state
-    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
-
-    assert reg['status'] == 'ongoing'
-    assert reg['id'] == execution.id
-    assert reg['state'] == {
-        'forms': [{
-            'ref': 'old',
-            'data': {
-                'a': '3',
-            },
-        }],
-        'actors': [{
-            'ref': 'start-node',
-            'user_id': old_user.id,
-        }],
-    }
 
 
 def test_call_handler_delete_process(config, mongo):
@@ -509,6 +310,92 @@ def test_teardown_last_task():
     assert False, 'suppose a pointer with only one task left, teardown should queue it'
 
 
+@pytest.mark.skip
+def test_approve(config, mongo):
+    ''' tests that a validation node can go forward on approval '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    channel = MagicMock()
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'execution': {
+            'id': execution.id,
+        },
+        'node': {
+            'id': p_0.node_id,
+        },
+        'actors': [],
+    })
+
+    # thing to test
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': {
+            'response': 'accept',
+            'comment': 'I like it',
+        },
+    }, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
+
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == 'final-node'
+
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+
+    assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert reg['execution']['id'] == ptr.execution
+    assert reg['node']['id'] == 'approval-node'
+    assert reg['actors'] == [{
+        'ref': 'mid-node',
+        'user': {
+            'identifier': 'manager',
+            'human_name': None,
+        },
+        'node': {
+            'type': 'validation',
+        },
+        'input': {
+            'response': 'accept',
+            'comment': 'I like it',
+        },
+    }]
+
+
+@pytest.mark.skip
+def test_reject():
+    ''' tests that a rejection moves the pointer to a backward position '''
+    assert False
+
+
+@pytest.mark.skip
+def test_rejected_doesnt_repeat():
+    ''' asserts that a pointer moved to the past doesn't repeat a task that
+    wasn't invalidated by the rejection '''
+    assert False
+
+
+@pytest.mark.skip
+def test_rejected_repeats():
+    ''' asserts that a pointer moved to the past repeats the nodes that were
+    invalidated '''
+    assert False
+
+
+@pytest.mark.skip
+def test_patch():
+    ''' ensure that a patch request moves the pointer accordingly '''
+    assert False
+
+
 def test_resistance_unexisteng_hierarchy_backend(config):
     handler = Handler(config)
 
@@ -521,6 +408,8 @@ def test_resistance_unexisteng_hierarchy_backend(config):
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
+        'user_identifier': '',
+        'input': {},
     }))
 
 
@@ -536,6 +425,8 @@ def test_resistance_hierarchy_return(config):
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
+        'user_identifier': '',
+        'input': {},
     }))
 
 
@@ -551,6 +442,8 @@ def test_resistance_hierarchy_item(config):
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
+        'user_identifier': '',
+        'input': {},
     }))
 
 
@@ -566,6 +459,8 @@ def test_resistance_node_not_found(config):
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
+        'user_identifier': '',
+        'input': {},
     }))
 
 
@@ -576,16 +471,4 @@ def test_resistance_dead_pointer(config):
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': 'nones',
-    }))
-
-
-def test_resistance_dead_execution(config):
-    handler = Handler(config)
-
-    ptr = Pointer().save()
-
-    # this is what we test
-    handler(MagicMock(), MagicMock(), None, json.dumps({
-        'command': 'step',
-        'pointer_id': ptr.id,
     }))

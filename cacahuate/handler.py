@@ -9,10 +9,10 @@ import pymongo
 from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
     MisconfiguredProvider
 from cacahuate.logger import log
-from cacahuate.models import Execution, Pointer, Questionaire, Activity, User
+from cacahuate.models import Execution, Pointer, Questionaire, Activity, \
+    User, Input
 from cacahuate.xml import Xml
-from cacahuate.node import make_node, Exit
-from cacahuate.auth.base import BaseUser
+from cacahuate.node import make_node, Exit, Action, Validation
 
 
 class Handler:
@@ -25,7 +25,7 @@ class Handler:
 
     def __call__(self, channel, method, properties, body: bytes):
         ''' the main callback of cacahuate '''
-        message = self.parse_message(body)
+        message = json.loads(body)
 
         if message['command'] == 'cancel':
             self.cancel_execution(message)
@@ -43,13 +43,20 @@ class Handler:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, message: dict, channel):
-        execution, pointer, xml, cur_node, actor = self.recover_step(message)
+        pointer, user, input = self.recover_step(message)
+        execution = pointer.proxy.execution.get()
+
+        xml = Xml.load(self.config, execution.process_name, direct=True)
+
+        node = make_node(xml.find(
+            lambda e: e.getAttribute('id') == pointer.node_id
+        ))
 
         to_queue = []  # pointers to be sent to the queue
 
         # node's lifetime ends here
-        self.teardown(pointer, actor)
-        next_nodes = self.next(xml, cur_node, execution)
+        self.teardown(node, pointer, user, input)
+        next_nodes = self.next(xml, node, execution)
 
         for node in next_nodes:
             # node's begining of life
@@ -80,9 +87,9 @@ class Handler:
                 ),
             )
 
-    def next(self, xml, cur_node, execution):
+    def next(self, xml, node, execution):
         ''' Given a position in the script, return the next position '''
-        if isinstance(cur_node, Exit):
+        if isinstance(node, Exit):
             return []
 
         try:
@@ -123,28 +130,53 @@ class Handler:
             'node': node.to_json(),
             'notified_users': notified_users,
             'actors': [],
-            'state': execution.get_state(),
+            'process_id': execution.process_name
         })
 
         # nodes with forms are not queued
         if not node.is_async():
             return pointer
 
-    def teardown(self, pointer, actor):
+    def teardown(self, node, pointer, user, input):
         ''' finishes the node's lifecycle '''
-        collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
-
         update_query = {
             '$set': {
                 'finished_at': datetime.now(),
             },
         }
 
-        if actor is not None:
+        if user is not None:
+            execution = pointer.proxy.execution.get()
+            # store activity
+            activity = Activity(ref=pointer.node_id).save()
+
+            activity.proxy.user.set(user)
+            activity.proxy.execution.set(execution)
+
+            # store forms
+            if type(node) == Action:
+                for ref, inputs in input:
+                    q = Questionaire(ref=ref).save()
+                    q.proxy.execution.set(execution)
+                    q.proxy.activity.set(activity)
+
+                    for input in inputs:
+                        i = Input(**input).save()
+                        i.proxy.form.set(q)
+
             update_query['$push'] = {
-                'actors': actor,
+                'actors': activity.to_json(include=[
+                    'ref',
+                    'user.fullname',
+                    'user.identifier',
+                    'forms.ref',
+                    'forms.inputs.name',
+                    'forms.inputs.type',
+                    'forms.inputs.value',
+                ]),
             }
 
+        collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
         collection.update_one({
             'execution.id': pointer.proxy.execution.get().id,
             'node.id': pointer.node_id,
@@ -184,45 +216,10 @@ class Handler:
         for form in execution.proxy.forms.get():
             form.delete()
 
-    def recover_state(self, node, execution):
-        ''' recovers the lost state '''
-        self.delete_related_objects(execution)
-
-        mongo = self.get_mongo()
-
-        # finds most recent registry for this node
-        collection = mongo[self.config['MONGO_HISTORY_COLLECTION']]
-        prev_state = next(collection.find({
-            'execution.id': execution.id,
-            'node.id': node.element.getAttribute('id'),
-        }).sort([
-            ('started_at', pymongo.DESCENDING)
-        ]))
-
-        # restores froms and actors from that time
-        for form_data in prev_state['state']['forms']:
-            q = Questionaire(**form_data).save()
-            q.proxy.execution.set(execution)
-
-        for act_data in prev_state['state']['actors']:
-            a = Activity(**act_data).save()
-            a.proxy.execution.set(execution)
-            a.proxy.user.set(User.get(act_data['user_id']))
-
-        # sets state in mongo
-        collection = mongo[self.config['MONGO_EXECUTION_COLLECTION']]
-        collection.update_one({
-            'id': execution.id,
-        }, {
-            '$set': {
-                'state': execution.get_state(),
-            },
-        })
-
     def notify_users(self, node, pointer, channel):
-        husers = node.get_actors(self.config, pointer.proxy.execution.get())
+        users = node.get_actors(self.config, pointer.proxy.execution.get())
 
-        if type(husers) != list:
+        if type(users) != list:
             raise MisconfiguredProvider('Provider returned non list')
 
         channel.exchange_declare(
@@ -232,18 +229,18 @@ class Handler:
 
         notified_users = []
 
-        for huser in husers:
-            if not isinstance(huser, BaseUser):
+        for user in users:
+            if not isinstance(user, User):
                 raise MisconfiguredProvider(
-                    'User returned by hierarchy provider is not BaseUser, '
-                    'but {}'.format(type(huser))
+                    'User returned by hierarchy provider is not User, '
+                    'but {}'.format(type(user))
                 )
-            user = huser.get_user()
+
             notified_users.append(user.to_json())
 
             user.proxy.tasks.add(pointer)
 
-            mediums = self.get_contact_channels(huser)
+            mediums = self.get_contact_channels(user)
 
             for medium, params in mediums:
                 log.debug('Notified user {} via {} about n:{} e:{}'.format(
@@ -256,7 +253,7 @@ class Handler:
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
                     routing_key=medium,
                     body=json.dumps({**{
-                        'pointer': pointer.to_json(embed=['execution']),
+                        'pointer': pointer.to_json(include=['*', 'execution']),
                     }, **params}),
                     properties=pika.BasicProperties(
                         delivery_mode=2,
@@ -264,24 +261,6 @@ class Handler:
                 )
 
         return notified_users
-
-    def parse_message(self, body: bytes):
-        ''' validates a received message against all possible needed fields
-        and structure '''
-        try:
-            message = json.loads(body)
-        except json.decoder.JSONDecodeError:
-            raise ValueError('Message is not json')
-
-        if 'command' not in message:
-            raise KeyError('Malformed message: must contain command keyword')
-
-        if message['command'] not in self.config['COMMANDS']:
-            raise ValueError('Command not supported: {}'.format(
-                message['command']
-            ))
-
-        return message
 
     def get_mongo(self):
         if self.mongo is None:
@@ -292,7 +271,7 @@ class Handler:
 
         return self.mongo
 
-    def get_contact_channels(self, user: BaseUser):
+    def get_contact_channels(self, user: User):
         return [('email', {'email': user.get_x_info('email')})]
 
     def create_pointer(self, node, execution: Execution):
@@ -311,29 +290,12 @@ class Handler:
     def recover_step(self, message: dict):
         ''' given an execution id and a pointer from the persistent storage,
         return the asociated process node to continue its execution '''
-        if 'pointer_id' not in message:
-            raise KeyError('Requested step without pointer id')
-
         pointer = Pointer.get_or_exception(message['pointer_id'])
-        execution = pointer.proxy.execution.get()
-
-        if execution is None:
-            raise InconsistentState('Found an orphan pointer')
-
-        xml = Xml.load(self.config, execution.process_name, direct=True)
-
-        assert execution.process_name == xml.filename, 'Inconsistent pointer'
-
-        point = xml.find(
-            lambda e: e.getAttribute('id') == pointer.node_id
-        )
 
         return (
-            execution,
             pointer,
-            xml,
-            make_node(point),
-            message.get('actor'),
+            User.get_by('identifier', message.get('user_identifier')),
+            message['input'],
         )
 
     def cancel_execution(self, message):

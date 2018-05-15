@@ -1,15 +1,8 @@
-from cacahuate.auth.base import BaseHierarchyProvider, BaseUser
-
-
-class User(BaseUser):
-    def __init__(self, identifier):
-        self.identifier = identifier
-
-    def get_identifier(self):
-        return self.identifier
+from cacahuate.auth.base import BaseHierarchyProvider
+from cacahuate.models import User
 
 
 class BackrefHierarchyProvider(BaseHierarchyProvider):
 
     def find_users(self, **params):
-        return [User(params.get('identifier'))]
+        return [User.get_by('identifier', params.get('identifier'))]

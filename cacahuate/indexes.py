@@ -12,7 +12,6 @@ def create_indexes(config):
     db.execution.create_index("started_at")
     db.execution.create_index("finished_at")
 
-    db.history.create_index("id", unique=True)
     db.history.create_index("status")
     db.history.create_index("execution.id")
     db.history.create_index("started_at")

@@ -1,25 +1,10 @@
 from ldap3 import Server, Connection, ALL
 from ldap3.core.exceptions import LDAPBindError, LDAPSocketOpenError
 
-from cacahuate.auth.base import BaseAuthProvider, BaseUser
+from cacahuate.auth.base import BaseAuthProvider
 from cacahuate.errors import AuthenticationError
 from cacahuate.http.wsgi import app
-
-
-class LdapUser(BaseUser):
-
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-    def get_identifier(self):
-        return self.username
-
-    def get_human_name(self):
-        return self.fullname
-
-    def get_x_info(self, notification_backend):
-        return getattr(self, notification_backend)
+from cacahuate.models import User
 
 
 class LdapAuthProvider(BaseAuthProvider):
@@ -65,13 +50,20 @@ class LdapAuthProvider(BaseAuthProvider):
 
         entry = conn.entries[0]
 
+        identifier = '{}\\{}'.format(domain, username)
         email = str(entry.mail)
         name = str(entry.givenName)
         surname = str(entry.sn)
         fullname = '{} {}'.format(name, surname)
 
-        return LdapUser(
-            username='{}\\{}'.format(domain, username),
-            email=email,
-            fullname=fullname,
-        )
+        # fetchs redis mirror user if there is None then creates one
+        user = User.get_by('identifier', identifier)
+
+        if user is None:
+            user = User(
+                identifier=identifier,
+                email=email,
+                fullname=fullname
+            ).save()
+
+        return user

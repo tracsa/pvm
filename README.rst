@@ -65,18 +65,5 @@ You can use any wsgi-compliant server, like gunicorn, to run this:
 TODO
 ----
 
-* Cada campo de un formulario puede estar en uno de tres estados:
-    - unfilled, valid, invalid
-* ciudadanos de primera clase:
-    - <action>
-    - <validation>
-    - <subprocess>
-    - <end>
-* probar input tipo aprobación
-    - aprobar camina hacia enfrente
-    - no aprobar sube al primer elemento inválido
-    - información inválida nunca pasa validación de formulario
-* obligar llenado ordenado de formularios
-    - cambiar validación acorde a eso
 * modificar funcion Xml.load para especificar versión como un argumento aparte
-* la invalidación en multiauth invalida las respuestas de todos los usuarios
+* desarrollar campo enum en Coralillo y usar para models.Field

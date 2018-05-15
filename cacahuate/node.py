@@ -1,16 +1,20 @@
 ''' This file defines some basic classes that map the behaviour of the
 equivalent xml nodes '''
-import re
 from case_conversion import pascalcase
+from datetime import datetime
 from typing import Iterator
 from xml.dom.minidom import Element
+import re
 
+from cacahuate.errors import ElementNotFound, IncompleteBranch, \
+    ValidationErrors, RequiredInputError, InvalidInputError, InputError, \
+    RequiredListError, RequiredDictError
+from cacahuate.grammar import Condition
+from cacahuate.inputs import make_input
+from cacahuate.logger import log
 from cacahuate.utils import user_import
 from cacahuate.xml import get_text, NODES
-from cacahuate.logger import log
-from cacahuate.grammar import Condition
-from cacahuate.errors import ElementNotFound, IncompleteBranch
-from cacahuate.inputs import make_input
+from cacahuate.http.errors import BadRequest
 
 
 class AuthParam:
@@ -48,6 +52,29 @@ class Form:
 
         return range
 
+    def validate(self, index, data):
+        errors = []
+        collected_inputs = []
+
+        for input in self.inputs:
+            try:
+                value = input.validate(
+                    data.get(input.name),
+                    index,
+                )
+
+                input_description = input.to_json()
+                input_description['value'] = value
+
+                collected_inputs.append(input_description)
+            except InputError as e:
+                errors.append(e)
+
+        if errors:
+            raise ValidationErrors(errors)
+
+        return collected_inputs
+
 
 class Node:
     ''' An XML tag that represents an action or instruction for the virtual
@@ -56,17 +83,6 @@ class Node:
     def __init__(self, element):
         for attrname, value in element.attributes.items():
             setattr(self, attrname, value)
-
-    def is_async(self):
-        raise NotImplementedError('Must be implemented in subclass')
-
-
-class Action(Node):
-    ''' A node from the process's graph. It is initialized from an Element
-    '''
-
-    def __init__(self, element):
-        super().__init__(element)
 
         # node info
         node_info = element.getElementsByTagName('node-info')
@@ -100,6 +116,38 @@ class Action(Node):
                 lambda x: AuthParam(x),
                 filter_node.getElementsByTagName('param')
             ))
+
+    def is_async(self):
+        raise NotImplementedError('Must be implemented in subclass')
+
+    def validate_input(self, json_data):
+        raise NotImplementedError('Must be implemented in subclass')
+
+    def log_entry(self, execution):
+        return {
+            'started_at': datetime.now(),
+            'finished_at': None,
+            'execution': execution.to_json(),
+            'node': self.to_json(),
+            'actors': [],
+            'process_id': execution.process_name,
+        }
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'type': type(self).__name__.lower(),
+        }
+
+
+class Action(Node):
+    ''' A node from the process's graph. It is initialized from an Element
+    '''
+
+    def __init__(self, element):
+        super().__init__(element)
 
         # Form resolving
         self.form_array = []
@@ -152,11 +200,140 @@ class Action(Node):
             **self.resolve_params(execution)
         )
 
-    def to_json(self):
+    def validate_form_spec(self, form_specs, associated_data) -> dict:
+        ''' Validates the given data against the spec contained in form.
+            In case of failure raises an exception. In case of success
+            returns the validated data.
+        '''
+        collected_specs = []
+
+        min, max = form_specs.multiple
+
+        if len(associated_data) < min:
+            raise BadRequest([{
+                'detail': 'form count lower than expected for ref {}'.format(
+                    form_specs.ref
+                ),
+                'where': 'request.body.form_array',
+            }])
+
+        if len(associated_data) > max:
+            raise BadRequest([{
+                'detail': 'form count higher than expected for ref {}'.format(
+                    form_specs.ref
+                ),
+                'where': 'request.body.form_array',
+            }])
+
+        for index, form in associated_data:
+            collected_specs.append(form_specs.validate(
+                index,
+                form.get('data', {})
+            ))
+
+        return collected_specs
+
+    def validate_input(self, json_data):
+        if 'form_array' in json_data and type(json_data['form_array']) != list:
+            raise BadRequest({
+                'detail': 'form_array has wrong type',
+                'where': 'request.body.form_array',
+            })
+
+        collected_forms = []
+        errors = []
+
+        index = 0
+        form_array = json_data.get('form_array', [])
+
+        for form_specs in self.form_array:
+            ref = form_specs.ref
+
+            # Ignore unexpected forms
+            while len(form_array) > index and form_array[index]['ref'] != ref:
+                index += 1
+
+            # Collect expected forms
+            forms = []
+            while len(form_array) > index and form_array[index]['ref'] == ref:
+                forms.append((index, form_array[index]))
+                index += 1
+
+            try:
+                for data in self.validate_form_spec(form_specs, forms):
+                    collected_forms.append((ref, data))
+            except ValidationErrors as e:
+                errors += e.errors
+
+        if len(errors) > 0:
+            raise BadRequest(ValidationErrors(errors).to_json())
+
+        return collected_forms
+
+
+class Validation(Node):
+
+    VALID_RESPONSES = ('accept', 'reject')
+
+    def __init__(self, element):
+        super().__init__(element)
+
+        # Dependency resolving
+        self.dependencies = []
+
+        deps_node = element.getElementsByTagName('dependencies')
+
+        if len(deps_node) > 0:
+            for dep_node in deps_node[0].getElementsByTagName('dep'):
+                self.dependencies.append(get_text(dep_node))
+
+    def validate_field(self, field, index):
+        if type(field) != dict:
+            raise RequiredDictError(
+                'fields.{}'.format(index),
+                'request.body.fields.{}'.format(index)
+            )
+
+        if 'ref' not in field:
+            raise RequiredInputError(
+                'fields.{}.ref'.format(index),
+                'request.body.fields.{}.ref'.format(index)
+            )
+
+        if field['ref'] not in self.dependencies:
+            raise InvalidInputError(
+                'fields.{}.ref'.format(index),
+                'request.body.fields.{}.ref'.format(index)
+            )
+
+    def validate_input(self, json_data):
+        if 'response' not in json_data:
+            raise RequiredInputError('response', 'request.body.response')
+
+        if json_data['response'] not in self.VALID_RESPONSES:
+            raise InvalidInputError('response', 'request.body.response')
+
+        if json_data['response'] == 'reject':
+            if 'fields' not in json_data:
+                raise RequiredInputError('fields', 'request.body.fields')
+
+            if type(json_data['fields']) is not list:
+                raise RequiredListError('fields', 'request.body.fields')
+
+            for index, field in enumerate(json_data['fields']):
+                errors = []
+                try:
+                    self.validate_field(field, index)
+                except InputError as e:
+                    errors.append(e.to_json())
+
+                if errors:
+                    raise BadRequest(errors)
+
         return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
+            k: json_data[k]
+            for k in ('response', 'comment', 'fields')
+            if k in json_data
         }
 
 

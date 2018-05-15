@@ -22,12 +22,6 @@ class Execution(Model):
         inverse='execution'
     )
 
-    def get_state(self):
-        return {
-            'forms': [q.get_state() for q in self.proxy.forms.get()],
-            'actors': [a.get_state() for a in self.proxy.actors.get()],
-        }
-
 
 class Activity(Model):
     ''' relates a user and a execution '''
@@ -39,26 +33,39 @@ class Activity(Model):
         'cacahuate.models.User',
         inverse='activities'
     )
+    forms = fields.SetRelation(
+        'cacahuate.models.Questionaire',
+        inverse='activity'
+    )
     ref = fields.Text()
 
-    def get_state(self):
-        return {
-            'ref': self.ref,
-            'user_id': self.proxy.user.get().id,
-        }
+
+class Input(Model):
+    name = fields.Text()
+    status = fields.Text()
+    value = fields.Text()
+    type = fields.Text()
+    form = fields.ForeignIdRelation(
+        'cacahuate.models.Questionaire',
+        inverse='inputs'
+    )
 
 
 class Questionaire(Model):
     ''' Represents filled forms and their data '''
     ref = fields.Text()
-    data = fields.Dict()
     execution = fields.ForeignIdRelation(Execution, inverse='forms')
+    activity = fields.ForeignIdRelation(Activity, inverse='forms')
+    inputs = fields.SetRelation(Input, inverse='form')
 
-    def get_state(self):
-        return {
-            'ref': self.ref,
-            'data': self.data,
-        }
+    def get_value(self, member):
+        ''' returs the value of one of this form's inputs '''
+        try:
+            input = next(self.proxy.inputs.q().filter(name=member))
+
+            return input.value
+        except StopIteration:
+            return None
 
 
 class Pointer(Model):
@@ -73,7 +80,9 @@ class Pointer(Model):
 class User(Model):
     ''' those humans who can execute actions '''
     identifier = fields.Text(index=True)
-    human_name = fields.Text()
+    fullname = fields.Text()
+    email = fields.Text()
+
     tokens = fields.SetRelation('cacahuate.models.Token', inverse='user')
     # processes I'm participating in
     activities = fields.SetRelation(
@@ -85,6 +94,9 @@ class User(Model):
         'cacahuate.models.Pointer',
         inverse='candidates'
     )
+
+    def get_x_info(self, attr):
+        return getattr(self, attr)
 
 
 class Token(Model):

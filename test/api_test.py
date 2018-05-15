@@ -1,10 +1,12 @@
 from datetime import datetime
 from datetime import timedelta
-from flask import json, jsonify
+from flask import json, jsonify, g
 import pika
 import pytest
 from cacahuate.handler import Handler
 from cacahuate.models import Pointer, Execution, Activity, Questionaire
+from random import choice
+from string import ascii_letters
 
 from .utils import make_auth, make_activity, make_pointer, make_user, make_date
 
@@ -37,12 +39,12 @@ def test_continue_process_requires(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'execution_id is required',
+                'detail': "'execution_id' is required",
                 'code': 'validation.required',
                 'where': 'request.body.execution_id',
             },
             {
-                'detail': 'node_id is required',
+                'detail': "'node_id' is required",
                 'code': 'validation.required',
                 'where': 'request.body.node_id',
             },
@@ -206,27 +208,6 @@ def test_continue_process(client, mocker, config):
         'data': 'accepted',
     }
 
-    # user is attached
-
-    assert exc.proxy.actors.count() == 2
-
-    activity = next(exc.proxy.actors.q().filter(ref='mid-node'))
-
-    assert activity.ref == 'mid-node'
-    assert activity.proxy.user.get() == manager
-
-    # form is attached
-    forms = exc.proxy.forms.get()
-
-    assert len(forms) == 1
-
-    form = forms[0]
-
-    assert form.ref == 'mid-form'
-    assert form.data == {
-        'data': 'yes',
-    }
-
     # rabbit is called
     pika.adapters.blocking_connection.BlockingChannel.\
         basic_publish.assert_called_once()
@@ -237,169 +218,38 @@ def test_continue_process(client, mocker, config):
     json_message = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'actor': {
-            'ref': 'mid-node',
-            'user': {
-                'identifier': 'juan_manager',
-                'human_name': 'Juanote',
-            },
-            'forms': [
-                {
-                    'ref': 'mid-form',
-                    'form': [
-                        {
-                            "name": "data",
-                            "type": "text",
-                            "value": "yes",
-                            "required": True,
-                            'default': None,
-                            'label': 'data',
-                        }
-                    ],
-                    'data': {
-                        'data': 'yes',
-                    },
-                },
+        'user_identifier': 'juan_manager',
+        'input': [
+            [
+                'mid-form',
+                [
+                    {
+                        "name": "data",
+                        "type": "text",
+                        "value": "yes",
+                        "required": True,
+                        'default': None,
+                        'label': 'data',
+                    }
+                ],
             ],
-        },
+        ],
     }
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
-    assert json.loads(args['body']) == json_message
+    body = json.loads(args['body'])
+    assert body == json_message
 
     # makes a useful call for the handler
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, *rest = \
-        handler.recover_step(json_message)
+    pointer, user, inputs = handler.recover_step(json_message)
 
-    assert execution.id == exc.id
     assert pointer.id == ptr.id
 
 
-def test_start_process_simple_requires(client, mongo, config):
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data='{}')
-
-    assert res.status_code == 400
-    assert json.loads(res.data) == {
-        'errors': [
-            {
-                'detail': 'process_name is required',
-                'where': 'request.body.process_name',
-                'code': 'validation.required',
-            },
-        ],
-    }
-
-    # we need an existing process to start
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'foo',
-    }))
-
-    assert res.status_code == 404
-    assert json.loads(res.data) == {
-        'errors': [
-            {
-                'detail': 'foo process does not exist',
-                'where': 'request.body.process_name',
-            },
-        ],
-    }
-
-    # no registry should be created yet
-    assert mongo[config["MONGO_HISTORY_COLLECTION"]].count() == 0
-    assert Activity.count() == 0
-    assert Questionaire.count() == 0
-
-
-def test_start_process_simple(client, mocker, config, mongo):
-    mocker.patch(
-        'pika.adapters.blocking_connection.'
-        'BlockingChannel.basic_publish'
-    )
-
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'simple',
-        'form_array': [{
-            'ref': 'start-form',
-            'data': {
-                'data': 'yes',
-            },
-        }],
-    }))
-
-    assert res.status_code == 201
-
-    exc = Execution.get_all()[0]
-
-    assert exc.process_name == 'simple.2018-02-19.xml'
-
-    ptr = exc.proxy.pointers.get()[0]
-
-    assert ptr.node_id == 'start-node'
-
-    pika.adapters.blocking_connection.BlockingChannel.\
-        basic_publish.assert_called_once()
-
-    args = pika.adapters.blocking_connection.\
-        BlockingChannel.basic_publish.call_args[1]
-
-    json_message = {
-        'command': 'step',
-        'process': exc.process_name,
-        'pointer_id': ptr.id,
-    }
-
-    assert args['exchange'] == ''
-    assert args['routing_key'] == config['RABBIT_QUEUE']
-    assert json.loads(args['body']) == json_message
-
-    handler = Handler(config)
-
-    execution, pointer, xmliter, current_node, *rest = \
-        handler.recover_step(json_message)
-
-    assert execution.id == exc.id
-    assert pointer.id == ptr.id
-
-    # mongo has a registry
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
-
-    assert (reg['started_at'] - datetime.now()).total_seconds() < 2
-    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
-    assert reg['execution']['id'] == exc.id
-    assert reg['node']['id'] == ptr.node_id
-    assert reg['state'] == {
-        'forms': [{
-            'ref': 'start-form',
-            'data': {
-                'data': 'yes',
-            },
-        }],
-        'actors': [{
-            'ref': 'start-node',
-            'user_id': juan.id,
-        }],
-    }
-
-    reg2 = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
-
-    assert reg2['id'] == exc.id
-    assert reg2['status'] == 'ongoing'
-
-
-def test_simple_requirements(client):
+def test_start_process_requirements(client, mongo, config):
     # first requirement is to have authentication
     res = client.post('/v1/execution', headers={
         'Content-Type': 'application/json',
@@ -440,150 +290,387 @@ def test_simple_requirements(client):
 
     assert Execution.count() == 0
     assert Activity.count() == 0
-
-
-def test_simple_start(client, mocker, mongo, config):
-    user = make_user('juan', 'Juan')
-
-    assert Execution.count() == 0
-    assert Activity.count() == 0
+    juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'simple',
-        'form_array': [
+    }, **make_auth(juan)}, data='{}')
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
             {
-                'ref': 'start-form',
-                'data': {
-                    'data': 'yes',
-                },
+                'detail': "'process_name' is required",
+                'where': 'request.body.process_name',
+                'code': 'validation.required',
             },
         ],
+    }
+
+    # we need an existing process to start
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'foo',
+    }))
+
+    assert res.status_code == 404
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': 'foo process does not exist',
+                'where': 'request.body.process_name',
+            },
+        ],
+    }
+
+    # no registry should be created yet
+    assert mongo[config["MONGO_HISTORY_COLLECTION"]].count() == 0
+    assert Activity.count() == 0
+    assert Questionaire.count() == 0
+
+
+def test_start_process(client, mocker, config, mongo):
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
+
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'simple',
+        'form_array': [{
+            'ref': 'start-form',
+            'data': {
+                'data': 'yes',
+            },
+        }],
     }))
 
     assert res.status_code == 201
 
     exc = Execution.get_all()[0]
 
-    assert json.loads(res.data) == {
-        'data': exc.to_json(),
+    assert exc.process_name == 'simple.2018-02-19.xml'
+
+    ptr = exc.proxy.pointers.get()[0]
+
+    assert ptr.node_id == 'start-node'
+
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.\
+        BlockingChannel.basic_publish.call_args[1]
+
+    json_message = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': 'juan',
+        'input': [
+            [
+                'start-form',
+                [{
+                    'default': None,
+                    'label': 'Info',
+                    'required': True,
+                    'type': 'text',
+                    'value': 'yes',
+                    'name': 'data',
+                }],
+            ],
+        ],
     }
-    # user is attached
-    actors = exc.proxy.actors.get()
 
-    assert len(actors) == 1
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == json_message
 
-    activity = actors[0]
+    handler = Handler(config)
 
-    assert activity.ref == 'start-node'
-    assert activity.proxy.user.get() == user
+    pointer, user, input = handler.recover_step(json_message)
 
-    # form is attached
-    forms = exc.proxy.forms.get()
-
-    assert len(forms) == 1
-
-    form = forms[0]
-
-    assert form.ref == 'start-form'
-    assert form.data == {
-        'data': 'yes',
-    }
+    assert pointer.id == ptr.id
 
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
-    assert reg['state'] == {
-        'forms': [{
-            'ref': 'start-form',
-            'data': {
-                'data': 'yes',
-            },
-        }],
-        'actors': [
+    assert (reg['started_at'] - datetime.now()).total_seconds() < 2
+    assert reg['finished_at'] is None
+    assert reg['execution']['id'] == exc.id
+    assert reg['node']['id'] == ptr.node_id
+
+    reg2 = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+
+    assert reg2['id'] == exc.id
+    assert reg2['status'] == 'ongoing'
+
+
+def test_regression_requirements(client):
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    exc = ptr.proxy.execution.get()
+    user.proxy.tasks.add(ptr)
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
             {
-                'ref': 'start-node',
-                'user_id': user.id,
-            }
+                'detail': "'response' is required",
+                'code': 'validation.required',
+                'where': 'request.body.response',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': ''.join(choice(ascii_letters) for c in range(10)),
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'response' value invalid",
+                'code': 'validation.invalid',
+                'where': 'request.body.response',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'fields' is required",
+                'code': 'validation.required',
+                'where': 'request.body.fields',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+        'fields': 'de',
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'fields' must be a list",
+                'code': 'validation.required_list',
+                'where': 'request.body.fields',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+        'fields': ['de'],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'fields.0' must be an object",
+                'code': 'validation.required_dict',
+                'where': 'request.body.fields.0',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+        'fields': [{
+        }],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'fields.0.ref' is required",
+                'code': 'validation.required',
+                'where': 'request.body.fields.0.ref',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'reject',
+        'fields': [{
+            'ref': 'de',
+        }],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'fields.0.ref' value invalid",
+                'code': 'validation.invalid',
+                'where': 'request.body.fields.0.ref',
+            },
         ],
     }
 
 
-def test_start_with_correct_form_order(client, mocker, mongo, config):
-    user = make_user('juan', 'Juan')
+def test_regression_approval(client, mocker, config):
+    ''' the api for an approval '''
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
 
-    res = client.post('/v1/execution', headers={**{
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    exc = ptr.proxy.execution.get()
+    user.proxy.tasks.add(ptr)
+
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'form-multiple',
-        'form_array': [
-            {
-                'ref': 'single-form',
-                'data': {
-                    'name': 'og',
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-        ],
+        'execution_id': exc.id,
+        'node_id': 'approval-node',
+        'response': 'accept',
+        'comment': 'I like the previous work',
     }))
 
-    assert res.status_code == 201
+    assert res.status_code == 202
+
+    # rabbit is called
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.BlockingChannel.basic_publish \
+        .call_args[1]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': 'juan',
+        'input': {
+            'response': 'accept',
+            'comment': 'I like the previous work',
+        },
+    }
 
 
-def test_start_with_incorrect_form_order(client, mocker, mongo, config):
+def test_regression_reject(client, mocker, config):
+    ''' the api for a reject '''
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
+
     user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    exc = ptr.proxy.execution.get()
+    user.proxy.tasks.add(ptr)
 
-    res = client.post('/v1/execution', headers={**{
+    res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
-        'process_name': 'form-multiple',
-        'form_array': [
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '3312345678'
-                },
-            },
-            {
-                'ref': 'single-form',
-                'data': {
-                    'name': 'og',
-                },
-            },
-        ],
+        'execution_id': exc.id,
+        'node_id': ptr.node_id,
+        'response': 'reject',
+        'comment': 'I dont like it',
+        'fields': [{
+            'ref': 'work.task',
+        }],
     }))
 
-    assert res.status_code == 400
+    assert res.status_code == 202
+
+    # rabbit is called
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.BlockingChannel.basic_publish \
+        .call_args[1]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': 'juan',
+        'input': {
+            'response': 'reject',
+            'comment': 'I dont like it',
+            'fields': [{
+                'ref': 'work.task',
+            }],
+        },
+    }
+
+
+@pytest.mark.skip
+def test_regression_patch_requirements():
+    assert False, 'fields are present'
+    assert False, 'every field is valid'
+
+
+@pytest.mark.skip
+def test_regression_patch():
+    ''' patch arbitrary data and cause a regression '''
+    juan = make_user('juan', 'Juan')
+
+    res = client.patch('/v1/execution/{}'.format(execution.id), headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'comment': 'a comment',
+        'fields': [{
+            'ref': '',
+        }],
+    }))
+
+    assert res.status_code == 202
+
+    assert False, 'comment is saved'
+    assert False, 'message is queued'
 
 
 def test_list_processes(client):
@@ -664,7 +751,6 @@ def test_list_processes_multiple(client):
 
 
 def test_read_process(client):
-
     res = client.get('/v1/process/oldest?version=2018-02-14')
     data = json.loads(res.data)
     assert res.status_code == 200
@@ -706,7 +792,7 @@ def test_list_activities(client):
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
-            act.to_json(embed=['execution']),
+            act.to_json(include=['*', 'execution']),
         ],
     }
 
@@ -751,7 +837,7 @@ def test_activity(client):
 
     assert res2.status_code == 200
     assert json.loads(res2.data) == {
-        'data': act.to_json(embed=['execution']),
+        'data': act.to_json(include=['*', 'execution']),
     }
 
 
@@ -819,25 +905,24 @@ def test_task_list(client):
 
     assert res.status_code == 200
     assert json.loads(res.data) == {
-        'data': [pointer.to_json(embed=['execution'])],
+        'data': [pointer.to_json(include=['*', 'execution'])],
     }
 
 
-def test_task_read_requires_auth(client):
+def test_task_read_requires(client):
+    # auth
     res = client.get('/v1/task/foo')
 
     assert res.status_code == 401
 
-
-def test_task_read_requires_real_pointer(client):
+    # real pointer
     juan = make_user('juan', 'Juan')
 
     res = client.get('/v1/task/foo', headers=make_auth(juan))
 
     assert res.status_code == 404
 
-
-def test_task_read_requires_assigned_task(client):
+    # assigned task
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     juan = make_user('juan', 'Juan')
 
@@ -950,44 +1035,6 @@ def test_log_has_node_info(client):
         'A simple process that does nothing'
 
 
-def test_log_has_form_input_data(client):
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'simple',
-        'form_array': [
-            {
-                'ref': 'start-form',
-                'data': {
-                    'data': 'yes',
-                },
-            },
-        ],
-    }))
-
-    assert res.status_code == 201
-
-    body = json.loads(res.data)
-    execution_id = body['data']['id']
-
-    res = client.get('/v1/log/{}'.format(execution_id))
-    body = json.loads(res.data)
-    data = body['data'][0]
-
-    assert data['actors'][0]['forms'][0]['form'] == [
-        {
-            "label": "Info",
-            "name": "data",
-            "type": "text",
-            "value": "yes",
-            "required": True,
-            'default': None,
-        },
-    ]
-
-
 def test_delete_process(config, client, mongo, mocker):
     mocker.patch(
         'pika.adapters.blocking_connection.'
@@ -1053,7 +1100,6 @@ def test_execution_list(client, mongo, config):
     data = json.loads(res.data)
 
     assert res.status_code == 200
-
     assert data == {
         'data': [{
             'status': 'ongoing',
@@ -1075,7 +1121,7 @@ def test_start_process_error_405(client, mongo, config):
 
 
 def test_node_statistics(client, mongo, config):
-    def make_node_reg(node_id, started_at, finished_at):
+    def make_node_reg(process_id,  node_id, started_at, finished_at):
         return {
             'started_at': started_at,
             'finished_at': finished_at,
@@ -1085,33 +1131,58 @@ def test_node_statistics(client, mongo, config):
             'node': {
                 'id': node_id,
             },
+            'process_id': process_id
         }
 
     mongo[config["MONGO_HISTORY_COLLECTION"]].insert_many([
-        make_node_reg('test1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
-        make_node_reg('test2', make_date(), make_date(2018, 5, 10, 6, 3, 3)),
-        make_node_reg('test1', make_date(), make_date(2018, 5, 10, 8, 2, 9)),
-        make_node_reg('test2', make_date(), make_date(2018, 5, 10, 3, 4, 5)),
-        make_node_reg('test2', make_date(), None),
+        make_node_reg(
+            'simple.2018-02-19', 'test1',
+            make_date(),
+            make_date(2018, 5, 10, 4, 5, 6)
+        ),
+        make_node_reg(
+            'simple.2018-02-19', 'test2',
+            make_date(),
+            make_date(2018, 5, 10, 6, 3, 3)
+        ),
+        make_node_reg(
+            'simple.2018-02-19', 'test1',
+            make_date(),
+            make_date(2018, 5, 10, 8, 2, 9)
+            ),
+        make_node_reg(
+            'simple.2018-02-19', 'test2',
+            make_date(),
+            make_date(2018, 5, 10, 3, 4, 5)
+        ),
+        make_node_reg(
+            'simple.2018-02-19',
+            'test2',
+            make_date(),
+            None
+        ),
     ])
 
-    res = client.get('/v1/process/{}/statistics'.format(EXECUTION_ID))
+    res = client.get('/v1/process/{}/statistics'.format(
+        'simple.2018-02-19'
+    ))
+
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
             {
                 'average': 540217.5,
-                'execution_id': EXECUTION_ID,
                 'max': 547329.0,
                 'min': 533106.0,
-                'node': 'test1'
+                'node': 'test1',
+                'process_id': 'simple.2018-02-19'
             },
             {
                 'average': 534814.0,
-                'execution_id': EXECUTION_ID,
                 'max': 540183.0,
                 'min': 529445.0,
-                'node': 'test2'
+                'node': 'test2',
+                'process_id': 'simple.2018-02-19'
             },
         ],
     }
@@ -1156,3 +1227,88 @@ def test_process_statistics(client, mongo, config):
 
         ],
     }
+
+
+def test_pagination_execution_log(client, mongo, config):
+    def make_exec_reg(process_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'status': 'finished',
+            'process': {
+                'id': process_id,
+                'version': 'v1',
+            },
+        }
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_many([
+        make_exec_reg('p1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
+        make_exec_reg('p2', make_date(), make_date(2018, 5, 10, 10, 34, 32)),
+        make_exec_reg('p3', make_date(), make_date(2018, 5, 11, 22, 41, 10)),
+        make_exec_reg('p4', make_date(), make_date(2018, 6, 23, 8, 15, 1)),
+        make_exec_reg('p5', make_date(), make_date(2018, 6, 11, 4, 5, 6)),
+        make_exec_reg('p6', make_date(), make_date(2018, 6, 12, 5, 6, 32)),
+        make_exec_reg('p7', make_date(), make_date(2018, 6, 13, 6, 7, 10)),
+        make_exec_reg('p8', make_date(), make_date(2018, 6, 14, 7, 8, 1)),
+    ])
+
+    res = client.get('/v1/process/statistics?offset=2&limit=2')
+    assert res.status_code == 200
+    assert json.loads(res.data)['data'][0]["process"] == 'p3'
+    assert json.loads(res.data)['data'][1]["process"] == 'p4'
+    assert len(json.loads(res.data)['data']) == 2
+
+
+def test_pagination_v1_log(client, mongo, config):
+
+    def make_node_reg(process_id, node_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'execution': {
+                'id': EXECUTION_ID,
+            },
+            'node': {
+                'id': node_id,
+            },
+            'process_id': process_id
+        }
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_many([
+        make_node_reg(
+            'simple.2018-02-19', 'mid-node',
+            make_date(),
+            make_date(2018, 5, 20, 5, 5, 5)
+        ),
+        make_node_reg(
+            'simple.2018-02-19', 'mid-node',
+            make_date(),
+            make_date(2018, 5, 21, 6, 6, 6)
+            ),
+        make_node_reg(
+            'simple.2018-02-19', 'mid-node',
+            make_date(),
+            make_date(2018, 5, 22, 7, 7, 7)
+        ),
+        make_node_reg(
+            'simple.2018-02-19',
+            'mid-node',
+            make_date(),
+            make_date(2018, 5, 23, 8, 8, 8)
+        ),
+        make_node_reg(
+            'simple.2018-02-19',
+            'mid-node',
+            make_date(),
+            make_date(2018, 5, 24, 9, 9, 9)
+        ),
+    ])
+
+    res = client.get(
+        '/v1/log/{}?node_id=mid-node&offset=2&limit=2'.format(EXECUTION_ID)
+    )
+    assert json.loads(res.data)['data'][0]["finished_at"] == \
+        '2018-05-22T07:07:07+00:00'
+    assert json.loads(res.data)['data'][1]["finished_at"] == \
+        '2018-05-23T08:08:08+00:00'
+    assert len(json.loads(res.data)['data']) == 2

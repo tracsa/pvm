@@ -4,8 +4,8 @@ from functools import reduce
 from operator import and_
 import ast
 
-from cacahuate.errors import ValidationErrors, InputError,\
-    RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
+from cacahuate.errors import ValidationErrors, RequiredInputError, \
+    HierarchyError, InvalidDateError, InvalidInputError, \
     RequiredListError, RequiredStrError, MisconfiguredProvider
 from cacahuate.xml import get_text
 
@@ -48,7 +48,10 @@ class Input:
         value = value or self.get_default()
 
         if self.required and (value == '' or value is None):
-            raise RequiredInputError(form_index, self.name)
+            raise RequiredInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
 
         return value
 
@@ -114,13 +117,16 @@ class CheckboxInput(FiniteOptionInput):
         if type(value) == str:
             value = ast.literal_eval(value)
         if type(value) is not list:
-            raise RequiredListError(form_index, value)
+            raise RequiredListError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, value)
+            )
 
         for val in value:
             if val not in self:
                 raise InvalidInputError(
-                    form_index,
-                    self.name
+                    self.name,
+                    'request.body.form_array.{}.{}'.format(form_index, self.name)
                 )
 
         return value
@@ -132,10 +138,16 @@ class RadioInput(FiniteOptionInput):
         super().validate(value, form_index)
 
         if type(value) is not str and value is not None:
-            raise RequiredStrError(form_index, self.name)
+            raise RequiredStrError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
 
         if value not in self:
-            raise InvalidInputError(form_index, self.name)
+            raise InvalidInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
 
         return value
 
@@ -157,7 +169,10 @@ class FileInput(Input):
         if value is None:
             value = {}
         if type(value) is not dict:
-            raise InvalidInputError(form_index, self.name)
+            raise InvalidInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
 
         provider = self.provider
 
@@ -172,8 +187,8 @@ class FileInput(Input):
 
             if not valid:
                 raise InvalidInputError(
-                    form_index,
-                    self.name
+                    self.name,
+                    'request.body.form_array.{}.{}'.format(form_index, self.name)
                 )
         else:
             abort(500, 'File provider `{}` not implemented'.format(provider))
@@ -188,12 +203,18 @@ class DatetimeInput(Input):
         value = value or self.get_default()
 
         if not value and self.required:
-            raise RequiredInputError(form_index, self.name)
+            raise RequiredInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
 
         try:
             datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
         except ValueError:
-            raise InvalidDateError(form_index, self.name)
+            raise InvalidDateError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
 
         return value
 

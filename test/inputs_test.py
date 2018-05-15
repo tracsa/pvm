@@ -325,7 +325,7 @@ def test_validate_form_multiple(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': '\'phone\' input is required',
+                'detail': '\'phone\' is required',
                 'where': 'request.body.form_array.1.phone',
                 'code': 'validation.required',
             },
@@ -365,108 +365,11 @@ def test_validate_form_multiple_error_position(client):
         'errors': [
             {
                 'code': 'validation.required',
-                'detail': '\'phone\' input is required',
+                'detail': '\'phone\' is required',
                 'where': 'request.body.form_array.2.phone',
             },
         ]
     }
-
-
-def test_store_form_multiple(config, client, mongo):
-    juan = make_user('juan', 'Juan')
-
-    res = client.post('/v1/execution', headers={**{
-        'Content-Type': 'application/json',
-    }, **make_auth(juan)}, data=json.dumps({
-        'process_name': 'form-multiple',
-        'form_array': [
-            {
-                'ref': 'single-form',
-                'data': {
-                    'name': 'jorge',
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '1111',
-                },
-            },
-            {
-                'ref': 'multiple-form',
-                'data': {
-                    'phone': '2222',
-                },
-            },
-        ],
-    }))
-
-    assert res.status_code == 201
-
-    # Questionaires are ok
-    assert Questionaire.count() == 3
-
-    qs = Questionaire.q().filter(ref='single-form').one()
-
-    assert qs.data == {
-        'name': 'jorge',
-    }
-
-    qa = sorted(
-        Questionaire.q().filter(ref='multiple-form').all(),
-        key=lambda i: i.data['phone']
-    )
-
-    assert qa[0].data['phone'] == '1111'
-    assert qa[1].data['phone'] == '2222'
-
-    # history has the two inputs
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
-
-    assert reg['actors'][0]['forms'] == [
-        {
-            'ref': 'single-form',
-            'data': {
-                'name': 'jorge',
-            },
-            'form': [{
-                'name': 'name',
-                'type': 'text',
-                'value': 'jorge',
-                'required': True,
-                'label': 'name',
-                'default': None,
-            }],
-        },
-        {
-            'ref': 'multiple-form',
-            'data': {
-                'phone': '1111',
-            },
-            'form': [{
-                'name': 'phone',
-                'type': 'text',
-                'value': '1111',
-                'required': True,
-                'default': None,
-                'label': 'phone',
-            }],
-        },
-        {
-            'ref': 'multiple-form',
-            'data': {
-                'phone': '2222',
-            },
-            'form': [{
-                'name': 'phone',
-                'type': 'text',
-                'value': '2222',
-                'required': True,
-                'default': None,
-                'label': 'phone',
-            }],
-        },
-    ]
 
 
 @pytest.mark.skip

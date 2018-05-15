@@ -123,6 +123,45 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
+    def get_actors(self, config, execution):
+        if not self.auth_params:
+            return []
+
+        HiPro = user_import(
+            self.auth_backend,
+            'HierarchyProvider',
+            config['HIERARCHY_PROVIDERS'],
+            'cacahuate.auth.hierarchy',
+        )
+
+        hierarchy_provider = HiPro(config)
+
+        return hierarchy_provider.find_users(
+            **self.resolve_params(execution)
+        )
+
+    def resolve_params(self, execution=None):
+        computed_params = {}
+
+        for param in self.auth_params:
+            if execution is not None and param.type == 'ref':
+                user_ref = param.value.split('#')[1].strip()
+
+                try:
+                    actor = next(
+                        execution.proxy.actors.q().filter(ref=user_ref)
+                    )
+
+                    value = actor.proxy.user.get().identifier
+                except StopIteration:
+                    value = None
+            else:
+                value = param.value
+
+            computed_params[param.name] = value
+
+        return computed_params
+
     def log_entry(self, execution):
         return {
             'started_at': datetime.now(),
@@ -160,45 +199,6 @@ class Action(Node):
 
     def is_async(self):
         return True
-
-    def resolve_params(self, execution=None):
-        computed_params = {}
-
-        for param in self.auth_params:
-            if execution is not None and param.type == 'ref':
-                user_ref = param.value.split('#')[1].strip()
-
-                try:
-                    actor = next(
-                        execution.proxy.actors.q().filter(ref=user_ref)
-                    )
-
-                    value = actor.proxy.user.get().identifier
-                except StopIteration:
-                    value = None
-            else:
-                value = param.value
-
-            computed_params[param.name] = value
-
-        return computed_params
-
-    def get_actors(self, config, execution):
-        if not self.auth_params:
-            return []
-
-        HiPro = user_import(
-            self.auth_backend,
-            'HierarchyProvider',
-            config['HIERARCHY_PROVIDERS'],
-            'cacahuate.auth.hierarchy',
-        )
-
-        hierarchy_provider = HiPro(config)
-
-        return hierarchy_provider.find_users(
-            **self.resolve_params(execution)
-        )
 
     def validate_form_spec(self, form_specs, associated_data) -> dict:
         ''' Validates the given data against the spec contained in form. In case of

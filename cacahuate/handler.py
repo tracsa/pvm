@@ -167,7 +167,7 @@ class Handler:
             update_query['$push'] = {
                 'actors': activity.to_json(include=[
                     'ref',
-                    'user.human_name',
+                    'user.fullname',
                     'user.identifier',
                     'forms.ref',
                     'forms.inputs.name',

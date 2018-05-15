@@ -196,7 +196,7 @@ def test_teardown(config, mongo):
         'ref': 'mid-node',
         'user': {
             'identifier': 'manager',
-            'human_name': None,
+            'fullname': None,
         },
         'forms': [{
             'ref': 'mid-form',

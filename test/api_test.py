@@ -792,7 +792,7 @@ def test_list_activities(client):
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
-            act.to_json(embed=['execution']),
+            act.to_json(include=['*', 'execution']),
         ],
     }
 
@@ -837,7 +837,7 @@ def test_activity(client):
 
     assert res2.status_code == 200
     assert json.loads(res2.data) == {
-        'data': act.to_json(embed=['execution']),
+        'data': act.to_json(include=['*', 'execution']),
     }
 
 
@@ -905,7 +905,7 @@ def test_task_list(client):
 
     assert res.status_code == 200
     assert json.loads(res.data) == {
-        'data': [pointer.to_json(embed=['execution'])],
+        'data': [pointer.to_json(include=['*', 'execution'])],
     }
 
 

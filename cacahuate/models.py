@@ -39,13 +39,6 @@ class Activity(Model):
     )
     ref = fields.Text()
 
-    def to_json(self):
-        return {
-            'ref': self.ref,
-            'user': self.user.to_json(fields=['identifier', 'human_name']),
-            'forms': [f.to_json() for f in self.proxy.forms.get()],
-        }
-
 
 class Input(Model):
     name = fields.Text()
@@ -57,13 +50,6 @@ class Input(Model):
         inverse='inputs'
     )
 
-    def to_json(self):
-        return {
-            'name': self.name,
-            'value': self.value,
-            'type': self.type,
-        }
-
 
 class Questionaire(Model):
     ''' Represents filled forms and their data '''
@@ -71,12 +57,6 @@ class Questionaire(Model):
     execution = fields.ForeignIdRelation(Execution, inverse='forms')
     activity = fields.ForeignIdRelation(Activity, inverse='forms')
     inputs = fields.SetRelation(Input, inverse='form')
-
-    def to_json(self):
-        return {
-            'ref': self.ref,
-            'inputs': [i.to_json() for i in self.proxy.inputs.get()],
-        }
 
 
 class Pointer(Model):

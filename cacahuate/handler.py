@@ -245,7 +245,7 @@ class Handler:
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
                     routing_key=medium,
                     body=json.dumps({**{
-                        'pointer': pointer.to_json(embed=['execution']),
+                        'pointer': pointer.to_json(include=['*', 'execution']),
                     }, **params}),
                     properties=pika.BasicProperties(
                         delivery_mode=2,

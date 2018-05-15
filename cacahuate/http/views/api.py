@@ -306,7 +306,7 @@ def list_activities():
 
     return jsonify({
         'data': list(map(
-            lambda a: a.to_json(embed=['execution']),
+            lambda a: a.to_json(include=['*', 'execution']),
             unique
         )),
     })
@@ -332,7 +332,7 @@ def one_activity(id):
         }])
 
     return jsonify({
-        'data': activity.to_json(embed=['execution']),
+        'data': activity.to_json(include=['*', 'execution']),
     })
 
 
@@ -341,7 +341,7 @@ def one_activity(id):
 def task_list():
     return jsonify({
         'data': list(map(
-            lambda t: t.to_json(embed=['execution']),
+            lambda t: t.to_json(include=['*', 'execution']),
             g.user.proxy.tasks.get()
         )),
     })
@@ -369,7 +369,7 @@ def task_read(id):
     for form in node.getElementsByTagName('form'):
         forms.append(form_to_dict(form))
 
-    json_data = pointer.to_json(embed=['execution'])
+    json_data = pointer.to_json(include=['*', 'execution'])
 
     json_data['form_array'] = forms
 

@@ -245,6 +245,7 @@ class Action(Node):
 
         index = 0
         form_array = json_data.get('form_array', [])
+
         for form_specs in self.form_array:
             ref = form_specs.ref
 

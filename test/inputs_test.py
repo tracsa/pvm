@@ -33,14 +33,6 @@ def test_all_inputs(client, config, mongo):
 
     assert res.status_code == 201
 
-    # mongo has a registry
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
-    actor = reg['actors'][0]
-
-    assert actor['ref'] == 'inputs-node'
-    assert actor['user']['identifier'] == 'juan'
-    assert actor['forms'][0]['data'] == objeto[0]['data']
-
 
 def test_datetime_error(client, mocker, config):
     objeto = [

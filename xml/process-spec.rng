@@ -201,9 +201,9 @@
   <define name="body">
     <element name="body">
     <interleave>
-        <oneOrMore>
+        <zeroOrMore>
           <ref name="action"/>
-        </oneOrMore>
+        </zeroOrMore>
         <zeroOrMore>
           <ref name="validation"/>
         </zeroOrMore>

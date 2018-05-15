@@ -15,33 +15,21 @@
       </form-array>
     </action>
     <if id="condition-node">
-      <condition>
-        <node-info>
-          <name>Primer paso</name>
-          <description>Pasar a tarea 1</description>
-        </node-info>
-      </condition>
+      <condition>fiuref hiur</condition>
+      <body>
+        <action id="start-node" >
+          <form-array>
+            <form id="work">
+              <input type="text" name="task"></input>
+            </form>
+          </form-array>
+        </action>
+      </body>
     </if>
     <validation id="approval-node" >
       <dependencies>
         <dep>work.task</dep>
       </dependencies>
     </validation>
-    <if id="condition-node">
-      <condition>
-        <node-info>
-          <name>Segundo paso</name>
-          <description>Pasar a tarea 2</description>
-        </node-info>
-      </condition>
-    </if>
-    <if id="condition-node">
-      <condition>
-        <node-info>
-          <name>Tercer paso</name>
-          <description>Pasar a tarea 3</description>
-        </node-info>
-      </condition>
-    </if>
   </process>
 </process-spec>

@@ -119,7 +119,12 @@ def test_wakeup(config, mongo):
     assert (reg['started_at'] - datetime.now()).total_seconds() < 2
     assert reg['finished_at'] is None
     assert reg['execution']['id'] == execution.id
-    assert reg['node']['id'] == 'mid-node'
+    assert reg['node'] == {
+        'id': 'mid-node',
+        'type': 'action',
+        'description': 'añadir información',
+        'name': 'Segundo paso',
+    }
     assert reg['actors'] == []
     assert reg['notified_users'] == [manager.to_json()]
     with pytest.raises(KeyError):

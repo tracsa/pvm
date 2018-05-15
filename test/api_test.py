@@ -244,10 +244,8 @@ def test_continue_process(client, mocker, config):
     # makes a useful call for the handler
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, *rest = \
-        handler.recover_step(json_message)
+    pointer, user, inputs = handler.recover_step(json_message)
 
-    assert execution.id == exc.id
     assert pointer.id == ptr.id
 
 
@@ -393,10 +391,8 @@ def test_start_process(client, mocker, config, mongo):
 
     handler = Handler(config)
 
-    execution, pointer, xmliter, current_node, *rest = \
-        handler.recover_step(json_message)
+    pointer, user, input = handler.recover_step(json_message)
 
-    assert execution.id == exc.id
     assert pointer.id == ptr.id
 
     # mongo has a registry

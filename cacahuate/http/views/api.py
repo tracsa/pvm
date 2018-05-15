@@ -296,9 +296,9 @@ def find_process(name):
 @requires_auth
 def list_activities():
     activities = g.user.proxy.activities.get()
-
     seen = {}
     unique = []
+
     for activity in activities:
         if activity.execution not in seen:
             seen[activity.execution] = True

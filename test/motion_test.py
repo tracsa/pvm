@@ -20,12 +20,13 @@ def test_find_next_element_normal(config):
     xml = Xml.load(config, 'simple')
     handler = Handler(config)
     execution = Execution().save()
+    xmliter = iter(xml)
 
-    current_node = make_node(xml.find(
+    current_node = make_node(xmliter.find(
         lambda e: e.getAttribute('id') == 'mid-node'
     ))
 
-    values = handler.next(xml, current_node, execution)
+    values = handler.next(xmliter, current_node, execution)
 
     assert len(values) == 1
     assert values[0].id == 'final-node'
@@ -71,14 +72,15 @@ def test_find_next_element_end_explicit(config):
     xml = Xml.load(config, 'exit')
     handler = Handler(config)
     execution = Execution().save()
+    xmliter = iter(xml)
 
     assert xml.filename == 'exit.2018-05-03.xml'
 
-    current_node = make_node(xml.find(
+    current_node = make_node(xmliter.find(
         lambda e: e.tagName == 'exit'
     ))
 
-    nodes = handler.next(xml, current_node, execution)
+    nodes = handler.next(xmliter, current_node, execution)
 
     assert nodes == []
 
@@ -88,14 +90,15 @@ def test_find_next_element_end_implicit(config):
     xml = Xml.load(config, 'exit')
     handler = Handler(config)
     execution = Execution().save()
+    xmliter = iter(xml)
 
     assert xml.filename == 'exit.2018-05-03.xml'
 
-    current_node = make_node(xml.find(
+    current_node = make_node(xmliter.find(
         lambda e: e.getAttribute('id') == 'final-node'
     ))
 
-    nodes = handler.next(xml, current_node, execution)
+    nodes = handler.next(xmliter, current_node, execution)
 
     assert nodes == []
 

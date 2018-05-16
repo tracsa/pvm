@@ -10,7 +10,7 @@ from cacahuate.models import Execution, Pointer, User, Questionaire, \
     Activity, Input
 from cacahuate.node import Action
 
-from .utils import make_pointer, make_activity, make_user
+from .utils import make_pointer, make_activity, make_user, assert_near_date
 
 
 def test_recover_step(config):
@@ -116,7 +116,7 @@ def test_wakeup(config, mongo):
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
-    assert (reg['started_at'] - datetime.now()).total_seconds() < 2
+    assert_near_date(reg['started_at'])
     assert reg['finished_at'] is None
     assert reg['execution']['id'] == execution.id
     assert reg['node']['id'] == 'mid-node'
@@ -189,7 +189,7 @@ def test_teardown(config, mongo):
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
-    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert_near_date(reg['finished_at'])
     assert reg['execution']['id'] == execution.id
     assert reg['node']['id'] == p_0.node_id
     assert reg['actors'] == [{
@@ -261,7 +261,7 @@ def test_finish_execution(config, mongo):
     reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
 
     assert reg['status'] == 'finished'
-    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert_near_date(reg['finished_at'])
 
 
 def test_call_handler_delete_process(config, mongo):
@@ -287,7 +287,7 @@ def test_call_handler_delete_process(config, mongo):
 
     assert reg['id'] == execution_id
     assert reg['status'] == "cancelled"
-    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert_near_date(reg['finished_at'])
 
     assert Execution.count() == 0
     assert Pointer.count() == 0
@@ -336,7 +336,7 @@ def test_approve(config, mongo):
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
-    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert_near_date(reg['finished_at'])
     assert reg['execution']['id'] == ptr.execution
     assert reg['node']['id'] == 'approval-node'
     assert reg['actors'] == [{

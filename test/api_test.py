@@ -8,7 +8,8 @@ from cacahuate.models import Pointer, Execution, Activity, Questionaire
 from random import choice
 from string import ascii_letters
 
-from .utils import make_auth, make_activity, make_pointer, make_user, make_date
+from .utils import make_auth, make_activity, make_pointer, make_user, \
+    make_date, assert_near_date
 
 EXECUTION_ID = '15asbs'
 
@@ -398,7 +399,7 @@ def test_start_process(client, mocker, config, mongo):
     # mongo has a registry
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
-    assert (reg['started_at'] - datetime.now()).total_seconds() < 2
+    assert_near_date(reg['started_at'])
     assert reg['finished_at'] is None
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id

@@ -136,7 +136,11 @@ class Node:
 
     def get_state(self):
         return {
+            '_type': 'node',
             'id': self.id,
+            'comment': '',
+            'state': 'unfilled',
+            'actors': Map([], key='identifier').to_json(),
         }
 
     def to_json(self):

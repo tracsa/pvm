@@ -424,7 +424,7 @@ def test_start_process(client, mocker, config, mongo):
             'items': {
                 'start-node': {
                     '_type': 'node',
-                    'id': 'node1_id',
+                    'id': 'start-node',
                     'state': 'unfilled',
                     'comment': '',
                     'actors': {
@@ -434,9 +434,9 @@ def test_start_process(client, mocker, config, mongo):
                 },
                 'mid-node': {
                     '_type': 'node',
-                    'id': 'node1_id',
+                    'id': 'mid-node',
                     'state': 'unfilled',
-                    'comment': 'el género es incorrecto',
+                    'comment': '',
                     'actors': {
                         '_type': ':map',
                         'items': {},
@@ -444,7 +444,7 @@ def test_start_process(client, mocker, config, mongo):
                 },
                 'final-node': {
                     '_type': 'node',
-                    'id': 'node3_id',
+                    'id': 'final-node',
                     'state': 'unfilled',
                     'comment': '',
                     'actors': {

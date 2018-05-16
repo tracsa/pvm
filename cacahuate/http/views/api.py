@@ -14,8 +14,7 @@ from cacahuate.http.middleware import requires_json, requires_auth, \
     pagination
 from cacahuate.http.validation import validate_json, validate_auth
 from cacahuate.http.wsgi import app, mongo
-from cacahuate.models import Execution, Pointer, User, Token, Activity, \
-    Questionaire
+from cacahuate.models import Execution, Pointer, User, Token, Activity
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict
 from cacahuate.node import make_node

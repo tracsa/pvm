@@ -3,7 +3,7 @@ import pytest
 
 from cacahuate.xml import Xml
 from cacahuate.node import make_node
-from cacahuate.models import Execution, Questionaire
+from cacahuate.models import Execution
 from cacahuate.handler import Handler
 
 

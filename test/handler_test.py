@@ -6,9 +6,9 @@ import pytest
 import simplejson as json
 
 from cacahuate.handler import Handler
-from cacahuate.models import Execution, Pointer, User, Questionaire, \
-    Activity, Input
+from cacahuate.models import Execution, Pointer, User, Activity
 from cacahuate.node import Action
+from cacahuate.xml import Xml
 
 from .utils import make_pointer, make_activity, make_user, assert_near_date
 
@@ -87,8 +87,6 @@ def test_wakeup(config, mongo):
         email='hardcoded@mailinator.com'
     ).save()
     act = make_activity('start-node', juan, execution)
-    ques = Questionaire(ref='start-form', data={'data': 'why not'}).save()
-    ques.proxy.execution.set(execution)
 
     channel = MagicMock()
 
@@ -96,7 +94,7 @@ def test_wakeup(config, mongo):
     handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
-        'user_identifier': '',
+        'user_identifier': juan.identifier,
         'input': [],
     }, channel)
 
@@ -120,7 +118,10 @@ def test_wakeup(config, mongo):
     assert reg['finished_at'] is None
     assert reg['execution']['id'] == execution.id
     assert reg['node']['id'] == 'mid-node'
-    assert reg['actors'] == []
+    assert reg['actors'] == {
+        '_type': ':map',
+        'items': {},
+    }
     assert reg['notified_users'] == [manager.to_json()]
     with pytest.raises(KeyError):
         reg['state']
@@ -150,6 +151,11 @@ def test_teardown(config, mongo):
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
 
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': Xml.load(config, 'simple').get_state(),
+    })
     mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
@@ -159,7 +165,10 @@ def test_teardown(config, mongo):
         'node': {
             'id': p_0.node_id,
         },
-        'actors': [],
+        'actors': {
+            '_type': ':map',
+            'items': {},
+        },
     })
 
     channel = MagicMock()
@@ -169,14 +178,22 @@ def test_teardown(config, mongo):
         'command': 'step',
         'pointer_id': p_0.id,
         'user_identifier': manager.identifier,
-        'input': [[
-            'mid-form',
-            [{
-                'name': 'data',
-                'value': 'yes',
-                'type': 'text',
-            }],
-        ]],
+        'input': [{
+            '_type': 'form',
+            'id': 'mid-form',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'data': {
+                        '_type': 'field',
+                        'state': 'valid',
+                        'value': 'yes',
+                    },
+                },
+                'item_order': ['data'],
+            },
+        }],
     }, channel)
 
     # assertions
@@ -192,53 +209,112 @@ def test_teardown(config, mongo):
     assert_near_date(reg['finished_at'])
     assert reg['execution']['id'] == execution.id
     assert reg['node']['id'] == p_0.node_id
-    assert reg['actors'] == [{
-        'ref': 'mid-node',
-        'user': {
-            'identifier': 'manager',
-            'fullname': None,
+    assert reg['actors'] == {
+        '_type': ':map',
+        'items': {
+            'manager': {
+                '_type': 'actor',
+                'state': 'valid',
+                'user': {
+                    '_type': 'user',
+                    'identifier': 'manager',
+                    'fullname': None,
+                },
+                'forms': [{
+                    '_type': 'form',
+                    'id': 'mid-form',
+                    'state': 'valid',
+                    'inputs': {
+                        '_type': ':sorted_map',
+                        'items': {
+                            'data': {
+                                '_type': 'field',
+                                'state': 'valid',
+                                'value': 'yes',
+                            },
+                        },
+                        'item_order': ['data'],
+                    },
+                }],
+            },
         },
-        'forms': [{
-            'ref': 'mid-form',
-            'inputs': [{
-                'type': 'text',
-                'name': 'data',
-                'value': 'yes',
-            }],
-        }],
-    }]
-    with pytest.raises(KeyError):
-        reg['state']
+    }
 
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0
     assert manager2.proxy.tasks.count() == 0
 
-    # activity is created
-    activities = execution.proxy.actors.get()
-
-    assert len(activities) == 1
-    assert activities[0].ref == 'mid-node'
-    assert activities[0].proxy.user.get() == manager
-
-    # form is attached
-    forms = execution.proxy.forms.get()
-
-    assert len(forms) == 1
-    assert forms[0].ref == 'mid-form'
-    assert forms[0] in activities[0].proxy.forms
-
-    # input is attached to form
-    inputs = Input.get_all()
-
-    assert len(inputs) == 1
-    assert inputs[0].name == 'data'
-    assert inputs[0].type == 'text'
-    assert inputs[0].value == 'yes'
-    assert inputs[0] in forms[0].proxy.inputs
-
     # state
-    assert False, 'state is updated'
+    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+
+    assert reg['state'] == {
+        '_type': ':sorted_map',
+        'items': {
+            'start-node': {
+                '_type': 'node',
+                'id': 'start-node',
+                'state': 'unfilled',
+                'comment': '',
+                'actors': {
+                    '_type': ':map',
+                    'items': {},
+                },
+            },
+
+            'mid-node': {
+                '_type': 'node',
+                'id': 'mid-node',
+                'state': 'unfilled',
+                'comment': '',
+                'actors': {
+                    '_type': ':map',
+                    'items': {
+                        'manager': {
+                            '_type': 'actor',
+                            'state': 'valid',
+                            'user': {
+                                '_type': 'user',
+                                'identifier': 'manager',
+                                'fullname': None,
+                            },
+                            'forms': [{
+                                '_type': 'form',
+                                'id': 'mid-form',
+                                'state': 'valid',
+                                'inputs': {
+                                    '_type': ':sorted_map',
+                                    'items': {
+                                        'data': {
+                                            '_type': 'field',
+                                            'state': 'valid',
+                                            'value': 'yes',
+                                        },
+                                    },
+                                    'item_order': ['data'],
+                                },
+                            }],
+                        },
+                    },
+                },
+            },
+
+            'final-node': {
+                '_type': 'node',
+                'id': 'final-node',
+                'state': 'unfilled',
+                'comment': '',
+                'actors': {
+                    '_type': ':map',
+                    'items': {},
+                },
+            },
+        },
+        'item_order': [
+            'start-node',
+            'mid-node',
+            'final-node',
+        ],
+    }
 
 
 def test_finish_execution(config, mongo):
@@ -291,7 +367,6 @@ def test_call_handler_delete_process(config, mongo):
 
     assert Execution.count() == 0
     assert Pointer.count() == 0
-    assert Questionaire.count() == 0
     assert Activity.count() == 0
 
 
@@ -313,7 +388,10 @@ def test_approve(config, mongo):
         'node': {
             'id': p_0.node_id,
         },
-        'actors': [],
+        'actors': {
+            '_type': ':map',
+            'items': {},
+        },
     })
 
     # thing to test
@@ -386,14 +464,13 @@ def test_resistance_unexisteng_hierarchy_backend(config):
 
     ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
     exc = ptr.proxy.execution.get()
-    que = Questionaire(ref='form', data={'choice': 'noprov'}).save()
-    que.proxy.execution.set(exc)
+    user = make_user('juan', 'Juan')
 
     # this is what we test
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
-        'user_identifier': '',
+        'user_identifier': user.identifier,
         'input': {},
     }))
 
@@ -403,14 +480,13 @@ def test_resistance_hierarchy_return(config):
 
     ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
     exc = ptr.proxy.execution.get()
-    que = Questionaire(ref='form', data={'choice': 'return'}).save()
-    que.proxy.execution.set(exc)
+    user = make_user('juan', 'Juan')
 
     # this is what we test
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
-        'user_identifier': '',
+        'user_identifier': user.identifier,
         'input': {},
     }))
 
@@ -420,14 +496,13 @@ def test_resistance_hierarchy_item(config):
 
     ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
     exc = ptr.proxy.execution.get()
-    que = Questionaire(ref='form', data={'choice': 'item'}).save()
-    que.proxy.execution.set(exc)
+    user = make_user('juan', 'Juan')
 
     # this is what we test
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
-        'user_identifier': '',
+        'user_identifier': user.identifier,
         'input': {},
     }))
 
@@ -437,14 +512,13 @@ def test_resistance_node_not_found(config):
 
     ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
     exc = ptr.proxy.execution.get()
-    que = Questionaire(ref='form', data={'choice': 'nonode'}).save()
-    que.proxy.execution.set(exc)
+    user = make_user('juan', 'Juan')
 
     # this is what we test
     handler(MagicMock(), MagicMock(), None, json.dumps({
         'command': 'step',
         'pointer_id': ptr.id,
-        'user_identifier': '',
+        'user_identifier': user.identifier,
         'input': {},
     }))
 

@@ -4,7 +4,7 @@ from flask import json, jsonify, g
 import pika
 import pytest
 from cacahuate.handler import Handler
-from cacahuate.models import Pointer, Execution, Activity, Questionaire
+from cacahuate.models import Pointer, Execution, Activity
 from random import choice
 from string import ascii_letters
 
@@ -328,7 +328,6 @@ def test_start_process_requirements(client, mongo, config):
     # no registry should be created yet
     assert mongo[config["MONGO_HISTORY_COLLECTION"]].count() == 0
     assert Activity.count() == 0
-    assert Questionaire.count() == 0
 
 
 def test_start_process(client, mocker, config, mongo):

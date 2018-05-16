@@ -9,7 +9,6 @@ import re
 from cacahuate.errors import ElementNotFound, IncompleteBranch, \
     ValidationErrors, RequiredInputError, InvalidInputError, InputError, \
     RequiredListError, RequiredDictError
-from cacahuate.grammar import Condition
 from cacahuate.inputs import make_input
 from cacahuate.logger import log
 from cacahuate.utils import user_import
@@ -130,7 +129,7 @@ class Node:
             'finished_at': None,
             'execution': execution.to_json(),
             'node': self.to_json(),
-            'actors': [],
+            'actors': Map([], key='identifier').to_json(),
             'process_id': execution.process_name,
         }
 

@@ -168,7 +168,9 @@ class Handler:
         })
 
         # update state
-        collection = self.get_mongo()[self.config['MONGO_EXECUTION_COLLECTION']]
+        collection = self.get_mongo()[
+            self.config['MONGO_EXECUTION_COLLECTION']
+        ]
         collection.update_one({
             'id': execution.id,
         }, {

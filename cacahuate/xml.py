@@ -148,12 +148,10 @@ class Xml:
 
             context[form['ref']] = form_dict
 
-        from pprint import pprint; pprint(context)
-
         return Template(self.name).render(**context)
 
     def get_state(self):
-        from cacahuate.node import make_node # noqa
+        from cacahuate.node import make_node  # noqa
 
         return SortedMap(map(
             lambda n: make_node(n).get_state(),

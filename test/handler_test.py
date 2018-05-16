@@ -10,7 +10,7 @@ from cacahuate.models import Execution, Pointer, User, Questionaire, \
     Activity, Input
 from cacahuate.node import Action
 
-from .utils import make_pointer, make_activity, make_user
+from .utils import make_pointer, make_activity, make_user, assert_near_date
 
 
 def test_recover_step(config):

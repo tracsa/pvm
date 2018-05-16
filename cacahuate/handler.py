@@ -47,8 +47,9 @@ class Handler:
         execution = pointer.proxy.execution.get()
 
         xml = Xml.load(self.config, execution.process_name, direct=True)
+        xmliter = iter(xml)
 
-        node = make_node(xml.find(
+        node = make_node(xmliter.find(
             lambda e: e.getAttribute('id') == pointer.node_id
         ))
 
@@ -56,7 +57,7 @@ class Handler:
 
         # node's lifetime ends here
         self.teardown(node, pointer, user, input)
-        next_nodes = self.next(xml, node, execution)
+        next_nodes = self.next(xmliter, node, execution)
 
         for node in next_nodes:
             # node's begining of life
@@ -87,14 +88,14 @@ class Handler:
                 ),
             )
 
-    def next(self, xml, node, execution):
+    def next(self, xmliter, node, execution):
         ''' Given a position in the script, return the next position '''
         if isinstance(node, Exit):
             return []
 
         try:
             # Return next node by simple adjacency
-            element = next(xml)
+            element = next(xmliter)
 
             return [make_node(element)]
         except StopIteration:

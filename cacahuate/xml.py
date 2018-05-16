@@ -89,22 +89,44 @@ class Xml:
             raise ProcessNotFound(common_name)
 
     def make_iterator(self, iterables):
-        parser = pulldom.parse(
-            open(os.path.join(self.config['XML_PATH'], self.filename))
-        )
 
-        def iter():
-            try:
-                for event, node in parser:
-                    if event == pulldom.START_ELEMENT and \
-                            node.tagName in iterables:
-                        parser.expandNode(node)
+        class Iter():
 
-                        yield node
-            except SAXParseException:
-                raise MalformedProcess
+            def __init__(self, config, filename):
+                self.parser = pulldom.parse(
+                    open(os.path.join(config['XML_PATH'], filename))
+                )
 
-        return iter()
+            def find(self, testfunc: Callable[[Element], bool]) -> Element:
+                ''' Given an interator returned by the previous function, tries
+                to find the first node matching the given condition '''
+                # Since we already consumed the start node on initialization,
+                # this fix is needed for find() to be stable
+                for element in self:
+                    if testfunc(element):
+                        return element
+
+                raise ElementNotFound(
+                    'node matching the given condition was not found'
+                )
+
+            def __next__(self):
+                try:
+                    for event, node in self.parser:
+                        if event == pulldom.START_ELEMENT and \
+                                node.tagName in iterables:
+                            self.parser.expandNode(node)
+
+                            return node
+                except SAXParseException:
+                    raise MalformedProcess
+
+                raise StopIteration
+
+            def __iter__(self):
+                return self
+
+        return Iter(self.config, self.filename)
 
     def get_info_node(self):
         return next(self.make_iterator('process-info'))
@@ -114,20 +136,6 @@ class Xml:
         by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed
         for this task. '''
         return self.make_iterator(NODES)
-
-
-    def find(self, testfunc: Callable[[Element], bool]) -> Element:
-        ''' Given an interator returned by the previous function, tries to find
-        the first node matching the given condition '''
-        # Since we already consumed the start node on initialization, this
-        # fix is needed for find() to be stable
-        for element in self:
-            if testfunc(element):
-                return element
-
-        raise ElementNotFound(
-            'node matching the given condition was not found'
-        )
 
     def make_name(self, collected_forms):
         context = dict(map(

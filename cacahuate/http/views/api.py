@@ -17,7 +17,7 @@ from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer, User, Token, Activity, \
     Questionaire
 from cacahuate.rabbit import get_channel
-from cacahuate.xml import Xml, form_to_dict
+from cacahuate.xml import Xml, form_to_dict, get_text
 from cacahuate.node import make_node
 
 
@@ -359,20 +359,43 @@ def task_read(id):
             'where': 'request.authorization',
         }])
 
-    forms = []
+    execution = pointer.proxy.execution.get()
+
     xml = Xml.load(
         app.config,
-        pointer.proxy.execution.get().process_name,
+        execution.process_name,
         direct=True
     )
     node = iter(xml).find(lambda e: e.getAttribute('id') == pointer.node_id)
 
-    for form in node.getElementsByTagName('form'):
-        forms.append(form_to_dict(form))
-
+    # Response body
     json_data = pointer.to_json(include=['*', 'execution'])
 
+    # Append node info
+    json_data['node_type'] = node.tagName
+
+    # Append forms
+    forms = []
+    for form in node.getElementsByTagName('form'):
+        forms.append(form_to_dict(form))
     json_data['form_array'] = forms
+
+    # Append validation
+    if node.tagName == 'validation':
+        deps = list(map(
+            lambda node: get_text(node),
+            node.getElementsByTagName('dep')
+        ))
+
+        fields = []
+        for dep in deps:
+            fields.append({
+                'ref': dep,
+                'label': '', # TODO get it from the state
+                'value': '', # TODO get it from the state
+            })
+
+        json_data['fields'] = fields
 
     return jsonify({
         'data': json_data,

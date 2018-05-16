@@ -121,7 +121,8 @@ def start_process():
             'where': 'request.body.process_name',
         }])
 
-    start_point = make_node(xml.start_node)
+    xmliter = iter(xml)
+    start_point = make_node(next(xmliter))
 
     # Check for authorization
     validate_auth(start_point, g.user)

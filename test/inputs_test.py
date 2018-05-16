@@ -403,10 +403,10 @@ def test_default_inputs(client):
     # text
     assert ques['data']['name'] == 'Jon Snow'
     # datetime
-    assert (datetime.strptime(
+    assert_near_date(datetime.strptime(
         ques['data']['datetime'],
         "%Y-%m-%dT%H:%M:%S.%fZ"
-    ) - datetime.now()).total_seconds() < 2
+    ))
     # password
     assert ques['data']['secret'] == 'dasdasd'
     # checkbox
@@ -443,10 +443,10 @@ def test_required_inputs_with_defaults(client):
     # text
     assert ques['data']['name'] == 'Jon Snow'
     # datetime
-    assert (datetime.strptime(
+    assert_near_date(datetime.strptime(
         ques['data']['datetime'],
         "%Y-%m-%dT%H:%M:%S.%fZ"
-    ) - datetime.now()).total_seconds() < 2
+    ))
     # password
     assert ques['data']['secret'] == 'dasdasd'
     # checkbox

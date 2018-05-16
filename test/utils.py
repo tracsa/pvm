@@ -50,3 +50,7 @@ def make_activity(ref, user, execution):
 
 def make_date(year=2018, month=5, day=4, hour=0, minute=0, second=0):
     return datetime(year, month, day, hour, minute, second)
+
+
+def assert_near_date(date, seconds=2):
+    assert (date - datetime.now()).total_seconds() < seconds

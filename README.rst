@@ -65,17 +65,6 @@ You can use any wsgi-compliant server, like gunicorn, to run this:
 TODO
 ----
 
-* Cada campo de un formulario puede estar en uno de tres estados:
-    - unfilled, valid, invalid
-* ciudadanos de primera clase:
-    - <action>
-    - <validation>
-    - <subprocess>
-    - <end>
-* probar nodo tipo aprobación
-    - aprobar camina hacia enfrente
-    - no aprobar sube al primer elemento inválido
-    - información inválida nunca pasa validación de formulario
-    - después de una regresión, nodos que ya pasen validacion se saltan
-* la invalidación en multiauth invalida las respuestas de todos los usuarios
 * modificar funcion Xml.load para especificar versión como un argumento aparte
+* desarrollar campo enum en Coralillo y usar para models.Field
+* hacer auth-filter parte obligatoria de un nodo y crear auth-backend que permite todos los usuarios

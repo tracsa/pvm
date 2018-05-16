@@ -15,11 +15,11 @@
       </form-array>
     </action>
 
-<!--     <validation id="approval-node" >
+    <validation id="approval-node" >
       <dependencies>
         <dep>work.task</dep>
       </dependencies>
-    </validation> -->
+    </validation>
 
     <action id="final-node">
       <form-array>

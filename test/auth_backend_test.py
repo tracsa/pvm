@@ -1,8 +1,9 @@
 from cacahuate.auth.hierarchy.backref import BackrefHierarchyProvider
-from cacahuate.auth.base import BaseUser
+from cacahuate.models import User
 
 
 def test_backref_backend(config):
+    user = User(identifier='juan').save()
     br = BackrefHierarchyProvider(config)
 
     users = br.find_users(identifier='juan')
@@ -11,5 +12,5 @@ def test_backref_backend(config):
 
     user = users[0]
 
-    assert isinstance(user, BaseUser)
-    assert user.get_identifier() == 'juan'
+    assert isinstance(user, User)
+    assert user.identifier == 'juan'

@@ -11,11 +11,9 @@ from string import ascii_letters
 @app.route('/v1/auth/signin/<AuthProvider:backend>', methods=['POST'])
 def signin(backend):
     try:
-        backend_user = backend.authenticate(**request.form.to_dict())
+        user = backend.authenticate(**request.form.to_dict())
     except AuthenticationError:
         abort(401, 'Provided user credentials are invalid')
-
-    user = backend_user.get_user()
 
     # creates auth token
     if user.proxy.tokens.count() > 0:
@@ -27,8 +25,8 @@ def signin(backend):
 
     return jsonify({
         'data': {
-            'username': backend_user.get_identifier(),
-            'humanname': backend_user.get_human_name(),
+            'username': user.identifier,
+            'fullname': user.fullname,
             'token': token.token,
         }
     })

@@ -2,8 +2,6 @@ from cacahuate.auth.base import BaseHierarchyProvider
 from cacahuate.errors import HierarchyError
 from cacahuate.models import User
 
-from .hardcoded_login import HardcodedUser
-
 
 class HardcodedHierarchyProvider(BaseHierarchyProvider):
 
@@ -24,9 +22,8 @@ class HardcodedHierarchyProvider(BaseHierarchyProvider):
         employee = params.get('identifier')
         relation = params.get('relation')
 
-        return list(map(
-            lambda u: HardcodedUser(username=u.identifier),
+        return list(
             User.q().filter(
                 identifier='{}_{}'.format(employee, relation)
             )
-        ))
+        )

@@ -30,3 +30,25 @@ class SortedMap:
 
         if type(item) == int:
             return self.items[self.item_order[item]]
+
+
+class Map:
+    ''' a utility class for managing maps similar to SortedMap '''
+
+    def __init__(self, arg, *, key=None):
+        self.items = {}
+
+        for item in arg:
+            self.items[item[key]] = item
+
+    def to_json(self):
+        return {
+            '_type': ':map',
+            'items': self.items,
+        }
+
+    def __iter__(self):
+        return iter(self.items.values())
+
+    def __getitem__(self, item):
+        return self.items[item]

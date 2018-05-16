@@ -15,6 +15,7 @@ from cacahuate.logger import log
 from cacahuate.utils import user_import
 from cacahuate.xml import get_text, NODES
 from cacahuate.http.errors import BadRequest
+from cacahuate.jsontypes import Map
 
 
 class AuthParam:

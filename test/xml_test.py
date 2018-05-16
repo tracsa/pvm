@@ -65,21 +65,21 @@ def test_make_iterator(config):
 
 
 def test_find(config):
-    xml = Xml.load(config, 'simple')
+    xmliter = iter(Xml.load(config, 'simple'))
 
-    start = xml.start_node
+    start = next(xmliter)
 
     assert start.tagName == 'action'
     assert start.getAttribute('id') == 'start-node'
 
-    echo = xml.find(
+    echo = xmliter.find(
         lambda e: e.getAttribute('id') == 'mid-node'
     )
 
     assert echo.tagName == 'action'
     assert echo.getAttribute('id') == 'mid-node'
 
-    end = xml.find(
+    end = xmliter.find(
         lambda e: e.getAttribute('id') == 'final-node'
     )
 

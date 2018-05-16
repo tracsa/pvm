@@ -121,7 +121,8 @@ def start_process():
             'where': 'request.body.process_name',
         }])
 
-    start_point = make_node(xml.start_node)
+    xmliter = iter(xml)
+    start_point = make_node(next(xmliter))
 
     # Check for authorization
     validate_auth(start_point, g.user)
@@ -199,7 +200,7 @@ def continue_process():
 
     try:
         continue_point = make_node(
-            xml.find(lambda e: e.getAttribute('id') == node_id)
+            iter(xml).find(lambda e: e.getAttribute('id') == node_id)
         )
     except ElementNotFound as e:
         raise BadRequest([{
@@ -254,7 +255,7 @@ def list_process():
         json_xml = xml.to_json()
         forms = []
 
-        for form in xml.start_node.getElementsByTagName('form'):
+        for form in next(iter(xml)).getElementsByTagName('form'):
             forms.append(form_to_dict(form))
 
         json_xml['form_array'] = forms
@@ -364,7 +365,7 @@ def task_read(id):
         pointer.proxy.execution.get().process_name,
         direct=True
     )
-    node = xml.find(lambda e: e.getAttribute('id') == pointer.node_id)
+    node = iter(xml).find(lambda e: e.getAttribute('id') == pointer.node_id)
 
     for form in node.getElementsByTagName('form'):
         forms.append(form_to_dict(form))

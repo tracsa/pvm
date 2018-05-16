@@ -14,8 +14,7 @@ from cacahuate.http.middleware import requires_json, requires_auth, \
     pagination
 from cacahuate.http.validation import validate_json, validate_auth
 from cacahuate.http.wsgi import app, mongo
-from cacahuate.models import Execution, Pointer, User, Token, Activity, \
-    Questionaire
+from cacahuate.models import Execution, Pointer, User, Token, Activity
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict, get_text
 from cacahuate.node import make_node
@@ -149,12 +148,14 @@ def start_process():
 
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
     collection.insert_one({
+        '_type': 'execution',
         'id': execution.id,
         'name': execution.name,
         'description': execution.description,
         'status': 'ongoing',
         'started_at': datetime.now(),
         'finished_at': None,
+        'state': xml.get_state(),
     })
 
     # trigger rabbit

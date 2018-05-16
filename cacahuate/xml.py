@@ -5,8 +5,8 @@ from xml.dom.minidom import Element
 from xml.sax._exceptions import SAXParseException
 from jinja2 import Template
 
-from .errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from .mark import comment
+from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
+from cacahuate.jsontypes import SortedMap
 
 XML_ATTRIBUTES = {
     'public': lambda a: a == 'true',
@@ -138,15 +138,25 @@ class Xml:
         return self.make_iterator(NODES)
 
     def make_name(self, collected_forms):
-        context = dict(map(
-            lambda i: (i[0], dict(map(
-                lambda j: (j['name'], j['value']),
-                i[1]
-            ))),
-            collected_forms
-        ))
+        context = dict()
+
+        for form in collected_forms:
+            form_dict = dict()
+
+            for name, input in form['inputs']['items'].items():
+                form_dict[name] = input['value_caption']
+
+            context[form['ref']] = form_dict
 
         return Template(self.name).render(**context)
+
+    def get_state(self):
+        from cacahuate.node import make_node  # noqa
+
+        return SortedMap(map(
+            lambda n: make_node(n).get_state(),
+            iter(self)
+        ), key='id').to_json()
 
     @classmethod
     def list(cls, config):

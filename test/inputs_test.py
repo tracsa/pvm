@@ -2,8 +2,6 @@ from datetime import datetime
 from flask import json
 import pytest
 
-from cacahuate.models import Questionaire
-
 from .utils import make_auth, make_activity, make_pointer, make_user
 
 

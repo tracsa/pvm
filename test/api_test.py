@@ -4,7 +4,7 @@ from flask import json, jsonify, g
 import pika
 import pytest
 from cacahuate.handler import Handler
-from cacahuate.models import Pointer, Execution, Activity, Questionaire
+from cacahuate.models import Pointer, Execution, Activity
 from random import choice
 from string import ascii_letters
 
@@ -220,21 +220,23 @@ def test_continue_process(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan_manager',
-        'input': [
-            [
-                'mid-form',
-                [
-                    {
+        'input': [{
+            '_type': 'form',
+            'ref': 'mid-form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'data': {
                         "name": "data",
                         "type": "text",
                         "value": "yes",
-                        "required": True,
-                        'default': None,
                         'label': 'data',
-                    }
-                ],
-            ],
-        ],
+                        'value_caption': 'yes',
+                    },
+                },
+                'item_order': ['data'],
+            },
+        }],
     }
 
     assert args['exchange'] == ''
@@ -328,7 +330,6 @@ def test_start_process_requirements(client, mongo, config):
     # no registry should be created yet
     assert mongo[config["MONGO_HISTORY_COLLECTION"]].count() == 0
     assert Activity.count() == 0
-    assert Questionaire.count() == 0
 
 
 def test_start_process(client, mocker, config, mongo):
@@ -371,19 +372,23 @@ def test_start_process(client, mocker, config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'input': [
-            [
-                'start-form',
-                [{
-                    'default': None,
-                    'label': 'Info',
-                    'required': True,
-                    'type': 'text',
-                    'value': 'yes',
-                    'name': 'data',
-                }],
-            ],
-        ],
+        'input': [{
+            '_type': 'form',
+            'ref': 'start-form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'data': {
+                        'label': 'Info',
+                        'type': 'text',
+                        'value': 'yes',
+                        'value_caption': 'yes',
+                        'name': 'data',
+                    },
+                },
+                'item_order': ['data'],
+            },
+        }],
     }
 
     assert args['exchange'] == ''
@@ -404,10 +409,62 @@ def test_start_process(client, mocker, config, mongo):
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
 
-    reg2 = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
 
-    assert reg2['id'] == exc.id
-    assert reg2['status'] == 'ongoing'
+    assert_near_date(reg['started_at'])
+
+    del reg['started_at']
+    del reg['_id']
+
+    assert reg == {
+        '_type': 'execution',
+        'id': exc.id,
+        'name': exc.name,
+        'description': exc.description,
+        'status': 'ongoing',
+        'finished_at': None,
+        'status': 'ongoing',
+        'state': {
+            '_type': ':sorted_map',
+            'items': {
+                'start-node': {
+                    '_type': 'node',
+                    'id': 'start-node',
+                    'state': 'unfilled',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+                'mid-node': {
+                    '_type': 'node',
+                    'id': 'mid-node',
+                    'state': 'unfilled',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+                'final-node': {
+                    '_type': 'node',
+                    'id': 'final-node',
+                    'state': 'unfilled',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+            },
+            'item_order': [
+                'start-node',
+                'mid-node',
+                'final-node',
+            ],
+        },
+    }
 
 
 def test_regression_requirements(client):

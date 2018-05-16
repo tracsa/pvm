@@ -9,9 +9,9 @@ class Condition:
 
     def __init__(self, execution):
         filename = os.path.join(
-                                os.path.dirname(__file__),
-                                'grammars/condition.g'
-                                )
+            os.path.dirname(__file__),
+            'grammars/condition.g'
+        )
 
         with open(filename) as grammar_file:
             self.parser = Lark(

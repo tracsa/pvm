@@ -242,7 +242,6 @@ class Action(Node):
 
         collected_forms = []
         errors = []
-
         index = 0
         form_array = json_data.get('form_array', [])
 

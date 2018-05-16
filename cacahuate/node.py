@@ -275,6 +275,9 @@ class Validation(Node):
 
     VALID_RESPONSES = ('accept', 'reject')
 
+    def is_async(self):
+        return True
+
     def __init__(self, element):
         super().__init__(element)
 

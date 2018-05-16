@@ -56,7 +56,7 @@ class Handler:
 
         # node's lifetime ends here
         self.teardown(node, pointer, user, input)
-        next_nodes = self.next(xml, node, execution)
+        next_nodes = self.next(xml, node, execution, input)
 
         for node in next_nodes:
             # node's begining of life
@@ -87,13 +87,30 @@ class Handler:
                 ),
             )
 
-    def next(self, xml, node, execution):
+    def next(self, xml, node, execution, input):
         ''' Given a position in the script, return the next position '''
         if isinstance(node, Exit):
             return []
 
+        elif isinstance(node, Validation) and input['response'] == 'reject':
+            # find the data backwards
+            xmlc = xml.copy()
+            first_node_found = False
+            first_invalid_node = None
+            invalidated = set(i['ref'] for i in input['fields'])
+
+            for element in xmlc:
+                node = make_node(element)
+
+                if node.invalidate(invalidated) and not first_node_found:
+                    first_node_found = True
+                    first_invalid_node = node
+
+            return [first_invalid_node]
+
+        # Return next node by simple adjacency, works for actions and accepted
+        # validations
         try:
-            # Return next node by simple adjacency
             element = next(xml)
 
             return [make_node(element)]

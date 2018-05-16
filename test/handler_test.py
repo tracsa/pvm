@@ -297,7 +297,6 @@ def test_call_handler_delete_process(config, mongo):
     assert Activity.count() == 0
 
 
-@pytest.mark.skip
 def test_approve(config, mongo):
     ''' tests that a validation node can go forward on approval '''
     # test setup
@@ -310,10 +309,10 @@ def test_approve(config, mongo):
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
-            'id': execution.id,
+            'id': ptr.proxy.execution.get().id,
         },
         'node': {
-            'id': p_0.node_id,
+            'id': 'approval-node',
         },
         'actors': [],
     })
@@ -342,13 +341,10 @@ def test_approve(config, mongo):
     assert reg['execution']['id'] == ptr.execution
     assert reg['node']['id'] == 'approval-node'
     assert reg['actors'] == [{
-        'ref': 'mid-node',
+        'ref': 'approval-node',
         'user': {
-            'identifier': 'manager',
-            'human_name': None,
-        },
-        'node': {
-            'type': 'validation',
+            'identifier': 'juan',
+            'fullname': 'Juan',
         },
         'input': {
             'response': 'accept',
@@ -357,10 +353,64 @@ def test_approve(config, mongo):
     }]
 
 
-@pytest.mark.skip
-def test_reject():
+def test_reject(config, mongo):
     ''' tests that a rejection moves the pointer to a backward position '''
-    assert False
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    channel = MagicMock()
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'execution': {
+            'id': ptr.proxy.execution.get().id,
+        },
+        'node': {
+            'id': 'approval-node',
+        },
+        'actors': [],
+    })
+
+    # thing to test
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': {
+            'response': 'reject',
+            'comment': 'I do not like it',
+        },
+    }, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
+
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == 'start-node'
+
+    # data invalidation
+    assert False, 'data is invalidated'
+
+    # mongo has the data
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+
+    assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert reg['execution']['id'] == ptr.execution
+    assert reg['node']['id'] == 'approval-node'
+    assert reg['actors'] == [{
+        'ref': 'approval-node',
+        'user': {
+            'identifier': 'juan',
+            'fullname': 'Juan',
+        },
+        'input': {
+            'response': 'accept',
+            'comment': 'I like it',
+        },
+    }]
 
 
 @pytest.mark.skip

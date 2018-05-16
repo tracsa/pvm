@@ -66,6 +66,9 @@ class Xml:
                 'Process does not have nodes'
             )
 
+    def copy(self):
+        return Xml(self.config, self.filename)
+
     @classmethod
     def load(cls, config: dict, common_name: str, direct=False) -> TextIO:
         ''' Loads an xml file and returns the corresponding TextIOWrapper for

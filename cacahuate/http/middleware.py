@@ -4,6 +4,7 @@ from werkzeug.exceptions import BadRequest as WBadRequest
 from flask import g
 from cacahuate.http.errors import BadRequest, Unauthorized
 from cacahuate.models import User, Token
+from cacahuate.http.wsgi import app
 
 
 def requires_json(view):
@@ -62,3 +63,25 @@ def requires_auth(view):
         return view(*args, **kwargs)
     return wrapper
 
+
+def pagination(view):
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        limit = request.args.get(
+            'limit', app.config['PAGINATION_LIMIT']
+        )
+        offset = request.args.get(
+            'offset', app.config['PAGINATION_OFFSET']
+        )
+
+        if not type(limit) == int and not limit.isdigit():
+            limit = app.config['PAGINATION_LIMIT']
+
+        if not type(offset) == int and not offset.isdigit():
+            offset = app.config['PAGINATION_OFFSET']
+
+        g.offset = int(offset)
+        g.limit = int(limit)
+
+        return view(*args, **kwargs)
+    return wrapper

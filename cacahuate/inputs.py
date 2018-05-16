@@ -58,12 +58,13 @@ class Input:
     def get_default(self):
         return self.default
 
+    def make_caption(self, value):
+        return value
+
     def to_json(self):
         return {
             'type': self.type,
-            'required': self.required,
             'name': self.name,
-            'default': self.get_default(),
             'label': self.label,
         }
 

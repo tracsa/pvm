@@ -14,8 +14,7 @@ from cacahuate.http.middleware import requires_json, requires_auth, \
     pagination
 from cacahuate.http.validation import validate_json, validate_auth
 from cacahuate.http.wsgi import app, mongo
-from cacahuate.models import Execution, Pointer, User, Token, Activity, \
-    Questionaire
+from cacahuate.models import Execution, Pointer, User, Token, Activity
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict
 from cacahuate.node import make_node
@@ -121,7 +120,8 @@ def start_process():
             'where': 'request.body.process_name',
         }])
 
-    start_point = make_node(xml.start_node)
+    xmliter = iter(xml)
+    start_point = make_node(next(xmliter))
 
     # Check for authorization
     validate_auth(start_point, g.user)
@@ -148,12 +148,14 @@ def start_process():
 
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
     collection.insert_one({
+        '_type': 'execution',
         'id': execution.id,
         'name': execution.name,
         'description': execution.description,
         'status': 'ongoing',
         'started_at': datetime.now(),
         'finished_at': None,
+        'state': xml.get_state(),
     })
 
     # trigger rabbit
@@ -199,7 +201,7 @@ def continue_process():
 
     try:
         continue_point = make_node(
-            xml.find(lambda e: e.getAttribute('id') == node_id)
+            iter(xml).find(lambda e: e.getAttribute('id') == node_id)
         )
     except ElementNotFound as e:
         raise BadRequest([{
@@ -254,7 +256,7 @@ def list_process():
         json_xml = xml.to_json()
         forms = []
 
-        for form in xml.start_node.getElementsByTagName('form'):
+        for form in next(iter(xml)).getElementsByTagName('form'):
             forms.append(form_to_dict(form))
 
         json_xml['form_array'] = forms
@@ -364,7 +366,7 @@ def task_read(id):
         pointer.proxy.execution.get().process_name,
         direct=True
     )
-    node = xml.find(lambda e: e.getAttribute('id') == pointer.node_id)
+    node = iter(xml).find(lambda e: e.getAttribute('id') == pointer.node_id)
 
     for form in node.getElementsByTagName('form'):
         forms.append(form_to_dict(form))

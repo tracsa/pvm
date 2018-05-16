@@ -17,10 +17,6 @@ class Execution(Model):
         'cacahuate.models.Activity',
         inverse='execution'
     )
-    forms = fields.SetRelation(
-        'cacahuate.models.Questionaire',
-        inverse='execution'
-    )
 
 
 class Activity(Model):
@@ -33,39 +29,7 @@ class Activity(Model):
         'cacahuate.models.User',
         inverse='activities'
     )
-    forms = fields.SetRelation(
-        'cacahuate.models.Questionaire',
-        inverse='activity'
-    )
     ref = fields.Text()
-
-
-class Input(Model):
-    name = fields.Text()
-    status = fields.Text()
-    value = fields.Text()
-    type = fields.Text()
-    form = fields.ForeignIdRelation(
-        'cacahuate.models.Questionaire',
-        inverse='inputs'
-    )
-
-
-class Questionaire(Model):
-    ''' Represents filled forms and their data '''
-    ref = fields.Text()
-    execution = fields.ForeignIdRelation(Execution, inverse='forms')
-    activity = fields.ForeignIdRelation(Activity, inverse='forms')
-    inputs = fields.SetRelation(Input, inverse='form')
-
-    def get_value(self, member):
-        ''' returs the value of one of this form's inputs '''
-        try:
-            input = next(self.proxy.inputs.q().filter(name=member))
-
-            return input.value
-        except StopIteration:
-            return None
 
 
 class Pointer(Model):

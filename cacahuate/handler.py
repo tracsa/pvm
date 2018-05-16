@@ -9,8 +9,7 @@ import pymongo
 from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
     MisconfiguredProvider
 from cacahuate.logger import log
-from cacahuate.models import Execution, Pointer, Questionaire, Activity, \
-    User, Input
+from cacahuate.models import Execution, Pointer, Activity, User
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, Exit, Action, Validation
 
@@ -47,8 +46,9 @@ class Handler:
         execution = pointer.proxy.execution.get()
 
         xml = Xml.load(self.config, execution.process_name, direct=True)
+        xmliter = iter(xml)
 
-        node = make_node(xml.find(
+        node = make_node(xmliter.find(
             lambda e: e.getAttribute('id') == pointer.node_id
         ))
 
@@ -56,7 +56,7 @@ class Handler:
 
         # node's lifetime ends here
         self.teardown(node, pointer, user, input)
-        next_nodes = self.next(xml, node, execution, input)
+        next_nodes = self.next(xmliter, node, execution, input)
 
         for node in next_nodes:
             # node's begining of life
@@ -87,7 +87,7 @@ class Handler:
                 ),
             )
 
-    def next(self, xml, node, execution, input):
+    def next(self, xmliter, node, execution, input):
         ''' Given a position in the script, return the next position '''
         if isinstance(node, Exit):
             return []
@@ -111,7 +111,8 @@ class Handler:
         # Return next node by simple adjacency, works for actions and accepted
         # validations
         try:
-            element = next(xml)
+            # Return next node by simple adjacency
+            element = next(xmliter)
 
             return [make_node(element)]
         except StopIteration:
@@ -135,7 +136,6 @@ class Handler:
 
         # update registry about this pointer
         collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
-
         collection.insert_one({
             'started_at': datetime.now(),
             'finished_at': None,
@@ -146,7 +146,10 @@ class Handler:
             },
             'node': node.to_json(),
             'notified_users': notified_users,
-            'actors': [],
+            'actors': {
+                '_type': ':map',
+                'items': {},
+            },
             'process_id': execution.process_name
         })
 
@@ -156,61 +159,57 @@ class Handler:
 
     def teardown(self, node, pointer, user, input):
         ''' finishes the node's lifecycle '''
-        update_query = {
-            '$set': {
-                'finished_at': datetime.now(),
-            },
+        execution = pointer.proxy.execution.get()
+        actor_json = {
+            '_type': 'actor',
+            'state': 'valid',
+            'user': user.to_json(include=[
+                '_type',
+                'fullname',
+                'identifier',
+            ]),
+            'forms': input,
         }
 
-        if user is not None:
-            execution = pointer.proxy.execution.get()
-            # store activity
-            activity = Activity(ref=pointer.node_id).save()
-
-            activity.proxy.user.set(user)
-            activity.proxy.execution.set(execution)
-
-            # store forms
-            if type(node) == Action:
-                for ref, inputs in input:
-                    q = Questionaire(ref=ref).save()
-                    q.proxy.execution.set(execution)
-                    q.proxy.activity.set(activity)
-
-                    for input in inputs:
-                        i = Input(**input).save()
-                        i.proxy.form.set(q)
-
-            update_query['$push'] = {
-                'actors': activity.to_json(include=[
-                    'ref',
-                    'user.fullname',
-                    'user.identifier',
-                    'forms.ref',
-                    'forms.inputs.name',
-                    'forms.inputs.type',
-                    'forms.inputs.value',
-                ]),
-            }
-
+        # update history
         collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
         collection.update_one({
-            'execution.id': pointer.proxy.execution.get().id,
+            'execution.id': execution.id,
             'node.id': pointer.node_id,
-        }, update_query)
+        }, {
+            '$set': {
+                'finished_at': datetime.now(),
+                'actors.items.{identifier}'.format(
+                    identifier=user.identifier,
+                ): actor_json,
+            },
+        })
+
+        # update state
+        collection = self.get_mongo()[
+            self.config['MONGO_EXECUTION_COLLECTION']
+        ]
+        collection.update_one({
+            'id': execution.id,
+        }, {
+            '$set': {
+                'state.items.{node}.actors.items.{identifier}'.format(
+                    node=node.id,
+                    identifier=user.identifier,
+                ): actor_json,
+            },
+        })
 
         log.debug('Deleted pointer p:{} n:{} e:{}'.format(
             pointer.id,
             pointer.node_id,
-            pointer.proxy.execution.get().id,
+            execution.id,
         ))
 
         pointer.delete()
 
     def finish_execution(self, execution):
         """ shuts down this execution and every related object """
-        self.delete_related_objects(execution)
-
         mongo = self.get_mongo()
         collection = mongo[self.config['MONGO_EXECUTION_COLLECTION']]
         collection.update_one({
@@ -225,13 +224,6 @@ class Handler:
         log.debug('Finished e:{}'.format(execution.id))
 
         execution.delete()
-
-    def delete_related_objects(self, execution):
-        for activity in execution.proxy.actors.get():
-            activity.delete()
-
-        for form in execution.proxy.forms.get():
-            form.delete()
 
     def notify_users(self, node, pointer, channel):
         users = node.get_actors(self.config, pointer.proxy.execution.get())
@@ -323,9 +315,6 @@ class Handler:
 
         for activity in execution.proxy.actors.get():
             activity.delete()
-
-        for form in execution.proxy.forms.get():
-            form.delete()
 
         collection = self.get_mongo()[
             self.config['MONGO_EXECUTION_COLLECTION']

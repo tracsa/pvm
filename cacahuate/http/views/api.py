@@ -148,12 +148,14 @@ def start_process():
 
     collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
     collection.insert_one({
+        '_type': 'execution',
         'id': execution.id,
         'name': execution.name,
         'description': execution.description,
         'status': 'ongoing',
         'started_at': datetime.now(),
         'finished_at': None,
+        'state': xml.get_state(),
     })
 
     # trigger rabbit

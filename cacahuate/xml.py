@@ -5,8 +5,8 @@ from xml.dom.minidom import Element
 from xml.sax._exceptions import SAXParseException
 from jinja2 import Template
 
-from .errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from .mark import comment
+from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
+from cacahuate.jsontypes import SortedMap
 
 XML_ATTRIBUTES = {
     'public': lambda a: a == 'true',
@@ -154,6 +154,14 @@ class Xml:
         ))
 
         return Template(self.name).render(**context)
+
+    def get_state(self):
+        from cacahuate.node import make_node # noqa
+
+        return SortedMap(map(
+            lambda n: make_node(n).get_state(),
+            iter(self)
+        ), key='id').to_json()
 
     @classmethod
     def list(cls, config):

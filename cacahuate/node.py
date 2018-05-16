@@ -133,6 +133,11 @@ class Node:
             'process_id': execution.process_name,
         }
 
+    def get_state(self):
+        return {
+            'id': self.id,
+        }
+
     def to_json(self):
         return {
             'id': self.id,

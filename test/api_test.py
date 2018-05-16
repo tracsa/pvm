@@ -403,10 +403,62 @@ def test_start_process(client, mocker, config, mongo):
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
 
-    reg2 = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
 
-    assert reg2['id'] == exc.id
-    assert reg2['status'] == 'ongoing'
+    assert_near_date(reg['started_at'])
+
+    del reg['started_at']
+    del reg['_id']
+
+    assert reg == {
+        '_type': 'execution',
+        'id': exc.id,
+        'name': exc.name,
+        'description': exc.description,
+        'status': 'ongoing',
+        'finished_at': None,
+        'status': 'ongoing',
+        'state': {
+            '_type': ':sorted_map',
+            'items': {
+                'start-node': {
+                    '_type': 'node',
+                    'id': 'node1_id',
+                    'state': 'unfilled',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+                'mid-node': {
+                    '_type': 'node',
+                    'id': 'node1_id',
+                    'state': 'unfilled',
+                    'comment': 'el género es incorrecto',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+                'final-node': {
+                    '_type': 'node',
+                    'id': 'node3_id',
+                    'state': 'unfilled',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+            },
+            'item_order': [
+                'start-node',
+                'mid-node',
+                'final-node',
+            ],
+        },
+    }
 
 
 def test_regression_requirements(client):

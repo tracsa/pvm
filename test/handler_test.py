@@ -237,6 +237,9 @@ def test_teardown(config, mongo):
     assert inputs[0].value == 'yes'
     assert inputs[0] in forms[0].proxy.inputs
 
+    # state
+    assert False, 'state is updated'
+
 
 def test_finish_execution(config, mongo):
     handler = Handler(config)

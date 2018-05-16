@@ -475,7 +475,6 @@ def list_logs(id):
     })
 
 
-
 @app.route('/v1/process/<id>/statistics', methods=['GET'])
 def time_process(id):
     collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]

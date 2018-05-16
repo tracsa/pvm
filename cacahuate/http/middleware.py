@@ -61,4 +61,3 @@ def requires_auth(view):
 
         return view(*args, **kwargs)
     return wrapper
-

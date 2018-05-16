@@ -220,21 +220,23 @@ def test_continue_process(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan_manager',
-        'input': [
-            [
-                'mid-form',
-                [
-                    {
+        'input': [{
+            '_type': 'form',
+            'ref': 'mid-form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'data': {
                         "name": "data",
                         "type": "text",
                         "value": "yes",
-                        "required": True,
-                        'default': None,
                         'label': 'data',
-                    }
-                ],
-            ],
-        ],
+                        'value_caption': 'yes',
+                    },
+                },
+                'item_order': ['data'],
+            },
+        }],
     }
 
     assert args['exchange'] == ''
@@ -370,19 +372,23 @@ def test_start_process(client, mocker, config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'input': [
-            [
-                'start-form',
-                [{
-                    'default': None,
-                    'label': 'Info',
-                    'required': True,
-                    'type': 'text',
-                    'value': 'yes',
-                    'name': 'data',
-                }],
-            ],
-        ],
+        'input': [{
+            '_type': 'form',
+            'ref': 'start-form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'data': {
+                        'label': 'Info',
+                        'type': 'text',
+                        'value': 'yes',
+                        'value_caption': 'yes',
+                        'name': 'data',
+                    },
+                },
+                'item_order': ['data'],
+            },
+        }],
     }
 
     assert args['exchange'] == ''

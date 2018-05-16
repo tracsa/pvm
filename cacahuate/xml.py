@@ -138,13 +138,17 @@ class Xml:
         return self.make_iterator(NODES)
 
     def make_name(self, collected_forms):
-        context = dict(map(
-            lambda i: (i[0], dict(map(
-                lambda j: (j['name'], j['value']),
-                i[1]
-            ))),
-            collected_forms
-        ))
+        context = dict()
+
+        for form in collected_forms:
+            form_dict = dict()
+
+            for name, input in form['inputs']['items'].items():
+                form_dict[name] = input['value_caption']
+
+            context[form['ref']] = form_dict
+
+        from pprint import pprint; pprint(context)
 
         return Template(self.name).render(**context)
 

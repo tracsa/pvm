@@ -15,6 +15,7 @@ from cacahuate.utils import user_import
 from cacahuate.xml import get_text, NODES
 from cacahuate.http.errors import BadRequest
 from cacahuate.jsontypes import Map
+from cacahuate.jsontypes import SortedMap
 
 
 class AuthParam:
@@ -65,6 +66,7 @@ class Form:
 
                 input_description = input.to_json()
                 input_description['value'] = value
+                input_description['value_caption'] = input.make_caption(value)
 
                 collected_inputs.append(input_description)
             except InputError as e:
@@ -73,7 +75,11 @@ class Form:
         if errors:
             raise ValidationErrors(errors)
 
-        return collected_inputs
+        return {
+            '_type': 'form',
+            'ref': self.ref,
+            'inputs': SortedMap(collected_inputs, key='name').to_json(),
+        }
 
 
 class Node:
@@ -214,7 +220,7 @@ class Action(Node):
             In case of failure raises an exception. In case of success
             returns the validated data.
         '''
-        collected_specs = []
+        collected_forms = []
 
         min, max = form_specs.multiple
 
@@ -235,12 +241,12 @@ class Action(Node):
             }])
 
         for index, form in associated_data:
-            collected_specs.append(form_specs.validate(
+            collected_forms.append(form_specs.validate(
                 index,
                 form.get('data', {})
             ))
 
-        return collected_specs
+        return collected_forms
 
     def validate_input(self, json_data):
         if 'form_array' in json_data and type(json_data['form_array']) != list:
@@ -270,7 +276,7 @@ class Action(Node):
 
             try:
                 for data in self.validate_form_spec(form_specs, forms):
-                    collected_forms.append((ref, data))
+                    collected_forms.append(data)
             except ValidationErrors as e:
                 errors += e.errors
 

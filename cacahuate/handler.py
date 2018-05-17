@@ -9,7 +9,7 @@ import pymongo
 from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
     MisconfiguredProvider
 from cacahuate.logger import log
-from cacahuate.models import Execution, Pointer, Activity, User
+from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, Exit, Action, Validation
 
@@ -58,9 +58,15 @@ class Handler:
         self.teardown(node, pointer, user, input)
         next_nodes = self.next(xml, node, execution, input)
 
+        # retrieve the state so we can use it in wakeup
+        collection = self.get_mongo()[
+            self.config['MONGO_EXECUTION_COLLECTION']
+        ]
+        state = next(collection.find({'id': execution.id}))
+
         for node in next_nodes:
             # node's begining of life
-            pointer = self.wakeup(node, execution, channel)
+            pointer = self.wakeup(node, execution, channel, state)
 
             # async nodes don't return theirs pointers so they are not queued
             if pointer:
@@ -121,7 +127,7 @@ class Handler:
             # End of process
             return []
 
-    def wakeup(self, node, execution, channel):
+    def wakeup(self, node, execution, channel, state):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
 
@@ -134,7 +140,7 @@ class Handler:
         ))
 
         # notify someone
-        notified_users = self.notify_users(node, pointer, channel)
+        notified_users = self.notify_users(node, pointer, channel, state)
 
         # update registry about this pointer
         collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
@@ -227,8 +233,8 @@ class Handler:
 
         execution.delete()
 
-    def notify_users(self, node, pointer, channel):
-        users = node.get_actors(self.config, pointer.proxy.execution.get())
+    def notify_users(self, node, pointer, channel, state):
+        users = node.get_actors(self.config, state)
 
         if type(users) != list:
             raise MisconfiguredProvider('Provider returned non list')
@@ -314,9 +320,6 @@ class Handler:
 
         for pointer in execution.proxy.pointers.get():
             pointer.delete()
-
-        for activity in execution.proxy.actors.get():
-            activity.delete()
 
         collection = self.get_mongo()[
             self.config['MONGO_EXECUTION_COLLECTION']

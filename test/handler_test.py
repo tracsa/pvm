@@ -525,7 +525,7 @@ def test_reject(config, mongo):
             'response': 'reject',
             'comment': 'I do not like it',
             'fields': [{
-                'ref': 'work.task',
+                'ref': 'start-node.juan.0.task',
             }],
         },
     }, channel)

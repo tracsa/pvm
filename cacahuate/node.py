@@ -129,6 +129,19 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
+    def get_invalidated_fields(self, invalidated, state):
+        ''' debe devolver un conjunto de referencias a campos que deben ser
+        invalidados, a partir de campos invalidados previamente '''
+        node_state = state['state']['items'][self.id]
+
+        if node_state['state'] == 'unfilled':
+            return []
+
+        from pprint import pprint; pprint(node_state)
+        print(invalidated)
+
+        return []
+
     def log_entry(self, execution):
         return {
             'started_at': datetime.now(),

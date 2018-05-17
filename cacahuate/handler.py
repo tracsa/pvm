@@ -56,13 +56,14 @@ class Handler:
 
         # node's lifetime ends here
         self.teardown(node, pointer, user, input)
-        next_nodes = self.next(xml, node, execution, input)
 
-        # retrieve the state so we can use it in wakeup
+        # retrieve the state so we can use it in wakeup and to find next node
         collection = self.get_mongo()[
             self.config['MONGO_EXECUTION_COLLECTION']
         ]
         state = next(collection.find({'id': execution.id}))
+
+        next_nodes = self.next(xml, node, state, input)
 
         for node in next_nodes:
             # node's begining of life
@@ -93,7 +94,7 @@ class Handler:
                 ),
             )
 
-    def next(self, xml, node, execution, input):
+    def next(self, xml, node, state, input):
         ''' Given a position in the script, return the next position '''
         if isinstance(node, Exit):
             return []

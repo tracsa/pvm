@@ -94,3 +94,15 @@ def test_aritmetic_operators(config):
     assert con.parse('set.B <= set.C')
 
     assert con.parse('set.C < set.D')
+
+def test_logic_operators(config):
+    state = state_generator([
+        ('first-node', 'juan', 'set', 'A', 'true'),
+        ('first-node', 'juan', 'set', 'B', ''),
+    ])
+
+    con = Condition(state)
+
+    assert con.parse('set.A || set.B')
+    assert not con.parse('set.A && set.B')
+    assert not con.parse('set.A && set.B')

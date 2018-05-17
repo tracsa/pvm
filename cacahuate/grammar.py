@@ -67,6 +67,22 @@ class Condition:
 
             return gte
 
+        def op_or(self, _):
+            def operator_or(a, b):
+                a = next(a.scan_values(lambda x: True))
+                b = next(b.scan_values(lambda x: True))
+                return a or b
+
+            return operator_or
+
+        def op_and(self, _):
+            def operator_and(a, b):
+                a = next(a.scan_values(lambda x: True))
+                b = next(b.scan_values(lambda x: True))
+                return a and b
+
+            return operator_and
+
         def variable(self, args):
             return args[0][:]
 

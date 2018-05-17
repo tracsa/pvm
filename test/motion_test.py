@@ -32,41 +32,6 @@ def test_find_next_element_normal(config):
     assert values[0].id == 'final-node'
 
 
-@pytest.mark.skip
-def test_find_next_element_condition(config):
-    ''' finding next element runs a node whose condition is satisfied '''
-    xml = Xml.load(config, 'decision')
-    handler = Handler(config)
-    execution = Execution().save()
-
-    current_node = make_node(xml.find(
-        lambda e: e.getAttribute('id') == 'start-node'
-    ))
-
-    values = handler.next(xml, current_node, execution)
-
-    assert len(values) == 1
-    assert values[0].id == 'mid-node'
-
-
-@pytest.mark.skip
-def test_find_next_element_condition_unsatisfied(config):
-    ''' given an if and asociated data, retrieves the next element, negative
-    variant '''
-    xml = Xml.load(config, 'decision')
-    handler = Handler(config)
-    execution = Execution().save()
-
-    current_node = make_node(xml.find(
-        lambda e: e.getAttribute('id') == 'start-node'
-    ))
-
-    values = handler.next(xml, current_node, execution)
-
-    assert len(values) == 1
-    assert values[0].id == 'final-node'
-
-
 def test_find_next_element_end_explicit(config):
     ''' given an end element, return end signal '''
     xml = Xml.load(config, 'exit')

@@ -99,11 +99,15 @@ class Handler:
         if isinstance(node, Exit):
             return []
 
-        elif isinstance(node, Validation) and input['response'] == 'reject':
+        elif isinstance(node, Validation) and \
+                input[0]['inputs']['items']['response']['value'] == 'reject':
             # find the data backwards
             first_node_found = False
             first_invalid_node = None
-            invalidated = set(i['ref'] for i in input['fields'])
+            invalidated = set(
+                i['ref']
+                for i in input[0]['inputs']['items']['inputs']['value']
+            )
 
             for element in iter(xml):
                 node = make_node(element)
@@ -116,8 +120,28 @@ class Handler:
                     first_node_found = True
                     first_invalid_node = node
 
-            make_update_query()
-            run_update_query()
+            def make_update(item):
+                node, actor, index, input = item.split('.')
+                return ('state.items.{node}.actors.items.{actor}.forms.{index}.inputs.items.{input}.state'.format(
+                    node=node,
+                    actor=actor,
+                    index=index,
+                    input=input,
+                ), 'invalid')
+
+            updates = dict(map(make_update, invalidated))
+
+            print(updates)
+
+            # update state
+            collection = self.get_mongo()[
+                self.config['MONGO_EXECUTION_COLLECTION']
+            ]
+            collection.update_one({
+                'id': state['id'],
+            }, {
+                '$set': updates,
+            })
 
             return [first_invalid_node]
 

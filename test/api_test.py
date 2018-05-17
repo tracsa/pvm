@@ -649,10 +649,10 @@ def test_regression_approval(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'input': {
+        'input': [{
             'response': 'accept',
             'comment': 'I like the previous work',
-        },
+        }],
     }
 
 
@@ -695,13 +695,13 @@ def test_regression_reject(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'input': {
+        'input': [{
             'response': 'reject',
             'comment': 'I dont like it',
             'fields': [{
                 'ref': 'work.task',
             }],
-        },
+        }],
     }
 
 

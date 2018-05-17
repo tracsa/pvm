@@ -419,10 +419,27 @@ def test_approve(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': {
-            'response': 'accept',
-            'comment': 'I like it',
-        },
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'accept',
+                    },
+                    'comment': {
+                        'value': 'I like it',
+                    },
+                    'inputs': {
+                        'value': [{
+                            'ref': 'start-node.juan.0.task',
+                        }],
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }],
     }, channel)
 
     # assertions
@@ -448,10 +465,27 @@ def test_approve(config, mongo):
                     'identifier': 'juan',
                     'fullname': 'Juan',
                 },
-                'forms': {
-                    'response': 'accept',
-                    'comment': 'I like it',
-                },
+                'forms': [{
+                    '_type': 'form',
+                    'ref': 'approval',
+                    'inputs': {
+                        '_type': ':sorted_map',
+                        'items': {
+                            'response': {
+                                'value': 'accept',
+                            },
+                            'comment': {
+                                'value': 'I like it',
+                            },
+                            'inputs': {
+                                'value': [{
+                                    'ref': 'start-node.juan.0.task',
+                                }],
+                            },
+                        },
+                        'item_order': ['response', 'comment', 'inputs'],
+                    },
+                }],
             },
         },
     }
@@ -505,7 +539,7 @@ def test_reject(config, mongo):
                         'value': '2',
                     },
                 },
-                'item_order': ['data'],
+                'item_order': ['task'],
             },
         }],
     }
@@ -521,13 +555,27 @@ def test_reject(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': {
-            'response': 'reject',
-            'comment': 'I do not like it',
-            'fields': [{
-                'ref': 'start-node.juan.0.task',
-            }],
-        },
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'reject',
+                    },
+                    'comment': {
+                        'value': 'I do not like it',
+                    },
+                    'inputs': {
+                        'value': [{
+                            'ref': 'start-node.juan.0.task',
+                        }],
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }],
     }, channel)
 
     # assertions
@@ -536,8 +584,115 @@ def test_reject(config, mongo):
     new_ptr = Pointer.get_all()[0]
     assert new_ptr.node_id == 'start-node'
 
-    # data invalidation
-    assert False, 'data is invalidated'
+    # data is invalidated
+    state = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find({
+        'id': execution.id,
+    }))
+
+    del state['_id']
+
+    assert state == {
+        '_type': 'execution',
+        'id': execution.id,
+        'state': {
+            '_type': ':sorted_map',
+            'items': {
+                'start-node': {
+                    '_type': 'node',
+                    'id': 'start-node',
+                    'state': 'invalid',
+                    'comment': 'I do not like it',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'state': 'invalid',
+                                    'ref': 'work',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'task': {
+                                                '_type': 'field',
+                                                'state': 'invalid',
+                                                'value': '2',
+                                            },
+                                        },
+                                        'item_order': ['task'],
+                                    },
+                                }],
+                                'state': 'invalid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
+                    },
+                },
+                'approval-node': {
+                    '_type': 'node',
+                    'id': 'approval-node',
+                    'state': 'invalid',
+                    'comment': 'I do not like it',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'approval',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'response': {
+                                                'value': 'reject',
+                                            },
+                                            'comment': {
+                                                'value': 'I do not like it',
+                                            },
+                                            'inputs': {
+                                                'value': [{
+                                                    'ref': 'start-node.juan.0.task',
+                                                }],
+                                            },
+                                        },
+                                        'item_order': ['response', 'comment', 'inputs'],
+                                    },
+                                }],
+                                'state': 'invalid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
+                    },
+                },
+                'final-node': {
+                    '_type': 'node',
+                    'id': 'final-node',
+                    'state': 'unfilled',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+            },
+            'item_order': ['start-node', 'approval-node', 'final-node'],
+        },
+    }
+
+    assert False, 'node is invalidated'
+    assert False, 'activity is invalidated'
+    assert False, 'form is invalidated'
+    assert False, 'field is invalidated'
 
     # mongo has the data
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
@@ -557,6 +712,10 @@ def test_reject(config, mongo):
             'comment': 'I like it',
         },
     }]
+
+
+def test_reject_with_dependencies():
+    assert False, 'dependencies are invalidated'
 
 
 @pytest.mark.skip

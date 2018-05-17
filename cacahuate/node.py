@@ -129,6 +129,21 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
+    def in_state(self, ref, node_state):
+        ''' returns true if this ref is part of this state '''
+        node_id, user, index, field = ref.split('.')
+
+        try:
+            node_state['actors']['items'][user]['forms'][int(index)]['inputs']['items'][field]
+
+            return True
+        except KeyError:
+            return False
+
+    def dependent_refs(self, invalidated, node_state):
+        ''' finds dependencies of the invalidated set in this node '''
+        return []
+
     def get_invalidated_fields(self, invalidated, state):
         ''' debe devolver un conjunto de referencias a campos que deben ser
         invalidados, a partir de campos invalidados previamente '''
@@ -137,10 +152,16 @@ class Node:
         if node_state['state'] == 'unfilled':
             return []
 
-        from pprint import pprint; pprint(node_state)
-        print(invalidated)
+        found_refs = []
 
-        return []
+        for ref in invalidated:
+            # for refs in this node's forms
+            if self.in_state(ref, node_state):
+                found_refs.append(ref)
+
+        found_refs += self.dependent_refs(invalidated, node_state)
+
+        return found_refs
 
     def log_entry(self, execution):
         return {

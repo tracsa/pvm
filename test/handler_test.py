@@ -153,6 +153,9 @@ def test_teardown(config, mongo):
     manager = User(identifier='manager').save()
     manager2 = User(identifier='manager2').save()
 
+    assert manager not in execution.proxy.actors.get()
+    assert execution not in manager.proxy.activities.get()
+
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
 
@@ -321,7 +324,8 @@ def test_teardown(config, mongo):
         ],
     }
 
-    assert False, 'relation between user and execution is created'
+    assert manager in execution.proxy.actors.get()
+    assert execution in manager.proxy.activities.get()
 
 
 def test_finish_execution(config, mongo):

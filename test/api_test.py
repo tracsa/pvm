@@ -155,8 +155,6 @@ def test_continue_process_requires_data(client):
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     manager.proxy.tasks.set([ptr])
 
-    act.proxy.execution.set(ptr.proxy.execution.get())
-
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(manager)}, data=json.dumps({
@@ -836,12 +834,17 @@ def test_list_activities(client):
         process_name='simple.2018-02-19.xml',
     ).save()
 
+    exc_2 = Execution(
+        process_name='simple.2018-02-19.xml',
+    ).save()
+    exc_2.proxy.actors.add(juan)
+    exc_2.save()
     res = client.get('/v1/activity', headers=make_auth(juan))
 
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
-            act.to_json(include=['*', 'execution']),
+            exc_2.to_json(include=['*', 'execution']),
         ],
     }
 

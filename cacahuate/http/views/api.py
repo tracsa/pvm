@@ -302,7 +302,7 @@ def list_activities():
     return jsonify({
         'data': list(map(
             lambda a: a.to_json(include=['*', 'execution']),
-            unique
+            activities
         )),
     })
 

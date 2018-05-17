@@ -148,6 +148,8 @@ class Handler:
     def teardown(self, node, pointer, user, input):
         ''' finishes the node's lifecycle '''
         execution = pointer.proxy.execution.get()
+        execution.proxy.actors.add(user)
+        execution.save()
         actor_json = {
             '_type': 'actor',
             'state': 'valid',

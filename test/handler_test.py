@@ -421,17 +421,24 @@ def test_approve(config, mongo):
     assert_near_date(reg['finished_at'])
     assert reg['execution']['id'] == ptr.execution
     assert reg['node']['id'] == 'approval-node'
-    assert reg['actors'] == [{
-        'ref': 'approval-node',
-        'user': {
-            'identifier': 'juan',
-            'fullname': 'Juan',
+    assert reg['actors'] == {
+        '_type': ':map',
+        'items': {
+            'juan': {
+                '_type': 'actor',
+                'state': 'valid',
+                'user': {
+                    '_type': 'user',
+                    'identifier': 'juan',
+                    'fullname': 'Juan',
+                },
+                'forms': {
+                    'response': 'accept',
+                    'comment': 'I like it',
+                },
+            },
         },
-        'input': {
-            'response': 'accept',
-            'comment': 'I like it',
-        },
-    }]
+    }
 
 
 def test_reject(config, mongo):
@@ -451,7 +458,10 @@ def test_reject(config, mongo):
         'node': {
             'id': 'approval-node',
         },
-        'actors': [],
+        'actors': {
+            '_type': ':map',
+            'items': {},
+        },
     })
 
     # thing to test
@@ -462,6 +472,9 @@ def test_reject(config, mongo):
         'input': {
             'response': 'reject',
             'comment': 'I do not like it',
+            'fields': [{
+                'ref': 'work.task',
+            }],
         },
     }, channel)
 

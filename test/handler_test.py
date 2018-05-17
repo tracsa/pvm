@@ -321,6 +321,8 @@ def test_teardown(config, mongo):
         ],
     }
 
+    assert False, 'relation between user and execution is created'
+
 
 def test_finish_execution(config, mongo):
     handler = Handler(config)

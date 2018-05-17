@@ -1003,6 +1003,7 @@ def test_task_read(client):
             '_type': 'pointer',
             'id': ptr.id,
             'node_id': ptr.node_id,
+            'node_type': 'action',
             'name': None,
             'description': None,
             'execution': {

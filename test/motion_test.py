@@ -26,7 +26,7 @@ def test_find_next_element_normal(config):
         lambda e: e.getAttribute('id') == 'mid-node'
     ))
 
-    values = handler.next(xmliter, current_node, execution)
+    values = handler.next(xml, current_node, {}, {})
 
     assert len(values) == 1
     assert values[0].id == 'final-node'
@@ -80,7 +80,7 @@ def test_find_next_element_end_explicit(config):
         lambda e: e.tagName == 'exit'
     ))
 
-    nodes = handler.next(xmliter, current_node, execution)
+    nodes = handler.next(xml, current_node, {}, {})
 
     assert nodes == []
 
@@ -98,11 +98,6 @@ def test_find_next_element_end_implicit(config):
         lambda e: e.getAttribute('id') == 'final-node'
     ))
 
-    nodes = handler.next(xmliter, current_node, execution)
+    nodes = handler.next(xml, current_node, {}, {})
 
     assert nodes == []
-
-
-@pytest.mark.skip
-def test_find_next_element_data_invalidation(config):
-    assert False

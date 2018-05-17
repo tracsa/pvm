@@ -162,11 +162,15 @@ def test_teardown(config, mongo):
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
 
+    state = Xml.load(config, 'simple').get_state()
+    state['items']['start-node']['state'] = 'valid'
+
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': state,
     })
+
     mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
@@ -264,7 +268,7 @@ def test_teardown(config, mongo):
             'start-node': {
                 '_type': 'node',
                 'id': 'start-node',
-                'state': 'unfilled',
+                'state': 'valid',
                 'comment': '',
                 'actors': {
                     '_type': ':map',
@@ -275,7 +279,7 @@ def test_teardown(config, mongo):
             'mid-node': {
                 '_type': 'node',
                 'id': 'mid-node',
-                'state': 'unfilled',
+                'state': 'valid',
                 'comment': '',
                 'actors': {
                     '_type': ':map',
@@ -407,7 +411,7 @@ def test_approve(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'validation').get_state(),
     })
 
     # thing to test
@@ -460,12 +464,13 @@ def test_reject(config, mongo):
     user = make_user('juan', 'Juan')
     ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
     channel = MagicMock()
+    execution = ptr.proxy.execution.get()
 
     mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
-            'id': ptr.proxy.execution.get().id,
+            'id': execution.id,
         },
         'node': {
             'id': 'approval-node',
@@ -474,6 +479,41 @@ def test_reject(config, mongo):
             '_type': ':map',
             'items': {},
         },
+    })
+
+    state = Xml.load(config, 'validation').get_state()
+
+    state['items']['start-node']['state'] = 'valid'
+    state['items']['start-node']['actors']['items']['juan'] = {
+        '_type': 'actor',
+        'state': 'valid',
+        'user': {
+            '_type': 'user',
+            'identifier': 'juan',
+            'fullname': 'Juan',
+        },
+        'forms': [{
+            '_type': 'form',
+            'ref': 'work',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        '_type': 'field',
+                        'state': 'valid',
+                        'value': '2',
+                    },
+                },
+                'item_order': ['data'],
+            },
+        }],
+    }
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': state,
     })
 
     # thing to test

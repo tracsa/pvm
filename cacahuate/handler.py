@@ -212,6 +212,7 @@ class Handler:
                     node=node.id,
                     identifier=user.identifier,
                 ): actor_json,
+                'state.items.{node}.state'.format(node=node.id): 'valid',
             },
         })
 

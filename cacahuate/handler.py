@@ -248,6 +248,8 @@ class Handler:
     def teardown(self, node, pointer, user, input):
         ''' finishes the node's lifecycle '''
         execution = pointer.proxy.execution.get()
+        execution.proxy.actors.add(user)
+
         actor_json = {
             '_type': 'actor',
             'state': 'valid',
@@ -259,7 +261,6 @@ class Handler:
             'forms': input,
         }
 
-        # update history
         collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
         collection.update_one({
             'execution.id': execution.id,

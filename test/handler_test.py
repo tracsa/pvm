@@ -6,11 +6,11 @@ import pytest
 import simplejson as json
 
 from cacahuate.handler import Handler
-from cacahuate.models import Execution, Pointer, User, Activity
+from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import Action
 from cacahuate.xml import Xml
 
-from .utils import make_pointer, make_activity, make_user, assert_near_date
+from .utils import make_pointer, make_user, assert_near_date
 
 
 def test_recover_step(config):
@@ -86,7 +86,6 @@ def test_wakeup(config, mongo):
         identifier='juan_manager',
         email='hardcoded@mailinator.com'
     ).save()
-    act = make_activity('start-node', juan, execution)
 
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
@@ -158,6 +157,9 @@ def test_teardown(config, mongo):
     juan = User(identifier='juan').save()
     manager = User(identifier='manager').save()
     manager2 = User(identifier='manager2').save()
+
+    assert manager not in execution.proxy.actors.get()
+    assert execution not in manager.proxy.activities.get()
 
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
@@ -331,6 +333,9 @@ def test_teardown(config, mongo):
         ],
     }
 
+    assert manager in execution.proxy.actors.get()
+    assert execution in manager.proxy.activities.get()
+
 
 def test_finish_execution(config, mongo):
     handler = Handler(config)
@@ -382,7 +387,6 @@ def test_call_handler_delete_process(config, mongo):
 
     assert Execution.count() == 0
     assert Pointer.count() == 0
-    assert Activity.count() == 0
 
 
 def test_approve(config, mongo):

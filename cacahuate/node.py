@@ -129,6 +129,44 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
+    def resolve_params(self, state=None):
+        computed_params = {}
+
+        for param in self.auth_params:
+            if state is not None and param.type == 'ref':
+                user_ref = param.value.split('#')[1].strip()
+
+                try:
+                    adic = state['state']['items'][user_ref]['actors']['items']
+                    actor = adic[next(iter(adic.keys()))]
+
+                    value = actor['user']['identifier']
+                except StopIteration:
+                    value = None
+            else:
+                value = param.value
+
+            computed_params[param.name] = value
+
+        return computed_params
+
+    def get_actors(self, config, state):
+        if not self.auth_params:
+            return []
+
+        HiPro = user_import(
+            self.auth_backend,
+            'HierarchyProvider',
+            config['HIERARCHY_PROVIDERS'],
+            'cacahuate.auth.hierarchy',
+        )
+
+        hierarchy_provider = HiPro(config)
+
+        return hierarchy_provider.find_users(
+            **self.resolve_params(state)
+        )
+
     def in_state(self, ref, node_state):
         ''' returns true if this ref is part of this state '''
         n, user, form, field = ref.split('.')
@@ -209,44 +247,6 @@ class Action(Node):
     def is_async(self):
         return True
 
-    def resolve_params(self, state=None):
-        computed_params = {}
-
-        for param in self.auth_params:
-            if state is not None and param.type == 'ref':
-                user_ref = param.value.split('#')[1].strip()
-
-                try:
-                    adic = state['state']['items'][user_ref]['actors']['items']
-                    actor = adic[next(iter(adic.keys()))]
-
-                    value = actor['user']['identifier']
-                except StopIteration:
-                    value = None
-            else:
-                value = param.value
-
-            computed_params[param.name] = value
-
-        return computed_params
-
-    def get_actors(self, config, state):
-        if not self.auth_params:
-            return []
-
-        HiPro = user_import(
-            self.auth_backend,
-            'HierarchyProvider',
-            config['HIERARCHY_PROVIDERS'],
-            'cacahuate.auth.hierarchy',
-        )
-
-        hierarchy_provider = HiPro(config)
-
-        return hierarchy_provider.find_users(
-            **self.resolve_params(state)
-        )
-
     def dependent_refs(self, invalidated, node_state):
         ''' finds dependencies of the invalidated set in this node '''
         return []
@@ -324,6 +324,9 @@ class Action(Node):
 class Validation(Node):
 
     VALID_RESPONSES = ('accept', 'reject')
+
+    def is_async(self):
+        return True
 
     def __init__(self, element):
         super().__init__(element)

@@ -561,3 +561,93 @@ def test_resistance_dead_pointer(config):
         'command': 'step',
         'pointer_id': 'nones',
     }))
+
+
+def test_true_condition_node(config, mongo):
+    ''' tests that a conditional node is instanced if its condition is truthfull '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
+    channel = MagicMock()
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'validation').get_state(),
+    })
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [
+            {
+                'ref': 'mistery',
+                '_type': 'form',
+                'inputs': {
+                    '_type': ':sorted_map',
+                    'item_order': [
+                        'password',
+                    ],
+                    'items': {
+                        'password': {
+                            'type': 'text',
+                            'value': 'abrete sésamo',
+                        },
+                    },
+                },
+            },
+        ],
+    }, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
+
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == 'mistical-node'
+
+
+def test_false_condition_node(config, mongo):
+    ''' tests that a conditional node is not instanced if its condition is false '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
+    channel = MagicMock()
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'validation').get_state(),
+    })
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [
+            {
+                'ref': 'mistery',
+                '_type': 'form',
+                'inputs': {
+                    '_type': ':sorted_map',
+                    'item_order': [
+                        'password',
+                    ],
+                    'items': {
+                        'password': {
+                            'type': 'text',
+                            'value': 'npi',
+                        },
+                    },
+                },
+            },
+        ],
+    }, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
+
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == 'final-node'

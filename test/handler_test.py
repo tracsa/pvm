@@ -564,7 +564,7 @@ def test_resistance_dead_pointer(config):
 
 
 def test_true_condition_node(config, mongo):
-    ''' tests that a conditional node is instanced if its condition is truthfull '''
+    ''' conditional node will be executed if its condition is true '''
     # test setup
     handler = Handler(config)
     user = make_user('juan', 'Juan')
@@ -609,7 +609,7 @@ def test_true_condition_node(config, mongo):
 
 
 def test_false_condition_node(config, mongo):
-    ''' tests that a conditional node is not instanced if its condition is false '''
+    ''' conditional node won't be executed if its condition is false '''
     # test setup
     handler = Handler(config)
     user = make_user('juan', 'Juan')

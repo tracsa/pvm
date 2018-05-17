@@ -12,6 +12,7 @@ from cacahuate.logger import log
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, Exit, Action, Validation
+from cacahuate.grammar import Condition
 
 
 class Handler:
@@ -98,9 +99,29 @@ class Handler:
         if isinstance(node, Exit):
             return []
 
+        # TODO remove when mergin with categulario/baby-come-back
+        collection = self.get_mongo()[
+            self.config['MONGO_EXECUTION_COLLECTION']
+        ]
+        state = collection.find_one({
+            'id': execution.id,
+        })
+
         try:
             # Return next node by simple adjacency
             element = next(xmliter)
+
+            context = None
+            while element.tagName == 'if':
+                if context is None:
+                    context = Condition(state['state'])
+
+                condition = xmliter.get_next_condition()
+
+                if not context.parse(condition):
+                    xmliter.expand(element)
+
+                element = next(xmliter)
 
             return [make_node(element)]
         except StopIteration:

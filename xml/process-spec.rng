@@ -68,20 +68,22 @@
             <ref name="form-array" />
           </optional>
         </interleave>
-
     </element>
   </define>
   <define name="validation">
     <element name="validation">
       <attribute name="id"><text/></attribute>
-      <ref name="dependencies"/>
-      <optional>
-        <ref name="node-info" />
-      </optional>
+      <interleave>
+        <optional>
+          <ref name="node-info" />
+        </optional>
 
-      <optional>
-        <ref name="auth-filter" />
-      </optional>
+        <optional>
+          <ref name="auth-filter" />
+        </optional>
+
+        <ref name="dependencies"/>
+      </interleave>
     </element>
   </define>
 

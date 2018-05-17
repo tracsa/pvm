@@ -588,6 +588,8 @@ def test_reject(config, mongo):
     new_ptr = Pointer.get_all()[0]
     assert new_ptr.node_id == 'start-node'
 
+    assert new_ptr in user.proxy.tasks
+
     # data is invalidated
     state = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find({
         'id': execution.id,

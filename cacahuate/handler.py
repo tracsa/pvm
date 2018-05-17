@@ -62,9 +62,10 @@ class Handler:
         collection = self.get_mongo()[
             self.config['MONGO_EXECUTION_COLLECTION']
         ]
-        state = next(collection.find({'id': execution.id}))
 
+        state = next(collection.find({'id': execution.id}))
         next_nodes = self.next(xml, node, state, input)
+        state = next(collection.find({'id': execution.id}))
 
         for node in next_nodes:
             # node's begining of life
@@ -315,8 +316,25 @@ class Handler:
 
         execution.delete()
 
+    def get_invalid_users(self, node_state):
+        users = [
+            username
+            for username, actor in node_state['actors']['items'].items()
+            if actor['state'] == 'invalid'
+        ]
+
+        return list(map(
+            lambda u: User.get_by('identifier', u),
+            users
+        ))
+
     def notify_users(self, node, pointer, channel, state):
-        users = node.get_actors(self.config, state)
+        node_state = state['state']['items'][node.id]
+
+        if node_state['state'] == 'invalid':
+            users = self.get_invalid_users(node_state)
+        else:
+            users = node.get_actors(self.config, state)
 
         if type(users) != list:
             raise MisconfiguredProvider('Provider returned non list')

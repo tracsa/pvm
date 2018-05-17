@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import json
 import pytest
 
-from .utils import make_auth, make_activity, make_pointer, make_user
+from .utils import make_auth, make_pointer, make_user
 
 
 def test_all_inputs(client, config, mongo):

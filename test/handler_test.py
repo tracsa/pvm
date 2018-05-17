@@ -6,11 +6,11 @@ import pytest
 import simplejson as json
 
 from cacahuate.handler import Handler
-from cacahuate.models import Execution, Pointer, User, Activity
+from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import Action
 from cacahuate.xml import Xml
 
-from .utils import make_pointer, make_activity, make_user, assert_near_date
+from .utils import make_pointer, make_user, assert_near_date
 
 
 def test_recover_step(config):
@@ -86,7 +86,6 @@ def test_wakeup(config, mongo):
         identifier='juan_manager',
         email='hardcoded@mailinator.com'
     ).save()
-    act = make_activity('start-node', juan, execution)
 
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
@@ -373,7 +372,6 @@ def test_call_handler_delete_process(config, mongo):
 
     assert Execution.count() == 0
     assert Pointer.count() == 0
-    assert Activity.count() == 0
 
 
 @pytest.mark.skip

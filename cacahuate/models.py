@@ -14,22 +14,9 @@ class Execution(Model):
         inverse='execution'
     )
     actors = fields.SetRelation(
-        'cacahuate.models.Activity',
-        inverse='execution'
-    )
-
-
-class Activity(Model):
-    ''' relates a user and a execution '''
-    execution = fields.ForeignIdRelation(
-        'cacahuate.models.Execution',
-        inverse='actors'
-    )
-    user = fields.ForeignIdRelation(
         'cacahuate.models.User',
         inverse='activities'
     )
-    ref = fields.Text()
 
 
 class Pointer(Model):
@@ -50,8 +37,8 @@ class User(Model):
     tokens = fields.SetRelation('cacahuate.models.Token', inverse='user')
     # processes I'm participating in
     activities = fields.SetRelation(
-        'cacahuate.models.Activity',
-        inverse='user'
+        'cacahuate.models.Execution',
+        inverse='actors'
     )
     # pending tasks to solve
     tasks = fields.SetRelation(

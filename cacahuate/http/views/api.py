@@ -14,7 +14,7 @@ from cacahuate.http.middleware import requires_json, requires_auth, \
     pagination
 from cacahuate.http.validation import validate_json, validate_auth
 from cacahuate.http.wsgi import app, mongo
-from cacahuate.models import Execution, Pointer, User, Token, Activity
+from cacahuate.models import Execution, Pointer, User, Token
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict
 from cacahuate.node import make_node
@@ -298,43 +298,12 @@ def find_process(name):
 @requires_auth
 def list_activities():
     activities = g.user.proxy.activities.get()
-    seen = {}
-    unique = []
-
-    for activity in activities:
-        if activity.execution not in seen:
-            seen[activity.execution] = True
-            unique.append(activity)
 
     return jsonify({
         'data': list(map(
             lambda a: a.to_json(include=['*', 'execution']),
             unique
         )),
-    })
-
-
-@app.route('/v1/activity/<id>', methods=['GET'])
-@requires_auth
-def one_activity(id):
-    try:
-        activity = Activity.get_or_exception(id)
-    except ModelNotFoundError:
-        raise BadRequest([{
-            'detail': 'activity_id is not valid',
-            'code': 'validation.invalid',
-            'where': 'request.body.execution_id',
-        }])
-
-    user_activity = User.get_or_exception(activity.user)
-    if not g.user == user_activity:
-        raise Forbidden([{
-            'detail': 'You must provide basic authorization headers',
-            'where': 'request.authorization',
-        }])
-
-    return jsonify({
-        'data': activity.to_json(include=['*', 'execution']),
     })
 
 

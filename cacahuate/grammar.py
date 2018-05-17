@@ -7,18 +7,18 @@ from cacahuate.errors import RefNotFound
 
 class Condition:
 
-    def __init__(self, execution):
+    def __init__(self, state):
         filename = os.path.join(
-                                os.path.dirname(__file__),
-                                'grammars/condition.g'
-                                )
+            os.path.dirname(__file__),
+            'grammars/condition.g'
+        )
 
         with open(filename) as grammar_file:
             self.parser = Lark(
                 grammar_file.read(),
                 start='condition',
                 parser='lalr',
-                transformer=self.ConditionTransformer(execution),
+                transformer=self.ConditionTransformer(state),
             )
 
     def parse(self, string):
@@ -26,8 +26,8 @@ class Condition:
 
     class ConditionTransformer(Transformer):
 
-        def __init__(self, execution):
-            self._execution = execution
+        def __init__(self, state):
+            self._state = state
 
         def op_eq(self, _):
             return operator.eq
@@ -47,12 +47,24 @@ class Condition:
         def ref(self, args):
             obj_id, member = args
 
-            try:
-                obj = next(self._execution.proxy.forms.q().filter(ref=obj_id))
-            except StopIteration:
-                return None
+            # TODO there is an implementation of this in O(log N + K)
+            for node in self._state['items'].values():
+                actors = node['actors']
+                for actor in actors['items'].values():
+                    forms = actor['forms']
+                    for form in forms:
+                        if form['_ref'] != obj_id:
+                            continue
 
-            return obj.get_value(member)
+                        inputs = form['inputs']
+                        if member in inputs['items']:
+                            input = inputs['items'][member]
+
+                            ret = None
+                            if 'value' in input:
+                                ret = input['value']
+
+                            return ret
 
         def string(self, args):
             return args[0][1:-1]

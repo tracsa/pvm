@@ -1,25 +1,96 @@
 import pytest
 
 from cacahuate.grammar import Condition
-from cacahuate.models import Execution
 
 
-@pytest.mark.skip
-def test_condition():
-    exc = Execution().save()
+def test_condition(config):
+    state = {
+        '_type': ':sorted_map',
+        'items': {
+            'first-node': {
+                '_type': 'node',
+                'id': 'first-node',
+                'state': 'valid',
+                'comment': '',
+                'actors': {
+                    '_type': ':map',
+                    'items': {
+                        'juan': {
+                            '_type': 'actor',
+                            'forms': [
+                                {
+                                    '_ref': 'first-form',
+                                    '_type': 'form',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'item_order': [
+                                            'param1',
+                                        ],
+                                        'items': {
+                                            'param1': {
+                                                'type': 'text',
+                                                'value': 'value1'
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+            'second-node': {
+                '_type': 'node',
+                'id': 'second-node',
+                'state': 'valid',
+                'comment': '',
+                'actors': {
+                    '_type': ':map',
+                    'items': {
+                        'pedro': {
+                            '_type': 'actor',
+                            'forms': [
+                                {
+                                    '_ref': 'second-form',
+                                    '_type': 'form',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'item_order': [
+                                            'param1',
+                                            'param2',
+                                        ],
+                                        'items': {
+                                            'param1': {
+                                                'type': 'text',
+                                                'value': 'value1'
+                                            },
+                                            'param2': {
+                                                'type': 'text',
+                                                'value': 'value2'
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+        'item_order': [
+            'first-node',
+            'second-node',
+        ],
+    }
 
-    form1 = Questionaire(ref='form1').save()
-    form1.proxy.execution.set(exc)
-    input1 = Input(name='answer', value='yes').save()
-    input1.proxy.form.set(form1)
+    con = Condition(state)
 
-    form2 = Questionaire(ref='form2', data={'answer': 'no'}).save()
-    form2.proxy.execution.set(exc)
-    input2 = Input(name='answer', value='no').save()
-    input2.proxy.form.set(form2)
+    assert con.parse('first-form.param1 == "value1"')
+    assert con.parse('second-form.param1 == "value1"')
+    assert con.parse('second-form.param2 == "value2"')
 
-    con = Condition(exc)
+    assert con.parse('first-form.param1 != "nonsense"')
+    assert not con.parse('first-form.param1 == "nonsense"')
 
-    assert con.parse('form1.answer=="yes"')
-    assert not con.parse('form1.answer == "no"')
-    assert con.parse('form2.answer =="no"')
+    assert con.parse('first-form.param1 == second-form.param1')
+    assert not con.parse('first-form.param1 == second-form.param2')

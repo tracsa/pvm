@@ -361,6 +361,10 @@ def task_read(id):
         }])
 
     execution = pointer.proxy.execution.get()
+    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+    state = collection.find_one({
+        'id': execution.id,
+    })
 
     xml = Xml.load(
         app.config,
@@ -390,11 +394,45 @@ def task_read(id):
 
         fields = []
         for dep in deps:
-            fields.append({
-                'ref': dep,
-                'label': '', # TODO get it from the state
-                'value': '', # TODO get it from the state
-            })
+            form_ref, input_name = dep.split('.')
+
+            # TODO this could be done in O(log N + K)
+            for node in state['state']['items'].values():
+                if node['state'] != 'valid':
+                    continue
+
+                for identifier in node['actors']['items']:
+                    actor = node['actors']['items'][identifier]
+                    if actor['state'] != 'valid':
+                        continue
+
+                    for form_ix, form in enumerate(actor['forms']):
+                        if form['state'] != 'valid':
+                            continue
+
+                        if form['ref'] != form_ref:
+                            continue
+
+                        if input_name not in form['inputs']['items']:
+                            continue
+
+                        input = form['inputs']['items'][input_name]
+
+                        state_ref = [
+                            node['id'],
+                            identifier,
+                            str(form_ix),
+                        ]
+                        state_ref = '.'.join(state_ref)
+                        state_ref = state_ref + ':' + dep
+
+                        field = {
+                            'ref': state_ref,
+                            **input,
+                        }
+                        del field['state']
+
+                        fields.append(field)
 
         json_data['fields'] = fields
 

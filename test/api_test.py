@@ -8,6 +8,7 @@ from cacahuate.models import Pointer, Execution, Activity
 from random import choice
 from string import ascii_letters
 
+from cacahuate.xml import Xml
 from .utils import make_auth, make_activity, make_pointer, make_user, \
     make_date, assert_near_date
 
@@ -1058,38 +1059,76 @@ def test_task_read(client):
     }
 
 
-def test_task_validation(client):
+def test_task_validation(client, mongo, config):
     ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
     juan = make_user('juan', 'Juan')
     juan.proxy.tasks.add(ptr)
     execution = ptr.proxy.execution.get()
+
+    state = Xml.load(config, 'validation').get_state()
+    node = state['items']['start-node']
+
+    node['state'] = 'valid'
+    node['actors']['items']['juan'] = {
+        '_type': 'actor',
+        'state': 'valid',
+        'user': {
+            '_type': 'user',
+            'identifier': 'juan',
+            'fullname': None,
+        },
+        'forms': [{
+            '_type': 'form',
+            'ref': 'work',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        '_type': 'field',
+                        'state': 'valid',
+                        'label': 'task',
+                        'value': 'Get some milk and eggs',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': state,
+    })
 
     res = client.get('/v1/task/{}'.format(ptr.id), headers=make_auth(juan))
     body = json.loads(res.data)['data']
 
     assert res.status_code == 200
     assert body == {
-      '_type': 'pointer',
-      'description': None,
-      'execution': {
-        '_type': 'execution',
+        '_type': 'pointer',
         'description': None,
-        'id': execution.id,
+        'execution': {
+            '_type': 'execution',
+            'description': None,
+            'id': execution.id,
+            'name': None,
+            'process_name': execution.process_name,
+        },
+        'fields': [
+            {
+                '_type': 'field',
+                'ref': 'start-node.juan.0:work.task',
+                'label': 'task',
+                'value': 'Get some milk and eggs',
+            }
+        ],
+        'form_array': [],
+        'id': ptr.id,
         'name': None,
-        'process_name': execution.process_name,
-      },
-      'fields': [
-        {
-          'label': 'task',
-          'ref': 'work.task',
-          'value': None
-        }
-      ],
-      'form_array': [],
-      'id': ptr.id,
-      'name': None,
-      'node_id': ptr.node_id,
-      'node_type': 'validation'
+        'node_id': ptr.node_id,
+        'node_type': 'validation'
     }
 
 

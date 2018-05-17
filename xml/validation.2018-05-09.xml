@@ -20,9 +20,6 @@
     </action>
 
     <validation id="approval-node" >
-      <auth-filter backend="backref">
-        <param name="identifier" type="ref">user#start-node</param>
-      </auth-filter>
       <dependencies>
         <dep>work.task</dep>
       </dependencies>
@@ -30,11 +27,8 @@
         <name>Aprobacion gerente reserva </name>
         <description>aprobar reserva</description>
       </node-info>
-
-      <auth-filter backend="quemado">
-        <param name="operation">Transfer</param>
-        <param name="relation">gerente</param>
-        <param name="inventario_destino" type="ref">form#transfer_form.inventario_destino</param>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start-node</param>
       </auth-filter>
     </validation>
 

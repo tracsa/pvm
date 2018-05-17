@@ -35,6 +35,38 @@ class Condition:
         def op_ne(self, _):
             return operator.ne
 
+        def op_lt(self, _):
+            def lt(a, b):
+                a = float(next(a.scan_values(lambda x: True)))
+                b = float(next(b.scan_values(lambda x: True)))
+                return a < b
+
+            return lt
+
+        def op_lte(self, _):
+            def lte(a, b):
+                a = float(next(a.scan_values(lambda x: True)))
+                b = float(next(b.scan_values(lambda x: True)))
+                return a <= b
+
+            return lte
+
+        def op_gt(self, _):
+            def gt(a, b):
+                a = float(next(a.scan_values(lambda x: True)))
+                b = float(next(b.scan_values(lambda x: True)))
+                return a > b
+
+            return gt
+
+        def op_gte(self, _):
+            def gte(a, b):
+                a = float(next(a.scan_values(lambda x: True)))
+                b = float(next(b.scan_values(lambda x: True)))
+                return a >= b
+
+            return gte
+
         def variable(self, args):
             return args[0][:]
 

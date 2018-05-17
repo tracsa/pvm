@@ -2,6 +2,10 @@ condition: expr op expr
 
 op: "==" -> op_eq
   | "!=" -> op_ne
+  | "<" -> op_lt
+  | "<=" -> op_lte
+  | ">" -> op_gt
+  | ">=" -> op_gte
 
 expr: ref
     | string

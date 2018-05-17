@@ -94,3 +94,65 @@ def test_condition(config):
 
     assert con.parse('first-form.param1 == second-form.param1')
     assert not con.parse('first-form.param1 == second-form.param2')
+
+def test_aritmetic_operators(config):
+    state = {
+        '_type': ':sorted_map',
+        'items': {
+            'first-node': {
+                '_type': 'node',
+                'id': 'first-node',
+                'comment': '',
+                'actors': {
+                    '_type': ':map',
+                    'items': {
+                        'juan': {
+                            '_type': 'actor',
+                            'forms': [
+                                {
+                                    '_ref': 'set',
+                                    '_type': 'form',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'item_order': [
+                                            'A',
+                                            'B',
+                                            'C',
+                                            'D',
+                                        ],
+                                        'items': {
+                                            'A': {
+                                                'value': -1
+                                            },
+                                            'B': {
+                                                'value': 1
+                                            },
+                                            'C': {
+                                                'value': 1.0
+                                            },
+                                            'D': {
+                                                'value': 1.5
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+        'item_order': [
+            'set',
+        ],
+    }
+
+    con = Condition(state)
+
+    assert con.parse('set.A < set.B')
+    assert not con.parse('set.A > set.B')
+
+    assert not con.parse('set.B < set.C')
+    assert con.parse('set.B <= set.C')
+
+    assert con.parse('set.C < set.D')

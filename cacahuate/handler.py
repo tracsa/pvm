@@ -120,18 +120,49 @@ class Handler:
                     first_node_found = True
                     first_invalid_node = node
 
-            def make_update(item):
-                node, actor, index, input = item.split('.')
-                return ('state.items.{node}.actors.items.{actor}.forms.{index}.inputs.items.{input}.state'.format(
-                    node=node,
-                    actor=actor,
-                    index=index,
-                    input=input,
-                ), 'invalid')
+            comment = input[0]['inputs']['items']['comment']['value']
 
-            updates = dict(map(make_update, invalidated))
+            def get_update_keys(invalidated):
+                ikeys = set()
+                fkeys = set()
+                akeys = set()
+                nkeys = set()
+                ckeys = set()
 
-            print(updates)
+                for key in invalidated:
+                    node, actor, index, input = key.split('.')
+
+                    ikeys.add(('state.items.{node}.actors.items.{actor}.forms.{index}.inputs.items.{input}.state'.format(
+                        node=node,
+                        actor=actor,
+                        index=index,
+                        input=input,
+                    ), 'invalid'))
+
+                    fkeys.add(('state.items.{node}.actors.items.{actor}.forms.{index}.state'.format(
+                        node=node,
+                        actor=actor,
+                        index=index,
+                    ), 'invalid'))
+
+                    akeys.add(('state.items.{node}.actors.items.{actor}.state'.format(
+                        node=node,
+                        actor=actor,
+                    ), 'invalid'))
+
+                    nkeys.add(('state.items.{node}.state'.format(
+                        node=node,
+                    ), 'invalid'))
+
+                for key, _ in nkeys:
+                    key = '.'.join(key.split('.')[:-1]) + '.comment'
+                    ckeys.add((key, comment))
+
+                return fkeys | akeys | nkeys | ikeys | ckeys
+
+            updates = dict(get_update_keys(invalidated))
+
+            from pprint import pprint; pprint(updates)
 
             # update state
             collection = self.get_mongo()[

@@ -1,5 +1,5 @@
 from base64 import b64encode
-from cacahuate.models import Execution, Pointer, User, Token, Activity
+from cacahuate.models import Execution, Pointer, User, Token
 from random import choice
 from string import ascii_letters
 from datetime import datetime
@@ -38,14 +38,6 @@ def make_pointer(process_name, node_id):
     ptr.proxy.execution.set(exc)
 
     return ptr
-
-
-def make_activity(ref, user, execution):
-    act = Activity(ref=ref).save()
-    act.proxy.user.set(user)
-    act.proxy.execution.set(execution)
-
-    return act
 
 
 def make_date(year=2018, month=5, day=4, hour=0, minute=0, second=0):

@@ -14,9 +14,9 @@ from cacahuate.http.middleware import requires_json, requires_auth, \
     pagination
 from cacahuate.http.validation import validate_json, validate_auth
 from cacahuate.http.wsgi import app, mongo
-from cacahuate.models import Execution, Pointer, User, Token, Activity
+from cacahuate.models import Execution, Pointer, User, Token
 from cacahuate.rabbit import get_channel
-from cacahuate.xml import Xml, form_to_dict
+from cacahuate.xml import Xml, form_to_dict, get_text
 from cacahuate.node import make_node
 
 
@@ -298,43 +298,12 @@ def find_process(name):
 @requires_auth
 def list_activities():
     activities = g.user.proxy.activities.get()
-    seen = {}
-    unique = []
-
-    for activity in activities:
-        if activity.execution not in seen:
-            seen[activity.execution] = True
-            unique.append(activity)
 
     return jsonify({
         'data': list(map(
             lambda a: a.to_json(include=['*', 'execution']),
-            unique
+            activities
         )),
-    })
-
-
-@app.route('/v1/activity/<id>', methods=['GET'])
-@requires_auth
-def one_activity(id):
-    try:
-        activity = Activity.get_or_exception(id)
-    except ModelNotFoundError:
-        raise BadRequest([{
-            'detail': 'activity_id is not valid',
-            'code': 'validation.invalid',
-            'where': 'request.body.execution_id',
-        }])
-
-    user_activity = User.get_or_exception(activity.user)
-    if not g.user == user_activity:
-        raise Forbidden([{
-            'detail': 'You must provide basic authorization headers',
-            'where': 'request.authorization',
-        }])
-
-    return jsonify({
-        'data': activity.to_json(include=['*', 'execution']),
     })
 
 
@@ -360,20 +329,81 @@ def task_read(id):
             'where': 'request.authorization',
         }])
 
-    forms = []
+    execution = pointer.proxy.execution.get()
+    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+    state = collection.find_one({
+        'id': execution.id,
+    })
+
     xml = Xml.load(
         app.config,
-        pointer.proxy.execution.get().process_name,
+        execution.process_name,
         direct=True
     )
     node = iter(xml).find(lambda e: e.getAttribute('id') == pointer.node_id)
 
-    for form in node.getElementsByTagName('form'):
-        forms.append(form_to_dict(form))
-
+    # Response body
     json_data = pointer.to_json(include=['*', 'execution'])
 
+    # Append node info
+    json_data['node_type'] = node.tagName
+
+    # Append forms
+    forms = []
+    for form in node.getElementsByTagName('form'):
+        forms.append(form_to_dict(form))
     json_data['form_array'] = forms
+
+    # Append validation
+    if node.tagName == 'validation':
+        deps = list(map(
+            lambda node: get_text(node),
+            node.getElementsByTagName('dep')
+        ))
+
+        fields = []
+        for dep in deps:
+            form_ref, input_name = dep.split('.')
+
+            # TODO this could be done in O(log N + K)
+            for node in state['state']['items'].values():
+                if node['state'] != 'valid':
+                    continue
+
+                for identifier in node['actors']['items']:
+                    actor = node['actors']['items'][identifier]
+                    if actor['state'] != 'valid':
+                        continue
+
+                    for form_ix, form in enumerate(actor['forms']):
+                        if form['state'] != 'valid':
+                            continue
+
+                        if form['ref'] != form_ref:
+                            continue
+
+                        if input_name not in form['inputs']['items']:
+                            continue
+
+                        input = form['inputs']['items'][input_name]
+
+                        state_ref = [
+                            node['id'],
+                            identifier,
+                            str(form_ix),
+                        ]
+                        state_ref = '.'.join(state_ref)
+                        state_ref = state_ref + ':' + dep
+
+                        field = {
+                            'ref': state_ref,
+                            **input,
+                        }
+                        del field['state']
+
+                        fields.append(field)
+
+        json_data['fields'] = fields
 
     return jsonify({
         'data': json_data,

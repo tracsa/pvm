@@ -4,11 +4,12 @@ from flask import json, jsonify, g
 import pika
 import pytest
 from cacahuate.handler import Handler
-from cacahuate.models import Pointer, Execution, Activity
+from cacahuate.models import Pointer, Execution
 from random import choice
 from string import ascii_letters
 
-from .utils import make_auth, make_activity, make_pointer, make_user, \
+from cacahuate.xml import Xml
+from .utils import make_auth, make_pointer, make_user, \
     make_date, assert_near_date
 
 EXECUTION_ID = '15asbs'
@@ -150,14 +151,10 @@ def test_continue_process_requires_user_hierarchy(client):
 
 def test_continue_process_requires_data(client):
     juan = make_user('juan', 'Juan')
-    act = Activity(ref='requester').save()
-    act.proxy.user.set(juan)
 
     manager = make_user('juan_manager', 'Juanote')
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     manager.proxy.tasks.set([ptr])
-
-    act.proxy.execution.set(ptr.proxy.execution.get())
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
@@ -186,8 +183,6 @@ def test_continue_process(client, mocker, config):
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     manager.proxy.tasks.set([ptr])
     exc = ptr.proxy.execution.get()
-
-    act = make_activity('requester', juan, ptr.proxy.execution.get())
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
@@ -272,7 +267,6 @@ def test_start_process_requirements(client, mongo, config):
     }
 
     assert Execution.count() == 0
-    assert Activity.count() == 0
 
     # next, validate the form data
     user = make_user('juan', 'Juan')
@@ -292,7 +286,6 @@ def test_start_process_requirements(client, mongo, config):
     }
 
     assert Execution.count() == 0
-    assert Activity.count() == 0
     juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
@@ -329,7 +322,6 @@ def test_start_process_requirements(client, mongo, config):
 
     # no registry should be created yet
     assert mongo[config["MONGO_HISTORY_COLLECTION"]].count() == 0
-    assert Activity.count() == 0
 
 
 def test_start_process(client, mocker, config, mongo):
@@ -522,9 +514,9 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields' is required",
+                'detail': "'inputs' is required",
                 'code': 'validation.required',
-                'where': 'request.body.fields',
+                'where': 'request.body.inputs',
             },
         ],
     }
@@ -535,16 +527,16 @@ def test_regression_requirements(client):
         'execution_id': exc.id,
         'node_id': 'approval-node',
         'response': 'reject',
-        'fields': 'de',
+        'inputs': 'de',
     }))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields' must be a list",
+                'detail': "'inputs' must be a list",
                 'code': 'validation.required_list',
-                'where': 'request.body.fields',
+                'where': 'request.body.inputs',
             },
         ],
     }
@@ -555,16 +547,16 @@ def test_regression_requirements(client):
         'execution_id': exc.id,
         'node_id': 'approval-node',
         'response': 'reject',
-        'fields': ['de'],
+        'inputs': ['de'],
     }))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields.0' must be an object",
+                'detail': "'inputs.0' must be an object",
                 'code': 'validation.required_dict',
-                'where': 'request.body.fields.0',
+                'where': 'request.body.inputs.0',
             },
         ],
     }
@@ -575,7 +567,7 @@ def test_regression_requirements(client):
         'execution_id': exc.id,
         'node_id': 'approval-node',
         'response': 'reject',
-        'fields': [{
+        'inputs': [{
         }],
     }))
 
@@ -583,9 +575,9 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields.0.ref' is required",
+                'detail': "'inputs.0.ref' is required",
                 'code': 'validation.required',
-                'where': 'request.body.fields.0.ref',
+                'where': 'request.body.inputs.0.ref',
             },
         ],
     }
@@ -596,7 +588,7 @@ def test_regression_requirements(client):
         'execution_id': exc.id,
         'node_id': 'approval-node',
         'response': 'reject',
-        'fields': [{
+        'inputs': [{
             'ref': 'de',
         }],
     }))
@@ -605,9 +597,9 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields.0.ref' value invalid",
+                'detail': "'inputs.0.ref' value invalid",
                 'code': 'validation.invalid',
-                'where': 'request.body.fields.0.ref',
+                'where': 'request.body.inputs.0.ref',
             },
         ],
     }
@@ -649,10 +641,25 @@ def test_regression_approval(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'input': {
-            'response': 'accept',
-            'comment': 'I like the previous work',
-        },
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'accept',
+                    },
+                    'comment': {
+                        'value': 'I like the previous work',
+                    },
+                    'inputs': {
+                        'value': None,
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }],
     }
 
 
@@ -675,8 +682,8 @@ def test_regression_reject(client, mocker, config):
         'node_id': ptr.node_id,
         'response': 'reject',
         'comment': 'I dont like it',
-        'fields': [{
-            'ref': 'work.task',
+        'inputs': [{
+            'ref': 'start-node.juan.0:work.task',
         }],
     }))
 
@@ -695,19 +702,33 @@ def test_regression_reject(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'input': {
-            'response': 'reject',
-            'comment': 'I dont like it',
-            'fields': [{
-                'ref': 'work.task',
-            }],
-        },
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'reject',
+                    },
+                    'comment': {
+                        'value': 'I dont like it',
+                    },
+                    'inputs': {
+                        'value': [{
+                            'ref': 'start-node.juan.0:work.task',
+                        }],
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }],
     }
 
 
 @pytest.mark.skip
 def test_regression_patch_requirements():
-    assert False, 'fields are present'
+    assert False, 'inputs are present'
     assert False, 'every field is valid'
 
 
@@ -720,7 +741,7 @@ def test_regression_patch():
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
         'comment': 'a comment',
-        'fields': [{
+        'inputs': [{
             'ref': '',
         }],
     }))
@@ -829,6 +850,7 @@ def test_read_process(client):
 
 def test_list_activities_requires(client):
     res = client.get('/v1/activity')
+
     assert res.status_code == 401
 
 
@@ -842,60 +864,18 @@ def test_list_activities(client):
         process_name='simple.2018-02-19.xml',
     ).save()
 
-    act = make_activity('requester', juan, exc)
-    act2 = make_activity('some', other, exc)
-
+    exc_2 = Execution(
+        process_name='simple.2018-02-19.xml',
+    ).save()
+    exc_2.proxy.actors.add(juan)
+    exc_2.save()
     res = client.get('/v1/activity', headers=make_auth(juan))
 
     assert res.status_code == 200
     assert json.loads(res.data) == {
         'data': [
-            act.to_json(include=['*', 'execution']),
+            exc_2.to_json(include=['*', 'execution']),
         ],
-    }
-
-
-def test_activity_requires(client):
-    # validate user authentication wrong
-    res = client.get('/v1/activity/1')
-    assert res.status_code == 401
-
-
-def test_activity_wrong_activity(client):
-    # validate user authentication correct but bad activity
-    juan = make_user('juan', 'Juan')
-    other = make_user('other', 'Otero')
-
-    exc = Execution(
-        process_name='simple.2018-02-19.xml',
-    ).save()
-
-    act = make_activity('requester', juan, exc)
-    act2 = make_activity('some', other, exc)
-
-    res = client.get(
-        '/v1/activity/{}'.format(act2.id),
-        headers=make_auth(juan)
-    )
-
-    assert res.status_code == 403
-
-
-def test_activity(client):
-    # validate user authentication correct with correct activity
-    juan = make_user('juan', 'Juan')
-
-    act = Activity(ref='requester').save()
-    act.proxy.user.set(juan)
-
-    res2 = client.get(
-        '/v1/activity/{}'.format(act.id),
-        headers=make_auth(juan)
-    )
-
-    assert res2.status_code == 200
-    assert json.loads(res2.data) == {
-        'data': act.to_json(include=['*', 'execution']),
     }
 
 
@@ -1003,6 +983,7 @@ def test_task_read(client):
             '_type': 'pointer',
             'id': ptr.id,
             'node_id': ptr.node_id,
+            'node_type': 'action',
             'name': None,
             'description': None,
             'execution': {
@@ -1025,6 +1006,79 @@ def test_task_read(client):
                 },
             ],
         },
+    }
+
+
+def test_task_validation(client, mongo, config):
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    juan = make_user('juan', 'Juan')
+    juan.proxy.tasks.add(ptr)
+    execution = ptr.proxy.execution.get()
+
+    state = Xml.load(config, 'validation').get_state()
+    node = state['items']['start-node']
+
+    node['state'] = 'valid'
+    node['actors']['items']['juan'] = {
+        '_type': 'actor',
+        'state': 'valid',
+        'user': {
+            '_type': 'user',
+            'identifier': 'juan',
+            'fullname': None,
+        },
+        'forms': [{
+            '_type': 'form',
+            'ref': 'work',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        '_type': 'field',
+                        'state': 'valid',
+                        'label': 'task',
+                        'value': 'Get some milk and eggs',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': state,
+    })
+
+    res = client.get('/v1/task/{}'.format(ptr.id), headers=make_auth(juan))
+    body = json.loads(res.data)['data']
+
+    assert res.status_code == 200
+    assert body == {
+        '_type': 'pointer',
+        'description': None,
+        'execution': {
+            '_type': 'execution',
+            'description': None,
+            'id': execution.id,
+            'name': None,
+            'process_name': execution.process_name,
+        },
+        'fields': [
+            {
+                '_type': 'field',
+                'ref': 'start-node.juan.0:work.task',
+                'label': 'task',
+                'value': 'Get some milk and eggs',
+            }
+        ],
+        'form_array': [],
+        'id': ptr.id,
+        'name': None,
+        'node_id': ptr.node_id,
+        'node_type': 'validation'
     }
 
 

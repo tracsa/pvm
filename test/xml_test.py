@@ -5,7 +5,7 @@ import simplejson as json
 
 from cacahuate.errors import ProcessNotFound
 from xml.dom.minidom import parse
-from cacahuate.models import Execution, User, Activity
+from cacahuate.models import Execution, User
 from cacahuate.xml import Xml, form_to_dict
 
 

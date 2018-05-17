@@ -6,11 +6,11 @@ import pytest
 import simplejson as json
 
 from cacahuate.handler import Handler
-from cacahuate.models import Execution, Pointer, User, Activity
+from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import Action
 from cacahuate.xml import Xml
 
-from .utils import make_pointer, make_activity, make_user, assert_near_date
+from .utils import make_pointer, make_user, assert_near_date
 
 
 def test_recover_step(config):
@@ -86,7 +86,6 @@ def test_wakeup(config, mongo):
         identifier='juan_manager',
         email='hardcoded@mailinator.com'
     ).save()
-    act = make_activity('start-node', juan, execution)
 
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
@@ -123,7 +122,12 @@ def test_wakeup(config, mongo):
     assert_near_date(reg['started_at'])
     assert reg['finished_at'] is None
     assert reg['execution']['id'] == execution.id
-    assert reg['node']['id'] == 'mid-node'
+    assert reg['node'] == {
+        'id': 'mid-node',
+        'type': 'action',
+        'description': 'añadir información',
+        'name': 'Segundo paso',
+    }
     assert reg['actors'] == {
         '_type': ':map',
         'items': {},
@@ -154,14 +158,21 @@ def test_teardown(config, mongo):
     manager = User(identifier='manager').save()
     manager2 = User(identifier='manager2').save()
 
+    assert manager not in execution.proxy.actors.get()
+    assert execution not in manager.proxy.activities.get()
+
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
+
+    state = Xml.load(config, 'simple').get_state()
+    state['items']['start-node']['state'] = 'valid'
 
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': state,
     })
+
     mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
@@ -186,7 +197,7 @@ def test_teardown(config, mongo):
         'user_identifier': manager.identifier,
         'input': [{
             '_type': 'form',
-            'id': 'mid-form',
+            'ref': 'mid-form',
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
@@ -228,7 +239,7 @@ def test_teardown(config, mongo):
                 },
                 'forms': [{
                     '_type': 'form',
-                    'id': 'mid-form',
+                    'ref': 'mid-form',
                     'state': 'valid',
                     'inputs': {
                         '_type': ':sorted_map',
@@ -259,7 +270,7 @@ def test_teardown(config, mongo):
             'start-node': {
                 '_type': 'node',
                 'id': 'start-node',
-                'state': 'unfilled',
+                'state': 'valid',
                 'comment': '',
                 'actors': {
                     '_type': ':map',
@@ -270,7 +281,7 @@ def test_teardown(config, mongo):
             'mid-node': {
                 '_type': 'node',
                 'id': 'mid-node',
-                'state': 'unfilled',
+                'state': 'valid',
                 'comment': '',
                 'actors': {
                     '_type': ':map',
@@ -285,7 +296,7 @@ def test_teardown(config, mongo):
                             },
                             'forms': [{
                                 '_type': 'form',
-                                'id': 'mid-form',
+                                'ref': 'mid-form',
                                 'state': 'valid',
                                 'inputs': {
                                     '_type': ':sorted_map',
@@ -321,6 +332,9 @@ def test_teardown(config, mongo):
             'final-node',
         ],
     }
+
+    assert manager in execution.proxy.actors.get()
+    assert execution in manager.proxy.activities.get()
 
 
 def test_finish_execution(config, mongo):
@@ -373,7 +387,6 @@ def test_call_handler_delete_process(config, mongo):
 
     assert Execution.count() == 0
     assert Pointer.count() == 0
-    assert Activity.count() == 0
 
 
 def test_pointer_not_created_without_form():
@@ -394,7 +407,6 @@ def test_teardown_last_task():
     assert False, 'suppose a pointer with only one task left, teardown should queue it'
 
 
-@pytest.mark.skip
 def test_approve(config, mongo):
     ''' tests that a validation node can go forward on approval '''
     # test setup
@@ -407,10 +419,10 @@ def test_approve(config, mongo):
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
-            'id': execution.id,
+            'id': ptr.proxy.execution.get().id,
         },
         'node': {
-            'id': p_0.node_id,
+            'id': 'approval-node',
         },
         'actors': {
             '_type': ':map',
@@ -418,15 +430,38 @@ def test_approve(config, mongo):
         },
     })
 
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'validation').get_state(),
+    })
+
     # thing to test
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': {
-            'response': 'accept',
-            'comment': 'I like it',
-        },
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'accept',
+                    },
+                    'comment': {
+                        'value': 'I like it',
+                    },
+                    'inputs': {
+                        'value': [{
+                            'ref': 'start-node.juan.0.task',
+                        }],
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }],
     }, channel)
 
     # assertions
@@ -441,26 +476,299 @@ def test_approve(config, mongo):
     assert_near_date(reg['finished_at'])
     assert reg['execution']['id'] == ptr.execution
     assert reg['node']['id'] == 'approval-node'
-    assert reg['actors'] == [{
-        'ref': 'mid-node',
-        'user': {
-            'identifier': 'manager',
-            'human_name': None,
+    assert reg['actors'] == {
+        '_type': ':map',
+        'items': {
+            'juan': {
+                '_type': 'actor',
+                'state': 'valid',
+                'user': {
+                    '_type': 'user',
+                    'identifier': 'juan',
+                    'fullname': 'Juan',
+                },
+                'forms': [{
+                    '_type': 'form',
+                    'ref': 'approval',
+                    'inputs': {
+                        '_type': ':sorted_map',
+                        'items': {
+                            'response': {
+                                'value': 'accept',
+                            },
+                            'comment': {
+                                'value': 'I like it',
+                            },
+                            'inputs': {
+                                'value': [{
+                                    'ref': 'start-node.juan.0.task',
+                                }],
+                            },
+                        },
+                        'item_order': ['response', 'comment', 'inputs'],
+                    },
+                }],
+            },
+        },
+    }
+
+
+def test_reject(config, mongo):
+    ''' tests that a rejection moves the pointer to a backward position '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    channel = MagicMock()
+    execution = ptr.proxy.execution.get()
+
+    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'execution': {
+            'id': execution.id,
         },
         'node': {
-            'type': 'validation',
+            'id': 'approval-node',
         },
-        'input': {
-            'response': 'accept',
-            'comment': 'I like it',
+        'actors': {
+            '_type': ':map',
+            'items': {},
         },
-    }]
+    })
+
+    state = Xml.load(config, 'validation').get_state()
+
+    state['items']['start-node']['state'] = 'valid'
+    state['items']['start-node']['actors']['items']['juan'] = {
+        '_type': 'actor',
+        'state': 'valid',
+        'user': {
+            '_type': 'user',
+            'identifier': 'juan',
+            'fullname': 'Juan',
+        },
+        'forms': [{
+            '_type': 'form',
+            'ref': 'work',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        '_type': 'field',
+                        'state': 'valid',
+                        'value': '2',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': state,
+    })
+
+    # thing to test
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'reject',
+                    },
+                    'comment': {
+                        'value': 'I do not like it',
+                    },
+                    'inputs': {
+                        'value': [{
+                            'ref': 'start-node.juan.0:work.task',
+                        }],
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }],
+    }, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
+
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == 'start-node'
+
+    # data is invalidated
+    state = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find({
+        'id': execution.id,
+    }))
+
+    del state['_id']
+
+    assert state == {
+        '_type': 'execution',
+        'id': execution.id,
+        'state': {
+            '_type': ':sorted_map',
+            'items': {
+                'start-node': {
+                    '_type': 'node',
+                    'id': 'start-node',
+                    'state': 'invalid',
+                    'comment': 'I do not like it',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'state': 'invalid',
+                                    'ref': 'work',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'task': {
+                                                '_type': 'field',
+                                                'state': 'invalid',
+                                                'value': '2',
+                                            },
+                                        },
+                                        'item_order': ['task'],
+                                    },
+                                }],
+                                'state': 'invalid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
+                    },
+                },
+                'approval-node': {
+                    '_type': 'node',
+                    'id': 'approval-node',
+                    'state': 'invalid',
+                    'comment': 'I do not like it',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'approval',
+                                    'state': 'invalid',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'response': {
+                                                'state': 'invalid',
+                                                'value': 'reject',
+                                            },
+                                            'comment': {
+                                                'value': 'I do not like it',
+                                            },
+                                            'inputs': {
+                                                'value': [{
+                                                    'ref': 'start-node.'
+                                                           'juan.0:work.task',
+                                                }],
+                                            },
+                                        },
+                                        'item_order': [
+                                            'response',
+                                            'comment',
+                                            'inputs',
+                                        ],
+                                    },
+                                }],
+                                'state': 'invalid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
+                    },
+                },
+                'final-node': {
+                    '_type': 'node',
+                    'id': 'final-node',
+                    'state': 'unfilled',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+            },
+            'item_order': ['start-node', 'approval-node', 'final-node'],
+        },
+    }
+
+    # mongo has the data
+    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+
+    assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
+    assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
+    assert reg['execution']['id'] == ptr.execution
+    assert reg['node']['id'] == 'approval-node'
+    assert reg['actors'] == {
+        '_type': ':map',
+        'items': {
+            'juan': {
+                '_type': 'actor',
+                'forms': [{
+                    '_type': 'form',
+                    'ref': 'approval',
+                    'inputs': {
+                        '_type': ':sorted_map',
+                        'items': {
+                            'response': {
+                                'value': 'reject',
+                            },
+                            'comment': {
+                                'value': 'I do not like it',
+                            },
+                            'inputs': {
+                                'value': [{
+                                    'ref': 'start-node.juan.0:work.task',
+                                }],
+                            },
+                        },
+                        'item_order': [
+                            'response',
+                            'comment',
+                            'inputs',
+                        ],
+                    },
+                }],
+                'state': 'valid',
+                'user': {
+                    '_type': 'user',
+                    'identifier': 'juan',
+                    'fullname': 'Juan',
+                },
+            },
+        },
+    }
 
 
 @pytest.mark.skip
-def test_reject():
-    ''' tests that a rejection moves the pointer to a backward position '''
-    assert False
+def test_reject_with_dependencies():
+    assert False, 'dependencies are invalidated'
 
 
 @pytest.mark.skip
@@ -579,3 +887,138 @@ def test_resistance_dead_pointer(config):
         'command': 'step',
         'pointer_id': 'nones',
     }))
+
+
+def test_true_condition_node(config, mongo):
+    ''' conditional node will be executed if its condition is true '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
+    channel = MagicMock()
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'validation').get_state(),
+    })
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [
+            {
+                'ref': 'mistery',
+                '_type': 'form',
+                'inputs': {
+                    '_type': ':sorted_map',
+                    'item_order': [
+                        'password',
+                    ],
+                    'items': {
+                        'password': {
+                            'type': 'text',
+                            'value': 'abrete sésamo',
+                        },
+                    },
+                },
+            },
+        ],
+    }, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
+
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == 'mistical-node'
+
+
+def test_elseif_condition_node(config, mongo):
+    ''' conditional node won't be executed if its condition is false '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
+    channel = MagicMock()
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'validation').get_state(),
+    })
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [
+            {
+                'ref': 'mistery',
+                '_type': 'form',
+                'inputs': {
+                    '_type': ':sorted_map',
+                    'item_order': [
+                        'password',
+                    ],
+                    'items': {
+                        'password': {
+                            'type': 'text',
+                            'value': '123456',
+                        },
+                    },
+                },
+            },
+        ],
+    }, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
+
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == '123456-node'
+
+
+def test_false_condition_node(config, mongo):
+    ''' conditional node won't be executed if its condition is false '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
+    channel = MagicMock()
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'validation').get_state(),
+    })
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [
+            {
+                'ref': 'mistery',
+                '_type': 'form',
+                'inputs': {
+                    '_type': ':sorted_map',
+                    'item_order': [
+                        'password',
+                    ],
+                    'items': {
+                        'password': {
+                            'type': 'text',
+                            'value': 'npi',
+                        },
+                    },
+                },
+            },
+        ],
+    }, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
+
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == 'final-node'

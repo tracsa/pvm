@@ -67,6 +67,7 @@ class Form:
                 input_description = input.to_json()
                 input_description['value'] = value
                 input_description['value_caption'] = input.make_caption(value)
+                input_description['state'] = 'valid'
 
                 collected_inputs.append(input_description)
             except InputError as e:
@@ -77,6 +78,7 @@ class Form:
 
         return {
             '_type': 'form',
+            'state': 'valid',
             'ref': self.ref,
             'inputs': SortedMap(collected_inputs, key='name').to_json(),
         }

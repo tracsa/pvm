@@ -2,6 +2,7 @@ import pytest
 
 from cacahuate.grammar import Condition
 
+
 def state_generator(actions):
     state = {
         '_type': ':sorted_map',
@@ -12,7 +13,7 @@ def state_generator(actions):
     for action in actions:
         node, actor, form_ref, input_name, value = action
 
-        if not node in state['items']:
+        if node not in state['items']:
             state['items'][node] = {
                 '_type': 'node',
                 'id': node,
@@ -28,7 +29,7 @@ def state_generator(actions):
 
         node = state['items'][node]
 
-        if not actor in node['actors']['items']:
+        if actor not in node['actors']['items']:
             node['actors']['items'][actor] = {
                 '_type': 'actor',
                 'forms': []
@@ -56,6 +57,7 @@ def state_generator(actions):
         actor['forms'].append(form)
 
     return state
+
 
 def test_condition(config):
     state = state_generator([
@@ -94,6 +96,7 @@ def test_aritmetic_operators(config):
     assert con.parse('set.B <= set.C')
 
     assert con.parse('set.C < set.D')
+
 
 def test_logic_operators(config):
     state = state_generator([

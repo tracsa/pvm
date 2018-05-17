@@ -19,7 +19,7 @@ def test_condition(config):
                             '_type': 'actor',
                             'forms': [
                                 {
-                                    '_ref': 'first-form',
+                                    'ref': 'first-form',
                                     '_type': 'form',
                                     'inputs': {
                                         '_type': ':sorted_map',
@@ -51,7 +51,7 @@ def test_condition(config):
                             '_type': 'actor',
                             'forms': [
                                 {
-                                    '_ref': 'second-form',
+                                    'ref': 'second-form',
                                     '_type': 'form',
                                     'inputs': {
                                         '_type': ':sorted_map',
@@ -95,6 +95,7 @@ def test_condition(config):
     assert con.parse('first-form.param1 == second-form.param1')
     assert not con.parse('first-form.param1 == second-form.param2')
 
+
 def test_aritmetic_operators(config):
     state = {
         '_type': ':sorted_map',
@@ -110,7 +111,7 @@ def test_aritmetic_operators(config):
                             '_type': 'actor',
                             'forms': [
                                 {
-                                    '_ref': 'set',
+                                    'ref': 'set',
                                     '_type': 'form',
                                     'inputs': {
                                         '_type': ':sorted_map',

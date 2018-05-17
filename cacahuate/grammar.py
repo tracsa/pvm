@@ -85,7 +85,7 @@ class Condition:
                 for actor in actors['items'].values():
                     forms = actor['forms']
                     for form in forms:
-                        if form['_ref'] != obj_id:
+                        if form['ref'] != obj_id:
                             continue
 
                         inputs = form['inputs']

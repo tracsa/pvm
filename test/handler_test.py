@@ -404,6 +404,12 @@ def test_approve(config, mongo):
         },
     })
 
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'simple').get_state(),
+    })
+
     # thing to test
     handler.call({
         'command': 'step',

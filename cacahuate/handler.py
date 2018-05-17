@@ -107,9 +107,16 @@ class Handler:
             for element in iter(xml):
                 node = make_node(element)
 
-                if node.invalidate(invalidated) and not first_node_found:
+                more_fields = node.get_invalidated_fields(invalidated, state)
+
+                invalidated.update(more_fields)
+
+                if more_fields and not first_node_found:
                     first_node_found = True
                     first_invalid_node = node
+
+            make_update_query()
+            run_update_query()
 
             return [first_invalid_node]
 

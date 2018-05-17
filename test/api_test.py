@@ -522,9 +522,9 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields' is required",
+                'detail': "'inputs' is required",
                 'code': 'validation.required',
-                'where': 'request.body.fields',
+                'where': 'request.body.inputs',
             },
         ],
     }
@@ -535,16 +535,16 @@ def test_regression_requirements(client):
         'execution_id': exc.id,
         'node_id': 'approval-node',
         'response': 'reject',
-        'fields': 'de',
+        'inputs': 'de',
     }))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields' must be a list",
+                'detail': "'inputs' must be a list",
                 'code': 'validation.required_list',
-                'where': 'request.body.fields',
+                'where': 'request.body.inputs',
             },
         ],
     }
@@ -555,16 +555,16 @@ def test_regression_requirements(client):
         'execution_id': exc.id,
         'node_id': 'approval-node',
         'response': 'reject',
-        'fields': ['de'],
+        'inputs': ['de'],
     }))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields.0' must be an object",
+                'detail': "'inputs.0' must be an object",
                 'code': 'validation.required_dict',
-                'where': 'request.body.fields.0',
+                'where': 'request.body.inputs.0',
             },
         ],
     }
@@ -575,7 +575,7 @@ def test_regression_requirements(client):
         'execution_id': exc.id,
         'node_id': 'approval-node',
         'response': 'reject',
-        'fields': [{
+        'inputs': [{
         }],
     }))
 
@@ -583,9 +583,9 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields.0.ref' is required",
+                'detail': "'inputs.0.ref' is required",
                 'code': 'validation.required',
-                'where': 'request.body.fields.0.ref',
+                'where': 'request.body.inputs.0.ref',
             },
         ],
     }
@@ -596,7 +596,7 @@ def test_regression_requirements(client):
         'execution_id': exc.id,
         'node_id': 'approval-node',
         'response': 'reject',
-        'fields': [{
+        'inputs': [{
             'ref': 'de',
         }],
     }))
@@ -605,9 +605,9 @@ def test_regression_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': "'fields.0.ref' value invalid",
+                'detail': "'inputs.0.ref' value invalid",
                 'code': 'validation.invalid',
-                'where': 'request.body.fields.0.ref',
+                'where': 'request.body.inputs.0.ref',
             },
         ],
     }
@@ -650,8 +650,23 @@ def test_regression_approval(client, mocker, config):
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
         'input': [{
-            'response': 'accept',
-            'comment': 'I like the previous work',
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'accept',
+                    },
+                    'comment': {
+                        'value': 'I like the previous work',
+                    },
+                    'inputs': {
+                        'value': None,
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
         }],
     }
 
@@ -675,8 +690,8 @@ def test_regression_reject(client, mocker, config):
         'node_id': ptr.node_id,
         'response': 'reject',
         'comment': 'I dont like it',
-        'fields': [{
-            'ref': 'work.task',
+        'inputs': [{
+            'ref': 'start-node.juan.0:work.task',
         }],
     }))
 
@@ -696,18 +711,32 @@ def test_regression_reject(client, mocker, config):
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
         'input': [{
-            'response': 'reject',
-            'comment': 'I dont like it',
-            'fields': [{
-                'ref': 'work.task',
-            }],
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'reject',
+                    },
+                    'comment': {
+                        'value': 'I dont like it',
+                    },
+                    'inputs': {
+                        'value': [{
+                            'ref': 'start-node.juan.0:work.task',
+                        }],
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
         }],
     }
 
 
 @pytest.mark.skip
 def test_regression_patch_requirements():
-    assert False, 'fields are present'
+    assert False, 'inputs are present'
     assert False, 'every field is valid'
 
 
@@ -720,7 +749,7 @@ def test_regression_patch():
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
         'comment': 'a comment',
-        'fields': [{
+        'inputs': [{
             'ref': '',
         }],
     }))

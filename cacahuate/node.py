@@ -347,21 +347,41 @@ class Validation(Node):
     def validate_field(self, field, index):
         if type(field) != dict:
             raise RequiredDictError(
-                'fields.{}'.format(index),
-                'request.body.fields.{}'.format(index)
+                'inputs.{}'.format(index),
+                'request.body.inputs.{}'.format(index)
             )
 
         if 'ref' not in field:
             raise RequiredInputError(
-                'fields.{}.ref'.format(index),
-                'request.body.fields.{}.ref'.format(index)
+                'inputs.{}.ref'.format(index),
+                'request.body.inputs.{}.ref'.format(index)
             )
 
-        if field['ref'] not in self.dependencies:
+        try:
+            node, actor, ref, input = field['ref'].split('.')
+            index, ref = ref.split(':')
+        except ValueError:
             raise InvalidInputError(
-                'fields.{}.ref'.format(index),
-                'request.body.fields.{}.ref'.format(index)
+                'inputs.{}.ref'.format(index),
+                'request.body.inputs.{}.ref'.format(index)
             )
+
+        if not self.in_dependencies(field['ref']):
+            raise InvalidInputError(
+                'inputs.{}.ref'.format(index),
+                'request.body.inputs.{}.ref'.format(index)
+            )
+
+    def in_dependencies(self, ref):
+        node, user, form, field = ref.split('.')
+        index, ref = form.split(':')
+        fref = ref + '.' + field
+
+        for dep in self.dependencies:
+            if dep == fref:
+                return True
+
+        return False
 
     def validate_input(self, json_data):
         if 'response' not in json_data:
@@ -371,13 +391,13 @@ class Validation(Node):
             raise InvalidInputError('response', 'request.body.response')
 
         if json_data['response'] == 'reject':
-            if 'fields' not in json_data:
-                raise RequiredInputError('fields', 'request.body.fields')
+            if 'inputs' not in json_data:
+                raise RequiredInputError('inputs', 'request.body.inputs')
 
-            if type(json_data['fields']) is not list:
-                raise RequiredListError('fields', 'request.body.fields')
+            if type(json_data['inputs']) is not list:
+                raise RequiredListError('inputs', 'request.body.inputs')
 
-            for index, field in enumerate(json_data['fields']):
+            for index, field in enumerate(json_data['inputs']):
                 errors = []
                 try:
                     self.validate_field(field, index)
@@ -387,27 +407,36 @@ class Validation(Node):
                 if errors:
                     raise BadRequest(errors)
 
-        return {
-            k: json_data[k]
-            for k in ('response', 'comment', 'fields')
-            if k in json_data
-        }
+        return [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': json_data['response'],
+                    },
+                    'comment': {
+                        'value': json_data['comment'],
+                    },
+                    'inputs': {
+                        'value': json_data.get('inputs'),
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }]
 
     def dependent_refs(self, invalidated, node_state):
         ''' finds dependencies of the invalidated set in this node '''
         refs = set()
 
         for inref in invalidated:
-            node, user, form, field = inref.split('.')
-            index, ref = form.split(':')
-            fref = ref + '.' + field
-
-            for dep in self.dependencies:
-                if dep == fref:
-                    refs.add('{node}.{actor}.0:approval.response'.format(
-                        node=self.id,
-                        actor=next(iter(node_state['actors']['items'].keys())),
-                    ))
+            if self.in_dependencies(inref):
+                refs.add('{node}.{actor}.0:approval.response'.format(
+                    node=self.id,
+                    actor=next(iter(node_state['actors']['items'].keys())),
+                ))
 
         return refs
 

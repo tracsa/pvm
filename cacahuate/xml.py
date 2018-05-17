@@ -168,8 +168,14 @@ class Xml:
         from cacahuate.node import make_node  # noqa
 
         return SortedMap(map(
-            lambda n: make_node(n).get_state(),
-            iter(self)
+            lambda node: node.get_state(),
+            filter(
+                lambda node: node,
+                map(
+                    lambda node: make_node(node),
+                    iter(self)
+                )
+            )
         ), key='id').to_json()
 
     @classmethod

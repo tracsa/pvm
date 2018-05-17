@@ -453,6 +453,10 @@ def make_node(element):
             'Class definition not found for node: {}'.format(element.tagName)
         )
 
+    # if nodes are not reflected in state
+    if element.tagName == 'if':
+        return None
+
     class_name = pascalcase(element.tagName)
     available_classes = __import__(__name__).node
 

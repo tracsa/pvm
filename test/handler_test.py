@@ -569,7 +569,7 @@ def test_reject(config, mongo):
                     },
                     'inputs': {
                         'value': [{
-                            'ref': 'start-node.juan.0.task',
+                            'ref': 'start-node.juan.0:work.task',
                         }],
                     },
                 },
@@ -646,10 +646,12 @@ def test_reject(config, mongo):
                                 'forms': [{
                                     '_type': 'form',
                                     'ref': 'approval',
+                                    'state': 'invalid',
                                     'inputs': {
                                         '_type': ':sorted_map',
                                         'items': {
                                             'response': {
+                                                'state': 'invalid',
                                                 'value': 'reject',
                                             },
                                             'comment': {
@@ -657,11 +659,15 @@ def test_reject(config, mongo):
                                             },
                                             'inputs': {
                                                 'value': [{
-                                                    'ref': 'start-node.juan.0.task',
+                                                    'ref': 'start-node.juan.0:work.task',
                                                 }],
                                             },
                                         },
-                                        'item_order': ['response', 'comment', 'inputs'],
+                                        'item_order': [
+                                            'response',
+                                            'comment',
+                                            'inputs',
+                                        ],
                                     },
                                 }],
                                 'state': 'invalid',
@@ -689,11 +695,6 @@ def test_reject(config, mongo):
         },
     }
 
-    assert False, 'node is invalidated'
-    assert False, 'activity is invalidated'
-    assert False, 'form is invalidated'
-    assert False, 'field is invalidated'
-
     # mongo has the data
     reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
 
@@ -701,17 +702,45 @@ def test_reject(config, mongo):
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == ptr.execution
     assert reg['node']['id'] == 'approval-node'
-    assert reg['actors'] == [{
-        'ref': 'approval-node',
-        'user': {
-            'identifier': 'juan',
-            'fullname': 'Juan',
+    assert reg['actors'] == {
+        '_type': ':map',
+        'items': {
+            'juan': {
+                '_type': 'actor',
+                'forms': [{
+                    '_type': 'form',
+                    'ref': 'approval',
+                    'inputs': {
+                        '_type': ':sorted_map',
+                        'items': {
+                            'response': {
+                                'value': 'reject',
+                            },
+                            'comment': {
+                                'value': 'I do not like it',
+                            },
+                            'inputs': {
+                                'value': [{
+                                    'ref': 'start-node.juan.0:work.task',
+                                }],
+                            },
+                        },
+                        'item_order': [
+                            'response',
+                            'comment',
+                            'inputs',
+                        ],
+                    },
+                }],
+                'state': 'valid',
+                'user': {
+                    '_type': 'user',
+                    'identifier': 'juan',
+                    'fullname': 'Juan',
+                },
+            },
         },
-        'input': {
-            'response': 'accept',
-            'comment': 'I like it',
-        },
-    }]
+    }
 
 
 def test_reject_with_dependencies():

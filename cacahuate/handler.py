@@ -130,7 +130,8 @@ class Handler:
                 ckeys = set()
 
                 for key in invalidated:
-                    node, actor, index, input = key.split('.')
+                    node, actor, form, input = key.split('.')
+                    index, ref = form.split(':')
 
                     ikeys.add(('state.items.{node}.actors.items.{actor}.forms.{index}.inputs.items.{input}.state'.format(
                         node=node,
@@ -161,8 +162,6 @@ class Handler:
                 return fkeys | akeys | nkeys | ikeys | ckeys
 
             updates = dict(get_update_keys(invalidated))
-
-            from pprint import pprint; pprint(updates)
 
             # update state
             collection = self.get_mongo()[

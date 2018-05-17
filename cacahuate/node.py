@@ -131,18 +131,24 @@ class Node:
 
     def in_state(self, ref, node_state):
         ''' returns true if this ref is part of this state '''
-        node_id, user, index, field = ref.split('.')
+        n, user, form, field = ref.split('.')
+
+        i, ref = form.split(':')
 
         try:
-            node_state['actors']['items'][user]['forms'][int(index)]['inputs']['items'][field]
+            node_state \
+                ['actors'] \
+                ['items'] \
+                [user] \
+                ['forms'] \
+                [int(i)] \
+                ['inputs'] \
+                ['items'] \
+                [field]
 
             return True
         except KeyError:
             return False
-
-    def dependent_refs(self, invalidated, node_state):
-        ''' finds dependencies of the invalidated set in this node '''
-        return []
 
     def get_invalidated_fields(self, invalidated, state):
         ''' debe devolver un conjunto de referencias a campos que deben ser
@@ -247,6 +253,10 @@ class Action(Node):
         return hierarchy_provider.find_users(
             **self.resolve_params(state)
         )
+
+    def dependent_refs(self, invalidated, node_state):
+        ''' finds dependencies of the invalidated set in this node '''
+        return []
 
     def validate_form_spec(self, form_specs, associated_data) -> dict:
         ''' Validates the given data against the spec contained in form.
@@ -382,6 +392,24 @@ class Validation(Node):
             for k in ('response', 'comment', 'fields')
             if k in json_data
         }
+
+    def dependent_refs(self, invalidated, node_state):
+        ''' finds dependencies of the invalidated set in this node '''
+        refs = set()
+
+        for inref in invalidated:
+            node, user, form, field = inref.split('.')
+            index, ref = form.split(':')
+            fref = ref + '.' + field
+
+            for dep in self.dependencies:
+                if dep == fref:
+                    refs.add('{node}.{actor}.0:approval.response'.format(
+                        node=self.id,
+                        actor=next(iter(node_state['actors']['items'].keys())),
+                    ))
+
+        return refs
 
 
 class Exit(Node):

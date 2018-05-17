@@ -88,6 +88,12 @@ def test_wakeup(config, mongo):
     ).save()
     act = make_activity('start-node', juan, execution)
 
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': Xml.load(config, 'simple').get_state(),
+    })
+
     channel = MagicMock()
 
     # this is what we test
@@ -459,12 +465,18 @@ def test_patch():
     assert False
 
 
-def test_resistance_unexisteng_hierarchy_backend(config):
+def test_resistance_unexisteng_hierarchy_backend(config, mongo):
     handler = Handler(config)
 
     ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': exc.id,
+        'state': Xml.load(config, 'simple').get_state(),
+    })
 
     # this is what we test
     handler(MagicMock(), MagicMock(), None, json.dumps({
@@ -475,12 +487,18 @@ def test_resistance_unexisteng_hierarchy_backend(config):
     }))
 
 
-def test_resistance_hierarchy_return(config):
+def test_resistance_hierarchy_return(config, mongo):
     handler = Handler(config)
 
     ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': exc.id,
+        'state': Xml.load(config, 'simple').get_state(),
+    })
 
     # this is what we test
     handler(MagicMock(), MagicMock(), None, json.dumps({
@@ -491,12 +509,18 @@ def test_resistance_hierarchy_return(config):
     }))
 
 
-def test_resistance_hierarchy_item(config):
+def test_resistance_hierarchy_item(config, mongo):
     handler = Handler(config)
 
     ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': exc.id,
+        'state': Xml.load(config, 'simple').get_state(),
+    })
 
     # this is what we test
     handler(MagicMock(), MagicMock(), None, json.dumps({
@@ -507,12 +531,18 @@ def test_resistance_hierarchy_item(config):
     }))
 
 
-def test_resistance_node_not_found(config):
+def test_resistance_node_not_found(config, mongo):
     handler = Handler(config)
 
     ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': exc.id,
+        'state': Xml.load(config, 'simple').get_state(),
+    })
 
     # this is what we test
     handler(MagicMock(), MagicMock(), None, json.dumps({

@@ -28,6 +28,19 @@
       </body>
     </if>
 
+    <if id="condition-node">
+      <condition>mistery.password == "123456"</condition>
+      <body>
+        <action id="123456-node">
+          <form-array>
+            <form id="123456-form">
+              <input type="text" name="answer" default="oh boy, please don't" />
+            </form>
+          </form-array>
+        </action>
+      </body>
+    </if>
+
     <action id="final-node"></action>
   </process>
 </process-spec>

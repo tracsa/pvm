@@ -75,6 +75,13 @@
     <element name="validation">
       <attribute name="id"><text/></attribute>
       <ref name="dependencies"/>
+      <optional>
+        <ref name="node-info" />
+      </optional>
+
+      <optional>
+        <ref name="auth-filter" />
+      </optional>
     </element>
   </define>
 

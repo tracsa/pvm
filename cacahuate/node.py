@@ -176,19 +176,18 @@ class Action(Node):
     def is_async(self):
         return True
 
-    def resolve_params(self, execution=None):
+    def resolve_params(self, state=None):
         computed_params = {}
 
         for param in self.auth_params:
-            if execution is not None and param.type == 'ref':
+            if state is not None and param.type == 'ref':
                 user_ref = param.value.split('#')[1].strip()
 
                 try:
-                    actor = next(
-                        execution.proxy.actors.q().filter(ref=user_ref)
-                    )
+                    adic = state['state']['items'][user_ref]['actors']['items']
+                    actor = adic[next(iter(adic.keys()))]
 
-                    value = actor.proxy.user.get().identifier
+                    value = actor['user']['identifier']
                 except StopIteration:
                     value = None
             else:
@@ -198,7 +197,7 @@ class Action(Node):
 
         return computed_params
 
-    def get_actors(self, config, execution):
+    def get_actors(self, config, state):
         if not self.auth_params:
             return []
 
@@ -212,7 +211,7 @@ class Action(Node):
         hierarchy_provider = HiPro(config)
 
         return hierarchy_provider.find_users(
-            **self.resolve_params(execution)
+            **self.resolve_params(state)
         )
 
     def validate_form_spec(self, form_specs, associated_data) -> dict:

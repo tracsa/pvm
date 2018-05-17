@@ -55,45 +55,33 @@
   <define name="action">
     <element name="action">
       <attribute name="id"><text/></attribute>
+        <interleave>
+          <optional>
+            <ref name="node-info" />
+          </optional>
 
-      <optional>
-        <ref name="node-info" />
-      </optional>
+          <optional>
+            <ref name="auth-filter" />
+          </optional>
 
-      <optional>
-        <element name="auth-filter">
-          <attribute name="backend"><text/></attribute>
-          <zeroOrMore>
-            <ref name="param"/>
-          </zeroOrMore>
-          <empty/>
-        </element>
-      </optional>
+          <optional>
+            <ref name="form-array" />
+          </optional>
+        </interleave>
 
-      <optional>
-        <element name="form-array">
-          <zeroOrMore>
-            <element name="form">
-              <attribute name="id"><text/></attribute>
-              <optional>
-                <attribute name="multiple">
-                  <text />
-                </attribute>
-              </optional>
-
-              <zeroOrMore>
-                <ref name="input"/>
-              </zeroOrMore>
-            </element>
-          </zeroOrMore>
-        </element>
-      </optional>
     </element>
   </define>
   <define name="validation">
     <element name="validation">
       <attribute name="id"><text/></attribute>
       <ref name="dependencies"/>
+      <optional>
+        <ref name="node-info" />
+      </optional>
+
+      <optional>
+        <ref name="auth-filter" />
+      </optional>
     </element>
   </define>
 
@@ -118,6 +106,7 @@
           <value>radio</value>
           <value>select</value>
           <value>file</value>
+          <value>date</value>
         </choice>
       </attribute>
       <optional>
@@ -144,15 +133,19 @@
         <attribute name="provider"><text/></attribute>
       </optional>
 
+
       <optional>
         <element name="options">
           <zeroOrMore>
-            <element name="option">
-              <attribute name="value"><text/></attribute>
-              <text/>
-            </element>
+            <ref name="option" />
           </zeroOrMore>
         </element>
+      </optional>
+
+      <optional>
+          <zeroOrMore>
+            <ref name="option" />
+          </zeroOrMore>
       </optional>
 
       <optional>
@@ -202,6 +195,45 @@
     </element>
   </define>
 
+  <define name="form-array">
+    <element name="form-array">
+      <zeroOrMore>
+        <ref name="form" />
+      </zeroOrMore>
+    </element>
+  </define>
+
+  <define name="auth-filter">
+    <element name="auth-filter">
+      <attribute name="backend"><text/></attribute>
+      <zeroOrMore>
+        <ref name="param"/>
+      </zeroOrMore>
+      <empty/>
+    </element>
+  </define>
+
+  <define name="form">
+    <element name="form">
+      <attribute name="id"><text/></attribute>
+      <optional>
+        <attribute name="multiple">
+          <text />
+        </attribute>
+      </optional>
+
+      <oneOrMore>
+        <ref name="input"/>
+      </oneOrMore>
+    </element>
+  </define>
+
+  <define name="option">
+    <element name="option">
+      <attribute name="value"><text/></attribute>
+      <text/>
+    </element>
+  </define>
   <define name="condition">
     <element name="condition">
       <text />

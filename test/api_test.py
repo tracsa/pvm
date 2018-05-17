@@ -1035,42 +1035,32 @@ def test_task_validation(client):
     execution = ptr.proxy.execution.get()
 
     res = client.get('/v1/task/{}'.format(ptr.id), headers=make_auth(juan))
+    body = json.loads(res.data)['data']
 
     assert res.status_code == 200
-    print(json.dumps(json.loads(res.data), indent=2))
-
-
-    body = json.loads(res.data)['data']
     assert body == {
-        '_type': 'pointer',
-        'id': ptr.id,
-        'node_id': ptr.node_id,
-        'node_type': 'validation',
+      '_type': 'pointer',
+      'description': None,
+      'execution': {
+        '_type': 'execution',
         'description': None,
-        'execution': {
-            '_type': 'execution',
-            'description': None,
-            'id': execution.id,
-            'process_name': execution.process_name,
-            'name': None,
-        },
-        'form_array': [
-            {
-                'ref': '@validation',
-                'inputs': [
-                    {
-                        'name': 'work.task',
-                        'label': 'task',
-                        'value': None,
-                        'type': 'validation',
-                    },
-                ],
-            },
-        ],
+        'id': execution.id,
         'name': None,
+        'process_name': execution.process_name,
+      },
+      'fields': [
+        {
+          'label': 'task',
+          'ref': 'work.task',
+          'value': None
+        }
+      ],
+      'form_array': [],
+      'id': ptr.id,
+      'name': None,
+      'node_id': ptr.node_id,
+      'node_type': 'validation'
     }
-
-    assert False
 
 
 def test_execution_has_node_info(client):

@@ -785,7 +785,7 @@ def test_resistance_unexisteng_hierarchy_backend(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -807,7 +807,7 @@ def test_resistance_hierarchy_return(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -829,7 +829,7 @@ def test_resistance_hierarchy_item(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -851,7 +851,7 @@ def test_resistance_node_not_found(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -884,7 +884,7 @@ def test_true_condition_node(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'validation').get_state(),
+        'state': Xml.load(config, 'condition').get_state(),
     })
 
     handler.call({
@@ -929,7 +929,7 @@ def test_elseif_condition_node(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'validation').get_state(),
+        'state': Xml.load(config, 'condition').get_state(),
     })
 
     handler.call({
@@ -974,7 +974,7 @@ def test_false_condition_node(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'validation').get_state(),
+        'state': Xml.load(config, 'condition').get_state(),
     })
 
     handler.call({

@@ -195,7 +195,7 @@ def test_teardown(config, mongo):
         'user_identifier': manager.identifier,
         'input': [{
             '_type': 'form',
-            'id': 'mid-form',
+            'ref': 'mid-form',
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
@@ -237,7 +237,7 @@ def test_teardown(config, mongo):
                 },
                 'forms': [{
                     '_type': 'form',
-                    'id': 'mid-form',
+                    'ref': 'mid-form',
                     'state': 'valid',
                     'inputs': {
                         '_type': ':sorted_map',
@@ -294,7 +294,7 @@ def test_teardown(config, mongo):
                             },
                             'forms': [{
                                 '_type': 'form',
-                                'id': 'mid-form',
+                                'ref': 'mid-form',
                                 'state': 'valid',
                                 'inputs': {
                                     '_type': ':sorted_map',

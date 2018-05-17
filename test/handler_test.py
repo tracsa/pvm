@@ -659,7 +659,8 @@ def test_reject(config, mongo):
                                             },
                                             'inputs': {
                                                 'value': [{
-                                                    'ref': 'start-node.juan.0:work.task',
+                                                    'ref': 'start-node.'
+                                                           'juan.0:work.task',
                                                 }],
                                             },
                                         },

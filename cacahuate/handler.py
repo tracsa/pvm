@@ -133,23 +133,27 @@ class Handler:
                     node, actor, form, input = key.split('.')
                     index, ref = form.split(':')
 
-                    ikeys.add(('state.items.{node}.actors.items.{actor}.forms.{index}.inputs.items.{input}.state'.format(
-                        node=node,
-                        actor=actor,
-                        index=index,
-                        input=input,
-                    ), 'invalid'))
+                    ikeys.add(('state.items.{node}.actors.items.{actor}.'
+                               'forms.{index}.inputs.items.{input}.'
+                               'state'.format(
+                                    node=node,
+                                    actor=actor,
+                                    index=index,
+                                    input=input,
+                                ), 'invalid'))
 
-                    fkeys.add(('state.items.{node}.actors.items.{actor}.forms.{index}.state'.format(
-                        node=node,
-                        actor=actor,
-                        index=index,
-                    ), 'invalid'))
+                    fkeys.add(('state.items.{node}.actors.items.{actor}.'
+                               'forms.{index}.state'.format(
+                                    node=node,
+                                    actor=actor,
+                                    index=index,
+                                ), 'invalid'))
 
-                    akeys.add(('state.items.{node}.actors.items.{actor}.state'.format(
-                        node=node,
-                        actor=actor,
-                    ), 'invalid'))
+                    akeys.add(('state.items.{node}.actors.items.{actor}.'
+                               'state'.format(
+                                    node=node,
+                                    actor=actor,
+                                ), 'invalid'))
 
                     nkeys.add(('state.items.{node}.state'.format(
                         node=node,

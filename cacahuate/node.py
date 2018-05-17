@@ -136,15 +136,8 @@ class Node:
         i, ref = form.split(':')
 
         try:
-            node_state \
-                ['actors'] \
-                ['items'] \
-                [user] \
-                ['forms'] \
-                [int(i)] \
-                ['inputs'] \
-                ['items'] \
-                [field]
+            forms = node_state['actors']['items'][user]['forms']
+            forms[int(i)]['inputs']['items'][field]
 
             return True
         except KeyError:

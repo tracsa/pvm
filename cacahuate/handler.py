@@ -9,9 +9,10 @@ import pymongo
 from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
     MisconfiguredProvider
 from cacahuate.logger import log
-from cacahuate.models import Execution, Pointer, Activity, User
+from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, Exit, Action, Validation
+from cacahuate.grammar import Condition
 
 
 class Handler:
@@ -56,11 +57,18 @@ class Handler:
 
         # node's lifetime ends here
         self.teardown(node, pointer, user, input)
-        next_nodes = self.next(xmliter, node, execution)
+
+        # retrieve the state so we can use it in wakeup and to find next node
+        collection = self.get_mongo()[
+            self.config['MONGO_EXECUTION_COLLECTION']
+        ]
+        state = next(collection.find({'id': execution.id}))
+
+        next_nodes = self.next(xml, node, state, input)
 
         for node in next_nodes:
             # node's begining of life
-            pointer = self.wakeup(node, execution, channel)
+            pointer = self.wakeup(node, execution, channel, state)
 
             # async nodes don't return theirs pointers so they are not queued
             if pointer:
@@ -87,21 +95,119 @@ class Handler:
                 ),
             )
 
-    def next(self, xmliter, node, execution):
+    def next(self, xml, node, state, input):
         ''' Given a position in the script, return the next position '''
         if isinstance(node, Exit):
             return []
 
+        elif isinstance(node, Validation) and \
+                input[0]['inputs']['items']['response']['value'] == 'reject':
+            # find the data backwards
+            first_node_found = False
+            first_invalid_node = None
+            invalidated = set(
+                i['ref']
+                for i in input[0]['inputs']['items']['inputs']['value']
+            )
+
+            for element in iter(xml):
+                node = make_node(element)
+
+                more_fields = node.get_invalidated_fields(invalidated, state)
+
+                invalidated.update(more_fields)
+
+                if more_fields and not first_node_found:
+                    first_node_found = True
+                    first_invalid_node = node
+
+            comment = input[0]['inputs']['items']['comment']['value']
+
+            def get_update_keys(invalidated):
+                ikeys = set()
+                fkeys = set()
+                akeys = set()
+                nkeys = set()
+                ckeys = set()
+
+                for key in invalidated:
+                    node, actor, form, input = key.split('.')
+                    index, ref = form.split(':')
+
+                    ikeys.add(('state.items.{node}.actors.items.{actor}.'
+                               'forms.{index}.inputs.items.{input}.'
+                               'state'.format(
+                                    node=node,
+                                    actor=actor,
+                                    index=index,
+                                    input=input,
+                                ), 'invalid'))
+
+                    fkeys.add(('state.items.{node}.actors.items.{actor}.'
+                               'forms.{index}.state'.format(
+                                    node=node,
+                                    actor=actor,
+                                    index=index,
+                                ), 'invalid'))
+
+                    akeys.add(('state.items.{node}.actors.items.{actor}.'
+                               'state'.format(
+                                    node=node,
+                                    actor=actor,
+                                ), 'invalid'))
+
+                    nkeys.add(('state.items.{node}.state'.format(
+                        node=node,
+                    ), 'invalid'))
+
+                for key, _ in nkeys:
+                    key = '.'.join(key.split('.')[:-1]) + '.comment'
+                    ckeys.add((key, comment))
+
+                return fkeys | akeys | nkeys | ikeys | ckeys
+
+            updates = dict(get_update_keys(invalidated))
+
+            # update state
+            collection = self.get_mongo()[
+                self.config['MONGO_EXECUTION_COLLECTION']
+            ]
+            collection.update_one({
+                'id': state['id'],
+            }, {
+                '$set': updates,
+            })
+
+            return [first_invalid_node]
+
+        # Return next node by simple adjacency, works for actions and accepted
+        # validations
+
         try:
             # Return next node by simple adjacency
+            xmliter = iter(xml)
+            xmliter.find(lambda e: e.getAttribute('id') == node.id)
+
             element = next(xmliter)
+
+            context = None
+            while element.tagName == 'if':
+                if context is None:
+                    context = Condition(state['state'])
+
+                condition = xmliter.get_next_condition()
+
+                if not context.parse(condition):
+                    xmliter.expand(element)
+
+                element = next(xmliter)
 
             return [make_node(element)]
         except StopIteration:
             # End of process
             return []
 
-    def wakeup(self, node, execution, channel):
+    def wakeup(self, node, execution, channel, state):
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
 
@@ -114,7 +220,7 @@ class Handler:
         ))
 
         # notify someone
-        notified_users = self.notify_users(node, pointer, channel)
+        notified_users = self.notify_users(node, pointer, channel, state)
 
         # update registry about this pointer
         collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
@@ -178,6 +284,7 @@ class Handler:
                     node=node.id,
                     identifier=user.identifier,
                 ): actor_json,
+                'state.items.{node}.state'.format(node=node.id): 'valid',
             },
         })
 
@@ -206,8 +313,8 @@ class Handler:
 
         execution.delete()
 
-    def notify_users(self, node, pointer, channel):
-        users = node.get_actors(self.config, pointer.proxy.execution.get())
+    def notify_users(self, node, pointer, channel, state):
+        users = node.get_actors(self.config, state)
 
         if type(users) != list:
             raise MisconfiguredProvider('Provider returned non list')
@@ -293,9 +400,6 @@ class Handler:
 
         for pointer in execution.proxy.pointers.get():
             pointer.delete()
-
-        for activity in execution.proxy.actors.get():
-            activity.delete()
 
         collection = self.get_mongo()[
             self.config['MONGO_EXECUTION_COLLECTION']

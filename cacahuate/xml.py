@@ -16,7 +16,7 @@ XML_ATTRIBUTES = {
     'description': lambda x: x,
 }
 
-NODES = ('action', 'validation', 'exit')
+NODES = ('action', 'validation', 'exit', 'if')
 
 
 class Xml:
@@ -110,12 +110,26 @@ class Xml:
                     'node matching the given condition was not found'
                 )
 
+            def get_next_condition(self):
+                for event, node in self.parser:
+                    if event == pulldom.START_ELEMENT and \
+                            node.tagName == 'condition':
+                        self.parser.expandNode(node)
+                        condition = get_text(node)
+
+                        return condition
+
+            def expand(self, node):
+                self.parser.expandNode(node)
+
             def __next__(self):
                 try:
                     for event, node in self.parser:
                         if event == pulldom.START_ELEMENT and \
                                 node.tagName in iterables:
-                            self.parser.expandNode(node)
+
+                            if not node.tagName == 'if':
+                                self.parser.expandNode(node)
 
                             return node
                 except SAXParseException:

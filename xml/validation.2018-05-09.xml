@@ -26,6 +26,16 @@
       <dependencies>
         <dep>work.task</dep>
       </dependencies>
+      <node-info>
+        <name>Aprobacion gerente reserva </name>
+        <description>aprobar reserva</description>
+      </node-info>
+
+      <auth-filter backend="quemado">
+        <param name="operation">Transfer</param>
+        <param name="relation">gerente</param>
+        <param name="inventario_destino" type="ref">form#transfer_form.inventario_destino</param>
+      </auth-filter>
     </validation>
 
     <action id="final-node">

@@ -129,7 +129,7 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
-    def get_actors(self, config, execution):
+    def get_actors(self, config, state):
         if not self.auth_params:
             return []
 
@@ -143,30 +143,58 @@ class Node:
         hierarchy_provider = HiPro(config)
 
         return hierarchy_provider.find_users(
-            **self.resolve_params(execution)
+            **self.resolve_params(state)
         )
 
-    def resolve_params(self, execution=None):
+    def resolve_params(self, state=None):
         computed_params = {}
 
         for param in self.auth_params:
-            if execution is not None and param.type == 'ref':
+            if state is not None and param.type == 'ref':
                 user_ref = param.value.split('#')[1].strip()
 
                 try:
-                    actor = next(
-                        execution.proxy.actors.q().filter(ref=user_ref)
-                    )
+                    adic = state['state']['items'][user_ref]['actors']['items']
+                    actor = adic[next(iter(adic.keys()))]
 
-                    value = actor.proxy.user.get().identifier
+                    value = actor['user']['identifier']
                 except StopIteration:
                     value = None
             else:
                 value = param.value
 
-            computed_params[param.name] = value
+    def in_state(self, ref, node_state):
+        ''' returns true if this ref is part of this state '''
+        n, user, form, field = ref.split('.')
 
-        return computed_params
+        i, ref = form.split(':')
+
+        try:
+            forms = node_state['actors']['items'][user]['forms']
+            forms[int(i)]['inputs']['items'][field]
+
+            return True
+        except KeyError:
+            return False
+
+    def get_invalidated_fields(self, invalidated, state):
+        ''' debe devolver un conjunto de referencias a campos que deben ser
+        invalidados, a partir de campos invalidados previamente '''
+        node_state = state['state']['items'][self.id]
+
+        if node_state['state'] == 'unfilled':
+            return []
+
+        found_refs = []
+
+        for ref in invalidated:
+            # for refs in this node's forms
+            if self.in_state(ref, node_state):
+                found_refs.append(ref)
+
+        found_refs += self.dependent_refs(invalidated, node_state)
+
+        return found_refs
 
     def log_entry(self, execution):
         return {
@@ -215,6 +243,10 @@ class Action(Node):
     def is_async(self):
         return True
 
+    def dependent_refs(self, invalidated, node_state):
+        ''' finds dependencies of the invalidated set in this node '''
+        return []
+
     def validate_form_spec(self, form_specs, associated_data) -> dict:
         ''' Validates the given data against the spec contained in form.
             In case of failure raises an exception. In case of success
@@ -257,7 +289,6 @@ class Action(Node):
 
         collected_forms = []
         errors = []
-
         index = 0
         form_array = json_data.get('form_array', [])
 
@@ -308,21 +339,41 @@ class Validation(Node):
     def validate_field(self, field, index):
         if type(field) != dict:
             raise RequiredDictError(
-                'fields.{}'.format(index),
-                'request.body.fields.{}'.format(index)
+                'inputs.{}'.format(index),
+                'request.body.inputs.{}'.format(index)
             )
 
         if 'ref' not in field:
             raise RequiredInputError(
-                'fields.{}.ref'.format(index),
-                'request.body.fields.{}.ref'.format(index)
+                'inputs.{}.ref'.format(index),
+                'request.body.inputs.{}.ref'.format(index)
             )
 
-        if field['ref'] not in self.dependencies:
+        try:
+            node, actor, ref, input = field['ref'].split('.')
+            index, ref = ref.split(':')
+        except ValueError:
             raise InvalidInputError(
-                'fields.{}.ref'.format(index),
-                'request.body.fields.{}.ref'.format(index)
+                'inputs.{}.ref'.format(index),
+                'request.body.inputs.{}.ref'.format(index)
             )
+
+        if not self.in_dependencies(field['ref']):
+            raise InvalidInputError(
+                'inputs.{}.ref'.format(index),
+                'request.body.inputs.{}.ref'.format(index)
+            )
+
+    def in_dependencies(self, ref):
+        node, user, form, field = ref.split('.')
+        index, ref = form.split(':')
+        fref = ref + '.' + field
+
+        for dep in self.dependencies:
+            if dep == fref:
+                return True
+
+        return False
 
     def validate_input(self, json_data):
         if 'response' not in json_data:
@@ -332,13 +383,13 @@ class Validation(Node):
             raise InvalidInputError('response', 'request.body.response')
 
         if json_data['response'] == 'reject':
-            if 'fields' not in json_data:
-                raise RequiredInputError('fields', 'request.body.fields')
+            if 'inputs' not in json_data:
+                raise RequiredInputError('inputs', 'request.body.inputs')
 
-            if type(json_data['fields']) is not list:
-                raise RequiredListError('fields', 'request.body.fields')
+            if type(json_data['inputs']) is not list:
+                raise RequiredListError('inputs', 'request.body.inputs')
 
-            for index, field in enumerate(json_data['fields']):
+            for index, field in enumerate(json_data['inputs']):
                 errors = []
                 try:
                     self.validate_field(field, index)
@@ -348,11 +399,38 @@ class Validation(Node):
                 if errors:
                     raise BadRequest(errors)
 
-        return {
-            k: json_data[k]
-            for k in ('response', 'comment', 'fields')
-            if k in json_data
-        }
+        return [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': json_data['response'],
+                    },
+                    'comment': {
+                        'value': json_data['comment'],
+                    },
+                    'inputs': {
+                        'value': json_data.get('inputs'),
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }]
+
+    def dependent_refs(self, invalidated, node_state):
+        ''' finds dependencies of the invalidated set in this node '''
+        refs = set()
+
+        for inref in invalidated:
+            if self.in_dependencies(inref):
+                refs.add('{node}.{actor}.0:approval.response'.format(
+                    node=self.id,
+                    actor=next(iter(node_state['actors']['items'].keys())),
+                ))
+
+        return refs
 
 
 class Exit(Node):

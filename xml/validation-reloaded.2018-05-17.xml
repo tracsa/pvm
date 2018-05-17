@@ -1,0 +1,68 @@
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-05-17</date>
+    <name>Validación compleja</name>
+    <public>true</public>
+    <description>Para probar algunos casos en la validación</description>
+  </process-info>
+  <process>
+    <action id="node1">
+      <node-info>
+        <name>Primer paso</name>
+        <description>Resolver una tarea</description>
+      </node-info>
+      <form-array>
+        <form id="form1">
+          <input label="task" type="text" name="task"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <action id="node2">
+      <node-info>
+        <name>Segundo paso</name>
+        <description>Resolver una tarea</description>
+      </node-info>
+      <form-array>
+        <form id="form2">
+          <input label="task" type="text" name="task">
+            <dependencies>
+              <dep>form1.task</dep>
+            </dependencies>
+          </input>
+        </form>
+      </form-array>
+    </action>
+
+    <action id="node3">
+      <node-info>
+        <name>Tercer paso</name>
+        <description>Resolver una tarea</description>
+      </node-info>
+      <form-array>
+        <form id="form3">
+          <input label="task" type="text" name="task"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <validation id="node4" >
+      <dependencies>
+        <dep>form1.task</dep>
+      </dependencies>
+      <node-info>
+        <name>Aprobacion gerente reserva </name>
+        <description>aprobar reserva</description>
+      </node-info>
+    </validation>
+
+    <action id="node5">
+      <form-array>
+        <form id="confirm">
+          <input type="text" name="exit"></input>
+        </form>
+      </form-array>
+    </action>
+  </process>
+</process-spec>

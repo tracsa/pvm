@@ -9,12 +9,13 @@ import re
 from cacahuate.errors import ElementNotFound, IncompleteBranch, \
     ValidationErrors, RequiredInputError, InvalidInputError, InputError, \
     RequiredListError, RequiredDictError
-from cacahuate.grammar import Condition
 from cacahuate.inputs import make_input
 from cacahuate.logger import log
 from cacahuate.utils import user_import
 from cacahuate.xml import get_text, NODES
 from cacahuate.http.errors import BadRequest
+from cacahuate.jsontypes import Map
+from cacahuate.jsontypes import SortedMap
 
 
 class AuthParam:
@@ -65,6 +66,7 @@ class Form:
 
                 input_description = input.to_json()
                 input_description['value'] = value
+                input_description['value_caption'] = input.make_caption(value)
 
                 collected_inputs.append(input_description)
             except InputError as e:
@@ -73,7 +75,11 @@ class Form:
         if errors:
             raise ValidationErrors(errors)
 
-        return collected_inputs
+        return {
+            '_type': 'form',
+            'ref': self.ref,
+            'inputs': SortedMap(collected_inputs, key='name').to_json(),
+        }
 
 
 class Node:
@@ -129,8 +135,17 @@ class Node:
             'finished_at': None,
             'execution': execution.to_json(),
             'node': self.to_json(),
-            'actors': [],
+            'actors': Map([], key='identifier').to_json(),
             'process_id': execution.process_name,
+        }
+
+    def get_state(self):
+        return {
+            '_type': 'node',
+            'id': self.id,
+            'comment': '',
+            'state': 'unfilled',
+            'actors': Map([], key='identifier').to_json(),
         }
 
     def to_json(self):
@@ -161,19 +176,18 @@ class Action(Node):
     def is_async(self):
         return True
 
-    def resolve_params(self, execution=None):
+    def resolve_params(self, state=None):
         computed_params = {}
 
         for param in self.auth_params:
-            if execution is not None and param.type == 'ref':
+            if state is not None and param.type == 'ref':
                 user_ref = param.value.split('#')[1].strip()
 
                 try:
-                    actor = next(
-                        execution.proxy.actors.q().filter(ref=user_ref)
-                    )
+                    adic = state['state']['items'][user_ref]['actors']['items']
+                    actor = adic[next(iter(adic.keys()))]
 
-                    value = actor.proxy.user.get().identifier
+                    value = actor['user']['identifier']
                 except StopIteration:
                     value = None
             else:
@@ -183,7 +197,7 @@ class Action(Node):
 
         return computed_params
 
-    def get_actors(self, config, execution):
+    def get_actors(self, config, state):
         if not self.auth_params:
             return []
 
@@ -197,7 +211,7 @@ class Action(Node):
         hierarchy_provider = HiPro(config)
 
         return hierarchy_provider.find_users(
-            **self.resolve_params(execution)
+            **self.resolve_params(state)
         )
 
     def validate_form_spec(self, form_specs, associated_data) -> dict:
@@ -205,7 +219,7 @@ class Action(Node):
             In case of failure raises an exception. In case of success
             returns the validated data.
         '''
-        collected_specs = []
+        collected_forms = []
 
         min, max = form_specs.multiple
 
@@ -226,12 +240,12 @@ class Action(Node):
             }])
 
         for index, form in associated_data:
-            collected_specs.append(form_specs.validate(
+            collected_forms.append(form_specs.validate(
                 index,
                 form.get('data', {})
             ))
 
-        return collected_specs
+        return collected_forms
 
     def validate_input(self, json_data):
         if 'form_array' in json_data and type(json_data['form_array']) != list:
@@ -261,7 +275,7 @@ class Action(Node):
 
             try:
                 for data in self.validate_form_spec(form_specs, forms):
-                    collected_forms.append((ref, data))
+                    collected_forms.append(data)
             except ValidationErrors as e:
                 errors += e.errors
 

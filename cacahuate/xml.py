@@ -5,8 +5,8 @@ from xml.dom.minidom import Element
 from xml.sax._exceptions import SAXParseException
 from jinja2 import Template
 
-from .errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from .mark import comment
+from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
+from cacahuate.jsontypes import SortedMap
 
 XML_ATTRIBUTES = {
     'public': lambda a: a == 'true',
@@ -32,12 +32,9 @@ class Xml:
         self.versions = [self.version]
         self.filename = filename
         self.config = config
-        self.parser = pulldom.parse(
-            open(os.path.join(config['XML_PATH'], filename))
-        )
 
         try:
-            info_node = next(self)
+            info_node = self.get_info_node()
         except StopIteration:
             raise MalformedProcess('This process lacks the process-info node')
 
@@ -53,18 +50,6 @@ class Xml:
                 )
 
             setattr(self, attr, func(get_text(node)))
-
-        self.start_node_consumed = True
-
-        try:
-            self.start_node = self.find(
-                lambda e: e.tagName == 'action'
-            )
-            self.start_node_consumed = False
-        except ElementNotFound:
-            raise MalformedProcess(
-                'Process does not have nodes'
-            )
 
     @classmethod
     def load(cls, config: dict, common_name: str, direct=False) -> TextIO:
@@ -103,57 +88,75 @@ class Xml:
         else:
             raise ProcessNotFound(common_name)
 
-    def __next__(self):
+    def make_iterator(self, iterables):
+
+        class Iter():
+
+            def __init__(self, config, filename):
+                self.parser = pulldom.parse(
+                    open(os.path.join(config['XML_PATH'], filename))
+                )
+
+            def find(self, testfunc: Callable[[Element], bool]) -> Element:
+                ''' Given an interator returned by the previous function, tries
+                to find the first node matching the given condition '''
+                # Since we already consumed the start node on initialization,
+                # this fix is needed for find() to be stable
+                for element in self:
+                    if testfunc(element):
+                        return element
+
+                raise ElementNotFound(
+                    'node matching the given condition was not found'
+                )
+
+            def __next__(self):
+                try:
+                    for event, node in self.parser:
+                        if event == pulldom.START_ELEMENT and \
+                                node.tagName in iterables:
+                            self.parser.expandNode(node)
+
+                            return node
+                except SAXParseException:
+                    raise MalformedProcess
+
+                raise StopIteration
+
+            def __iter__(self):
+                return self
+
+        return Iter(self.config, self.filename)
+
+    def get_info_node(self):
+        return next(self.make_iterator('process-info'))
+
+    def __iter__(self):
         ''' Returns an inerator over the nodes and edges of a process defined
         by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed
         for this task. '''
-
-        ITERABLES = ('process-info', ) + NODES
-
-        try:
-            for event, node in self.parser:
-                if event == pulldom.START_ELEMENT and \
-                        node.tagName in ITERABLES:
-                    self.parser.expandNode(node)
-
-                    return node
-        except SAXParseException:
-            raise MalformedProcess
-
-        raise StopIteration
-
-    def __iter__(self):
-        return self
-
-    def find(self, testfunc: Callable[[Element], bool]) -> Element:
-        ''' Given an interator returned by the previous function, tries to find
-        the first node matching the given condition '''
-        # Since we already consumed the start node on initialization, this
-        # fix is needed for find() to be stable
-        if not self.start_node_consumed:
-            self.start_node_consumed = True
-
-            if testfunc(self.start_node):
-                return self.start_node
-
-        for element in self:
-            if testfunc(element):
-                return element
-
-        raise ElementNotFound(
-            'node matching the given condition was not found'
-        )
+        return self.make_iterator(NODES)
 
     def make_name(self, collected_forms):
-        context = dict(map(
-            lambda i: (i[0], dict(map(
-                lambda j: (j['name'], j['value']),
-                i[1]
-            ))),
-            collected_forms
-        ))
+        context = dict()
+
+        for form in collected_forms:
+            form_dict = dict()
+
+            for name, input in form['inputs']['items'].items():
+                form_dict[name] = input['value_caption']
+
+            context[form['ref']] = form_dict
 
         return Template(self.name).render(**context)
+
+    def get_state(self):
+        from cacahuate.node import make_node  # noqa
+
+        return SortedMap(map(
+            lambda n: make_node(n).get_state(),
+            iter(self)
+        ), key='id').to_json()
 
     @classmethod
     def list(cls, config):

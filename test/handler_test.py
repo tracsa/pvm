@@ -744,19 +744,16 @@ def test_reject(config, mongo):
     }
 
 
-@pytest.mark.skip
 def test_reject_with_dependencies():
     assert False, 'dependencies are invalidated'
 
 
-@pytest.mark.skip
 def test_rejected_doesnt_repeat():
     ''' asserts that a pointer moved to the past doesn't repeat a task that
     wasn't invalidated by the rejection '''
     assert False
 
 
-@pytest.mark.skip
 def test_rejected_repeats():
     ''' asserts that a pointer moved to the past repeats the nodes that were
     invalidated '''

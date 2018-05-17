@@ -1,0 +1,46 @@
+<process-spec>
+  <process-info>
+    <author>ramiggu</author>
+    <date>2018-05-17</date>
+    <name>condition Process</name>
+    <public>false</public>
+    <description>Smallest Condition process</description>
+  </process-info>
+  <process>
+    <action id="start-node">
+      <form-array>
+        <form id="mistery">
+          <input type="text" name="password"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <if id="condition-node">
+      <condition>mistery.password == "abrete sésamo"</condition>
+      <body>
+        <action id="mistical-node">
+          <form-array>
+            <form id="mistical-form">
+              <input type="text" name="answer" default="42" />
+            </form>
+          </form-array>
+        </action>
+      </body>
+    </if>
+
+    <if id="condition-node">
+      <condition>mistery.password == "123456"</condition>
+      <body>
+        <action id="123456-node">
+          <form-array>
+            <form id="123456-form">
+              <input type="text" name="answer" default="oh boy, please don't" />
+            </form>
+          </form-array>
+        </action>
+      </body>
+    </if>
+
+    <action id="final-node"></action>
+  </process>
+</process-spec>

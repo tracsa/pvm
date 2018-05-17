@@ -1,25 +1,111 @@
 import pytest
 
 from cacahuate.grammar import Condition
-from cacahuate.models import Execution
 
 
-@pytest.mark.skip
-def test_condition():
-    exc = Execution().save()
+def state_generator(actions):
+    state = {
+        '_type': ':sorted_map',
+        'items': {},
+        'item_order': [],
+    }
 
-    form1 = Questionaire(ref='form1').save()
-    form1.proxy.execution.set(exc)
-    input1 = Input(name='answer', value='yes').save()
-    input1.proxy.form.set(form1)
+    for action in actions:
+        node, actor, form_ref, input_name, value = action
 
-    form2 = Questionaire(ref='form2', data={'answer': 'no'}).save()
-    form2.proxy.execution.set(exc)
-    input2 = Input(name='answer', value='no').save()
-    input2.proxy.form.set(form2)
+        if node not in state['items']:
+            state['items'][node] = {
+                '_type': 'node',
+                'id': node,
+                'state': 'valid',
+                'comment': '',
+                'actors': {
+                    '_type': ':map',
+                    'items': {},
+                },
+            }
 
-    con = Condition(exc)
+            state['item_order'].append(node)
 
-    assert con.parse('form1.answer=="yes"')
-    assert not con.parse('form1.answer == "no"')
-    assert con.parse('form2.answer =="no"')
+        node = state['items'][node]
+
+        if actor not in node['actors']['items']:
+            node['actors']['items'][actor] = {
+                '_type': 'actor',
+                'forms': []
+            }
+
+        actor = node['actors']['items'][actor]
+
+        form = {
+            'ref': form_ref,
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': [
+                    input_name,
+                ],
+                'items': {
+                    input_name: {
+                        'type': 'text',
+                        'value': value,
+                    },
+                },
+            },
+        }
+
+        actor['forms'].append(form)
+
+    return state
+
+
+def test_condition(config):
+    state = state_generator([
+        ('first-node', 'juan', 'first-form', 'param1', 'value1'),
+        ('first-node', 'pedro', 'second-form', 'param1', 'value1'),
+        ('first-node', 'pedro', 'second-form', 'param2', 'value2'),
+    ])
+
+    con = Condition(state)
+
+    assert con.parse('first-form.param1 == "value1"')
+    assert con.parse('second-form.param1 == "value1"')
+    assert con.parse('second-form.param2 == "value2"')
+
+    assert con.parse('first-form.param1 != "nonsense"')
+    assert not con.parse('first-form.param1 == "nonsense"')
+
+    assert con.parse('first-form.param1 == second-form.param1')
+    assert not con.parse('first-form.param1 == second-form.param2')
+
+
+def test_aritmetic_operators(config):
+    state = state_generator([
+        ('first-node', 'juan', 'set', 'A', '-1'),
+        ('first-node', 'juan', 'set', 'B', '1'),
+        ('first-node', 'juan', 'set', 'C', '1.0'),
+        ('first-node', 'juan', 'set', 'D', '1.5'),
+    ])
+
+    con = Condition(state)
+
+    assert con.parse('set.A < set.B')
+    assert not con.parse('set.A > set.B')
+
+    assert not con.parse('set.B < set.C')
+    assert con.parse('set.B <= set.C')
+
+    assert con.parse('set.C < set.D')
+
+
+def test_logic_operators(config):
+    state = state_generator([
+        ('first-node', 'juan', 'set', 'A', 'true'),
+        ('first-node', 'juan', 'set', 'B', ''),
+    ])
+
+    con = Condition(state)
+
+    assert con.parse('set.A || set.B')
+    assert not con.parse('set.A && set.B')
+    assert not con.parse('set.A && set.B')

@@ -2,86 +2,67 @@ import pytest
 
 from cacahuate.grammar import Condition
 
-
-def test_condition(config):
+def state_generator(actions):
     state = {
         '_type': ':sorted_map',
-        'items': {
-            'first-node': {
-                '_type': 'node',
-                'id': 'first-node',
-                'state': 'valid',
-                'comment': '',
-                'actors': {
-                    '_type': ':map',
-                    'items': {
-                        'juan': {
-                            '_type': 'actor',
-                            'forms': [
-                                {
-                                    'ref': 'first-form',
-                                    '_type': 'form',
-                                    'inputs': {
-                                        '_type': ':sorted_map',
-                                        'item_order': [
-                                            'param1',
-                                        ],
-                                        'items': {
-                                            'param1': {
-                                                'type': 'text',
-                                                'value': 'value1'
-                                            },
-                                        },
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                },
-            },
-            'second-node': {
-                '_type': 'node',
-                'id': 'second-node',
-                'state': 'valid',
-                'comment': '',
-                'actors': {
-                    '_type': ':map',
-                    'items': {
-                        'pedro': {
-                            '_type': 'actor',
-                            'forms': [
-                                {
-                                    'ref': 'second-form',
-                                    '_type': 'form',
-                                    'inputs': {
-                                        '_type': ':sorted_map',
-                                        'item_order': [
-                                            'param1',
-                                            'param2',
-                                        ],
-                                        'items': {
-                                            'param1': {
-                                                'type': 'text',
-                                                'value': 'value1'
-                                            },
-                                            'param2': {
-                                                'type': 'text',
-                                                'value': 'value2'
-                                            },
-                                        },
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                },
-            },
-        },
-        'item_order': [
-            'first-node',
-            'second-node',
-        ],
+        'items': {},
+        'item_order': [],
     }
+
+    for action in actions:
+        node, actor, form_ref, input_name, value = action
+
+        if not node in state['items']:
+            state['items'][node] = {
+                '_type': 'node',
+                'id': node,
+                'state': 'valid',
+                'comment': '',
+                'actors': {
+                    '_type': ':map',
+                    'items': {},
+                },
+            }
+
+            state['item_order'].append(node)
+
+        node = state['items'][node]
+
+        if not actor in node['actors']['items']:
+            node['actors']['items'][actor] = {
+                '_type': 'actor',
+                'forms': []
+            }
+
+        actor = node['actors']['items'][actor]
+
+        form = {
+            'ref': form_ref,
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': [
+                    input_name,
+                ],
+                'items': {
+                    input_name: {
+                        'type': 'text',
+                        'value': value,
+                    },
+                },
+            },
+        }
+
+        actor['forms'].append(form)
+
+    return state
+
+def test_condition(config):
+    state = state_generator([
+        ('first-node', 'juan', 'first-form', 'param1', 'value1'),
+        ('first-node', 'pedro', 'second-form', 'param1', 'value1'),
+        ('first-node', 'pedro', 'second-form', 'param2', 'value2'),
+    ])
 
     con = Condition(state)
 
@@ -97,56 +78,12 @@ def test_condition(config):
 
 
 def test_aritmetic_operators(config):
-    state = {
-        '_type': ':sorted_map',
-        'items': {
-            'first-node': {
-                '_type': 'node',
-                'id': 'first-node',
-                'comment': '',
-                'actors': {
-                    '_type': ':map',
-                    'items': {
-                        'juan': {
-                            '_type': 'actor',
-                            'forms': [
-                                {
-                                    'ref': 'set',
-                                    '_type': 'form',
-                                    'inputs': {
-                                        '_type': ':sorted_map',
-                                        'item_order': [
-                                            'A',
-                                            'B',
-                                            'C',
-                                            'D',
-                                        ],
-                                        'items': {
-                                            'A': {
-                                                'value': -1
-                                            },
-                                            'B': {
-                                                'value': 1
-                                            },
-                                            'C': {
-                                                'value': 1.0
-                                            },
-                                            'D': {
-                                                'value': 1.5
-                                            },
-                                        },
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                },
-            },
-        },
-        'item_order': [
-            'set',
-        ],
-    }
+    state = state_generator([
+        ('first-node', 'juan', 'set', 'A', '-1'),
+        ('first-node', 'juan', 'set', 'B', '1'),
+        ('first-node', 'juan', 'set', 'C', '1.0'),
+        ('first-node', 'juan', 'set', 'D', '1.5'),
+    ])
 
     con = Condition(state)
 

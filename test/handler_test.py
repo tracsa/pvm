@@ -750,20 +750,202 @@ def test_reject(config, mongo):
     }
 
 
-def test_reject_with_dependencies():
-    assert False, 'dependencies are invalidated'
+def test_reject_with_dependencies(config, mongo):
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation-reloaded.2018-05-17.xml', 'node1')
+    channel = MagicMock()
+    execution = ptr.proxy.execution.get()
 
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': Xml.load(config, 'validation-reloaded').get_state(),
+    })
 
-def test_rejected_doesnt_repeat():
-    ''' asserts that a pointer moved to the past doesn't repeat a task that
-    wasn't invalidated by the rejection '''
-    assert False
+    # first call to node1
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'form1',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        'value': '1',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node2'
 
+    # first call to node2
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'form2',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        'value': '1',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node3'
 
-def test_rejected_repeats():
-    ''' asserts that a pointer moved to the past repeats the nodes that were
-    invalidated '''
-    assert False
+    # first call to node3
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'form3',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        'value': '1',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node4'
+
+    # first call to validation
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'reject',
+                    },
+                    'comment': {
+                        'value': 'I do not like it',
+                    },
+                    'inputs': {
+                        'value': [{
+                            'ref': 'node1.juan.0:form1.task',
+                        }],
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node1'
+
+    # second call to node1
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'form1',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        'value': '2',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node2'
+
+    # second call to node2
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'reject',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node4'
+
+    # second call to validation
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'reject',
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node5'
+
+    # first call to last node
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'reject',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    assert Pointer.get_all() == []
+
 
 
 @pytest.mark.skip

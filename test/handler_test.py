@@ -1160,7 +1160,7 @@ def test_resistance_unexisteng_hierarchy_backend(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -1182,7 +1182,7 @@ def test_resistance_hierarchy_return(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -1204,7 +1204,7 @@ def test_resistance_hierarchy_item(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -1226,7 +1226,7 @@ def test_resistance_node_not_found(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -1259,7 +1259,7 @@ def test_true_condition_node(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'validation').get_state(),
+        'state': Xml.load(config, 'condition').get_state(),
     })
 
     handler.call({
@@ -1304,7 +1304,7 @@ def test_elseif_condition_node(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'validation').get_state(),
+        'state': Xml.load(config, 'condition').get_state(),
     })
 
     handler.call({
@@ -1349,7 +1349,7 @@ def test_false_condition_node(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'validation').get_state(),
+        'state': Xml.load(config, 'condition').get_state(),
     })
 
     handler.call({
@@ -1381,3 +1381,118 @@ def test_false_condition_node(config, mongo):
 
     new_ptr = Pointer.get_all()[0]
     assert new_ptr.node_id == 'final-node'
+
+
+def test_anidated_conditions(config, mongo):
+    ''' conditional node won't be executed if its condition is false '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('anidated-conditions.2018-05-17.xml', 'a')
+    channel = MagicMock()
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'anidated-conditions').get_state(),
+    })
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'a',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['a'],
+                'items': {
+                    'a': {'value': '1'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'b'
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'b',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['b'],
+                'items': {
+                    'b': {'value': '0.00004'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'c'
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'c',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['c'],
+                'items': {
+                    'c': {'value': '-1'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'e'
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'e',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['e'],
+                'items': {
+                    'e': {'value': '-1'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'f'
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'f',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['f'],
+                'items': {
+                    'f': {'value': '-1'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'g'

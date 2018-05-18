@@ -89,7 +89,6 @@
 
   <define name="if">
     <element name="if">
-      <attribute name="id"><text/></attribute>
       <ref name="condition"/>
       <ref name="body" />
     </element>

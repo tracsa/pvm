@@ -185,9 +185,6 @@
 
   <define name="form-array">
     <element name="form-array">
-       <optional>
-        <attribute name="id"><text/></attribute>
-      </optional>
       <zeroOrMore>
         <ref name="form" />
       </zeroOrMore>

@@ -76,3 +76,4 @@ TODO
 * hacer validación intensiva de xml:
   - dependencias existen arriba en el xml
   - id de nodos son únicos
+* guardar en un store privado por hash los xml al iniciar proceso, obsoleta el sistema de versiones (borrar toda referencia a la versión)

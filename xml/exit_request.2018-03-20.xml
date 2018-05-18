@@ -8,6 +8,7 @@
   </process-info>
   <process>
     <action id="requester" >
+      <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="exit-form">
           <input type="text" name="reason" required="required" />

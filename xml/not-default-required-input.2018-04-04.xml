@@ -9,6 +9,7 @@
   </process-info>
   <process>
     <action id="inputs-node" >
+      <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="auth-form">
           <input

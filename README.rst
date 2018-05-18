@@ -65,12 +65,14 @@ You can use any wsgi-compliant server, like gunicorn, to run this:
 TODO
 ----
 
-* desarrollar campo enum en Coralillo y usar para models.Field
-* que las condiciones indiquen el nodo donde está el formulario
 * añadir endpoint /v1/pointer y usar consultas
-* date input solo debe recibir yyyy-mm-dd
 * hacer obsoleto el validate_user
 * cambiar api de LoginProvider y HierarchyProvider, no deben guardar usuarios
 * auth backends no deben crear usuarios, solo devolver objetos calificados
-* que el nodo exit no necesite ID
 * quitar refs de tres niveles en params de auth filter, guardar un estado optimizado
+
+* date input solo debe recibir yyyy-mm-dd
+
+* hacer validación intensiva de xml:
+  - dependencias existen arriba en el xml
+  - id de nodos son únicos

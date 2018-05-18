@@ -9,6 +9,7 @@
   </process-info>
   <process>
     <action id="start-node">
+      <auth-filter backend="anyone"></auth-filter>
       <node-info>
         <name>Primer paso</name>
         <description>Resolver una tarea</description>
@@ -37,6 +38,7 @@
     </action>
 
     <action id="final-node">
+      <auth-filter backend="hardcoded"></auth-filter>
     </action>
   </process>
 </process-spec>

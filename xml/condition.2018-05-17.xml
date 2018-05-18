@@ -8,6 +8,7 @@
   </process-info>
   <process>
     <action id="start-node">
+      <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="mistery">
           <input type="text" name="password"></input>
@@ -19,6 +20,7 @@
       <condition>mistery.password == "abrete sésamo"</condition>
       <body>
         <action id="mistical-node">
+          <auth-filter backend="hardcoded"></auth-filter>
           <form-array>
             <form id="mistical-form">
               <input type="text" name="answer" default="42" />
@@ -32,6 +34,7 @@
       <condition>mistery.password == "123456"</condition>
       <body>
         <action id="123456-node">
+          <auth-filter backend="hardcoded"></auth-filter>
           <form-array>
             <form id="123456-form">
               <input type="text" name="answer" default="oh boy, please don't" />
@@ -41,6 +44,8 @@
       </body>
     </if>
 
-    <action id="final-node"></action>
+    <action id="final-node">
+      <auth-filter backend="hardcoded"></auth-filter>
+    </action>
   </process>
 </process-spec>

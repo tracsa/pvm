@@ -22,7 +22,7 @@
         <param name="reason" type="ref">form#requester.exit-form.reason</param>
       </auth-filter>
 
-      <form-array>
+      <form-array id="choice_fom">
         <form id="auth-form">
           <input type="radio" name="auth" required="required">
             <options>

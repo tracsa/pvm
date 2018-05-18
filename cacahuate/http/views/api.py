@@ -187,13 +187,12 @@ def continue_process():
 
     execution_id = request.json['execution_id']
     node_id = request.json['node_id']
-
     try:
         execution = Execution.get_or_exception(execution_id)
     except ModelNotFoundError:
         raise BadRequest([{
             'detail': 'execution_id is not valid',
-            'code': 'validation.invalid',
+            'code': 'validation.invalidssss',
             'where': 'request.body.execution_id',
         }])
 
@@ -201,6 +200,7 @@ def continue_process():
 
     try:
         continue_point = make_node(
+
             iter(xml).find(lambda e: e.getAttribute('id') == node_id)
         )
     except ElementNotFound as e:

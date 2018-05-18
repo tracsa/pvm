@@ -142,13 +142,6 @@
           </zeroOrMore>
         </element>
       </optional>
-
-      <optional>
-          <zeroOrMore>
-            <ref name="option" />
-          </zeroOrMore>
-      </optional>
-
       <optional>
         <ref name="dependencies"/>
       </optional>

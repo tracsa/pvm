@@ -90,7 +90,7 @@ class Handler:
                 body=json.dumps({
                     'command': 'step',
                     'pointer_id': pointer.id,
-                    'user_identifier': None,
+                    'user_identifier': '__system__',
                     'input': [],
                 }),
                 properties=pika.BasicProperties(
@@ -250,41 +250,29 @@ class Handler:
     def teardown(self, node, pointer, user, input):
         ''' finishes the node's lifecycle '''
         execution = pointer.proxy.execution.get()
+        execution.proxy.actors.add(user)
 
-        pointer_query = {}
-        execution_query = {}
-
-        if isinstance(node, UserAttachedNode):
-            execution.proxy.actors.add(user)
-
-            actor_json = {
-                '_type': 'actor',
-                'state': 'valid',
-                'user': user.to_json(include=[
-                    '_type',
-                    'fullname',
-                    'identifier',
-                ]),
-                'forms': input,
-            }
-
-            pointer_query['actors.items.{identifier}'.format(
-                identifier=user.identifier,
-            )] = actor_json
-
-            execution_query[
-                'state.items.{node}.actors.items.{identifier}'.format(
-                    node=node.id,
-                    identifier=user.identifier,
-                )] = actor_json
+        actor_json = {
+            '_type': 'actor',
+            'state': 'valid',
+            'user': user.to_json(include=[
+                '_type',
+                'fullname',
+                'identifier',
+            ]),
+            'forms': input,
+        }
 
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.update_one({
             'id': pointer.id,
         }, {
-            '$set': {**{
+            '$set': {
                 'finished_at': datetime.now(),
-            }, **pointer_query},
+                'actors.items.{identifier}'.format(
+                    identifier=user.identifier,
+                ): actor_json,
+            },
         })
 
         # update state
@@ -294,9 +282,13 @@ class Handler:
         collection.update_one({
             'id': execution.id,
         }, {
-            '$set': {**{
+            '$set': {
                 'state.items.{node}.state'.format(node=node.id): 'valid',
-            }, **execution_query},
+                'state.items.{node}.actors.items.{identifier}'.format(
+                    node=node.id,
+                    identifier=user.identifier,
+                ): actor_json,
+            },
         })
 
         log.debug('Deleted pointer p:{} n:{} e:{}'.format(
@@ -420,9 +412,17 @@ class Handler:
         except ModelNotFoundError:
             raise InconsistentState('Queued dead pointer')
 
+        user = User.get_by('identifier', message.get('user_identifier'))
+
+        if user is None:
+            if message.get('user_identifier') == '__system__':
+                user = User(username='__system__', fullname='System').save()
+            else:
+                raise InconsistentState('sent username of unexisten user')
+
         return (
             pointer,
-            User.get_by('identifier', message.get('user_identifier')),
+            user,
             message['input'],
         )
 

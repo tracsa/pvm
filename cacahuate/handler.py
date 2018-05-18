@@ -189,19 +189,25 @@ class Handler:
             xmliter = iter(xml)
             xmliter.find(lambda e: e.getAttribute('id') == node.id)
 
-            element = next(xmliter)
+            # skip nodes in certain conditions, like anidated ifs and already
+            # validated nodes
+            grammar = None
+            element = None
 
-            context = None
-            while element.tagName == 'if':
-                if context is None:
-                    context = Condition(state['state'])
-
-                condition = xmliter.get_next_condition()
-
-                if not context.parse(condition):
-                    xmliter.expand(element)
-
+            while True:
                 element = next(xmliter)
+
+                if element.tagName == 'if':
+                    if grammar is None:
+                        grammar = Condition(state['state'])
+
+                    condition = xmliter.get_next_condition()
+
+                    if not grammar.parse(condition):
+                        xmliter.expand(element)
+                elif element.getAttribute('id') in state['state']['items']:
+                    if state['state']['items'][element.getAttribute('id')]['state'] != 'valid':
+                        break
 
             return [make_node(element)]
         except StopIteration:

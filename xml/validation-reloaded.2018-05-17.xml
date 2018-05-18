@@ -59,8 +59,8 @@
 
     <action id="node5">
       <form-array>
-        <form id="confirm">
-          <input type="text" name="exit"></input>
+        <form id="form5">
+          <input type="text" name="task"></input>
         </form>
       </form-array>
     </action>

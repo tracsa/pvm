@@ -68,3 +68,4 @@ TODO
 * modificar funcion Xml.load para especificar versión como un argumento aparte
 * desarrollar campo enum en Coralillo y usar para models.Field
 * hacer auth-filter parte obligatoria de un nodo y crear auth-backend que permite todos los usuarios
+* que las condiciones indiquen el nodo donde está el formulario

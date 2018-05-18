@@ -888,12 +888,12 @@ def test_reject_with_dependencies(config, mongo):
         'user_identifier': user.identifier,
         'input': [{
             '_type': 'form',
-            'ref': 'approval',
+            'ref': 'form2',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
-                    'response': {
-                        'value': 'reject',
+                    'task': {
+                        'value': '2',
                     },
                 },
                 'item_order': ['task'],
@@ -915,7 +915,13 @@ def test_reject_with_dependencies(config, mongo):
                 '_type': ':sorted_map',
                 'items': {
                     'response': {
-                        'value': 'reject',
+                        'value': 'accept',
+                    },
+                    'comment': {
+                        'value': 'I like it',
+                    },
+                    'inputs': {
+                        'value': None,
                     },
                 },
                 'item_order': ['response', 'comment', 'inputs'],
@@ -932,12 +938,12 @@ def test_reject_with_dependencies(config, mongo):
         'user_identifier': user.identifier,
         'input': [{
             '_type': 'form',
-            'ref': 'approval',
+            'ref': 'form5',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
-                    'response': {
-                        'value': 'reject',
+                    'task': {
+                        'value': '1',
                     },
                 },
                 'item_order': ['task'],
@@ -946,6 +952,74 @@ def test_reject_with_dependencies(config, mongo):
     }, channel)
     assert Pointer.get_all() == []
 
+    # state is coherent
+    state = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find({
+        'id': execution.id,
+    }))
+
+    del state['_id']
+
+    assert state == {
+        '_type': 'execution',
+        'id': execution.id,
+        'state': {
+            '_type': ':sorted_map',
+            'items': {
+                'node1': {
+                    '_type': 'node',
+                    'id': 'node1',
+                    'state': 'valid',
+                    'comment': 'I do not like it',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+                'node2': {
+                    '_type': 'node',
+                    'id': 'node1',
+                    'state': 'valid',
+                    'comment': 'I do not like it',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+                'node3': {
+                    '_type': 'node',
+                    'id': 'node1',
+                    'state': 'valid',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+                'node4': {
+                    '_type': 'node',
+                    'id': 'node1',
+                    'state': 'valid',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+                'node5': {
+                    '_type': 'node',
+                    'id': 'node1',
+                    'state': 'valid',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+            },
+            'item_order': ['node1', 'node2', 'node3', 'node4', 'node5'],
+        },
+        'status': 'finished',
+    }
 
 
 @pytest.mark.skip

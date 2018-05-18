@@ -249,7 +249,24 @@ class Action(Node):
 
     def dependent_refs(self, invalidated, node_state):
         ''' finds dependencies of the invalidated set in this node '''
-        return []
+        refs = set()
+        actor = next(iter(node_state['actors']['items'].keys()))
+
+        for dep in invalidated:
+            _, depref = dep.split(':')
+
+            for form in self.form_array:
+                for field in form.inputs:
+                    for dep in field.dependencies:
+                        if depref == dep:
+                            refs.add('{node}.{actor}.0:{form}.{input}'.format(
+                                node=self.id,
+                                actor=actor,
+                                form=form.ref,
+                                input=field.name,
+                            ))
+
+        return refs
 
     def validate_form_spec(self, form_specs, associated_data) -> dict:
         ''' Validates the given data against the spec contained in form.
@@ -426,12 +443,13 @@ class Validation(Node):
     def dependent_refs(self, invalidated, node_state):
         ''' finds dependencies of the invalidated set in this node '''
         refs = set()
+        actor = next(iter(node_state['actors']['items'].keys()))
 
         for inref in invalidated:
             if self.in_dependencies(inref):
                 refs.add('{node}.{actor}.0:approval.response'.format(
                     node=self.id,
-                    actor=next(iter(node_state['actors']['items'].keys())),
+                    actor=actor,
                 ))
 
         return refs

@@ -477,6 +477,20 @@ class Validation(UserAttachedNode):
         return refs
 
 
+class Call(Node):
+    ''' Calls a subprocess '''
+
+    def __init__(self, element):
+        super().__init__(element)
+
+        self.name = 'Call ' + self.id
+        self.description = 'Call ' + self.id
+
+    def is_async(self):
+        return False
+
+
+
 class Exit(Node):
     ''' A node that kills an execution with some status '''
 

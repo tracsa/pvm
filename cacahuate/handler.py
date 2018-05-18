@@ -210,6 +210,8 @@ class Handler:
                         xmliter.expand(element)
                 if element.tagName == 'exit':
                     break
+                if element.tagName == 'call':
+                    break
                 elif el_id in state['state']['items']:
                     if state['state']['items'][el_id]['state'] != 'valid':
                         break

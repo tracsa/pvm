@@ -1622,3 +1622,90 @@ def test_exit_interaction(config, mongo):
         },
         'status': 'finished',
     }
+
+
+def test_call_node(config, mongo):
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('call.2018-05-18.xml', 'start-node')
+    channel = MagicMock()
+    execution = ptr.proxy.execution.get()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': Xml.load(config, 'exit').get_state(),
+    })
+
+    # first node
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'start_form',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['data'],
+                'items': {
+                    'data': {
+                        'value': 'somedata',
+                    },
+                },
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id
+
+    # call node
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': '__system__',
+        'input': [],
+    }, channel)
+
+    # old execution is gone, new is here
+    assert Execution.get(execution.id) is None
+    new_ptr = Pointer.get_all()[0]
+    execution = Execution.get_all()[0]
+    assert execution.process_name == 'simple.2018-02-19.xml'
+
+    # rabbit was called for new process
+    args = channel.basic_publish.call_args[1]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'command': 'step',
+        'pointer_id': new_ptr.id,
+        'user_identifier': '__system__',
+        'input': [],
+    }
+
+    # first node, second process
+    handler.call({
+        'command': 'step',
+        'pointer_id': new_ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'start_form',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['data'],
+                'items': {
+                    'data': {
+                        'value': 'somedata',
+                    },
+                },
+            },
+        }],
+    }, channel)
+    new_ptr = Pointer.get_all()[0]
+    assert new_ptr.node_id == 'mid-node'
+
+    assert False, 'boto user is in the state call node'
+    assert False, 'boto user is in the state as initiator of the second process'

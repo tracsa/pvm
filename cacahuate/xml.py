@@ -16,7 +16,7 @@ XML_ATTRIBUTES = {
     'description': lambda x: x,
 }
 
-NODES = ('action', 'validation', 'exit', 'if')
+NODES = ('action', 'validation', 'exit', 'request', 'if')
 
 
 class Xml:

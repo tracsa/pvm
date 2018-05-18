@@ -4,6 +4,8 @@ from case_conversion import pascalcase
 from datetime import datetime
 from typing import Iterator
 from xml.dom.minidom import Element
+from jinja2 import Template
+from requests import request
 import re
 
 from cacahuate.errors import ElementNotFound, IncompleteBranch, \
@@ -472,6 +474,48 @@ class Validation(Node):
 
 class Exit(Node):
     ''' A node that kills an execution with some status '''
+
+    def is_async(self):
+        return False
+
+
+class Request(Node):
+    ''' A node that makes a TCP Request '''
+    def __init__(self, element):
+        super().__init__(element)
+
+        urls = list(map(lambda e: get_text(e), element.getElementsByTagName('url')))
+        bodies = list(map(lambda e: get_text(e), element.getElementsByTagName('body')))
+        headers = list(map(
+            lambda e: (e.getAttribute('name'), get_text(e)),
+            element.getElementsByTagName('header')
+        ))
+
+        self.url = urls[0]
+        self.body = bodies[0]
+        self.headers = headers
+
+    def make_request(self, context):
+        url = Template(self.url).render(**context)
+        body = Template(self.body).render(**context)
+        headers = dict(map(
+            lambda t: (t[0], Template(t[1]).render(**context)),
+            self.headers
+        ))
+
+        response = request(
+            self.method,
+            url,
+            headers=headers,
+            data=body
+        )
+
+        res_dict = {
+            'status_code': response.status_code,
+            'response': response.text,
+        }
+
+        return res_dict
 
     def is_async(self):
         return False

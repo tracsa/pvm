@@ -98,7 +98,6 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
-
     def pointer_entry(self, execution, pointer, notified_users=None):
         return {
             'id': pointer.id,

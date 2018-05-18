@@ -272,10 +272,11 @@ class Handler:
                 identifier=user.identifier,
             )] = actor_json
 
-            execution_query['state.items.{node}.actors.items.{identifier}'.format(
-                node=node.id,
-                identifier=user.identifier,
-            )] = actor_json
+            execution_query[
+                'state.items.{node}.actors.items.{identifier}'.format(
+                    node=node.id,
+                    identifier=user.identifier,
+                )] = actor_json
 
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.update_one({

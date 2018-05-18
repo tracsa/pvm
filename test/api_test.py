@@ -282,7 +282,7 @@ def test_start_process_requirements(client, mongo, config):
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': "form count lower than expected for ref start-form",
+            'detail': "form count lower than expected for ref start_form",
             'where': 'request.body.form_array',
         }],
     }
@@ -339,7 +339,7 @@ def test_start_process(client, mocker, config, mongo):
     }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'simple',
         'form_array': [{
-            'ref': 'start-form',
+            'ref': 'start_form',
             'data': {
                 'data': 'yes',
             },
@@ -368,7 +368,7 @@ def test_start_process(client, mocker, config, mongo):
         'user_identifier': 'juan',
         'input': [{
             '_type': 'form',
-            'ref': 'start-form',
+            'ref': 'start_form',
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
@@ -775,7 +775,7 @@ def test_list_processes(client):
         'versions': ['2018-02-19'],
         'form_array': [
             {
-                'ref': 'start-form',
+                'ref': 'start_form',
                 'inputs': [
                     {
                         'type': 'text',
@@ -1095,7 +1095,7 @@ def test_execution_has_node_info(client):
         'process_name': 'simple',
         'form_array': [
             {
-                'ref': 'start-form',
+                'ref': 'start_form',
                 'data': {
                     'data': 'yes',
                 },
@@ -1108,7 +1108,7 @@ def test_execution_has_node_info(client):
     exe = Execution.get_all()[0]
     ptr = Pointer.get_all()[0]
 
-    assert exe.name == 'Simplest process ever'
+    assert exe.name == 'Simplest process ever started with: yes'
     assert exe.description == 'A simple process that does nothing'
 
     assert ptr.name == 'Primer paso'
@@ -1124,7 +1124,7 @@ def test_log_has_node_info(client):
         'process_name': 'simple',
         'form_array': [
             {
-                'ref': 'start-form',
+                'ref': 'start_form',
                 'data': {
                     'data': 'yes',
                 },
@@ -1146,7 +1146,8 @@ def test_log_has_node_info(client):
     assert data['node']['description'] == 'Resolver una tarea'
 
     assert data['execution']['id'] == execution_id
-    assert data['execution']['name'] == 'Simplest process ever'
+    assert data['execution']['name'] == \
+        'Simplest process ever started with: yes'
     assert data['execution']['description'] == \
         'A simple process that does nothing'
 

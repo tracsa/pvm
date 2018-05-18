@@ -3,7 +3,7 @@
   <process-info>
     <author>categulario</author>
     <date>2018-02-19</date>
-    <name>Simplest process ever</name>
+    <name>Simplest process ever{% if start_form %} started with: {{ start_form.data }}{% endif %}</name>
     <public>true</public>
     <description>A simple process that does nothing</description>
   </process-info>
@@ -14,7 +14,7 @@
         <description>Resolver una tarea</description>
       </node-info>
       <form-array>
-        <form id="start-form">
+        <form id="start_form">
           <input type="text" name="data" required="required" label="Info" />
         </form>
       </form-array>

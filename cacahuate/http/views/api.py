@@ -132,7 +132,7 @@ def start_process():
     # save the data
     execution = Execution(
         process_name=xml.filename,
-        name=xml.make_name(collected_input),
+        name=xml.get_name(collected_input),
         description=xml.description,
     ).save()
     pointer = Pointer(
@@ -276,22 +276,25 @@ def list_process():
 
 @app.route('/v1/process/<name>', methods=['GET'])
 def find_process(name):
-    if request.method == 'GET':
-        version = request.args.get('version', '')
-        if version:
-            version = ".{}".format(version)
-        process_name = "{}{}".format(name, version)
-        try:
-            xml = Xml.load(app.config, process_name)
-        except ProcessNotFound as e:
-            raise NotFound([{
-                'detail': '{} process does not exist'
-                          .format(process_name),
-                'where': 'request.body.process_name',
-            }])
-        return jsonify({
-            'data': xml.to_json()
-        })
+    version = request.args.get('version', '')
+
+    if version:
+        version = ".{}".format(version)
+
+    process_name = "{}{}".format(name, version)
+
+    try:
+        xml = Xml.load(app.config, process_name)
+    except ProcessNotFound as e:
+        raise NotFound([{
+            'detail': '{} process does not exist'
+                      .format(process_name),
+            'where': 'request.body.process_name',
+        }])
+
+    return jsonify({
+        'data': xml.to_json()
+    })
 
 
 @app.route('/v1/activity', methods=['GET'])

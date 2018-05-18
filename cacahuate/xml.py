@@ -51,6 +51,24 @@ class Xml:
 
             setattr(self, attr, func(get_text(node)))
 
+    def get_name(self, collected_forms=[]):
+        context = dict()
+
+        for form in collected_forms:
+            form_dict = dict()
+
+            for name, input in form['inputs']['items'].items():
+                form_dict[name] = input['value_caption']
+
+            context[form['ref']] = form_dict
+
+        return Template(self._name).render(**context)
+
+    def set_name(self, name):
+        self._name = name
+
+    name = property(get_name, set_name)
+
     @classmethod
     def load(cls, config: dict, common_name: str, direct=False) -> TextIO:
         ''' Loads an xml file and returns the corresponding TextIOWrapper for
@@ -150,19 +168,6 @@ class Xml:
         by the xmlfile descriptor. Uses XMLPullParser so no memory is consumed
         for this task. '''
         return self.make_iterator(NODES)
-
-    def make_name(self, collected_forms):
-        context = dict()
-
-        for form in collected_forms:
-            form_dict = dict()
-
-            for name, input in form['inputs']['items'].items():
-                form_dict[name] = input['value_caption']
-
-            context[form['ref']] = form_dict
-
-        return Template(self.name).render(**context)
 
     def get_state(self):
         from cacahuate.node import make_node  # noqa

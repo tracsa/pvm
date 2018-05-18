@@ -73,3 +73,4 @@ TODO
 * cambiar api de LoginProvider y HierarchyProvider, no deben guardar usuarios
 * auth backends no deben crear usuarios, solo devolver objetos calificados
 * que el nodo exit no necesite ID
+* quitar refs de tres niveles en params de auth filter, guardar un estado optimizado

@@ -196,6 +196,7 @@ class Handler:
 
             while True:
                 element = next(xmliter)
+                el_id = element.getAttribute('id')
 
                 if element.tagName == 'if':
                     if grammar is None:
@@ -205,8 +206,8 @@ class Handler:
 
                     if not grammar.parse(condition):
                         xmliter.expand(element)
-                elif element.getAttribute('id') in state['state']['items']:
-                    if state['state']['items'][element.getAttribute('id')]['state'] != 'valid':
+                elif el_id in state['state']['items']:
+                    if state['state']['items'][el_id]['state'] != 'valid':
                         break
 
             return [make_node(element)]

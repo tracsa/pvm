@@ -65,9 +65,11 @@ You can use any wsgi-compliant server, like gunicorn, to run this:
 TODO
 ----
 
-* modificar funcion Xml.load para especificar versión como un argumento aparte
 * desarrollar campo enum en Coralillo y usar para models.Field
-* hacer auth-filter parte obligatoria de un nodo y crear auth-backend que permite todos los usuarios
 * que las condiciones indiquen el nodo donde está el formulario
-* renombrar endpint /v1/log/<id> a /v1/pointer y usasr consultas
+* añadir endpoint /v1/pointer y usar consultas
 * date input solo debe recibir yyyy-mm-dd
+* hacer obsoleto el validate_user
+* cambiar api de LoginProvider y HierarchyProvider, no deben guardar usuarios
+* auth backends no deben crear usuarios, solo devolver objetos calificados
+* que el nodo exit no necesite ID

@@ -232,23 +232,9 @@ class Handler:
 
         # update registry about this pointer
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
-        collection.insert_one({
-            'id': pointer.id,
-            'started_at': datetime.now(),
-            'finished_at': None,
-            'execution': {
-                'id': execution.id,
-                'name': execution.name,
-                'description': execution.description,
-            },
-            'node': node.to_json(),
-            'notified_users': notified_users,
-            'actors': {
-                '_type': ':map',
-                'items': {},
-            },
-            'process_id': execution.process_name
-        })
+        collection.insert_one(node.pointer_entry(
+            execution, pointer, notified_users
+        ))
 
         # nodes with forms are not queued
         if not node.is_async():

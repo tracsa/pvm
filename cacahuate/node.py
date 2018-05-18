@@ -202,14 +202,16 @@ class Node:
 
         return found_refs
 
-    def log_entry(self, execution):
+    def pointer_entry(self, execution, pointer, notified_users=None):
         return {
+            'id': pointer.id,
             'started_at': datetime.now(),
             'finished_at': None,
             'execution': execution.to_json(),
             'node': self.to_json(),
             'actors': Map([], key='identifier').to_json(),
             'process_id': execution.process_name,
+            'notified_users': notified_users or [],
         }
 
     def get_state(self):

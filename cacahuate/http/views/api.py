@@ -144,7 +144,7 @@ def start_process():
 
     # log to mongo
     collection = mongo.db[app.config['POINTER_COLLECTION']]
-    collection.insert_one(start_point.log_entry(execution))
+    collection.insert_one(start_point.pointer_entry(execution, pointer))
 
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
     collection.insert_one({

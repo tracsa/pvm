@@ -121,58 +121,18 @@ def start_process():
         }])
 
     xmliter = iter(xml)
-    start_point = make_node(next(xmliter))
+    node = make_node(next(xmliter))
 
     # Check for authorization
-    validate_auth(start_point, g.user)
+    validate_auth(node, g.user)
 
     # check if there are any forms present
-    collected_input = start_point.validate_input(request.json)
+    input = node.validate_input(request.json)
 
-    # save the data
-    execution = Execution(
-        process_name=xml.filename,
-        name=xml.get_name(collected_input),
-        description=xml.description,
-    ).save()
-    pointer = Pointer(
-        node_id=start_point.id,
-        name=start_point.name,
-        description=start_point.description,
-    ).save()
-    pointer.proxy.execution.set(execution)
-
-    # log to mongo
-    collection = mongo.db[app.config['POINTER_COLLECTION']]
-    collection.insert_one(start_point.pointer_entry(execution, pointer))
-
-    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
-    collection.insert_one({
-        '_type': 'execution',
-        'id': execution.id,
-        'name': execution.name,
-        'description': execution.description,
-        'status': 'ongoing',
-        'started_at': datetime.now(),
-        'finished_at': None,
-        'state': xml.get_state(),
-    })
-
-    # trigger rabbit
+    # get rabbit channel for process queue
     channel = get_channel()
-    channel.basic_publish(
-        exchange='',
-        routing_key=app.config['RABBIT_QUEUE'],
-        body=json.dumps({
-            'command': 'step',
-            'pointer_id': pointer.id,
-            'user_identifier': g.user.identifier,
-            'input': collected_input,
-        }),
-        properties=pika.BasicProperties(
-            delivery_mode=2,
-        ),
-    )
+
+    execution = xml.start(node, input, mongo, channel, g.user)
 
     return {
         'data': execution.to_json(),

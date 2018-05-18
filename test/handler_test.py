@@ -958,6 +958,7 @@ def test_reject_with_dependencies(config, mongo):
     }))
 
     del state['_id']
+    del state['finished_at']
 
     assert state == {
         '_type': 'execution',
@@ -972,47 +973,168 @@ def test_reject_with_dependencies(config, mongo):
                     'comment': 'I do not like it',
                     'actors': {
                         '_type': ':map',
-                        'items': {},
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'form1',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'task': {'value': '2'},
+                                        },
+                                        'item_order': ['task'],
+                                    },
+                                }],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
                     },
                 },
+
                 'node2': {
                     '_type': 'node',
-                    'id': 'node1',
+                    'id': 'node2',
                     'state': 'valid',
                     'comment': 'I do not like it',
                     'actors': {
                         '_type': ':map',
-                        'items': {},
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'form2',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'task': {'value': '2'},
+                                        },
+                                        'item_order': ['task'],
+                                    },
+                                }],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
                     },
                 },
+
                 'node3': {
                     '_type': 'node',
-                    'id': 'node1',
+                    'id': 'node3',
                     'state': 'valid',
                     'comment': '',
                     'actors': {
                         '_type': ':map',
-                        'items': {},
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'form3',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'task': {'value': '1'},
+                                        },
+                                        'item_order': ['task'],
+                                    },
+                                }],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
                     },
                 },
+
                 'node4': {
                     '_type': 'node',
-                    'id': 'node1',
+                    'id': 'node4',
                     'state': 'valid',
-                    'comment': '',
+                    'comment': 'I do not like it',
                     'actors': {
                         '_type': ':map',
-                        'items': {},
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'approval',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'response': {
+                                                'value': 'accept',
+                                            },
+                                            'comment': {
+                                                'value': 'I like it',
+                                            },
+                                            'inputs': {
+                                                'value': None,
+                                            },
+                                        },
+                                        'item_order': [
+                                            'response',
+                                            'comment',
+                                            'inputs',
+                                        ],
+                                    },
+                                }],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
                     },
                 },
+
                 'node5': {
                     '_type': 'node',
-                    'id': 'node1',
+                    'id': 'node5',
                     'state': 'valid',
                     'comment': '',
                     'actors': {
                         '_type': ':map',
-                        'items': {},
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'form5',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'task': {'value': '1'},
+                                        },
+                                        'item_order': ['task'],
+                                    },
+                                }],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
                     },
                 },
             },

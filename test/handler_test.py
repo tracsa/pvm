@@ -87,7 +87,7 @@ def test_wakeup(config, mongo):
         email='hardcoded@mailinator.com'
     ).save()
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, 'simple').get_state(),
@@ -117,7 +117,7 @@ def test_wakeup(config, mongo):
     }
 
     # mongo has a registry
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+    reg = next(mongo[config["POINTER_COLLECTION"]].find())
 
     assert_near_date(reg['started_at'])
     assert reg['finished_at'] is None
@@ -167,13 +167,13 @@ def test_teardown(config, mongo):
     state = Xml.load(config, 'simple').get_state()
     state['items']['start-node']['state'] = 'valid'
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
         'state': state,
     })
 
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+    mongo[config["POINTER_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
@@ -220,7 +220,7 @@ def test_teardown(config, mongo):
     assert Pointer.get_all()[0].node_id == 'final-node'
 
     # mongo has a registry
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+    reg = next(mongo[config["POINTER_COLLECTION"]].find())
 
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
     assert_near_date(reg['finished_at'])
@@ -262,7 +262,7 @@ def test_teardown(config, mongo):
     assert manager2.proxy.tasks.count() == 0
 
     # state
-    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+    reg = next(mongo[config["EXECUTION_COLLECTION"]].find())
 
     assert reg['state'] == {
         '_type': ':sorted_map',
@@ -342,19 +342,19 @@ def test_finish_execution(config, mongo):
 
     p_0 = make_pointer('simple.2018-02-19.xml', 'manager')
     execution = p_0.proxy.execution.get()
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'status': 'ongoing',
         'id': execution.id
     })
 
-    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+    reg = next(mongo[config["EXECUTION_COLLECTION"]].find())
     assert execution.id == reg['id']
 
     handler.finish_execution(execution)
 
-    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+    reg = next(mongo[config["EXECUTION_COLLECTION"]].find())
 
     assert reg['status'] == 'finished'
     assert_near_date(reg['finished_at'])
@@ -370,7 +370,7 @@ def test_call_handler_delete_process(config, mongo):
     body = '{"command":"cancel", "execution_id":"%s", "pointer_id":"%s"}'\
         % (execution_id, pointer.id)
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
             'started_at': datetime(2018, 4, 1, 21, 45),
             'finished_at': None,
             'status': 'ongoing',
@@ -379,7 +379,7 @@ def test_call_handler_delete_process(config, mongo):
 
     handler(channel, method, properties, body)
 
-    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+    reg = next(mongo[config["EXECUTION_COLLECTION"]].find())
 
     assert reg['id'] == execution_id
     assert reg['status'] == "cancelled"
@@ -397,7 +397,7 @@ def test_approve(config, mongo):
     ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
     channel = MagicMock()
 
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+    mongo[config["POINTER_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
@@ -412,7 +412,7 @@ def test_approve(config, mongo):
         },
     })
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
         'state': Xml.load(config, 'validation').get_state(),
@@ -452,7 +452,7 @@ def test_approve(config, mongo):
     new_ptr = Pointer.get_all()[0]
     assert new_ptr.node_id == 'final-node'
 
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+    reg = next(mongo[config["POINTER_COLLECTION"]].find())
 
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
     assert_near_date(reg['finished_at'])
@@ -504,7 +504,7 @@ def test_reject(config, mongo):
     channel = MagicMock()
     execution = ptr.proxy.execution.get()
 
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+    mongo[config["POINTER_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
@@ -548,7 +548,7 @@ def test_reject(config, mongo):
         }],
     }
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
         'state': state,
@@ -591,7 +591,7 @@ def test_reject(config, mongo):
     assert new_ptr in user.proxy.tasks
 
     # data is invalidated
-    state = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find({
+    state = next(mongo[config["EXECUTION_COLLECTION"]].find({
         'id': execution.id,
     }))
 
@@ -703,7 +703,7 @@ def test_reject(config, mongo):
     }
 
     # mongo has the data
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+    reg = next(mongo[config["POINTER_COLLECTION"]].find())
 
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
@@ -757,7 +757,7 @@ def test_reject_with_dependencies(config, mongo):
     channel = MagicMock()
     execution = ptr.proxy.execution.get()
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, 'validation-reloaded').get_state(),
@@ -953,7 +953,7 @@ def test_reject_with_dependencies(config, mongo):
     assert Pointer.get_all() == []
 
     # state is coherent
-    state = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find({
+    state = next(mongo[config["EXECUTION_COLLECTION"]].find({
         'id': execution.id,
     }))
 
@@ -1157,7 +1157,7 @@ def test_resistance_unexisteng_hierarchy_backend(config, mongo):
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
         'state': Xml.load(config, 'wrong').get_state(),
@@ -1179,7 +1179,7 @@ def test_resistance_hierarchy_return(config, mongo):
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
         'state': Xml.load(config, 'wrong').get_state(),
@@ -1201,7 +1201,7 @@ def test_resistance_hierarchy_item(config, mongo):
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
         'state': Xml.load(config, 'wrong').get_state(),
@@ -1223,7 +1223,7 @@ def test_resistance_node_not_found(config, mongo):
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
         'state': Xml.load(config, 'wrong').get_state(),
@@ -1256,7 +1256,7 @@ def test_true_condition_node(config, mongo):
     ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
     channel = MagicMock()
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
         'state': Xml.load(config, 'condition').get_state(),
@@ -1301,7 +1301,7 @@ def test_elseif_condition_node(config, mongo):
     ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
     channel = MagicMock()
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
         'state': Xml.load(config, 'condition').get_state(),
@@ -1346,7 +1346,7 @@ def test_false_condition_node(config, mongo):
     ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
     channel = MagicMock()
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
         'state': Xml.load(config, 'condition').get_state(),
@@ -1391,7 +1391,7 @@ def test_anidated_conditions(config, mongo):
     ptr = make_pointer('anidated-conditions.2018-05-17.xml', 'a')
     channel = MagicMock()
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
         'state': Xml.load(config, 'anidated-conditions').get_state(),

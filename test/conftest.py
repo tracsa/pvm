@@ -38,10 +38,10 @@ def clear_mongo():
     client = MongoClient()
     db = client[con['MONGO_DBNAME']]
 
-    collection = db[con['MONGO_HISTORY_COLLECTION']]
+    collection = db[con['POINTER_COLLECTION']]
     collection.drop()
 
-    collection_execution = db[con['MONGO_EXECUTION_COLLECTION']]
+    collection_execution = db[con['EXECUTION_COLLECTION']]
     collection_execution.drop()
 
 

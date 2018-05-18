@@ -12,7 +12,7 @@ def create_indexes(config):
     db.execution.create_index("started_at")
     db.execution.create_index("finished_at")
 
-    db.history.create_index("status")
-    db.history.create_index("execution.id")
-    db.history.create_index("started_at")
-    db.history.create_index("finished_at")
+    db.pointer.create_index("status")
+    db.pointer.create_index("execution.id")
+    db.pointer.create_index("started_at")
+    db.pointer.create_index("finished_at")

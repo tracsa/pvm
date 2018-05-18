@@ -1,0 +1,24 @@
+<process-spec>
+  <process-info>
+    <author>Og Astorga</author>
+    <date>2018-05-18</date>
+    <name>HTTP node</name>
+    <public>true</public>
+    <description>Makes an HTTP request</description>
+  </process-info>
+  <process>
+    <action id="start-node" >
+      <form-array>
+        <form id="request">
+          <input type="text" name="data"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <request id="request-node" method="GET">
+      <url>http://localhost/mirror?data={{ request.data }}</url>
+      <header></header>
+      <body>{"data":"{{ request.data}}"}</body>
+    </request>
+  </process>
+</process-spec>

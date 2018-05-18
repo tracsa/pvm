@@ -174,6 +174,7 @@ def test_teardown(config, mongo):
     })
 
     mongo[config["POINTER_COLLECTION"]].insert_one({
+        'id': p_0.id,
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
@@ -398,6 +399,7 @@ def test_approve(config, mongo):
     channel = MagicMock()
 
     mongo[config["POINTER_COLLECTION"]].insert_one({
+        'id': ptr.id,
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
@@ -505,6 +507,7 @@ def test_reject(config, mongo):
     execution = ptr.proxy.execution.get()
 
     mongo[config["POINTER_COLLECTION"]].insert_one({
+        'id': ptr.id,
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {

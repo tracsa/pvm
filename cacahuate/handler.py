@@ -233,6 +233,7 @@ class Handler:
         # update registry about this pointer
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.insert_one({
+            'id': pointer.id,
             'started_at': datetime.now(),
             'finished_at': None,
             'execution': {
@@ -271,8 +272,7 @@ class Handler:
 
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.update_one({
-            'execution.id': execution.id,
-            'node.id': pointer.node_id,
+            'id': pointer.id,
         }, {
             '$set': {
                 'finished_at': datetime.now(),

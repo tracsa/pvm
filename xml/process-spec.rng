@@ -87,6 +87,25 @@
     </element>
   </define>
 
+  <define name="request">
+    <element name="request">
+      <attribute name="id"><text/></attribute>
+      <attribute name="method">
+        <choice>
+          <value>GET</value>
+          <value>HEAD</value>
+          <value>POST</value>
+          <value>PUT</value>
+          <value>DELETE</value>
+          <value>TRACE</value>
+          <value>OPTIONS</value>
+          <value>CONNECT</value>
+          <value>PATCH</value>
+        </choice>
+      </attribute>
+    </element>
+  </define>
+
   <define name="if">
     <element name="if">
       <ref name="condition"/>

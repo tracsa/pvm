@@ -270,6 +270,7 @@ def test_teardown(config, mongo):
         'items': {
             'start-node': {
                 '_type': 'node',
+                'type': 'action',
                 'id': 'start-node',
                 'state': 'valid',
                 'comment': '',
@@ -281,6 +282,7 @@ def test_teardown(config, mongo):
 
             'mid-node': {
                 '_type': 'node',
+                'type': 'action',
                 'id': 'mid-node',
                 'state': 'valid',
                 'comment': '',
@@ -318,6 +320,7 @@ def test_teardown(config, mongo):
 
             'final-node': {
                 '_type': 'node',
+                'type': 'action',
                 'id': 'final-node',
                 'state': 'unfilled',
                 'comment': '',
@@ -608,6 +611,7 @@ def test_reject(config, mongo):
             'items': {
                 'start-node': {
                     '_type': 'node',
+                    'type': 'action',
                     'id': 'start-node',
                     'state': 'invalid',
                     'comment': 'I do not like it',
@@ -644,6 +648,7 @@ def test_reject(config, mongo):
                 },
                 'approval-node': {
                     '_type': 'node',
+                    'type': 'validation',
                     'id': 'approval-node',
                     'state': 'invalid',
                     'comment': 'I do not like it',
@@ -692,6 +697,7 @@ def test_reject(config, mongo):
                 },
                 'final-node': {
                     '_type': 'node',
+                    'type': 'action',
                     'id': 'final-node',
                     'state': 'unfilled',
                     'comment': '',
@@ -971,6 +977,7 @@ def test_reject_with_dependencies(config, mongo):
             'items': {
                 'node1': {
                     '_type': 'node',
+                    'type': 'action',
                     'id': 'node1',
                     'state': 'valid',
                     'comment': 'I do not like it',
@@ -1003,6 +1010,7 @@ def test_reject_with_dependencies(config, mongo):
 
                 'node2': {
                     '_type': 'node',
+                    'type': 'action',
                     'id': 'node2',
                     'state': 'valid',
                     'comment': 'I do not like it',
@@ -1035,6 +1043,7 @@ def test_reject_with_dependencies(config, mongo):
 
                 'node3': {
                     '_type': 'node',
+                    'type': 'action',
                     'id': 'node3',
                     'state': 'valid',
                     'comment': '',
@@ -1067,6 +1076,7 @@ def test_reject_with_dependencies(config, mongo):
 
                 'node4': {
                     '_type': 'node',
+                    'type': 'validation',
                     'id': 'node4',
                     'state': 'valid',
                     'comment': 'I do not like it',
@@ -1111,6 +1121,7 @@ def test_reject_with_dependencies(config, mongo):
 
                 'node5': {
                     '_type': 'node',
+                    'type': 'action',
                     'id': 'node5',
                     'state': 'valid',
                     'comment': '',
@@ -1499,3 +1510,115 @@ def test_anidated_conditions(config, mongo):
 
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'g'
+
+
+def test_exit_interaction(config, mongo):
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('exit.2018-05-03.xml', 'start-node')
+    channel = MagicMock()
+    execution = ptr.proxy.execution.get()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': Xml.load(config, 'exit').get_state(),
+    })
+
+    # first node
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id
+
+    args = channel.basic_publish.call_args[1]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': None,
+        'input': [],
+    }
+
+    # exit node
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': None,
+        'input': [],
+    }, channel)
+
+    assert len(Pointer.get_all()) == 0
+    assert len(Execution.get_all()) == 0
+
+    # state is coherent
+    state = next(mongo[config["EXECUTION_COLLECTION"]].find({
+        'id': execution.id,
+    }))
+
+    del state['_id']
+    del state['finished_at']
+
+    assert state == {
+        '_type': 'execution',
+        'id': execution.id,
+        'state': {
+            '_type': ':sorted_map',
+            'items': {
+                'start-node': {
+                    '_type': 'node',
+                    'type': 'action',
+                    'id': 'start-node',
+                    'state': 'valid',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
+                    },
+                },
+
+                'exit': {
+                    '_type': 'node',
+                    'type': 'exit',
+                    'id': 'exit',
+                    'state': 'valid',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+
+                'final-node': {
+                    '_type': 'node',
+                    'type': 'action',
+                    'id': 'final-node',
+                    'state': 'unfilled',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {},
+                    },
+                },
+            },
+            'item_order': ['start-node', 'exit', 'final-node'],
+        },
+        'status': 'finished',
+    }

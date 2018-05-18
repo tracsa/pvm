@@ -9,8 +9,9 @@
   </process-info>
   <process>
     <action id="start-node" >
+      <auth-filter backend="anyone"></auth-filter>
       <form-array>
-        <form id="start-form">
+        <form id="start_form">
           <input type="select" name="should_exec" required="required" label="Should exec?">
             <options>
               <option value="yes">Yes</option>
@@ -22,6 +23,7 @@
     </action>
 
     <action id="mid-node" >
+      <auth-filter backend="hardcoded"></auth-filter>
       <form-array>
         <form id="mid-form">
           <input type="text" name="data" required="required" />
@@ -29,6 +31,8 @@
       </form-array>
     </action>
 
-    <action id="final-node" />
+    <action id="final-node">
+      <auth-filter backend="hardcoded"></auth-filter>
+    </action>
   </process>
 </process-spec>

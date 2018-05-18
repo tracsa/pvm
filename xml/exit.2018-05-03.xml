@@ -8,10 +8,14 @@
     <description>Test exit mechanisms</description>
   </process-info>
   <process>
-    <action id="start-node"></action>
+    <action id="start-node">
+      <auth-filter backend="anyone"></auth-filter>
+    </action>
 
-    <exit />
+    <exit id="exit" />
 
-    <action id="final-node"></action>
+    <action id="final-node">
+      <auth-filter backend="hardcoded"></auth-filter>
+    </action>
   </process>
 </process-spec>

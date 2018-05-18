@@ -59,11 +59,7 @@
           <optional>
             <ref name="node-info" />
           </optional>
-
-          <optional>
-            <ref name="auth-filter" />
-          </optional>
-
+          <ref name="auth-filter" />
           <optional>
             <ref name="form-array" />
           </optional>
@@ -77,11 +73,7 @@
         <optional>
           <ref name="node-info" />
         </optional>
-
-        <optional>
-          <ref name="auth-filter" />
-        </optional>
-
+        <ref name="auth-filter" />
         <ref name="dependencies"/>
       </interleave>
     </element>
@@ -108,7 +100,9 @@
 
   <define name="if">
     <element name="if">
-      <ref name="condition"/>
+      <element name="condition">
+        <text />
+      </element>
       <ref name="body" />
     </element>
   </define>
@@ -190,7 +184,7 @@
 
   <define name="exit">
     <element name="exit">
-      <empty />
+      <attribute name="id"><text/></attribute>
     </element>
   </define>
 
@@ -252,11 +246,6 @@
     <element name="option">
       <attribute name="value"><text/></attribute>
       <text/>
-    </element>
-  </define>
-  <define name="condition">
-    <element name="condition">
-      <text />
     </element>
   </define>
 </grammar>

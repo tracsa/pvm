@@ -12,7 +12,7 @@
       <auth-filter backend="anyone"></auth-filter>
     </action>
 
-    <exit />
+    <exit id="exit" />
 
     <action id="final-node">
       <auth-filter backend="hardcoded"></auth-filter>

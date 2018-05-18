@@ -72,3 +72,7 @@ TODO
 * quitar refs de tres niveles en params de auth filter, guardar un estado optimizado
 
 * date input solo debe recibir yyyy-mm-dd
+
+* hacer validación intensiva de xml:
+  - dependencias existen arriba en el xml
+  - id de nodos son únicos

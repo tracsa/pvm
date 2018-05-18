@@ -81,10 +81,10 @@
 
   <define name="if">
     <element name="if">
-      <optional>
-        <attribute name="id"><text/></attribute>
-      </optional>
-      <ref name="condition"/>
+      <attribute name="id"><text/></attribute>
+      <element name="condition">
+        <text />
+      </element>
       <ref name="body" />
     </element>
   </define>
@@ -166,7 +166,7 @@
 
   <define name="exit">
     <element name="exit">
-      <empty />
+      <attribute name="id"><text/></attribute>
     </element>
   </define>
 
@@ -228,11 +228,6 @@
     <element name="option">
       <attribute name="value"><text/></attribute>
       <text/>
-    </element>
-  </define>
-  <define name="condition">
-    <element name="condition">
-      <text />
     </element>
   </define>
 </grammar>

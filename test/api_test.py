@@ -425,6 +425,7 @@ def test_start_process(client, mocker, config, mongo):
             'items': {
                 'start-node': {
                     '_type': 'node',
+                    'type': 'action',
                     'id': 'start-node',
                     'state': 'unfilled',
                     'comment': '',
@@ -435,6 +436,7 @@ def test_start_process(client, mocker, config, mongo):
                 },
                 'mid-node': {
                     '_type': 'node',
+                    'type': 'action',
                     'id': 'mid-node',
                     'state': 'unfilled',
                     'comment': '',
@@ -445,6 +447,7 @@ def test_start_process(client, mocker, config, mongo):
                 },
                 'final-node': {
                     '_type': 'node',
+                    'type': 'action',
                     'id': 'final-node',
                     'state': 'unfilled',
                     'comment': '',

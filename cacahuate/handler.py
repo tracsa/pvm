@@ -11,7 +11,7 @@ from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
 from cacahuate.logger import log
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
-from cacahuate.node import make_node, Exit, Action, Validation
+from cacahuate.node import make_node, Exit, Validation, UserAttachedNode
 from cacahuate.grammar import Condition
 
 
@@ -90,6 +90,8 @@ class Handler:
                 body=json.dumps({
                     'command': 'step',
                     'pointer_id': pointer.id,
+                    'user_identifier': None,
+                    'input': [],
                 }),
                 properties=pika.BasicProperties(
                     delivery_mode=2,
@@ -206,6 +208,8 @@ class Handler:
 
                     if not grammar.parse(condition):
                         xmliter.expand(element)
+                if element.tagName == 'exit':
+                    break
                 elif el_id in state['state']['items']:
                     if state['state']['items'][el_id]['state'] != 'valid':
                         break
@@ -228,7 +232,10 @@ class Handler:
         ))
 
         # notify someone
-        notified_users = self.notify_users(node, pointer, channel, state)
+        if isinstance(node, UserAttachedNode):
+            notified_users = self.notify_users(node, pointer, channel, state)
+        else:
+            notified_users = []
 
         # update registry about this pointer
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
@@ -243,29 +250,40 @@ class Handler:
     def teardown(self, node, pointer, user, input):
         ''' finishes the node's lifecycle '''
         execution = pointer.proxy.execution.get()
-        execution.proxy.actors.add(user)
 
-        actor_json = {
-            '_type': 'actor',
-            'state': 'valid',
-            'user': user.to_json(include=[
-                '_type',
-                'fullname',
-                'identifier',
-            ]),
-            'forms': input,
-        }
+        pointer_query = {}
+        execution_query = {}
+
+        if isinstance(node, UserAttachedNode):
+            execution.proxy.actors.add(user)
+
+            actor_json = {
+                '_type': 'actor',
+                'state': 'valid',
+                'user': user.to_json(include=[
+                    '_type',
+                    'fullname',
+                    'identifier',
+                ]),
+                'forms': input,
+            }
+
+            pointer_query['actors.items.{identifier}'.format(
+                identifier=user.identifier,
+            )] = actor_json
+
+            execution_query['state.items.{node}.actors.items.{identifier}'.format(
+                node=node.id,
+                identifier=user.identifier,
+            )] = actor_json
 
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.update_one({
             'id': pointer.id,
         }, {
-            '$set': {
+            '$set': {**{
                 'finished_at': datetime.now(),
-                'actors.items.{identifier}'.format(
-                    identifier=user.identifier,
-                ): actor_json,
-            },
+            }, **pointer_query},
         })
 
         # update state
@@ -275,13 +293,9 @@ class Handler:
         collection.update_one({
             'id': execution.id,
         }, {
-            '$set': {
-                'state.items.{node}.actors.items.{identifier}'.format(
-                    node=node.id,
-                    identifier=user.identifier,
-                ): actor_json,
+            '$set': {**{
                 'state.items.{node}.state'.format(node=node.id): 'valid',
-            },
+            }, **execution_query},
         })
 
         log.debug('Deleted pointer p:{} n:{} e:{}'.format(
@@ -400,7 +414,10 @@ class Handler:
     def recover_step(self, message: dict):
         ''' given an execution id and a pointer from the persistent storage,
         return the asociated process node to continue its execution '''
-        pointer = Pointer.get_or_exception(message['pointer_id'])
+        try:
+            pointer = Pointer.get_or_exception(message['pointer_id'])
+        except ModelNotFoundError:
+            raise InconsistentState('Queued dead pointer')
 
         return (
             pointer,

@@ -69,3 +69,4 @@ TODO
 * desarrollar campo enum en Coralillo y usar para models.Field
 * hacer auth-filter parte obligatoria de un nodo y crear auth-backend que permite todos los usuarios
 * que las condiciones indiquen el nodo donde está el formulario
+* renombrar endpint /v1/log/<id> a /v1/pointer y usasr consultas

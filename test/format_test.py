@@ -30,12 +30,12 @@ def test_interpolated_name(config, client, mongo):
     assert exc.name == name
 
     # execution collection has name
-    reg2 = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+    reg2 = next(mongo[config["EXECUTION_COLLECTION"]].find())
 
     assert reg2['id'] == exc.id
     assert reg2['name'] == name
 
     # history has the name
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+    reg = next(mongo[config["POINTER_COLLECTION"]].find())
 
     assert reg['execution']['name'] == name

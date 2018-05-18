@@ -60,7 +60,7 @@ class Handler:
 
         # retrieve the state so we can use it in wakeup and to find next node
         collection = self.get_mongo()[
-            self.config['MONGO_EXECUTION_COLLECTION']
+            self.config['EXECUTION_COLLECTION']
         ]
 
         state = next(collection.find({'id': execution.id}))
@@ -171,7 +171,7 @@ class Handler:
 
             # update state
             collection = self.get_mongo()[
-                self.config['MONGO_EXECUTION_COLLECTION']
+                self.config['EXECUTION_COLLECTION']
             ]
             collection.update_one({
                 'id': state['id'],
@@ -231,23 +231,10 @@ class Handler:
         notified_users = self.notify_users(node, pointer, channel, state)
 
         # update registry about this pointer
-        collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
-        collection.insert_one({
-            'started_at': datetime.now(),
-            'finished_at': None,
-            'execution': {
-                'id': execution.id,
-                'name': execution.name,
-                'description': execution.description,
-            },
-            'node': node.to_json(),
-            'notified_users': notified_users,
-            'actors': {
-                '_type': ':map',
-                'items': {},
-            },
-            'process_id': execution.process_name
-        })
+        collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
+        collection.insert_one(node.pointer_entry(
+            execution, pointer, notified_users
+        ))
 
         # nodes with forms are not queued
         if not node.is_async():
@@ -269,10 +256,9 @@ class Handler:
             'forms': input,
         }
 
-        collection = self.get_mongo()[self.config['MONGO_HISTORY_COLLECTION']]
+        collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.update_one({
-            'execution.id': execution.id,
-            'node.id': pointer.node_id,
+            'id': pointer.id,
         }, {
             '$set': {
                 'finished_at': datetime.now(),
@@ -284,7 +270,7 @@ class Handler:
 
         # update state
         collection = self.get_mongo()[
-            self.config['MONGO_EXECUTION_COLLECTION']
+            self.config['EXECUTION_COLLECTION']
         ]
         collection.update_one({
             'id': execution.id,
@@ -309,7 +295,7 @@ class Handler:
     def finish_execution(self, execution):
         """ shuts down this execution and every related object """
         mongo = self.get_mongo()
-        collection = mongo[self.config['MONGO_EXECUTION_COLLECTION']]
+        collection = mongo[self.config['EXECUTION_COLLECTION']]
         collection.update_one({
             'id': execution.id
         }, {
@@ -429,7 +415,7 @@ class Handler:
             pointer.delete()
 
         collection = self.get_mongo()[
-            self.config['MONGO_EXECUTION_COLLECTION']
+            self.config['EXECUTION_COLLECTION']
         ]
 
         collection.update_one({

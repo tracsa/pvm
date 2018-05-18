@@ -133,16 +133,27 @@ class Node:
 
     def resolve_params(self, state=None):
         computed_params = {}
-
         for param in self.auth_params:
             if state is not None and param.type == 'ref':
-                user_ref = param.value.split('#')[1].strip()
-
+                element_ref, req = param.value.split('#')
                 try:
-                    adic = state['state']['items'][user_ref]['actors']['items']
-                    actor = adic[next(iter(adic.keys()))]
+                    if element_ref == 'user':
+                        adic = state['state']['items'][req]['actors']['items']
+                        actor = adic[next(iter(adic.keys()))]
+                        value = actor['user']['identifier']
+                    elif element_ref == 'form':
+                        _node, _form, _input = req.split('.')
+                        value_form = state['state']['items']
+                        adic = value_form[_node]['actors']['items']
+                        actor = adic[next(iter(adic.keys()))]
+                        form = actor['forms']
 
-                    value = actor['user']['identifier']
+                        for element in form:
+                            if element['ref'] == _form:
+                                value_input = element['inputs']['items']
+                                value = value_input[_input]['value']
+                                break
+
                 except StopIteration:
                     value = None
             else:
@@ -202,14 +213,16 @@ class Node:
 
         return found_refs
 
-    def log_entry(self, execution):
+    def pointer_entry(self, execution, pointer, notified_users=None):
         return {
+            'id': pointer.id,
             'started_at': datetime.now(),
             'finished_at': None,
             'execution': execution.to_json(),
             'node': self.to_json(),
             'actors': Map([], key='identifier').to_json(),
             'process_id': execution.process_name,
+            'notified_users': notified_users or [],
         }
 
     def get_state(self):

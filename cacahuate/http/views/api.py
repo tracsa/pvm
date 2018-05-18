@@ -51,7 +51,7 @@ def index():
 @app.route('/v1/execution', methods=['GET'])
 @pagination
 def execution_list():
-    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
     return jsonify({
         "data": list(map(
@@ -63,7 +63,7 @@ def execution_list():
 
 @app.route('/v1/execution/<id>', methods=['GET'])
 def process_status(id):
-    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
     try:
         exc = next(collection.find({'id': id}))
@@ -143,10 +143,10 @@ def start_process():
     pointer.proxy.execution.set(execution)
 
     # log to mongo
-    collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
-    collection.insert_one(start_point.log_entry(execution))
+    collection = mongo.db[app.config['POINTER_COLLECTION']]
+    collection.insert_one(start_point.pointer_entry(execution, pointer))
 
-    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
     collection.insert_one({
         '_type': 'execution',
         'id': execution.id,
@@ -330,7 +330,7 @@ def task_read(id):
         }])
 
     execution = pointer.proxy.execution.get()
-    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
     state = collection.find_one({
         'id': execution.id,
     })
@@ -413,7 +413,7 @@ def task_read(id):
 @app.route('/v1/log/<id>', methods=['GET'])
 @pagination
 def list_logs(id):
-    collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
+    collection = mongo.db[app.config['POINTER_COLLECTION']]
     node_id = request.args.get('node_id')
     query = {'execution.id': id}
 
@@ -432,7 +432,7 @@ def list_logs(id):
 
 @app.route('/v1/process/<id>/statistics', methods=['GET'])
 def node_statistics(id):
-    collection = mongo.db[app.config['MONGO_HISTORY_COLLECTION']]
+    collection = mongo.db[app.config['POINTER_COLLECTION']]
     query = [
         {"$match": {"process_id": id}},
         {"$project": {
@@ -476,7 +476,7 @@ def node_statistics(id):
 @app.route('/v1/process/statistics', methods=['GET'])
 @pagination
 def process_statistics():
-    collection = mongo.db[app.config['MONGO_EXECUTION_COLLECTION']]
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
     query = [
         {"$match": {"status": "finished"}},
         {"$skip": g.offset},

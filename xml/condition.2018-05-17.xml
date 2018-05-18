@@ -15,7 +15,7 @@
       </form-array>
     </action>
 
-    <if id="condition-node">
+    <if>
       <condition>mistery.password == "abrete sésamo"</condition>
       <body>
         <action id="mistical-node">
@@ -28,7 +28,7 @@
       </body>
     </if>
 
-    <if id="condition-node">
+    <if>
       <condition>mistery.password == "123456"</condition>
       <body>
         <action id="123456-node">

@@ -213,14 +213,16 @@ class Node:
 
         return found_refs
 
-    def log_entry(self, execution):
+    def pointer_entry(self, execution, pointer, notified_users=None):
         return {
+            'id': pointer.id,
             'started_at': datetime.now(),
             'finished_at': None,
             'execution': execution.to_json(),
             'node': self.to_json(),
             'actors': Map([], key='identifier').to_json(),
             'process_id': execution.process_name,
+            'notified_users': notified_users or [],
         }
 
     def get_state(self):
@@ -262,7 +264,24 @@ class Action(Node):
 
     def dependent_refs(self, invalidated, node_state):
         ''' finds dependencies of the invalidated set in this node '''
-        return []
+        refs = set()
+        actor = next(iter(node_state['actors']['items'].keys()))
+
+        for dep in invalidated:
+            _, depref = dep.split(':')
+
+            for form in self.form_array:
+                for field in form.inputs:
+                    for dep in field.dependencies:
+                        if depref == dep:
+                            refs.add('{node}.{actor}.0:{form}.{input}'.format(
+                                node=self.id,
+                                actor=actor,
+                                form=form.ref,
+                                input=field.name,
+                            ))
+
+        return refs
 
     def validate_form_spec(self, form_specs, associated_data) -> dict:
         ''' Validates the given data against the spec contained in form.
@@ -439,12 +458,13 @@ class Validation(Node):
     def dependent_refs(self, invalidated, node_state):
         ''' finds dependencies of the invalidated set in this node '''
         refs = set()
+        actor = next(iter(node_state['actors']['items'].keys()))
 
         for inref in invalidated:
             if self.in_dependencies(inref):
                 refs.add('{node}.{actor}.0:approval.response'.format(
                     node=self.id,
-                    actor=next(iter(node_state['actors']['items'].keys())),
+                    actor=actor,
                 ))
 
         return refs

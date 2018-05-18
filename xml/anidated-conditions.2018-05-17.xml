@@ -1,0 +1,75 @@
+<process-spec>
+  <process-info>
+    <author>Og Astorga</author>
+    <date>2018-05-17</date>
+    <name>Anidated conditions</name>
+    <public>false</public>
+    <description>anidated conditions</description>
+  </process-info>
+  <process>
+    <action id="a">
+      <form-array>
+        <form id="a">
+          <input type="text" name="a" />
+        </form>
+      </form-array>
+    </action>
+
+    <if>
+      <condition>a.a > "0"</condition>
+      <body>
+        <action id="b">
+          <form-array>
+            <form id="b">
+              <input type="text" name="b" />
+            </form>
+          </form-array>
+        </action>
+
+        <if>
+          <condition>b.b > "0"</condition>
+          <body>
+            <action id="c">
+              <form-array>
+                <form id="c">
+                  <input type="text" name="c" />
+                </form>
+              </form-array>
+            </action>
+
+            <if>
+              <condition>c.c > "0"</condition>
+              <body>
+                <action id="d">
+                  <form-array>
+                    <form id="d">
+                      <input type="text" name="d" />
+                    </form>
+                  </form-array>
+                </action>
+              </body>
+            </if>
+
+            <action id="e">
+              <form-array>
+                <form id="e">
+                  <input type="text" name="e" />
+                </form>
+              </form-array>
+            </action>
+          </body>
+        </if>
+
+        <action id="f">
+          <form-array>
+            <form id="f">
+              <input type="text" name="f" />
+            </form>
+          </form-array>
+        </action>
+      </body>
+    </if>
+
+    <action id="g"></action>
+  </process>
+</process-spec>

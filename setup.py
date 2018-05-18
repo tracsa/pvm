@@ -14,7 +14,7 @@ setup(
     long_description=long_description,
     url='https://github.com/tracsa/cacahuate',
 
-    version='2.0.0-alpha1',
+    version='2.0.0-alpha2',
 
     author='Abraham Toriz Cruz',
     author_email='categulario@gmail.com',
@@ -58,8 +58,8 @@ setup(
         'Flask-Cors',
         'Flask_PyMongo',
         'case_conversion',
-        'coralillo',
-        'flask',
+        'coralillo >= 0.8',
+        'flask >= 1.0',
         'itacate',
         'lark-parser',
         'ldap3',

@@ -44,6 +44,14 @@ class Input:
         self.default = element.getAttribute('default') or None
         self.label = element.getAttribute('label') or self.name
 
+        self.dependencies = []
+
+        deps_el = element.getElementsByTagName('dependencies')
+
+        if deps_el:
+            for dep_el in deps_el[0].getElementsByTagName('dep'):
+                self.dependencies.append(get_text(dep_el))
+
     def validate(self, value, form_index):
         value = value or self.get_default()
 

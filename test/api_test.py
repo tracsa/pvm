@@ -323,7 +323,7 @@ def test_start_process_requirements(client, mongo, config):
     }
 
     # no registry should be created yet
-    assert mongo[config["MONGO_HISTORY_COLLECTION"]].count() == 0
+    assert mongo[config["POINTER_COLLECTION"]].count() == 0
 
 
 def test_start_process(client, mocker, config, mongo):
@@ -398,14 +398,14 @@ def test_start_process(client, mocker, config, mongo):
     assert pointer.id == ptr.id
 
     # mongo has a registry
-    reg = next(mongo[config["MONGO_HISTORY_COLLECTION"]].find())
+    reg = next(mongo[config["POINTER_COLLECTION"]].find())
 
     assert_near_date(reg['started_at'])
     assert reg['finished_at'] is None
     assert reg['execution']['id'] == exc.id
     assert reg['node']['id'] == ptr.node_id
 
-    reg = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find())
+    reg = next(mongo[config["EXECUTION_COLLECTION"]].find())
 
     assert_near_date(reg['started_at'])
 
@@ -884,7 +884,7 @@ def test_list_activities(client):
 
 
 def test_logs_activity(mongo, client, config):
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+    mongo[config["POINTER_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),
         'finished_at': None,
         'execution': {
@@ -895,7 +895,7 @@ def test_logs_activity(mongo, client, config):
         },
     })
 
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_one({
+    mongo[config["POINTER_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 50),
         'finished_at': None,
         'execution': {
@@ -1050,7 +1050,7 @@ def test_task_validation(client, mongo, config):
         }],
     }
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
         'state': state,
@@ -1193,7 +1193,7 @@ def test_status(config, client, mongo):
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     execution = ptr.proxy.execution.get()
 
-    mongo[config['MONGO_EXECUTION_COLLECTION']].insert_one({
+    mongo[config['EXECUTION_COLLECTION']].insert_one({
         'id': execution.id,
     })
 
@@ -1208,7 +1208,7 @@ def test_status(config, client, mongo):
 
 
 def test_execution_list(client, mongo, config):
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
         'status': 'ongoing',
     })
 
@@ -1250,7 +1250,7 @@ def test_node_statistics(client, mongo, config):
             'process_id': process_id
         }
 
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_many([
+    mongo[config["POINTER_COLLECTION"]].insert_many([
         make_node_reg(
             'simple.2018-02-19', 'test1',
             make_date(),
@@ -1316,7 +1316,7 @@ def test_process_statistics(client, mongo, config):
             },
         }
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_many([
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
         make_exec_reg('p1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
         make_exec_reg('p2', make_date(), make_date(2018, 5, 10, 10, 34, 32)),
         make_exec_reg('p1', make_date(), make_date(2018, 5, 11, 22, 41, 10)),
@@ -1357,7 +1357,7 @@ def test_pagination_execution_log(client, mongo, config):
             },
         }
 
-    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_many([
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
         make_exec_reg('p1', make_date(), make_date(2018, 5, 10, 4, 5, 6)),
         make_exec_reg('p2', make_date(), make_date(2018, 5, 10, 10, 34, 32)),
         make_exec_reg('p3', make_date(), make_date(2018, 5, 11, 22, 41, 10)),
@@ -1390,7 +1390,7 @@ def test_pagination_v1_log(client, mongo, config):
             'process_id': process_id
         }
 
-    mongo[config["MONGO_HISTORY_COLLECTION"]].insert_many([
+    mongo[config["POINTER_COLLECTION"]].insert_many([
         make_node_reg(
             'simple.2018-02-19', 'mid-node',
             make_date(),

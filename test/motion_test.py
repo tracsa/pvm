@@ -26,7 +26,15 @@ def test_find_next_element_normal(config):
         lambda e: e.getAttribute('id') == 'mid-node'
     ))
 
-    values = handler.next(xml, current_node, {}, {})
+    values = handler.next(xml, current_node, {
+        'state': {
+            'items': {
+                'final-node': {
+                    'state': 'unfilled',
+                },
+            },
+        },
+    }, {})
 
     assert len(values) == 1
     assert values[0].id == 'final-node'

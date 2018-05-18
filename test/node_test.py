@@ -18,15 +18,28 @@ def test_resolve_params(config):
                                 'user': {
                                     'identifier': 'juan',
                                 },
-                                'forms': [{
-                                    'inputs': {
-                                        'items': {
-                                            'reason': {
-                                                'value': 'nones',
+                                'forms': [
+                                    {
+                                        'ref': 'sdfdfgg',
+                                        'inputs': {
+                                            'items': {
+                                                'reason': {
+                                                    'value': 'sdfgfs',
+                                                },
                                             },
                                         },
                                     },
-                                }],
+                                    {
+                                        'ref': 'exit-form',
+                                        'inputs': {
+                                            'items': {
+                                                'reason': {
+                                                    'value': 'nones',
+                                                },
+                                            },
+                                        },
+                                    },
+                                ],
                             },
                         },
                     },

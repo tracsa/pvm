@@ -133,16 +133,24 @@ class Node:
 
     def resolve_params(self, state=None):
         computed_params = {}
-
         for param in self.auth_params:
             if state is not None and param.type == 'ref':
-                user_ref = param.value.split('#')[1].strip()
-
+                element_ref, req = param.value.split('#')
                 try:
-                    adic = state['state']['items'][user_ref]['actors']['items']
-                    actor = adic[next(iter(adic.keys()))]
+                    if element_ref == 'user':
+                        adic = state['state']['items'][req]['actors']['items']
+                        actor = adic[next(iter(adic.keys()))]
+                        value = actor['user']['identifier']
+                    elif element_ref == 'form':
+                        element_node, element_form, element_ipunt = req.split('.')
+                        adic = state['state']['items'][element_node]['actors']['items']
+                        actor = adic[next(iter(adic.keys()))]
+                        form = actor['forms']
+                        for a in form:
+                            if a['ref'] == element_form:
+                                value = (a['inputs']['items'][element_ipunt]['value'])
+                                break
 
-                    value = actor['user']['identifier']
                 except StopIteration:
                     value = None
             else:

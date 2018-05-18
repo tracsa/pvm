@@ -15,10 +15,13 @@
       </form-array>
     </action>
 
-    <request id="request-node" method="GET">
+    <request id="request-node" method="get">
       <url>http://localhost/mirror?data={{ request.data }}</url>
-      <header></header>
-      <body>{"data":"{{ request.data}}"}</body>
+      <headers>
+        <header name="content-type">application/json</header>
+        <header name="x-url-data">{{ request.data }}</header>
+      </headers>
+      <body>{"data":"{{ request.data }}"}</body>
     </request>
   </process>
 </process-spec>

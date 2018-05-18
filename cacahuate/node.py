@@ -142,13 +142,16 @@ class Node:
                         actor = adic[next(iter(adic.keys()))]
                         value = actor['user']['identifier']
                     elif element_ref == 'form':
-                        element_node, element_form, element_ipunt = req.split('.')
-                        adic = state['state']['items'][element_node]['actors']['items']
+                        element_node, element_form, element_ipunt = \
+                            req.split('.')
+                        value_form = state['state']['items']
+                        adic = value_form[element_node]['actors']['items']
                         actor = adic[next(iter(adic.keys()))]
                         form = actor['forms']
-                        for a in form:
-                            if a['ref'] == element_form:
-                                value = (a['inputs']['items'][element_ipunt]['value'])
+                        for element in form:
+                            if element['ref'] == element_form:
+                                value_input = element['inputs']['items']
+                                value = value_input[element_ipunt]['value']
                                 break
 
                 except StopIteration:

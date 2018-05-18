@@ -69,11 +69,11 @@ class Handler:
 
         for node in next_nodes:
             # node's begining of life
-            pointer = self.wakeup(node, execution, channel, state)
+            qdata = self.wakeup(node, execution, channel, state)
 
             # async nodes don't return theirs pointers so they are not queued
-            if pointer:
-                to_queue.append(pointer)
+            if qdata:
+                to_queue.append(qdata)
 
         if execution.proxy.pointers.count() == 0:
             self.finish_execution(execution)
@@ -83,7 +83,8 @@ class Handler:
             durable=True
         )
 
-        for pointer in to_queue:
+        # Sync nodes are queued immediatly
+        for pointer, input in to_queue:
             channel.basic_publish(
                 exchange='',
                 routing_key=self.config['RABBIT_QUEUE'],
@@ -91,7 +92,7 @@ class Handler:
                     'command': 'step',
                     'pointer_id': pointer.id,
                     'user_identifier': '__system__',
-                    'input': [],
+                    'input': input,
                 }),
                 properties=pika.BasicProperties(
                     delivery_mode=2,
@@ -239,6 +240,11 @@ class Handler:
         else:
             notified_users = []
 
+        if not node.is_async():
+            input = node.work(state)
+        else:
+            input = []
+
         # update registry about this pointer
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.insert_one(node.pointer_entry(
@@ -247,7 +253,7 @@ class Handler:
 
         # nodes with forms are not queued
         if not node.is_async():
-            return pointer
+            return pointer, input
 
     def teardown(self, node, pointer, user, input):
         ''' finishes the node's lifecycle '''

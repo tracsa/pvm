@@ -8,6 +8,7 @@
   </process-info>
   <process>
     <action id="start-node" >
+      <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="work">
           <input type="text" name="task"></input>
@@ -19,6 +20,7 @@
       <condition>fiuref hiur</condition>
       <body>
         <action id="start-node" >
+          <auth-filter backend="hardcoded"></auth-filter>
           <form-array>
             <form id="work">
               <input type="text" name="task"></input>
@@ -30,6 +32,7 @@
           <condition>fiuref hiur</condition>
           <body>
             <action id="start-node" >
+              <auth-filter backend="hardcoded"></auth-filter>
               <form-array>
                 <form id="work">
                   <input type="text" name="task"></input>
@@ -40,6 +43,7 @@
         </if>
 
         <action id="start-node" >
+          <auth-filter backend="hardcoded"></auth-filter>
           <form-array>
             <form id="work">
               <input type="text" name="task"></input>
@@ -50,6 +54,7 @@
     </if>
 
     <validation id="approval-node" >
+      <auth-filter backend="hardcoded"></auth-filter>
       <dependencies>
         <dep>work.task</dep>
       </dependencies>

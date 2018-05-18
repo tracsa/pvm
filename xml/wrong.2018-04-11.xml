@@ -8,6 +8,7 @@
   </process-info>
   <process>
     <action id="start-node" >
+      <auth-filter backend="hardcoded"></auth-filter>
       <form-array>
         <form id="form">
           <input type="select" name="choice">

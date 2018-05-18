@@ -92,6 +92,48 @@ class Node:
         for attrname, value in element.attributes.items():
             setattr(self, attrname, value)
 
+    def is_async(self):
+        raise NotImplementedError('Must be implemented in subclass')
+
+    def validate_input(self, json_data):
+        raise NotImplementedError('Must be implemented in subclass')
+
+    def pointer_entry(self, execution, pointer, notified_users=None):
+        return {
+            'id': pointer.id,
+            'started_at': datetime.now(),
+            'finished_at': None,
+            'execution': execution.to_json(),
+            'node': self.to_json(),
+            'actors': Map([], key='identifier').to_json(),
+            'process_id': execution.process_name,
+            'notified_users': notified_users or [],
+        }
+
+    def get_state(self):
+        return {
+            '_type': 'node',
+            'type': type(self).__name__.lower(),
+            'id': self.id,
+            'comment': '',
+            'state': 'unfilled',
+            'actors': Map([], key='identifier').to_json(),
+        }
+
+    def to_json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'type': type(self).__name__.lower(),
+        }
+
+
+class UserAttachedNode(Node):
+
+    def __init__(self, element):
+        super().__init__(element)
+
         # node info
         node_info = element.getElementsByTagName('node-info')
 
@@ -124,12 +166,6 @@ class Node:
                 lambda x: AuthParam(x),
                 filter_node.getElementsByTagName('param')
             ))
-
-    def is_async(self):
-        raise NotImplementedError('Must be implemented in subclass')
-
-    def validate_input(self, json_data):
-        raise NotImplementedError('Must be implemented in subclass')
 
     def resolve_params(self, state=None):
         computed_params = {}
@@ -213,37 +249,8 @@ class Node:
 
         return found_refs
 
-    def pointer_entry(self, execution, pointer, notified_users=None):
-        return {
-            'id': pointer.id,
-            'started_at': datetime.now(),
-            'finished_at': None,
-            'execution': execution.to_json(),
-            'node': self.to_json(),
-            'actors': Map([], key='identifier').to_json(),
-            'process_id': execution.process_name,
-            'notified_users': notified_users or [],
-        }
 
-    def get_state(self):
-        return {
-            '_type': 'node',
-            'id': self.id,
-            'comment': '',
-            'state': 'unfilled',
-            'actors': Map([], key='identifier').to_json(),
-        }
-
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'type': type(self).__name__.lower(),
-        }
-
-
-class Action(Node):
+class Action(UserAttachedNode):
     ''' A node from the process's graph. It is initialized from an Element
     '''
 
@@ -353,7 +360,7 @@ class Action(Node):
         return collected_forms
 
 
-class Validation(Node):
+class Validation(UserAttachedNode):
 
     VALID_RESPONSES = ('accept', 'reject')
 
@@ -472,6 +479,12 @@ class Validation(Node):
 
 class Exit(Node):
     ''' A node that kills an execution with some status '''
+
+    def __init__(self, element):
+        super().__init__(element)
+
+        self.name = 'Exit ' + self.id
+        self.description = 'Exit ' + self.id
 
     def is_async(self):
         return False

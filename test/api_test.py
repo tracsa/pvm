@@ -218,6 +218,7 @@ def test_continue_process(client, mocker, config):
         'input': [{
             '_type': 'form',
             'ref': 'mid-form',
+            'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
@@ -227,6 +228,7 @@ def test_continue_process(client, mocker, config):
                         "value": "yes",
                         'label': 'data',
                         'value_caption': 'yes',
+                        'state': 'valid',
                     },
                 },
                 'item_order': ['data'],
@@ -367,6 +369,7 @@ def test_start_process(client, mocker, config, mongo):
         'input': [{
             '_type': 'form',
             'ref': 'start-form',
+            'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
@@ -376,6 +379,7 @@ def test_start_process(client, mocker, config, mongo):
                         'value': 'yes',
                         'value_caption': 'yes',
                         'name': 'data',
+                        'state': 'valid',
                     },
                 },
                 'item_order': ['data'],

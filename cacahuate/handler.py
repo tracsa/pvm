@@ -62,9 +62,10 @@ class Handler:
         collection = self.get_mongo()[
             self.config['MONGO_EXECUTION_COLLECTION']
         ]
-        state = next(collection.find({'id': execution.id}))
 
+        state = next(collection.find({'id': execution.id}))
         next_nodes = self.next(xml, node, state, input)
+        state = next(collection.find({'id': execution.id}))
 
         for node in next_nodes:
             # node's begining of life
@@ -188,19 +189,26 @@ class Handler:
             xmliter = iter(xml)
             xmliter.find(lambda e: e.getAttribute('id') == node.id)
 
-            element = next(xmliter)
+            # skip nodes in certain conditions, like anidated ifs and already
+            # validated nodes
+            grammar = None
+            element = None
 
-            context = None
-            while element.tagName == 'if':
-                if context is None:
-                    context = Condition(state['state'])
-
-                condition = xmliter.get_next_condition()
-
-                if not context.parse(condition):
-                    xmliter.expand(element)
-
+            while True:
                 element = next(xmliter)
+                el_id = element.getAttribute('id')
+
+                if element.tagName == 'if':
+                    if grammar is None:
+                        grammar = Condition(state['state'])
+
+                    condition = xmliter.get_next_condition()
+
+                    if not grammar.parse(condition):
+                        xmliter.expand(element)
+                elif el_id in state['state']['items']:
+                    if state['state']['items'][el_id]['state'] != 'valid':
+                        break
 
             return [make_node(element)]
         except StopIteration:
@@ -315,8 +323,25 @@ class Handler:
 
         execution.delete()
 
+    def get_invalid_users(self, node_state):
+        users = [
+            username
+            for username, actor in node_state['actors']['items'].items()
+            if actor['state'] == 'invalid'
+        ]
+
+        return list(map(
+            lambda u: User.get_by('identifier', u),
+            users
+        ))
+
     def notify_users(self, node, pointer, channel, state):
-        users = node.get_actors(self.config, state)
+        node_state = state['state']['items'][node.id]
+
+        if node_state['state'] == 'invalid':
+            users = self.get_invalid_users(node_state)
+        else:
+            users = node.get_actors(self.config, state)
 
         if type(users) != list:
             raise MisconfiguredProvider('Provider returned non list')

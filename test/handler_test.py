@@ -606,6 +606,8 @@ def test_reject(config, mongo):
     new_ptr = Pointer.get_all()[0]
     assert new_ptr.node_id == 'start-node'
 
+    assert new_ptr in user.proxy.tasks
+
     # data is invalidated
     state = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find({
         'id': execution.id,
@@ -766,23 +768,398 @@ def test_reject(config, mongo):
     }
 
 
-@pytest.mark.skip
-def test_reject_with_dependencies():
-    assert False, 'dependencies are invalidated'
+def test_reject_with_dependencies(config, mongo):
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('validation-reloaded.2018-05-17.xml', 'node1')
+    channel = MagicMock()
+    execution = ptr.proxy.execution.get()
 
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': Xml.load(config, 'validation-reloaded').get_state(),
+    })
 
-@pytest.mark.skip
-def test_rejected_doesnt_repeat():
-    ''' asserts that a pointer moved to the past doesn't repeat a task that
-    wasn't invalidated by the rejection '''
-    assert False
+    # first call to node1
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'form1',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        'value': '1',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node2'
 
+    # first call to node2
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'form2',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        'value': '1',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node3'
 
-@pytest.mark.skip
-def test_rejected_repeats():
-    ''' asserts that a pointer moved to the past repeats the nodes that were
-    invalidated '''
-    assert False
+    # first call to node3
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'form3',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        'value': '1',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node4'
+
+    # first call to validation
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'reject',
+                    },
+                    'comment': {
+                        'value': 'I do not like it',
+                    },
+                    'inputs': {
+                        'value': [{
+                            'ref': 'node1.juan.0:form1.task',
+                        }],
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node1'
+
+    # second call to node1
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'form1',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        'value': '2',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node2'
+
+    # second call to node2
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'form2',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        'value': '2',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node4'
+
+    # second call to validation
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'approval',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'response': {
+                        'value': 'accept',
+                    },
+                    'comment': {
+                        'value': 'I like it',
+                    },
+                    'inputs': {
+                        'value': None,
+                    },
+                },
+                'item_order': ['response', 'comment', 'inputs'],
+            },
+        }],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'node5'
+
+    # first call to last node
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            '_type': 'form',
+            'ref': 'form5',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'task': {
+                        'value': '1',
+                    },
+                },
+                'item_order': ['task'],
+            },
+        }],
+    }, channel)
+    assert Pointer.get_all() == []
+
+    # state is coherent
+    state = next(mongo[config["MONGO_EXECUTION_COLLECTION"]].find({
+        'id': execution.id,
+    }))
+
+    del state['_id']
+    del state['finished_at']
+
+    assert state == {
+        '_type': 'execution',
+        'id': execution.id,
+        'state': {
+            '_type': ':sorted_map',
+            'items': {
+                'node1': {
+                    '_type': 'node',
+                    'id': 'node1',
+                    'state': 'valid',
+                    'comment': 'I do not like it',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'form1',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'task': {'value': '2'},
+                                        },
+                                        'item_order': ['task'],
+                                    },
+                                }],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
+                    },
+                },
+
+                'node2': {
+                    '_type': 'node',
+                    'id': 'node2',
+                    'state': 'valid',
+                    'comment': 'I do not like it',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'form2',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'task': {'value': '2'},
+                                        },
+                                        'item_order': ['task'],
+                                    },
+                                }],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
+                    },
+                },
+
+                'node3': {
+                    '_type': 'node',
+                    'id': 'node3',
+                    'state': 'valid',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'form3',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'task': {'value': '1'},
+                                        },
+                                        'item_order': ['task'],
+                                    },
+                                }],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
+                    },
+                },
+
+                'node4': {
+                    '_type': 'node',
+                    'id': 'node4',
+                    'state': 'valid',
+                    'comment': 'I do not like it',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'approval',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'response': {
+                                                'value': 'accept',
+                                            },
+                                            'comment': {
+                                                'value': 'I like it',
+                                            },
+                                            'inputs': {
+                                                'value': None,
+                                            },
+                                        },
+                                        'item_order': [
+                                            'response',
+                                            'comment',
+                                            'inputs',
+                                        ],
+                                    },
+                                }],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
+                    },
+                },
+
+                'node5': {
+                    '_type': 'node',
+                    'id': 'node5',
+                    'state': 'valid',
+                    'comment': '',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'forms': [{
+                                    '_type': 'form',
+                                    'ref': 'form5',
+                                    'inputs': {
+                                        '_type': ':sorted_map',
+                                        'items': {
+                                            'task': {'value': '1'},
+                                        },
+                                        'item_order': ['task'],
+                                    },
+                                }],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': 'juan',
+                                    'fullname': 'Juan',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            'item_order': ['node1', 'node2', 'node3', 'node4', 'node5'],
+        },
+        'status': 'finished',
+    }
 
 
 @pytest.mark.skip
@@ -801,7 +1178,7 @@ def test_resistance_unexisteng_hierarchy_backend(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -823,7 +1200,7 @@ def test_resistance_hierarchy_return(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -845,7 +1222,7 @@ def test_resistance_hierarchy_item(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -867,7 +1244,7 @@ def test_resistance_node_not_found(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, 'wrong').get_state(),
     })
 
     # this is what we test
@@ -900,7 +1277,7 @@ def test_true_condition_node(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'validation').get_state(),
+        'state': Xml.load(config, 'condition').get_state(),
     })
 
     handler.call({
@@ -945,7 +1322,7 @@ def test_elseif_condition_node(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'validation').get_state(),
+        'state': Xml.load(config, 'condition').get_state(),
     })
 
     handler.call({
@@ -990,7 +1367,7 @@ def test_false_condition_node(config, mongo):
     mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'validation').get_state(),
+        'state': Xml.load(config, 'condition').get_state(),
     })
 
     handler.call({
@@ -1022,3 +1399,118 @@ def test_false_condition_node(config, mongo):
 
     new_ptr = Pointer.get_all()[0]
     assert new_ptr.node_id == 'final-node'
+
+
+def test_anidated_conditions(config, mongo):
+    ''' conditional node won't be executed if its condition is false '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('anidated-conditions.2018-05-17.xml', 'a')
+    channel = MagicMock()
+
+    mongo[config["MONGO_EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'anidated-conditions').get_state(),
+    })
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'a',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['a'],
+                'items': {
+                    'a': {'value': '1'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'b'
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'b',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['b'],
+                'items': {
+                    'b': {'value': '0.00004'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'c'
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'c',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['c'],
+                'items': {
+                    'c': {'value': '-1'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'e'
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'e',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['e'],
+                'items': {
+                    'e': {'value': '-1'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'f'
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'f',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['f'],
+                'items': {
+                    'f': {'value': '-1'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'g'

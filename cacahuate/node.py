@@ -67,6 +67,7 @@ class Form:
                 input_description = input.to_json()
                 input_description['value'] = value
                 input_description['value_caption'] = input.make_caption(value)
+                input_description['state'] = 'valid'
 
                 collected_inputs.append(input_description)
             except InputError as e:
@@ -77,6 +78,7 @@ class Form:
 
         return {
             '_type': 'form',
+            'state': 'valid',
             'ref': self.ref,
             'inputs': SortedMap(collected_inputs, key='name').to_json(),
         }
@@ -249,7 +251,24 @@ class Action(Node):
 
     def dependent_refs(self, invalidated, node_state):
         ''' finds dependencies of the invalidated set in this node '''
-        return []
+        refs = set()
+        actor = next(iter(node_state['actors']['items'].keys()))
+
+        for dep in invalidated:
+            _, depref = dep.split(':')
+
+            for form in self.form_array:
+                for field in form.inputs:
+                    for dep in field.dependencies:
+                        if depref == dep:
+                            refs.add('{node}.{actor}.0:{form}.{input}'.format(
+                                node=self.id,
+                                actor=actor,
+                                form=form.ref,
+                                input=field.name,
+                            ))
+
+        return refs
 
     def validate_form_spec(self, form_specs, associated_data) -> dict:
         ''' Validates the given data against the spec contained in form.
@@ -426,12 +445,13 @@ class Validation(Node):
     def dependent_refs(self, invalidated, node_state):
         ''' finds dependencies of the invalidated set in this node '''
         refs = set()
+        actor = next(iter(node_state['actors']['items'].keys()))
 
         for inref in invalidated:
             if self.in_dependencies(inref):
                 refs.add('{node}.{actor}.0:approval.response'.format(
                     node=self.id,
-                    actor=next(iter(node_state['actors']['items'].keys())),
+                    actor=actor,
                 ))
 
         return refs
@@ -450,6 +470,10 @@ def make_node(element):
         raise ValueError(
             'Class definition not found for node: {}'.format(element.tagName)
         )
+
+    # if nodes are not reflected in state
+    if element.tagName == 'if':
+        return None
 
     class_name = pascalcase(element.tagName)
     available_classes = __import__(__name__).node

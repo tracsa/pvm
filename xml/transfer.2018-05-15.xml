@@ -1,0 +1,62 @@
+<process-spec>
+  <process-info>
+    <author>cueto</author>
+    <date>2018-05-13</date>
+    <name>Cotizacion</name>
+    <public>true</public>
+    <description>A process of confirmation</description>
+  </process-info>
+  <process>
+    <action id="start-node">
+      <auth-filter backend="anyone"></auth-filter>
+      <node-info>
+        <name>Formulario Traspaso </name>
+        <description>llenar formulario traspaso</description>
+      </node-info>
+
+      <form-array>
+        <form id="transfer_form">
+          <input type="text" label="id equipo" name="id_equipo" required="required"/>
+          <input type="text" label="inventario destino" name="inventario_destino" required="required"/>
+          <input type="text" label="inventario origen" name="inventario_origen" required="required"/>
+          <input type="text" label="Marca del Equipo" name="marcaequipo" required="required"/>
+          <input type="text" label="Modelo del Equipo" name="modeloequipo" required="required"/>
+          <input type="date" label="Fecha de solicitud" name="fecha" required="required"/>
+          <input type="text" label="Descripcion Equipo" name="descripcionequipo" required="required"/>
+
+        </form>
+      </form-array>
+    </action>
+
+
+    <action id="gerente-aprueba-node" >
+      <node-info>
+        <name>Aprobacion gerente reserva </name>
+        <description>aprobar reserva</description>
+      </node-info>
+
+      <auth-filter backend="quemado">
+        <param name="operation">Transfer</param>
+        <param name="relation">gerente</param>
+        <param name="inventario_destino" type="ref">form#transfer_form.inventario_destino</param>
+      </auth-filter>
+
+      <form-array>
+        <form id="gerente-aprueba-auth">
+          <input type="text" label="Comentario de rechazo" name="recahao" required="required"/>
+          <input type="radio" label="¿Aprueba el traspaso?" name="auth" required="required">
+            <option value="yes">Aprobado</option>
+            <option value="no">Rechazado</option>
+          </input>
+        </form>
+      </form-array>
+    </action>
+
+    <action id="detona-flujo-depreciacion-action" >
+      <auth-filter backend="hardcoded"></auth-filter>
+      <!-- El sistema manda hablar flujo depreciacion-->
+    </action>
+
+
+  </process>
+</process-spec>

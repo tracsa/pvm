@@ -8,6 +8,7 @@
   </process-info>
   <process>
     <action id="node1">
+      <auth-filter backend="anyone"></auth-filter>
       <node-info>
         <name>Primer paso</name>
         <description>Resolver una tarea</description>
@@ -20,6 +21,7 @@
     </action>
 
     <action id="node2">
+      <auth-filter backend="hardcoded"></auth-filter>
       <node-info>
         <name>Segundo paso</name>
         <description>Resolver una tarea</description>
@@ -36,6 +38,7 @@
     </action>
 
     <action id="node3">
+      <auth-filter backend="hardcoded"></auth-filter>
       <node-info>
         <name>Tercer paso</name>
         <description>Resolver una tarea</description>
@@ -48,6 +51,7 @@
     </action>
 
     <validation id="node4" >
+      <auth-filter backend="hardcoded"></auth-filter>
       <dependencies>
         <dep>form1.task</dep>
       </dependencies>
@@ -58,6 +62,7 @@
     </validation>
 
     <action id="node5">
+      <auth-filter backend="hardcoded"></auth-filter>
       <form-array>
         <form id="form5">
           <input type="text" name="task"></input>

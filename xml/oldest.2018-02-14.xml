@@ -7,6 +7,8 @@
         <description>A process for testing loading</description>
     </process-info>
     <process>
-      <action id="start" />
+      <action id="start">
+       <auth-filter backend="anyone"></auth-filter>
+      </action>
     </process>
 </process-spec>

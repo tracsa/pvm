@@ -192,7 +192,7 @@ def continue_process():
     except ModelNotFoundError:
         raise BadRequest([{
             'detail': 'execution_id is not valid',
-            'code': 'validation.invalidssss',
+            'code': 'validation.invalid',
             'where': 'request.body.execution_id',
         }])
 

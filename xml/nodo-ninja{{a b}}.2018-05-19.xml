@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-02-19</date>
+    <name>Simplest process ever{% if start_form %} started with: {{ start_form.data }}{% endif %}</name>
+    <public>true</public>
+    <description>A simple process that does nothing</description>
+  </process-info>
+  <process>
+    <action id="start-node">
+      <auth-filter backend="anyone"></auth-filter>
+      <node-info>
+        <name>Primer paso</name>
+        <description>Resolver una tarea</description>
+      </node-info>
+      <form-array>
+        <form id="start_form">
+          <input type="text" name="data" required="required" label="Info" />
+        </form>
+      </form-array>
+    </action>
+  </process>
+</process-spec>

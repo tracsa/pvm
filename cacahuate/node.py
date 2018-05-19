@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Iterator
 from xml.dom.minidom import Element
 from jinja2 import Template
-from requests import request
+import requests
 import re
 
 from cacahuate.errors import ElementNotFound, IncompleteBranch, \
@@ -516,7 +516,7 @@ class Request(Node):
             self.headers
         ))
 
-        response = request(
+        response = requests.request(
             self.method,
             url,
             headers=headers,

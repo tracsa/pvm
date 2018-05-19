@@ -477,6 +477,30 @@ class Validation(UserAttachedNode):
         return refs
 
 
+class CallFormInput(Node):
+
+    pass
+
+
+class CallForm(Node):
+
+    def __init__(self, element):
+        super().__init__(element)
+
+        self.inputs = []
+
+        for input_el in element.getElementsByTagName('input'):
+            self.inputs.append(CallFormInput(input_el))
+
+    def render(self, context):
+        res = {}
+
+        for input in self.inputs:
+            res[input.name] = ''
+
+        return res
+
+
 class Call(Node):
     ''' Calls a subprocess '''
 
@@ -488,6 +512,13 @@ class Call(Node):
 
         self.procname = get_text(element.getElementsByTagName('procname')[0])
 
+        self.forms = []
+
+        data_el = element.getElementsByTagName('data')[0]
+
+        for form_el in data_el.getElementsByTagName('form'):
+            self.forms.append(CallForm(form_el))
+
     def is_async(self):
         return False
 
@@ -497,7 +528,11 @@ class Call(Node):
         xmliter = iter(xml)
         node = make_node(next(xmliter))
 
-        xml.start(node, [], mongo, channel, '__system__')
+        from pprint import pprint; pprint(state)
+
+        xml.start(node, [
+            form.render(context) for form in self.forms
+        ], mongo, channel, '__system__')
 
         return []
 

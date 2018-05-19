@@ -10,7 +10,7 @@ from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import Action
 from cacahuate.xml import Xml
 
-from .utils import make_pointer, make_user, assert_near_date
+from .utils import make_pointer, make_user, assert_near_date, random_string
 
 
 def test_recover_step(config):
@@ -1630,6 +1630,7 @@ def test_call_node(config, mongo):
     ptr = make_pointer('call.2018-05-18.xml', 'start-node')
     channel = MagicMock()
     execution = ptr.proxy.execution.get()
+    value = random_string()
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
@@ -1650,7 +1651,7 @@ def test_call_node(config, mongo):
                 'item_order': ['data'],
                 'items': {
                     'data': {
-                        'value': 'somedata',
+                        'value': value,
                     },
                 },
             },
@@ -1671,7 +1672,7 @@ def test_call_node(config, mongo):
         'command': 'step',
         'pointer_id': new_ptr.id,
         'user_identifier': '__system__',
-        'input': [],
+        'input': ['dete'],
     }
 
     # normal rabbit call
@@ -1711,29 +1712,3 @@ def test_call_node(config, mongo):
     assert Pointer.get(ptr.id) is None
     execution = Execution.get_all()[0]
     assert execution.process_name == 'simple.2018-02-19.xml'
-
-    # first node, second process
-    handler.call({
-        'command': 'step',
-        'pointer_id': new_ptr.id,
-        'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'start_form',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['data'],
-                'items': {
-                    'data': {
-                        'value': 'somedata',
-                    },
-                },
-            },
-        }],
-    }, channel)
-
-    new_ptr = Pointer.get_all()[0]
-    assert new_ptr.node_id == 'mid-node'
-
-    assert False, 'the state of the new process has data from the original'
-    assert False, 'the state if the first process is well formated'

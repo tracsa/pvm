@@ -316,9 +316,30 @@ class Action(UserAttachedNode):
             }])
 
         for index, form in associated_data:
+            if type(form) != dict:
+                raise BadRequest([{
+                    'detail': 'each form must be a dict',
+                    'where': 'request.body.form_array.{}.data'.format(index),
+                }])
+
+            if 'data' not in form:
+                raise BadRequest([{
+                    'detail': 'form.data is required',
+                    'code': 'validation.required',
+                    'where': 'request.body.form_array.{}.data'.format(index),
+                }])
+
+            if type(form['data']) != dict:
+                raise BadRequest([{
+                    'detail': 'form.data must be a dict',
+                    'code': 'validation.invalid',
+                    'where': 'request.body.form_array.{}.data'.format(index),
+                }])
+
+
             collected_forms.append(form_specs.validate(
                 index,
-                form.get('data', {})
+                form['data']
             ))
 
         return collected_forms

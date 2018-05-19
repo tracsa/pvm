@@ -197,6 +197,7 @@ class Handler:
             grammar = None
             element = None
 
+            # TODO expropiese
             while True:
                 element = next(xmliter)
                 el_id = element.getAttribute('id')

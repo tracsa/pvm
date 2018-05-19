@@ -46,6 +46,11 @@ def test_resolve_params(config):
                 },
             },
         },
+        'values': {
+            'exit-form': {
+                'reason': 'nones',
+            },
+        },
     }
 
     assert node.resolve_params(state) == {

@@ -69,11 +69,11 @@ class Handler:
 
         for node in next_nodes:
             # node's begining of life
-            pointer = self.wakeup(node, execution, channel, state)
+            qdata = self.wakeup(node, execution, channel, state)
 
             # async nodes don't return theirs pointers so they are not queued
-            if pointer:
-                to_queue.append(pointer)
+            if qdata:
+                to_queue.append(qdata)
 
         if execution.proxy.pointers.count() == 0:
             self.finish_execution(execution)
@@ -83,15 +83,16 @@ class Handler:
             durable=True
         )
 
-        for pointer in to_queue:
+        # Sync nodes are queued immediatly
+        for pointer, input in to_queue:
             channel.basic_publish(
                 exchange='',
                 routing_key=self.config['RABBIT_QUEUE'],
                 body=json.dumps({
                     'command': 'step',
                     'pointer_id': pointer.id,
-                    'user_identifier': None,
-                    'input': [],
+                    'user_identifier': '__system__',
+                    'input': input,
                 }),
                 properties=pika.BasicProperties(
                     delivery_mode=2,
@@ -210,6 +211,8 @@ class Handler:
                         xmliter.expand(element)
                 if element.tagName == 'exit':
                     break
+                if element.tagName == 'call':
+                    break
                 elif el_id in state['state']['items']:
                     if state['state']['items'][el_id]['state'] != 'valid':
                         break
@@ -237,6 +240,11 @@ class Handler:
         else:
             notified_users = []
 
+        if not node.is_async():
+            input = node.work(self.config, state, channel, self.get_mongo())
+        else:
+            input = []
+
         # update registry about this pointer
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.insert_one(node.pointer_entry(
@@ -245,47 +253,37 @@ class Handler:
 
         # nodes with forms are not queued
         if not node.is_async():
-            return pointer
+            return pointer, input
 
     def teardown(self, node, pointer, user, input):
         ''' finishes the node's lifecycle '''
         execution = pointer.proxy.execution.get()
+        execution.proxy.actors.add(user)
 
-        pointer_query = {}
-        execution_query = {}
-
-        if isinstance(node, UserAttachedNode):
-            execution.proxy.actors.add(user)
-
-            actor_json = {
-                '_type': 'actor',
-                'state': 'valid',
-                'user': user.to_json(include=[
-                    '_type',
-                    'fullname',
-                    'identifier',
-                ]),
-                'forms': input,
-            }
-
-            pointer_query['actors.items.{identifier}'.format(
-                identifier=user.identifier,
-            )] = actor_json
-
-            execution_query[
-                'state.items.{node}.actors.items.{identifier}'.format(
-                    node=node.id,
-                    identifier=user.identifier,
-                )] = actor_json
+        actor_json = {
+            '_type': 'actor',
+            'state': 'valid',
+            'user': user.to_json(include=[
+                '_type',
+                'fullname',
+                'identifier',
+            ]),
+            'forms': input,
+        }
 
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.update_one({
             'id': pointer.id,
         }, {
-            '$set': {**{
+            '$set': {
                 'finished_at': datetime.now(),
-            }, **pointer_query},
+                'actors.items.{identifier}'.format(
+                    identifier=user.identifier,
+                ): actor_json,
+            },
         })
+
+        values = self.compact_values(input)
 
         # update state
         collection = self.get_mongo()[
@@ -296,7 +294,11 @@ class Handler:
         }, {
             '$set': {**{
                 'state.items.{node}.state'.format(node=node.id): 'valid',
-            }, **execution_query},
+                'state.items.{node}.actors.items.{identifier}'.format(
+                    node=node.id,
+                    identifier=user.identifier,
+                ): actor_json,
+            }, **values},
         })
 
         log.debug('Deleted pointer p:{} n:{} e:{}'.format(
@@ -323,6 +325,17 @@ class Handler:
         log.debug('Finished e:{}'.format(execution.id))
 
         execution.delete()
+
+    def compact_values(self, input):
+        compact = {}
+
+        for form in input:
+            for key, value in form['inputs']['items'].items():
+                compact[
+                    'values.{}.{}'.format(form['ref'], key)
+                ] = value['value']
+
+        return compact
 
     def get_invalid_users(self, node_state):
         users = [
@@ -420,9 +433,17 @@ class Handler:
         except ModelNotFoundError:
             raise InconsistentState('Queued dead pointer')
 
+        user = User.get_by('identifier', message.get('user_identifier'))
+
+        if user is None:
+            if message.get('user_identifier') == '__system__':
+                user = User(identifier='__system__', fullname='System').save()
+            else:
+                raise InconsistentState('sent identifier of unexisten user')
+
         return (
             pointer,
-            User.get_by('identifier', message.get('user_identifier')),
+            user,
             message['input'],
         )
 

@@ -74,6 +74,8 @@ class Input:
             'type': self.type,
             'name': self.name,
             'label': self.label,
+            'value': None,
+            'value_caption': None,
         }
 
 

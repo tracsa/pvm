@@ -20,7 +20,7 @@
       <auth-filter backend="hardcoded">
         <param name="identifier" type="ref">user#requester</param>
         <param name="relation">manager</param>
-        <param name="reason" type="ref">form#requester.exit-form.reason</param>
+        <param name="reason" type="ref">form#exit-form.reason</param>
       </auth-filter>
 
       <form-array>

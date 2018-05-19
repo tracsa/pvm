@@ -1,12 +1,16 @@
+from datetime import datetime
+from jinja2 import Template
 from typing import Iterator, TextIO, Callable
-import os
 from xml.dom import pulldom
 from xml.dom.minidom import Element
 from xml.sax._exceptions import SAXParseException
-from jinja2 import Template
+import json
+import os
+import pika
 
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.jsontypes import SortedMap
+from cacahuate.models import Execution, Pointer
 
 XML_ATTRIBUTES = {
     'public': lambda a: a == 'true',
@@ -16,7 +20,7 @@ XML_ATTRIBUTES = {
     'description': lambda x: x,
 }
 
-NODES = ('action', 'validation', 'exit', 'if')
+NODES = ('action', 'validation', 'exit', 'if', 'call')
 
 
 class Xml:
@@ -105,6 +109,54 @@ class Xml:
 
         else:
             raise ProcessNotFound(common_name)
+
+    def start(self, node, input, mongo, channel, user_identifier):
+        # save the data
+        execution = Execution(
+            process_name=self.filename,
+            name=self.get_name(input),
+            description=self.description,
+        ).save()
+        pointer = Pointer(
+            node_id=node.id,
+            name=node.name,
+            description=node.description,
+        ).save()
+        pointer.proxy.execution.set(execution)
+
+        # log to mongo
+        collection = mongo[self.config['POINTER_COLLECTION']]
+        res = collection.insert_one(node.pointer_entry(execution, pointer))
+
+        collection = mongo[self.config['EXECUTION_COLLECTION']]
+        res = collection.insert_one({
+            '_type': 'execution',
+            'id': execution.id,
+            'name': execution.name,
+            'description': execution.description,
+            'status': 'ongoing',
+            'started_at': datetime.now(),
+            'finished_at': None,
+            'state': self.get_state(),
+            'values': {},
+        })
+
+        # trigger rabbit
+        channel.basic_publish(
+            exchange='',
+            routing_key=self.config['RABBIT_QUEUE'],
+            body=json.dumps({
+                'command': 'step',
+                'pointer_id': pointer.id,
+                'user_identifier': user_identifier,
+                'input': input,
+            }),
+            properties=pika.BasicProperties(
+                delivery_mode=2,
+            ),
+        )
+
+        return execution
 
     def make_iterator(self, iterables):
 

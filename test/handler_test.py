@@ -1767,3 +1767,45 @@ def test_call_node(config, mongo):
     assert Pointer.get(ptr.id) is None
     execution = Execution.get_all()[0]
     assert execution.process_name == 'simple.2018-02-19.xml'
+
+def test_handle_request_node(config, mongo):
+    ''' conditional node won't be executed if its condition is false '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('request.2018-05-18.xml', 'start-node')
+    channel = MagicMock()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'request.2018-05-18').get_state(),
+    })
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'request',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['data'],
+                'items': {
+                    'data': {'value': 'this data'},
+                },
+            },
+        }],
+    }, channel)
+
+    ptr = Pointer.get_all()[0]
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [],
+    }, channel)
+
+    assert False

@@ -215,7 +215,7 @@ class Handler:
                 if element.tagName == 'call':
                     break
                 if element.tagName == 'request':
-                    break;
+                    break
                 elif el_id in state['state']['items']:
                     if state['state']['items'][el_id]['state'] != 'valid':
                         break

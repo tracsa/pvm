@@ -71,7 +71,7 @@ def test_request_node(config, mocker):
 
     mocker.patch(
         'requests.request',
-        new = mock
+        new=mock
     )
 
     xml = Xml.load(config, 'request.2018-05-18')

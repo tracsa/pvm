@@ -1779,7 +1779,7 @@ def test_handle_request_node(config, mocker, mongo):
 
     mocker.patch(
         'requests.request',
-        new = mock
+        new=mock
     )
 
     handler = Handler(config)

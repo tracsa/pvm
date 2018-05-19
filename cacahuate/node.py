@@ -590,8 +590,14 @@ class Request(Node):
     def __init__(self, element):
         super().__init__(element)
 
-        urls = list(map(lambda e: get_text(e), element.getElementsByTagName('url')))
-        bodies = list(map(lambda e: get_text(e), element.getElementsByTagName('body')))
+        urls = list(map(
+            lambda e: get_text(e),
+            element.getElementsByTagName('url')
+        ))
+        bodies = list(map(
+            lambda e: get_text(e),
+            element.getElementsByTagName('body')
+        ))
         headers = list(map(
             lambda e: (e.getAttribute('name'), get_text(e)),
             element.getElementsByTagName('header')

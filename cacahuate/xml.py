@@ -110,7 +110,7 @@ class Xml:
         else:
             raise ProcessNotFound(common_name)
 
-    def start(self, node, input, mongo, channel, user):
+    def start(self, node, input, mongo, channel, user_identifier):
         # save the data
         execution = Execution(
             process_name=self.filename,
@@ -125,11 +125,11 @@ class Xml:
         pointer.proxy.execution.set(execution)
 
         # log to mongo
-        collection = mongo.db[self.config['POINTER_COLLECTION']]
-        collection.insert_one(node.pointer_entry(execution, pointer))
+        collection = mongo[self.config['POINTER_COLLECTION']]
+        res = collection.insert_one(node.pointer_entry(execution, pointer))
 
-        collection = mongo.db[self.config['EXECUTION_COLLECTION']]
-        collection.insert_one({
+        collection = mongo[self.config['EXECUTION_COLLECTION']]
+        res = collection.insert_one({
             '_type': 'execution',
             'id': execution.id,
             'name': execution.name,
@@ -147,7 +147,7 @@ class Xml:
             body=json.dumps({
                 'command': 'step',
                 'pointer_id': pointer.id,
-                'user_identifier': user.identifier,
+                'user_identifier': user_identifier,
                 'input': input,
             }),
             properties=pika.BasicProperties(

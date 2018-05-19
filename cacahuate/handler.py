@@ -241,7 +241,7 @@ class Handler:
             notified_users = []
 
         if not node.is_async():
-            input = node.work(state)
+            input = node.work(self.config, state, channel, self.get_mongo())
         else:
             input = []
 

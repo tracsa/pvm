@@ -1637,7 +1637,7 @@ def test_call_node(config, mongo):
         'state': Xml.load(config, 'exit').get_state(),
     })
 
-    # first node
+    # teardown of first node and wakeup of call node
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
@@ -1656,25 +1656,14 @@ def test_call_node(config, mongo):
             },
         }],
     }, channel)
-    ptr = Pointer.get_all()[0]
-    assert ptr.node_id
+    assert Pointer.get(ptr.id) is None
+    ptr = execution.proxy.pointers.get()[0]
+    assert ptr.node_id == 'call'
 
-    # call node
-    handler.call({
-        'command': 'step',
-        'pointer_id': ptr.id,
-        'user_identifier': '__system__',
-        'input': [],
-    }, channel)
+    new_ptr = next(Pointer.q().filter(node_id='start-node'))
 
-    # old execution is gone, new is here
-    assert Execution.get(execution.id) is None
-    new_ptr = Pointer.get_all()[0]
-    execution = Execution.get_all()[0]
-    assert execution.process_name == 'simple.2018-02-19.xml'
-
-    # rabbit was called for new process
-    args = channel.basic_publish.call_args[1]
+    # aditional rabbit call for new process
+    args = channel.basic_publish.call_args_list[0][1]
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
@@ -1684,6 +1673,44 @@ def test_call_node(config, mongo):
         'user_identifier': '__system__',
         'input': [],
     }
+
+    # normal rabbit call
+    args = channel.basic_publish.call_args_list[1][1]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': '__system__',
+        'input': [],
+    }
+
+    # mongo log registry created for new process
+    reg = next(mongo[config["POINTER_COLLECTION"]].find({
+        'id': new_ptr.id,
+    }))
+    assert reg['node']['id'] == 'start-node'
+
+    # mongo execution registry created for new process
+    reg = next(mongo[config["EXECUTION_COLLECTION"]].find({
+        'id': new_ptr.proxy.execution.get().id,
+    }))
+    assert reg['name'] == 'Simplest process ever'
+
+    # teardown of the call node and end of first execution
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': '__system__',
+        'input': [],
+    }, channel)
+
+    # old execution is gone, new is here
+    assert Execution.get(execution.id) is None
+    assert Pointer.get(ptr.id) is None
+    execution = Execution.get_all()[0]
+    assert execution.process_name == 'simple.2018-02-19.xml'
 
     # first node, second process
     handler.call({
@@ -1704,8 +1731,9 @@ def test_call_node(config, mongo):
             },
         }],
     }, channel)
+
     new_ptr = Pointer.get_all()[0]
     assert new_ptr.node_id == 'mid-node'
 
-    assert False, 'boto user is in the state call node'
-    assert False, 'boto user is in the state as initiator of the second process'
+    assert False, 'the state of the new process has data from the original'
+    assert False, 'the state if the first process is well formated'

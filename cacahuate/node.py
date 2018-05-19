@@ -12,7 +12,7 @@ from cacahuate.errors import ElementNotFound, IncompleteBranch, \
 from cacahuate.inputs import make_input
 from cacahuate.logger import log
 from cacahuate.utils import user_import
-from cacahuate.xml import get_text, NODES
+from cacahuate.xml import get_text, NODES, Xml
 from cacahuate.http.errors import BadRequest
 from cacahuate.jsontypes import Map
 from cacahuate.jsontypes import SortedMap
@@ -486,9 +486,20 @@ class Call(Node):
         self.name = 'Call ' + self.id
         self.description = 'Call ' + self.id
 
+        self.procname = get_text(element.getElementsByTagName('procname')[0])
+
     def is_async(self):
         return False
 
+    def work(self, config, state, channel, mongo):
+        xml = Xml.load(config, self.procname)
+
+        xmliter = iter(xml)
+        node = make_node(next(xmliter))
+
+        xml.start(node, [], mongo, channel, '__system__')
+
+        return []
 
 
 class Exit(Node):

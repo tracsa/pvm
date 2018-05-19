@@ -331,7 +331,9 @@ class Handler:
 
         for form in input:
             for key, value in form['inputs']['items'].items():
-                compact['values.{}.{}'.format(form['ref'], key)] = value['value']
+                compact[
+                    'values.{}.{}'.format(form['ref'], key)
+                ] = value['value']
 
         return compact
 

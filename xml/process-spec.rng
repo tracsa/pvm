@@ -41,6 +41,9 @@
         <ref name="action"/>
       </zeroOrMore>
       <zeroOrMore>
+        <ref name="call"/>
+      </zeroOrMore>
+      <zeroOrMore>
         <ref name="validation"/>
       </zeroOrMore>
       <zeroOrMore>
@@ -66,6 +69,7 @@
         </interleave>
     </element>
   </define>
+
   <define name="validation">
     <element name="validation">
       <attribute name="id"><text/></attribute>
@@ -85,6 +89,30 @@
         <text />
       </element>
       <ref name="body" />
+    </element>
+  </define>
+
+  <define name="call">
+    <element name="call">
+      <attribute name="id"><text/></attribute>
+      <element name="procname"><text/></element>
+      <element name="data">
+        <zeroOrMore>
+          <element name="form">
+            <attribute name="ref"><text/></attribute>
+            <oneOrMore>
+              <element name="input">
+                <attribute name="name"><text/></attribute>
+                <optional>
+                  <attribute name="type"><value>ref</value></attribute>
+                </optional>
+
+                <text/>
+              </element>
+            </oneOrMore>
+          </element>
+        </zeroOrMore>
+      </element>
     </element>
   </define>
 
@@ -127,7 +155,6 @@
       <optional>
         <attribute name="provider"><text/></attribute>
       </optional>
-
 
       <optional>
         <element name="options">

@@ -326,7 +326,6 @@ class Action(UserAttachedNode):
                     'where': 'request.body.form_array.{}.data'.format(index),
                 }])
 
-
             collected_forms.append(form_specs.validate(
                 index,
                 form['data']

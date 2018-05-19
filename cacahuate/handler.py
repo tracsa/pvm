@@ -435,9 +435,9 @@ class Handler:
 
         if user is None:
             if message.get('user_identifier') == '__system__':
-                user = User(username='__system__', fullname='System').save()
+                user = User(identifier='__system__', fullname='System').save()
             else:
-                raise InconsistentState('sent username of unexisten user')
+                raise InconsistentState('sent identifier of unexisten user')
 
         return (
             pointer,

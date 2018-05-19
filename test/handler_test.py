@@ -1567,7 +1567,7 @@ def test_exit_interaction(config, mongo):
     assert json.loads(args['body']) == {
         'command': 'step',
         'pointer_id': ptr.id,
-        'user_identifier': None,
+        'user_identifier': '__system__',
         'input': [],
     }
 
@@ -1575,7 +1575,7 @@ def test_exit_interaction(config, mongo):
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
-        'user_identifier': None,
+        'user_identifier': '__system__',
         'input': [],
     }, channel)
 
@@ -1627,7 +1627,18 @@ def test_exit_interaction(config, mongo):
                     'comment': '',
                     'actors': {
                         '_type': ':map',
-                        'items': {},
+                        'items': {
+                            '__system__': {
+                                '_type': 'actor',
+                                'forms': [],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': '__system__',
+                                    'fullname': 'System',
+                                },
+                            },
+                        },
                     },
                 },
 

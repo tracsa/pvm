@@ -132,7 +132,7 @@ def start_process():
     # get rabbit channel for process queue
     channel = get_channel()
 
-    execution = xml.start(node, input, mongo, channel, g.user)
+    execution = xml.start(node, input, mongo.db, channel, g.user.identifier)
 
     return {
         'data': execution.to_json(),

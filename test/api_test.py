@@ -463,6 +463,7 @@ def test_start_process(client, mocker, config, mongo):
                 'final-node',
             ],
         },
+        'values': {},
     }
 
 

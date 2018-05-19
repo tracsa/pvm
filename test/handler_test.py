@@ -1687,6 +1687,7 @@ def test_call_node(config, mongo):
                 'item_order': ['data'],
                 'items': {
                     'data': {
+                        'name': 'data',
                         'value': value,
                     },
                 },
@@ -1708,7 +1709,25 @@ def test_call_node(config, mongo):
         'command': 'step',
         'pointer_id': new_ptr.id,
         'user_identifier': '__system__',
-        'input': ['dete'],
+        'input': [{
+            '_type': 'form',
+            'ref': 'start_form',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'data': {
+                        'label': 'Info',
+                        'name': 'data',
+                        'state': 'valid',
+                        'type': 'text',
+                        'value': value,
+                        'value_caption': value,
+                    },
+                },
+                'item_order': ['data'],
+            },
+        }],
     }
 
     # normal rabbit call
@@ -1733,7 +1752,7 @@ def test_call_node(config, mongo):
     reg = next(mongo[config["EXECUTION_COLLECTION"]].find({
         'id': new_ptr.proxy.execution.get().id,
     }))
-    assert reg['name'] == 'Simplest process ever'
+    assert reg['name'] == 'Simplest process ever started with: ' + value
 
     # teardown of the call node and end of first execution
     handler.call({

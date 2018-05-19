@@ -500,7 +500,21 @@ class Validation(UserAttachedNode):
 
 class CallFormInput(Node):
 
-    pass
+    def __init__(self, element):
+        super().__init__(element)
+
+        self.value = get_text(element)
+
+    def render(self, context):
+        if self.type == 'ref':
+            try:
+                form_ref, input = self.value.split('#')[1].split('.')
+
+                return context[form_ref][input]
+            except ValueError:
+                return None
+        else:
+            return self.value
 
 
 class CallForm(Node):
@@ -514,10 +528,14 @@ class CallForm(Node):
             self.inputs.append(CallFormInput(input_el))
 
     def render(self, context):
-        res = {}
+        res = {
+            'ref': self.ref,
+            'data': {
+            },
+        }
 
         for input in self.inputs:
-            res[input.name] = ''
+            res['data'][input.name] = input.render(context)
 
         return res
 
@@ -549,11 +567,13 @@ class Call(Node):
         xmliter = iter(xml)
         node = make_node(next(xmliter))
 
-        from pprint import pprint; pprint(state)
+        data = {
+            'form_array': [f.render(state['values']) for f in self.forms],
+        }
 
-        xml.start(node, [
-            form.render(context) for form in self.forms
-        ], mongo, channel, '__system__')
+        collected_input = node.validate_input(data)
+
+        xml.start(node, collected_input, mongo, channel, '__system__')
 
         return []
 
@@ -569,6 +589,9 @@ class Exit(Node):
 
     def is_async(self):
         return False
+
+    def work(self, config, state, channel, mongo):
+        return []
 
 
 def make_node(element):

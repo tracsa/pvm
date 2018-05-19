@@ -60,12 +60,12 @@ class Form:
         collected_inputs = []
 
         for input in self.inputs:
+
             try:
                 value = input.validate(
                     data.get(input.name),
                     index,
                 )
-
                 input_description = input.to_json()
                 input_description['value'] = value
                 input_description['value_caption'] = input.make_caption(value)
@@ -297,6 +297,7 @@ class Action(UserAttachedNode):
             In case of failure raises an exception. In case of success
             returns the validated data.
         '''
+
         collected_forms = []
 
         min, max = form_specs.multiple
@@ -316,7 +317,6 @@ class Action(UserAttachedNode):
                 ),
                 'where': 'request.body.form_array',
             }])
-
         for index, form in associated_data:
             collected_forms.append(form_specs.validate(
                 index,

@@ -301,6 +301,7 @@ class Handler:
                     node=node.id,
                     identifier=user.identifier,
                 ): actor_json,
+                'actors.{}'.format(node.id): user.identifier,
             }, **values},
         })
 

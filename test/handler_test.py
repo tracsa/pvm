@@ -4,6 +4,7 @@ from xml.dom.minidom import Document
 import pika
 import pytest
 import simplejson as json
+import requests
 
 from cacahuate.handler import Handler
 from cacahuate.models import Execution, Pointer, User
@@ -1768,20 +1769,33 @@ def test_call_node(config, mongo):
     execution = Execution.get_all()[0]
     assert execution.process_name == 'simple.2018-02-19.xml'
 
-def test_handle_request_node(config, mongo):
-    ''' conditional node won't be executed if its condition is false '''
-    # test setup
+
+def test_handle_request_node(config, mocker, mongo):
+    class ResponseMock:
+        status_code = 200
+        text = 'request response'
+
+    mock = MagicMock(return_value=ResponseMock())
+
+    mocker.patch(
+        'requests.request',
+        new = mock
+    )
+
     handler = Handler(config)
     user = make_user('juan', 'Juan')
     ptr = make_pointer('request.2018-05-18.xml', 'start-node')
     channel = MagicMock()
+    execution = ptr.proxy.execution.get()
+    value = random_string()
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
-        'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'request.2018-05-18').get_state(),
+        'id': execution.id,
+        'state': Xml.load(config, 'request').get_state(),
     })
 
+    # teardown of first node and wakeup of request node
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
@@ -1793,19 +1807,83 @@ def test_handle_request_node(config, mongo):
                 '_type': ':sorted_map',
                 'item_order': ['data'],
                 'items': {
-                    'data': {'value': 'this data'},
+                    'data': {
+                        'value': value
+                    },
                 },
             },
         }],
     }, channel)
+    assert Pointer.get(ptr.id) is None
+    ptr = execution.proxy.pointers.get()[0]
+    assert ptr.node_id == 'request-node'
 
-    ptr = Pointer.get_all()[0]
+    # aditional rabbit call for new process
+    args = channel.basic_publish.call_args_list[0][1]
+
+    expected_inputs = [{
+        '_type': 'form',
+        'ref': 'request-node',
+        'state': 'valid',
+        'inputs': {
+            '_type': ':sorted_map',
+            'items': {
+                'status_code': {
+                    'name': 'status_code',
+                    'state': 'valid',
+                    'type': 'text',
+                    'value': 200,
+                },
+                'raw_response': {
+                    'name': 'raw_response',
+                    'state': 'valid',
+                    'type': 'text',
+                    'value': 'request response',
+                },
+            },
+            'item_order': ['status_code', 'raw_response'],
+        },
+    }]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': '__system__',
+        'input': expected_inputs,
+    }
 
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
-        'user_identifier': user.identifier,
-        'input': [],
+        'user_identifier': '__system__',
+        'input': expected_inputs,
     }, channel)
 
-    assert False
+    state = mongo[config["EXECUTION_COLLECTION"]].find_one({
+        'id': execution.id,
+    })
+
+    assert state['state']['items']['request-node'] == {
+      '_type': 'node',
+      'type': 'request',
+      'id': 'request-node',
+      'comment': '',
+      'state': 'valid',
+      'actors': {
+        '_type': ':map',
+        'items': {
+          '__system__': {
+            '_type': 'actor',
+            'state': 'valid',
+            'user': {
+              '_type': 'user',
+              'fullname': 'System',
+              'identifier': '__system__',
+            },
+            'forms': expected_inputs,
+          },
+        },
+      },
+    }

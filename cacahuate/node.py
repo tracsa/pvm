@@ -597,6 +597,9 @@ class Request(Node):
             element.getElementsByTagName('header')
         ))
 
+        self.name = 'Request ' + self.id
+        self.description = 'Request ' + self.id
+
         self.url = urls[0]
         self.body = bodies[0]
         self.headers = headers
@@ -622,6 +625,35 @@ class Request(Node):
         }
 
         return res_dict
+
+    def work(self, config, state, channel, mongo):
+        response = self.make_request(state['values'])
+
+        state = [{
+            '_type': 'form',
+            'ref': 'request-node',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'status_code': {
+                        'name': 'status_code',
+                        'state': 'valid',
+                        'type': 'text',
+                        'value': response['status_code'],
+                    },
+                    'raw_response': {
+                        'name': 'raw_response',
+                        'state': 'valid',
+                        'type': 'text',
+                        'value': response['response'],
+                    },
+                },
+                'item_order': ['status_code', 'raw_response'],
+            },
+        }]
+
+        return state
 
     def is_async(self):
         return False

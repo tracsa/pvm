@@ -5,10 +5,14 @@ from string import ascii_letters
 from datetime import datetime
 
 
+def random_string(length=6):
+    return ''.join(choice(ascii_letters) for _ in range(6))
+
+
 def make_user(identifier, name):
     u = User(identifier=identifier, fullname=name).save()
     token = Token(
-        token=''.join(choice(ascii_letters) for c in range(9))
+        token=random_string(9)
     ).save()
     token.proxy.user.set(u)
 

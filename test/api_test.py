@@ -1,12 +1,12 @@
+from cacahuate.handler import Handler
+from cacahuate.models import Pointer, Execution
 from datetime import datetime
 from datetime import timedelta
 from flask import json, jsonify, g
-import pika
-import pytest
-from cacahuate.handler import Handler
-from cacahuate.models import Pointer, Execution
 from random import choice
 from string import ascii_letters
+import pika
+import pytest
 
 from cacahuate.xml import Xml
 from .utils import make_auth, make_pointer, make_user, \
@@ -463,6 +463,7 @@ def test_start_process(client, mocker, config, mongo):
                 'final-node',
             ],
         },
+        'values': {},
     }
 
 

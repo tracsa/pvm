@@ -10,7 +10,7 @@ from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import Action
 from cacahuate.xml import Xml
 
-from .utils import make_pointer, make_user, assert_near_date
+from .utils import make_pointer, make_user, assert_near_date, random_string
 
 
 def test_recover_step(config):
@@ -171,6 +171,7 @@ def test_teardown(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': state,
+        'values': {},
     })
 
     mongo[config["POINTER_COLLECTION"]].insert_one({
@@ -337,8 +338,14 @@ def test_teardown(config, mongo):
         ],
     }
 
-    assert manager in execution.proxy.actors.get()
-    assert execution in manager.proxy.activities.get()
+    assert reg['values'] == {
+        'mid-form': {
+            'data': 'yes',
+        },
+    }
+
+    assert manager in execution.proxy.actors
+    assert execution in manager.proxy.activities
 
 
 def test_finish_execution(config, mongo):
@@ -708,6 +715,13 @@ def test_reject(config, mongo):
                 },
             },
             'item_order': ['start-node', 'approval-node', 'final-node'],
+        },
+        'values': {
+            'approval': {
+                'comment': 'I do not like it',
+                'response': 'reject',
+                'inputs': [{'ref': 'start-node.juan.0:work.task'}],
+            },
         },
     }
 
@@ -1155,6 +1169,17 @@ def test_reject_with_dependencies(config, mongo):
             'item_order': ['node1', 'node2', 'node3', 'node4', 'node5'],
         },
         'status': 'finished',
+        'values': {
+            'approval': {
+                'comment': 'I like it',
+                'inputs': None,
+                'response': 'accept',
+            },
+            'form1': {'task': '2'},
+            'form2': {'task': '2'},
+            'form3': {'task': '1'},
+            'form5': {'task': '1'},
+        },
     }
 
 
@@ -1542,7 +1567,7 @@ def test_exit_interaction(config, mongo):
     assert json.loads(args['body']) == {
         'command': 'step',
         'pointer_id': ptr.id,
-        'user_identifier': None,
+        'user_identifier': '__system__',
         'input': [],
     }
 
@@ -1550,7 +1575,7 @@ def test_exit_interaction(config, mongo):
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
-        'user_identifier': None,
+        'user_identifier': '__system__',
         'input': [],
     }, channel)
 
@@ -1602,7 +1627,18 @@ def test_exit_interaction(config, mongo):
                     'comment': '',
                     'actors': {
                         '_type': ':map',
-                        'items': {},
+                        'items': {
+                            '__system__': {
+                                '_type': 'actor',
+                                'forms': [],
+                                'state': 'valid',
+                                'user': {
+                                    '_type': 'user',
+                                    'identifier': '__system__',
+                                    'fullname': 'System',
+                                },
+                            },
+                        },
                     },
                 },
 
@@ -1622,3 +1658,112 @@ def test_exit_interaction(config, mongo):
         },
         'status': 'finished',
     }
+
+
+def test_call_node(config, mongo):
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('call.2018-05-18.xml', 'start-node')
+    channel = MagicMock()
+    execution = ptr.proxy.execution.get()
+    value = random_string()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': Xml.load(config, 'exit').get_state(),
+    })
+
+    # teardown of first node and wakeup of call node
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'start_form',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['data'],
+                'items': {
+                    'data': {
+                        'name': 'data',
+                        'value': value,
+                    },
+                },
+            },
+        }],
+    }, channel)
+    assert Pointer.get(ptr.id) is None
+    ptr = execution.proxy.pointers.get()[0]
+    assert ptr.node_id == 'call'
+
+    new_ptr = next(Pointer.q().filter(node_id='start-node'))
+
+    # aditional rabbit call for new process
+    args = channel.basic_publish.call_args_list[0][1]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'command': 'step',
+        'pointer_id': new_ptr.id,
+        'user_identifier': '__system__',
+        'input': [{
+            '_type': 'form',
+            'ref': 'start_form',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'data': {
+                        'label': 'Info',
+                        'name': 'data',
+                        'state': 'valid',
+                        'type': 'text',
+                        'value': value,
+                        'value_caption': value,
+                    },
+                },
+                'item_order': ['data'],
+            },
+        }],
+    }
+
+    # normal rabbit call
+    args = channel.basic_publish.call_args_list[1][1]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': '__system__',
+        'input': [],
+    }
+
+    # mongo log registry created for new process
+    reg = next(mongo[config["POINTER_COLLECTION"]].find({
+        'id': new_ptr.id,
+    }))
+    assert reg['node']['id'] == 'start-node'
+
+    # mongo execution registry created for new process
+    reg = next(mongo[config["EXECUTION_COLLECTION"]].find({
+        'id': new_ptr.proxy.execution.get().id,
+    }))
+    assert reg['name'] == 'Simplest process ever started with: ' + value
+
+    # teardown of the call node and end of first execution
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': '__system__',
+        'input': [],
+    }, channel)
+
+    # old execution is gone, new is here
+    assert Execution.get(execution.id) is None
+    assert Pointer.get(ptr.id) is None
+    execution = Execution.get_all()[0]
+    assert execution.process_name == 'simple.2018-02-19.xml'

@@ -14,7 +14,7 @@ from cacahuate.errors import ElementNotFound, IncompleteBranch, \
 from cacahuate.inputs import make_input
 from cacahuate.logger import log
 from cacahuate.utils import user_import
-from cacahuate.xml import get_text, NODES
+from cacahuate.xml import get_text, NODES, Xml
 from cacahuate.http.errors import BadRequest
 from cacahuate.jsontypes import Map
 from cacahuate.jsontypes import SortedMap
@@ -174,26 +174,16 @@ class UserAttachedNode(Node):
         for param in self.auth_params:
             if state is not None and param.type == 'ref':
                 element_ref, req = param.value.split('#')
-                try:
-                    if element_ref == 'user':
-                        adic = state['state']['items'][req]['actors']['items']
-                        actor = adic[next(iter(adic.keys()))]
-                        value = actor['user']['identifier']
-                    elif element_ref == 'form':
-                        _node, _form, _input = req.split('.')
-                        value_form = state['state']['items']
-                        adic = value_form[_node]['actors']['items']
-                        actor = adic[next(iter(adic.keys()))]
-                        form = actor['forms']
 
-                        for element in form:
-                            if element['ref'] == _form:
-                                value_input = element['inputs']['items']
-                                value = value_input[_input]['value']
-                                break
+                if element_ref == 'user':
+                    adic = state['state']['items'][req]['actors']['items']
+                    actor = adic[next(iter(adic.keys()))]
+                    value = actor['user']['identifier']
 
-                except StopIteration:
-                    value = None
+                elif element_ref == 'form':
+                    _form, _input = req.split('.')
+
+                    value = state['values'][_form][_input]
             else:
                 value = param.value
 
@@ -318,9 +308,29 @@ class Action(UserAttachedNode):
                 'where': 'request.body.form_array',
             }])
         for index, form in associated_data:
+            if type(form) != dict:
+                raise BadRequest([{
+                    'detail': 'each form must be a dict',
+                    'where': 'request.body.form_array.{}.data'.format(index),
+                }])
+
+            if 'data' not in form:
+                raise BadRequest([{
+                    'detail': 'form.data is required',
+                    'code': 'validation.required',
+                    'where': 'request.body.form_array.{}.data'.format(index),
+                }])
+
+            if type(form['data']) != dict:
+                raise BadRequest([{
+                    'detail': 'form.data must be a dict',
+                    'code': 'validation.invalid',
+                    'where': 'request.body.form_array.{}.data'.format(index),
+                }])
+
             collected_forms.append(form_specs.validate(
                 index,
-                form.get('data', {})
+                form['data']
             ))
 
         return collected_forms
@@ -479,6 +489,86 @@ class Validation(UserAttachedNode):
         return refs
 
 
+class CallFormInput(Node):
+
+    def __init__(self, element):
+        super().__init__(element)
+
+        self.value = get_text(element)
+
+    def render(self, context):
+        if self.type == 'ref':
+            try:
+                form_ref, input = self.value.split('#')[1].split('.')
+
+                return context[form_ref][input]
+            except ValueError:
+                return None
+        else:
+            return self.value
+
+
+class CallForm(Node):
+
+    def __init__(self, element):
+        super().__init__(element)
+
+        self.inputs = []
+
+        for input_el in element.getElementsByTagName('input'):
+            self.inputs.append(CallFormInput(input_el))
+
+    def render(self, context):
+        res = {
+            'ref': self.ref,
+            'data': {
+            },
+        }
+
+        for input in self.inputs:
+            res['data'][input.name] = input.render(context)
+
+        return res
+
+
+class Call(Node):
+    ''' Calls a subprocess '''
+
+    def __init__(self, element):
+        super().__init__(element)
+
+        self.name = 'Call ' + self.id
+        self.description = 'Call ' + self.id
+
+        self.procname = get_text(element.getElementsByTagName('procname')[0])
+
+        self.forms = []
+
+        data_el = element.getElementsByTagName('data')[0]
+
+        for form_el in data_el.getElementsByTagName('form'):
+            self.forms.append(CallForm(form_el))
+
+    def is_async(self):
+        return False
+
+    def work(self, config, state, channel, mongo):
+        xml = Xml.load(config, self.procname)
+
+        xmliter = iter(xml)
+        node = make_node(next(xmliter))
+
+        data = {
+            'form_array': [f.render(state['values']) for f in self.forms],
+        }
+
+        collected_input = node.validate_input(data)
+
+        xml.start(node, collected_input, mongo, channel, '__system__')
+
+        return []
+
+
 class Exit(Node):
     ''' A node that kills an execution with some status '''
 
@@ -490,6 +580,9 @@ class Exit(Node):
 
     def is_async(self):
         return False
+
+    def work(self, config, state, channel, mongo):
+        return []
 
 
 class Request(Node):

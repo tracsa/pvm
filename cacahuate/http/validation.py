@@ -35,7 +35,7 @@ def validate_json(json_data: dict, req: list):
         raise BadRequest(errors)
 
 
-def validate_auth(node, user, execution=None):
+def validate_auth(node, user, state=None):
     if not node.auth_backend:
         return
 
@@ -52,7 +52,7 @@ def validate_auth(node, user, execution=None):
     hipro = HiPro(app.config)
 
     try:
-        hipro.validate_user(user, **node.resolve_params(execution))
+        hipro.validate_user(user, **node.resolve_params(state))
     except HierarchyError:
         raise Forbidden([{
             'detail': 'The provided credentials do not match the specified'

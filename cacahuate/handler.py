@@ -283,6 +283,8 @@ class Handler:
             },
         })
 
+        values = self.compact_values(input)
+
         # update state
         collection = self.get_mongo()[
             self.config['EXECUTION_COLLECTION']
@@ -290,13 +292,13 @@ class Handler:
         collection.update_one({
             'id': execution.id,
         }, {
-            '$set': {
+            '$set': {**{
                 'state.items.{node}.state'.format(node=node.id): 'valid',
                 'state.items.{node}.actors.items.{identifier}'.format(
                     node=node.id,
                     identifier=user.identifier,
                 ): actor_json,
-            },
+            }, **values},
         })
 
         log.debug('Deleted pointer p:{} n:{} e:{}'.format(
@@ -323,6 +325,15 @@ class Handler:
         log.debug('Finished e:{}'.format(execution.id))
 
         execution.delete()
+
+    def compact_values(self, input):
+        compact = {}
+
+        for form in input:
+            for key, value in form['inputs']['items'].items():
+                compact['values.{}.{}'.format(form['ref'], key)] = value['value']
+
+        return compact
 
     def get_invalid_users(self, node_state):
         users = [

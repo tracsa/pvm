@@ -171,6 +171,7 @@ def test_teardown(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': state,
+        'values': {},
     })
 
     mongo[config["POINTER_COLLECTION"]].insert_one({
@@ -337,8 +338,14 @@ def test_teardown(config, mongo):
         ],
     }
 
-    assert manager in execution.proxy.actors.get()
-    assert execution in manager.proxy.activities.get()
+    assert reg['values'] == {
+        'mid-form': {
+            'data': 'yes',
+        },
+    }
+
+    assert manager in execution.proxy.actors
+    assert execution in manager.proxy.activities
 
 
 def test_finish_execution(config, mongo):
@@ -708,6 +715,13 @@ def test_reject(config, mongo):
                 },
             },
             'item_order': ['start-node', 'approval-node', 'final-node'],
+        },
+        'values': {
+            'approval': {
+                'comment': 'I do not like it',
+                'response': 'reject',
+                'inputs': [{'ref': 'start-node.juan.0:work.task'}],
+            },
         },
     }
 
@@ -1155,6 +1169,17 @@ def test_reject_with_dependencies(config, mongo):
             'item_order': ['node1', 'node2', 'node3', 'node4', 'node5'],
         },
         'status': 'finished',
+        'values': {
+            'approval': {
+                'comment': 'I like it',
+                'inputs': None,
+                'response': 'accept',
+            },
+            'form1': {'task': '2'},
+            'form2': {'task': '2'},
+            'form3': {'task': '1'},
+            'form5': {'task': '1'},
+        },
     }
 
 

@@ -138,6 +138,7 @@ class Xml:
             'started_at': datetime.now(),
             'finished_at': None,
             'state': self.get_state(),
+            'values': {},
         })
 
         # trigger rabbit

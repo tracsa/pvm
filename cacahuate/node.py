@@ -172,26 +172,16 @@ class UserAttachedNode(Node):
         for param in self.auth_params:
             if state is not None and param.type == 'ref':
                 element_ref, req = param.value.split('#')
-                try:
-                    if element_ref == 'user':
-                        adic = state['state']['items'][req]['actors']['items']
-                        actor = adic[next(iter(adic.keys()))]
-                        value = actor['user']['identifier']
-                    elif element_ref == 'form':
-                        _node, _form, _input = req.split('.')
-                        value_form = state['state']['items']
-                        adic = value_form[_node]['actors']['items']
-                        actor = adic[next(iter(adic.keys()))]
-                        form = actor['forms']
 
-                        for element in form:
-                            if element['ref'] == _form:
-                                value_input = element['inputs']['items']
-                                value = value_input[_input]['value']
-                                break
+                if element_ref == 'user':
+                    adic = state['state']['items'][req]['actors']['items']
+                    actor = adic[next(iter(adic.keys()))]
+                    value = actor['user']['identifier']
 
-                except StopIteration:
-                    value = None
+                elif element_ref == 'form':
+                    _form, _input = req.split('.')
+
+                    value = state['values'][_form][_input]
             else:
                 value = param.value
 

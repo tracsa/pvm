@@ -17,10 +17,11 @@ class BaseHierarchyProvider:
 
     def validate_user(self, user, **params):
         ''' given a user, should rise an exception if the user does not match
-        the hierarchy conditions required via params '''
+        the hierarchy conditions required via params, it is only useful for
+        the first node of a process '''
         raise NotImplementedError('Must be implemented in subclasses')
 
     def find_users(self, **params) -> [User]:
-        ''' given the params, retrieves the
-        user identifiers that match them '''
+        ''' given the params, retrieves the user identifiers that match them
+        '''
         raise NotImplementedError('Must be implemented in subclasses')

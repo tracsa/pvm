@@ -65,11 +65,8 @@ You can use any wsgi-compliant server, like gunicorn, to run this:
 TODO
 ----
 
-* añadir endpoint /v1/pointer y usar consultas
-* hacer obsoleto el validate_user
 * cambiar api de LoginProvider y HierarchyProvider, no deben guardar usuarios
 * auth backends no deben crear usuarios, solo devolver objetos calificados
-* quitar refs de tres niveles en params de auth filter, guardar un estado optimizado
 
 * date input solo debe recibir yyyy-mm-dd
 

@@ -174,9 +174,7 @@ class UserAttachedNode(Node):
                 element_ref, req = param.value.split('#')
 
                 if element_ref == 'user':
-                    adic = state['state']['items'][req]['actors']['items']
-                    actor = adic[next(iter(adic.keys()))]
-                    value = actor['user']['identifier']
+                    value = state['actors'][req]
 
                 elif element_ref == 'form':
                     _form, _input = req.split('.')
@@ -493,6 +491,7 @@ class CallFormInput(Node):
         super().__init__(element)
 
         self.value = get_text(element)
+        self.type = element.getAttribute('type')
 
     def render(self, context):
         if self.type == 'ref':

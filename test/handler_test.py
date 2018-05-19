@@ -91,11 +91,12 @@ def test_wakeup(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, 'simple').get_state(),
+        'actors': {'start-node': 'juan'},
     })
 
     channel = MagicMock()
 
-    # this is what we test
+    # will wakeup the second node
     handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
@@ -342,6 +343,10 @@ def test_teardown(config, mongo):
         'mid-form': {
             'data': 'yes',
         },
+    }
+
+    assert reg['actors'] == {
+        'mid-node': 'manager',
     }
 
     assert manager in execution.proxy.actors
@@ -722,6 +727,9 @@ def test_reject(config, mongo):
                 'response': 'reject',
                 'inputs': [{'ref': 'start-node.juan.0:work.task'}],
             },
+        },
+        'actors': {
+            'approval-node': 'juan',
         },
     }
 
@@ -1179,6 +1187,13 @@ def test_reject_with_dependencies(config, mongo):
             'form2': {'task': '2'},
             'form3': {'task': '1'},
             'form5': {'task': '1'},
+        },
+        'actors': {
+            'node1': 'juan',
+            'node2': 'juan',
+            'node3': 'juan',
+            'node4': 'juan',
+            'node5': 'juan',
         },
     }
 
@@ -1657,6 +1672,10 @@ def test_exit_interaction(config, mongo):
             'item_order': ['start-node', 'exit', 'final-node'],
         },
         'status': 'finished',
+        'actors': {
+            'exit': '__system__',
+            'start-node': 'juan',
+        },
     }
 
 

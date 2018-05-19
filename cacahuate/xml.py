@@ -139,6 +139,7 @@ class Xml:
             'finished_at': None,
             'state': self.get_state(),
             'values': {},
+            'actors': {},
         })
 
         # trigger rabbit

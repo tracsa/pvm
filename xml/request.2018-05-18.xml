@@ -8,6 +8,7 @@
   </process-info>
   <process>
     <action id="start-node" >
+      <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="request">
           <input type="text" name="data"></input>

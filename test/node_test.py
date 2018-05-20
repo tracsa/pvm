@@ -11,47 +11,13 @@ def test_resolve_params(config):
     node = make_node(next(xmliter))
 
     state = {
-        'state': {
-            'items': {
-                'requester': {
-                    'actors': {
-                        'items': {
-                            'juan': {
-                                'user': {
-                                    'identifier': 'juan',
-                                },
-                                'forms': [
-                                    {
-                                        'ref': 'sdfdfgg',
-                                        'inputs': {
-                                            'items': {
-                                                'reason': {
-                                                    'value': 'sdfgfs',
-                                                },
-                                            },
-                                        },
-                                    },
-                                    {
-                                        'ref': 'exit-form',
-                                        'inputs': {
-                                            'items': {
-                                                'reason': {
-                                                    'value': 'nones',
-                                                },
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
-                        },
-                    },
-                },
-            },
-        },
         'values': {
             'exit-form': {
                 'reason': 'nones',
             },
+        },
+        'actors': {
+            'requester': 'juan',
         },
     }
 

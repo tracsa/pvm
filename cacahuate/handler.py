@@ -197,6 +197,7 @@ class Handler:
             grammar = None
             element = None
 
+            # TODO expropiese
             while True:
                 element = next(xmliter)
                 el_id = element.getAttribute('id')
@@ -212,6 +213,8 @@ class Handler:
                 if element.tagName == 'exit':
                     break
                 if element.tagName == 'call':
+                    break
+                if element.tagName == 'request':
                     break
                 elif el_id in state['state']['items']:
                     if state['state']['items'][el_id]['state'] != 'valid':
@@ -298,6 +301,7 @@ class Handler:
                     node=node.id,
                     identifier=user.identifier,
                 ): actor_json,
+                'actors.{}'.format(node.id): user.identifier,
             }, **values},
         })
 

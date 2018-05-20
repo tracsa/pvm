@@ -4,6 +4,8 @@ from case_conversion import pascalcase
 from datetime import datetime
 from typing import Iterator
 from xml.dom.minidom import Element
+from jinja2 import Template
+import requests
 import re
 
 from cacahuate.errors import ElementNotFound, IncompleteBranch, \
@@ -174,14 +176,15 @@ class UserAttachedNode(Node):
                 element_ref, req = param.value.split('#')
 
                 if element_ref == 'user':
-                    adic = state['state']['items'][req]['actors']['items']
-                    actor = adic[next(iter(adic.keys()))]
-                    value = actor['user']['identifier']
+                    value = state['actors'][req]
 
                 elif element_ref == 'form':
-                    _form, _input = req.split('.')
+                    try:
+                        _form, _input = req.split('.')
 
-                    value = state['values'][_form][_input]
+                        value = state['values'][_form][_input]
+                    except ValueError:
+                        value = None
             else:
                 value = param.value
 
@@ -455,6 +458,7 @@ class Validation(UserAttachedNode):
         return [{
             '_type': 'form',
             'ref': 'approval',
+            'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
@@ -493,6 +497,7 @@ class CallFormInput(Node):
         super().__init__(element)
 
         self.value = get_text(element)
+        self.type = element.getAttribute('type')
 
     def render(self, context):
         if self.type == 'ref':
@@ -581,6 +586,86 @@ class Exit(Node):
 
     def work(self, config, state, channel, mongo):
         return []
+
+
+class Request(Node):
+    ''' A node that makes a TCP Request '''
+    def __init__(self, element):
+        super().__init__(element)
+
+        urls = list(map(
+            lambda e: get_text(e),
+            element.getElementsByTagName('url')
+        ))
+        bodies = list(map(
+            lambda e: get_text(e),
+            element.getElementsByTagName('body')
+        ))
+        headers = list(map(
+            lambda e: (e.getAttribute('name'), get_text(e)),
+            element.getElementsByTagName('header')
+        ))
+
+        self.name = 'Request ' + self.id
+        self.description = 'Request ' + self.id
+
+        self.url = urls[0]
+        self.body = bodies[0]
+        self.headers = headers
+
+    def make_request(self, context):
+        url = Template(self.url).render(**context)
+        body = Template(self.body).render(**context)
+        headers = dict(map(
+            lambda t: (t[0], Template(t[1]).render(**context)),
+            self.headers
+        ))
+
+        response = requests.request(
+            self.method,
+            url,
+            headers=headers,
+            data=body
+        )
+
+        res_dict = {
+            'status_code': response.status_code,
+            'response': response.text,
+        }
+
+        return res_dict
+
+    def work(self, config, state, channel, mongo):
+        response = self.make_request(state['values'])
+
+        state = [{
+            '_type': 'form',
+            'ref': 'request-node',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'status_code': {
+                        'name': 'status_code',
+                        'state': 'valid',
+                        'type': 'text',
+                        'value': response['status_code'],
+                    },
+                    'raw_response': {
+                        'name': 'raw_response',
+                        'state': 'valid',
+                        'type': 'text',
+                        'value': response['response'],
+                    },
+                },
+                'item_order': ['status_code', 'raw_response'],
+            },
+        }]
+
+        return state
+
+    def is_async(self):
+        return False
 
 
 def make_node(element):

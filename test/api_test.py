@@ -464,6 +464,7 @@ def test_start_process(client, mocker, config, mongo):
             ],
         },
         'values': {},
+        'actors': {},
     }
 
 
@@ -652,6 +653,7 @@ def test_regression_approval(client, mocker, config):
         'input': [{
             '_type': 'form',
             'ref': 'approval',
+            'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
@@ -713,6 +715,7 @@ def test_regression_reject(client, mocker, config):
         'input': [{
             '_type': 'form',
             'ref': 'approval',
+            'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {

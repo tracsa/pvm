@@ -52,6 +52,9 @@
       <zeroOrMore>
         <ref name="if" />
       </zeroOrMore>
+      <zeroOrMore>
+        <ref name="request" />
+      </zeroOrMore>
     </interleave>
   </define>
 
@@ -80,6 +83,37 @@
         <ref name="auth-filter" />
         <ref name="dependencies"/>
       </interleave>
+    </element>
+  </define>
+
+  <define name="request">
+    <element name="request">
+      <attribute name="id"><text/></attribute>
+      <attribute name="method">
+        <choice>
+          <value>GET</value>
+          <value>HEAD</value>
+          <value>POST</value>
+          <value>PUT</value>
+          <value>DELETE</value>
+          <value>TRACE</value>
+          <value>OPTIONS</value>
+          <value>CONNECT</value>
+          <value>PATCH</value>
+        </choice>
+      </attribute>
+      <element name="url"><text/></element>
+      <element name="headers">
+        <zeroOrMore>
+          <element name="header">
+            <attribute name="name"><text/></attribute>
+            <text/>
+          </element>
+        </zeroOrMore>
+      </element>
+      <element name="body">
+        <text/>
+      </element>
     </element>
   </define>
 

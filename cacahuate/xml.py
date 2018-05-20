@@ -20,7 +20,7 @@ XML_ATTRIBUTES = {
     'description': lambda x: x,
 }
 
-NODES = ('action', 'validation', 'exit', 'if', 'call')
+NODES = ('action', 'validation', 'exit', 'if', 'request', 'call')
 
 
 class Xml:
@@ -139,6 +139,7 @@ class Xml:
             'finished_at': None,
             'state': self.get_state(),
             'values': {},
+            'actors': {},
         })
 
         # trigger rabbit

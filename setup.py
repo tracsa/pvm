@@ -65,6 +65,7 @@ setup(
         'ldap3',
         'pika',
         'simplejson',
+        'requests',
     ],
 
     setup_requires=[

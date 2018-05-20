@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process-spec>
+  <process-info>
+    <author>Og Astorga</author>
+    <date>2018-05-18</date>
+    <name>HTTP node</name>
+    <public>true</public>
+    <description>Makes an HTTP request</description>
+  </process-info>
+  <process>
+    <action id="start-node" >
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="request">
+          <input type="text" name="data"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <request id="request-node" method="GET">
+      <url>http://localhost/mirror?data={{ request.data }}</url>
+      <headers>
+        <header name="content-type">application/json</header>
+        <header name="x-url-data">{{ request.data }}</header>
+      </headers>
+      <body>{"data":"{{ request.data }}"}</body>
+    </request>
+  </process>
+</process-spec>

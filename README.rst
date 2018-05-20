@@ -65,11 +65,8 @@ You can use any wsgi-compliant server, like gunicorn, to run this:
 TODO
 ----
 
-* añadir endpoint /v1/pointer y usar consultas
-* hacer obsoleto el validate_user
 * cambiar api de LoginProvider y HierarchyProvider, no deben guardar usuarios
 * auth backends no deben crear usuarios, solo devolver objetos calificados
-* quitar refs de tres niveles en params de auth filter, guardar un estado optimizado
 
 * date input solo debe recibir yyyy-mm-dd
 
@@ -77,5 +74,6 @@ TODO
   - dependencias existen arriba en el xml
   - id de nodos son únicos
   - condicionales validan
+  - params existen
 * guardar en un store privado por hash los xml al iniciar proceso, obsoleta el sistema de versiones (borrar toda referencia a la versión)
 * atrapar excepciones de template de jinja y añadir mensaje al titulo

@@ -4,6 +4,7 @@ from xml.dom.minidom import Document
 import pika
 import pytest
 import simplejson as json
+import requests
 
 from cacahuate.handler import Handler
 from cacahuate.models import Execution, Pointer, User
@@ -91,11 +92,12 @@ def test_wakeup(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, 'simple').get_state(),
+        'actors': {'start-node': 'juan'},
     })
 
     channel = MagicMock()
 
-    # this is what we test
+    # will wakeup the second node
     handler.call({
         'command': 'step',
         'pointer_id': pointer.id,
@@ -342,6 +344,10 @@ def test_teardown(config, mongo):
         'mid-form': {
             'data': 'yes',
         },
+    }
+
+    assert reg['actors'] == {
+        'mid-node': 'manager',
     }
 
     assert manager in execution.proxy.actors
@@ -722,6 +728,9 @@ def test_reject(config, mongo):
                 'response': 'reject',
                 'inputs': [{'ref': 'start-node.juan.0:work.task'}],
             },
+        },
+        'actors': {
+            'approval-node': 'juan',
         },
     }
 
@@ -1179,6 +1188,13 @@ def test_reject_with_dependencies(config, mongo):
             'form2': {'task': '2'},
             'form3': {'task': '1'},
             'form5': {'task': '1'},
+        },
+        'actors': {
+            'node1': 'juan',
+            'node2': 'juan',
+            'node3': 'juan',
+            'node4': 'juan',
+            'node5': 'juan',
         },
     }
 
@@ -1657,6 +1673,10 @@ def test_exit_interaction(config, mongo):
             'item_order': ['start-node', 'exit', 'final-node'],
         },
         'status': 'finished',
+        'actors': {
+            'exit': '__system__',
+            'start-node': 'juan',
+        },
     }
 
 
@@ -1671,7 +1691,7 @@ def test_call_node(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
-        'state': Xml.load(config, 'exit').get_state(),
+        'state': Xml.load(config, 'call').get_state(),
     })
 
     # teardown of first node and wakeup of call node
@@ -1767,3 +1787,122 @@ def test_call_node(config, mongo):
     assert Pointer.get(ptr.id) is None
     execution = Execution.get_all()[0]
     assert execution.process_name == 'simple.2018-02-19.xml'
+
+
+def test_handle_request_node(config, mocker, mongo):
+    class ResponseMock:
+        status_code = 200
+        text = 'request response'
+
+    mock = MagicMock(return_value=ResponseMock())
+
+    mocker.patch(
+        'requests.request',
+        new=mock
+    )
+
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('request.2018-05-18.xml', 'start-node')
+    channel = MagicMock()
+    execution = ptr.proxy.execution.get()
+    value = random_string()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': Xml.load(config, 'request').get_state(),
+    })
+
+    # teardown of first node and wakeup of request node
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'request',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['data'],
+                'items': {
+                    'data': {
+                        'value': value
+                    },
+                },
+            },
+        }],
+    }, channel)
+    assert Pointer.get(ptr.id) is None
+    ptr = execution.proxy.pointers.get()[0]
+    assert ptr.node_id == 'request-node'
+
+    # aditional rabbit call for new process
+    args = channel.basic_publish.call_args_list[0][1]
+
+    expected_inputs = [{
+        '_type': 'form',
+        'ref': 'request-node',
+        'state': 'valid',
+        'inputs': {
+            '_type': ':sorted_map',
+            'items': {
+                'status_code': {
+                    'name': 'status_code',
+                    'state': 'valid',
+                    'type': 'text',
+                    'value': 200,
+                },
+                'raw_response': {
+                    'name': 'raw_response',
+                    'state': 'valid',
+                    'type': 'text',
+                    'value': 'request response',
+                },
+            },
+            'item_order': ['status_code', 'raw_response'],
+        },
+    }]
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    assert json.loads(args['body']) == {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': '__system__',
+        'input': expected_inputs,
+    }
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': '__system__',
+        'input': expected_inputs,
+    }, channel)
+
+    state = mongo[config["EXECUTION_COLLECTION"]].find_one({
+        'id': execution.id,
+    })
+
+    assert state['state']['items']['request-node'] == {
+      '_type': 'node',
+      'type': 'request',
+      'id': 'request-node',
+      'comment': '',
+      'state': 'valid',
+      'actors': {
+        '_type': ':map',
+        'items': {
+          '__system__': {
+            '_type': 'actor',
+            'state': 'valid',
+            'user': {
+              '_type': 'user',
+              'fullname': 'System',
+              'identifier': '__system__',
+            },
+            'forms': expected_inputs,
+          },
+        },
+      },
+    }

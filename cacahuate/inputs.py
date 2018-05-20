@@ -199,7 +199,7 @@ class FileInput(Input):
             )
 
         if provider == 'doqer':
-            if value != None:
+            if not value:
                 valid = reduce(
                     and_,
                     map(

@@ -184,7 +184,7 @@ class FileInput(Input):
         if not value:
             value = None
 
-        if value != None and type(value) is not dict:
+        if value is not None and type(value) is not dict:
             raise InvalidInputError(
                 self.name,
                 'request.body.form_array.{}.{}'.format(form_index, self.name)

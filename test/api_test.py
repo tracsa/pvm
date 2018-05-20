@@ -1436,3 +1436,15 @@ def test_pagination_v1_log(client, mongo, config):
     assert json.loads(res.data)['data'][1]["finished_at"] == \
         '2018-05-23T08:08:08+00:00'
     assert len(json.loads(res.data)['data']) == 2
+
+
+def test_name_with_if(client, mongo, config):
+    # ptr = make_pointer('start_form.pollo.2018-05-09.xml', 'approval-node')
+    # juan = make_user('juan', 'Juan')
+    # juan.proxy.tasks.add(ptr)
+    # execution = ptr.proxy.execution.get()
+
+    state = Xml.load(config, 'pollo')
+    print (state.id)
+    print (state.to_json())
+    assert False

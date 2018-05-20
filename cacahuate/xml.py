@@ -59,6 +59,7 @@ class Xml:
         context = dict()
 
         for form in collected_forms:
+            print (collected_forms)
             form_dict = dict()
 
             for name, input in form['inputs']['items'].items():

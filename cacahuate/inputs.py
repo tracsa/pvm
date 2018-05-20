@@ -181,9 +181,10 @@ class FileInput(Input):
     def validate(self, value, form_index):
         super().validate(value, form_index)
 
-        if value is None:
-            value = {}
-        if type(value) is not dict:
+        if not value:
+            value = None
+
+        if value != None and type(value) is not dict:
             raise InvalidInputError(
                 self.name,
                 'request.body.form_array.{}.{}'.format(form_index, self.name)
@@ -191,25 +192,33 @@ class FileInput(Input):
 
         provider = self.provider
 
-        if provider == 'doqer':
-            valid = reduce(
-                and_,
-                map(
-                    lambda attr: attr in value and value[attr] is not None,
-                    ['id', 'mime', 'name', 'type']
-                )
+        if not value and self.required:
+            raise RequiredInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
             )
 
-            if not valid:
-                raise InvalidInputError(
-                    self.name,
-                    'request.body.form_array.{}.{}'.format(
-                        form_index,
-                        self.name
+        if provider == 'doqer':
+            if value != None:
+                valid = reduce(
+                    and_,
+                    map(
+                        lambda attr: attr in value and value[attr] is not None,
+                        ['id', 'mime', 'name', 'type']
                     )
                 )
+
+                if not valid:
+                    raise InvalidInputError(
+                        self.name,
+                        'request.body.form_array.{}.{}'.format(
+                            form_index,
+                            self.name
+                        )
+                    )
         else:
             abort(500, 'File provider `{}` not implemented'.format(provider))
+
         return value
 
 

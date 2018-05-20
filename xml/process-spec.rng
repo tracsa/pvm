@@ -52,6 +52,9 @@
       <zeroOrMore>
         <ref name="if" />
       </zeroOrMore>
+      <zeroOrMore>
+        <ref name="request" />
+      </zeroOrMore>
     </interleave>
   </define>
 
@@ -99,6 +102,18 @@
           <value>PATCH</value>
         </choice>
       </attribute>
+      <element name="url"><text/></element>
+      <element name="headers">
+        <zeroOrMore>
+          <element name="header">
+            <attribute name="name"><text/></attribute>
+            <text/>
+          </element>
+        </zeroOrMore>
+      </element>
+      <element name="body">
+        <text/>
+      </element>
     </element>
   </define>
 

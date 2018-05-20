@@ -179,9 +179,12 @@ class UserAttachedNode(Node):
                     value = state['actors'][req]
 
                 elif element_ref == 'form':
-                    _form, _input = req.split('.')
+                    try:
+                        _form, _input = req.split('.')
 
-                    value = state['values'][_form][_input]
+                        value = state['values'][_form][_input]
+                    except ValueError:
+                        value = None
             else:
                 value = param.value
 
@@ -455,6 +458,7 @@ class Validation(UserAttachedNode):
         return [{
             '_type': 'form',
             'ref': 'approval',
+            'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {

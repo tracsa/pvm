@@ -118,7 +118,7 @@ def test_wakeup(config, mongo):
         'pointer': Pointer.get_all()[0].to_json(include=['*', 'execution']),
     }
 
-    # mongo has a registry
+    # pointer collection updated
     reg = next(mongo[config["POINTER_COLLECTION"]].find())
 
     assert_near_date(reg['started_at'])
@@ -137,6 +137,11 @@ def test_wakeup(config, mongo):
     assert reg['notified_users'] == [manager.to_json()]
     with pytest.raises(KeyError):
         reg['state']
+
+    # execution collection updated
+    reg = next(mongo[config["EXECUTION_COLLECTION"]].find())
+
+    assert reg['state']['items']['mid-node']['state'] == 'ongoing'
 
     # tasks where asigned
     assert manager.proxy.tasks.count() == 1
@@ -194,7 +199,7 @@ def test_teardown(config, mongo):
 
     channel = MagicMock()
 
-    # the thing to test
+    # will teardown mid-node
     handler.call({
         'command': 'step',
         'pointer_id': p_0.id,
@@ -331,7 +336,7 @@ def test_teardown(config, mongo):
                 '_type': 'node',
                 'type': 'action',
                 'id': 'final-node',
-                'state': 'unfilled',
+                'state': 'ongoing',
                 'comment': '',
                 'actors': {
                     '_type': ':map',
@@ -582,7 +587,7 @@ def test_reject(config, mongo):
         'state': state,
     })
 
-    # thing to test
+    # will teardown the approval node
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
@@ -635,7 +640,7 @@ def test_reject(config, mongo):
                     '_type': 'node',
                     'type': 'action',
                     'id': 'start-node',
-                    'state': 'invalid',
+                    'state': 'ongoing',
                     'comment': 'I do not like it',
                     'actors': {
                         '_type': ':map',

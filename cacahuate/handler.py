@@ -254,6 +254,16 @@ class Handler:
             execution, pointer, notified_users
         ))
 
+        # mark this node as ongoing
+        collection = self.get_mongo()[self.config['EXECUTION_COLLECTION']]
+        collection.update_one({
+            'id': execution.id,
+        }, {
+            '$set': {
+                'state.items.{}.state'.format(node.id): 'ongoing',
+            },
+        })
+
         # nodes with forms are not queued
         if not node.is_async():
             return pointer, input

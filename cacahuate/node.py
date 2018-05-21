@@ -120,6 +120,9 @@ class Node:
             'comment': '',
             'state': 'unfilled',
             'actors': Map([], key='identifier').to_json(),
+            'name': self.name,
+            'description': self.description,
+            'milestone': hasattr(self, 'milestone'),
         }
 
     def to_json(self):

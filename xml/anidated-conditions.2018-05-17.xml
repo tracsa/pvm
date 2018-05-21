@@ -16,7 +16,7 @@
       </form-array>
     </action>
 
-    <if>
+    <if id="uno">
       <condition>a.a > "0"</condition>
       <body>
         <action id="b">
@@ -28,7 +28,7 @@
           </form-array>
         </action>
 
-        <if>
+        <if id="dos">
           <condition>b.b > "0"</condition>
           <body>
             <action id="c">
@@ -40,7 +40,7 @@
               </form-array>
             </action>
 
-            <if>
+            <if id="tres">
               <condition>c.c > "0"</condition>
               <body>
                 <action id="d">

@@ -16,7 +16,7 @@
       </form-array>
     </action>
 
-    <if>
+    <if id="uno">
       <condition>fiuref hiur</condition>
       <body>
         <action id="start-node" >
@@ -28,7 +28,7 @@
           </form-array>
         </action>
 
-        <if>
+        <if id="dos">
           <condition>fiuref hiur</condition>
           <body>
             <action id="start-node" >

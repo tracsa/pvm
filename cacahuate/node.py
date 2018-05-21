@@ -588,6 +588,21 @@ class Exit(Node):
         return []
 
 
+class If(Node):
+
+    def __init__(self, element):
+        super().__init__(element)
+
+        self.name = 'If ' + self.id
+        self.description = 'If ' + self.id
+
+    def is_async(self):
+        return False
+
+    def work(self, config, state, channel, mongo):
+        return []
+
+
 class Request(Node):
     ''' A node that makes a TCP Request '''
     def __init__(self, element):
@@ -674,10 +689,6 @@ def make_node(element):
         raise ValueError(
             'Class definition not found for node: {}'.format(element.tagName)
         )
-
-    # if nodes are not reflected in state
-    if element.tagName == 'if':
-        return None
 
     class_name = pascalcase(element.tagName)
     available_classes = __import__(__name__).node

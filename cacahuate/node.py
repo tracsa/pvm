@@ -683,7 +683,7 @@ class Request(Node):
         return False
 
 
-def make_node(element):
+def make_node(element) -> Node:
     ''' returns a build Node object given an Element object '''
     if element.tagName not in NODES:
         raise ValueError(

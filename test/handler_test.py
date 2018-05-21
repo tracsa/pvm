@@ -1929,23 +1929,23 @@ def test_handle_request_node(config, mocker, mongo):
     })
 
     assert state['state']['items']['request-node'] == {
-      '_type': 'node',
-      'type': 'request',
-      'id': 'request-node',
-      'comment': '',
-      'state': 'valid',
-      'actors': {
-        '_type': ':map',
-        'items': {
-            '__system__': {
-                '_type': 'actor',
-                'state': 'valid',
-                'user': {
-                    '_type': 'user',
-                    'fullname': 'System',
-                    'identifier': '__system__',
-                },
-                'forms': expected_inputs,
+        '_type': 'node',
+        'type': 'request',
+        'id': 'request-node',
+        'comment': '',
+        'state': 'valid',
+        'actors': {
+            '_type': ':map',
+            'items': {
+                '__system__': {
+                    '_type': 'actor',
+                    'state': 'valid',
+                    'user': {
+                        '_type': 'user',
+                        'fullname': 'System',
+                        'identifier': '__system__',
+                    },
+                    'forms': expected_inputs,
                 },
             },
         },

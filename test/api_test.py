@@ -433,7 +433,11 @@ def test_start_process(client, mocker, config, mongo):
                         '_type': ':map',
                         'items': {},
                     },
+                    'milestone': False,
+                    'name': 'Primer paso',
+                    'description': 'Resolver una tarea',
                 },
+
                 'mid-node': {
                     '_type': 'node',
                     'type': 'action',
@@ -444,7 +448,11 @@ def test_start_process(client, mocker, config, mongo):
                         '_type': ':map',
                         'items': {},
                     },
+                    'milestone': False,
+                    'name': 'Segundo paso',
+                    'description': 'añadir información',
                 },
+
                 'final-node': {
                     '_type': 'node',
                     'type': 'action',
@@ -455,6 +463,9 @@ def test_start_process(client, mocker, config, mongo):
                         '_type': ':map',
                         'items': {},
                     },
+                    'milestone': False,
+                    'name': '',
+                    'description': '',
                 },
             },
             'item_order': [

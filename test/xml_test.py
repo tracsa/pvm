@@ -173,3 +173,36 @@ def test_form_to_dict(config):
             },
         ]
     }
+
+
+def test_get_state(config):
+    xml = Xml.load(config, 'milestones')
+
+    assert xml.get_state() == {
+        '_type': ':sorted_map',
+        'items': {
+            'start': {
+                '_type': 'node',
+                'actors': {'_type': ':map', 'items': {}},
+                'comment': '',
+                'id': 'start',
+                'state': 'unfilled',
+                'type': 'action',
+                'milestone': False,
+                'name': '',
+                'description': '',
+            },
+            'end': {
+                '_type': 'node',
+                'actors': {'_type': ':map', 'items': {}},
+                'comment': '',
+                'id': 'end',
+                'state': 'unfilled',
+                'type': 'validation',
+                'milestone': True,
+                'name': '',
+                'description': '',
+            },
+        },
+        'item_order': ['start', 'end'],
+    }

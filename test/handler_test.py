@@ -281,6 +281,9 @@ def test_teardown(config, mongo):
                     '_type': ':map',
                     'items': {},
                 },
+                'milestone': False,
+                'name': 'Primer paso',
+                'description': 'Resolver una tarea',
             },
 
             'mid-node': {
@@ -319,6 +322,9 @@ def test_teardown(config, mongo):
                         },
                     },
                 },
+                'milestone': False,
+                'name': 'Segundo paso',
+                'description': 'añadir información',
             },
 
             'final-node': {
@@ -331,6 +337,9 @@ def test_teardown(config, mongo):
                     '_type': ':map',
                     'items': {},
                 },
+                'milestone': False,
+                'name': '',
+                'description': '',
             },
         },
         'item_order': [
@@ -658,7 +667,11 @@ def test_reject(config, mongo):
                             },
                         },
                     },
+                    'milestone': False,
+                    'name': 'Primer paso',
+                    'description': 'Resolver una tarea',
                 },
+
                 'approval-node': {
                     '_type': 'node',
                     'type': 'validation',
@@ -707,7 +720,11 @@ def test_reject(config, mongo):
                             },
                         },
                     },
+                    'milestone': False,
+                    'name': 'Aprobación gerente reserva',
+                    'description': 'aprobar reserva',
                 },
+
                 'final-node': {
                     '_type': 'node',
                     'type': 'action',
@@ -718,6 +735,9 @@ def test_reject(config, mongo):
                         '_type': ':map',
                         'items': {},
                     },
+                    'milestone': False,
+                    'name': '',
+                    'description': '',
                 },
             },
             'item_order': ['start-node', 'approval-node', 'final-node'],
@@ -1029,6 +1049,9 @@ def test_reject_with_dependencies(config, mongo):
                             },
                         },
                     },
+                    'milestone': False,
+                    'name': 'Primer paso',
+                    'description': 'información original',
                 },
 
                 'node2': {
@@ -1062,6 +1085,9 @@ def test_reject_with_dependencies(config, mongo):
                             },
                         },
                     },
+                    'milestone': False,
+                    'name': 'Segundo paso',
+                    'description': 'depender de la info',
                 },
 
                 'node3': {
@@ -1095,6 +1121,9 @@ def test_reject_with_dependencies(config, mongo):
                             },
                         },
                     },
+                    'milestone': False,
+                    'name': 'Tercer paso',
+                    'description': 'no depender de nada',
                 },
 
                 'node4': {
@@ -1140,6 +1169,9 @@ def test_reject_with_dependencies(config, mongo):
                             },
                         },
                     },
+                    'milestone': False,
+                    'name': 'Cuarto paso',
+                    'description': 'validar',
                 },
 
                 'node5': {
@@ -1173,6 +1205,9 @@ def test_reject_with_dependencies(config, mongo):
                             },
                         },
                     },
+                    'milestone': False,
+                    'name': 'Quinto paso',
+                    'description': 'terminar',
                 },
             },
             'item_order': ['node1', 'node2', 'node3', 'node4', 'node5'],
@@ -1633,6 +1668,9 @@ def test_exit_interaction(config, mongo):
                             },
                         },
                     },
+                    'milestone': False,
+                    'name': '',
+                    'description': '',
                 },
 
                 'exit': {
@@ -1656,6 +1694,9 @@ def test_exit_interaction(config, mongo):
                             },
                         },
                     },
+                    'milestone': False,
+                    'name': 'Exit exit',
+                    'description': 'Exit exit',
                 },
 
                 'final-node': {
@@ -1668,6 +1709,9 @@ def test_exit_interaction(config, mongo):
                         '_type': ':map',
                         'items': {},
                     },
+                    'milestone': False,
+                    'name': '',
+                    'description': '',
                 },
             },
             'item_order': ['start-node', 'exit', 'final-node'],
@@ -1893,16 +1937,19 @@ def test_handle_request_node(config, mocker, mongo):
       'actors': {
         '_type': ':map',
         'items': {
-          '__system__': {
-            '_type': 'actor',
-            'state': 'valid',
-            'user': {
-              '_type': 'user',
-              'fullname': 'System',
-              'identifier': '__system__',
+            '__system__': {
+                '_type': 'actor',
+                'state': 'valid',
+                'user': {
+                    '_type': 'user',
+                    'fullname': 'System',
+                    'identifier': '__system__',
+                },
+                'forms': expected_inputs,
+                },
             },
-            'forms': expected_inputs,
-          },
         },
-      },
+        'milestone': False,
+        'name': 'Request request-node',
+        'description': 'Request request-node',
     }

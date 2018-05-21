@@ -1,0 +1,28 @@
+<process-spec>
+  <process-info>
+    <author>Og Astorga</author>
+    <date>2018-05-17</date>
+    <name>Anidated conditions</name>
+    <public>false</public>
+    <description>anidated conditions</description>
+  </process-info>
+  <process>
+    <action id="start">
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="start">
+          <input type="text" name="info" />
+        </form>
+      </form-array>
+    </action>
+
+    <validation id="end" milestone="true">
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start</param>
+      </auth-filter>
+      <dependencies>
+        <dep>start.info</dep>
+      </dependencies>
+    </validation>
+  </process>
+</process-spec>

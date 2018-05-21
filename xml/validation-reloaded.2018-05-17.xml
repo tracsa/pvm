@@ -11,7 +11,7 @@
       <auth-filter backend="anyone"></auth-filter>
       <node-info>
         <name>Primer paso</name>
-        <description>Resolver una tarea</description>
+        <description>información original</description>
       </node-info>
       <form-array>
         <form id="form1">
@@ -24,7 +24,7 @@
       <auth-filter backend="hardcoded"></auth-filter>
       <node-info>
         <name>Segundo paso</name>
-        <description>Resolver una tarea</description>
+        <description>depender de la info</description>
       </node-info>
       <form-array>
         <form id="form2">
@@ -41,7 +41,7 @@
       <auth-filter backend="hardcoded"></auth-filter>
       <node-info>
         <name>Tercer paso</name>
-        <description>Resolver una tarea</description>
+        <description>no depender de nada</description>
       </node-info>
       <form-array>
         <form id="form3">
@@ -56,8 +56,8 @@
         <dep>form1.task</dep>
       </dependencies>
       <node-info>
-        <name>Aprobacion gerente reserva </name>
-        <description>aprobar reserva</description>
+        <name>Cuarto paso</name>
+        <description>validar</description>
       </node-info>
     </validation>
 
@@ -68,6 +68,10 @@
           <input type="text" name="task"></input>
         </form>
       </form-array>
+      <node-info>
+        <name>Quinto paso</name>
+        <description>terminar</description>
+      </node-info>
     </action>
   </process>
 </process-spec>

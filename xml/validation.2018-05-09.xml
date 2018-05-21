@@ -25,7 +25,7 @@
         <dep>work.task</dep>
       </dependencies>
       <node-info>
-        <name>Aprobacion gerente reserva </name>
+        <name>Aprobación gerente reserva</name>
         <description>aprobar reserva</description>
       </node-info>
       <auth-filter backend="backref">

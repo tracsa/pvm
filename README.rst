@@ -77,3 +77,4 @@ TODO
   - params existen
 * guardar en un store privado por hash los xml al iniciar proceso, obsoleta el sistema de versiones (borrar toda referencia a la versión)
 * atrapar excepciones de template de jinja y añadir mensaje al titulo
+* todo uso de jinja debe tener try

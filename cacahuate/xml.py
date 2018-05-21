@@ -1,5 +1,5 @@
 from datetime import datetime
-from jinja2 import Template
+from jinja2 import Template, TemplateError
 from typing import Iterator, TextIO, Callable
 from xml.dom import pulldom
 from xml.dom.minidom import Element
@@ -57,9 +57,7 @@ class Xml:
 
     def get_name(self, collected_forms=[]):
         context = dict()
-
         for form in collected_forms:
-            print (collected_forms)
             form_dict = dict()
 
             for name, input in form['inputs']['items'].items():
@@ -67,7 +65,10 @@ class Xml:
 
             context[form['ref']] = form_dict
 
-        return Template(self._name).render(**context)
+        try:
+            return Template(self._name).render(**context)
+        except TemplateError:
+            return self.filename
 
     def set_name(self, name):
         self._name = name

@@ -3,7 +3,7 @@
   <process-info>
     <author>categulario</author>
     <date>2018-02-19</date>
-    <name>Simplest process ever {% if start_form %} started with: {{ start_form.pollo }}{% endif %}</name>
+    <name>Simplest process ever {% if start_form.pollo%} started with: {{ start_form.date }}{% endif %}</name>
     <public>true</public>
     <description>A simple process that does nothing</description>
   </process-info>

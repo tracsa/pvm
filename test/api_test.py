@@ -991,11 +991,19 @@ def test_task_read_requires(client):
     assert res.status_code == 403
 
 
-def test_task_read(client):
+def test_task_read(client, config, mongo):
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     juan = make_user('juan', 'Juan')
     juan.proxy.tasks.set([ptr])
     execution = ptr.proxy.execution.get()
+
+    state = Xml.load(config, 'simple.2018-02-19').get_state()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': state,
+    })
 
     res = client.get('/v1/task/{}'.format(ptr.id), headers=make_auth(juan))
 

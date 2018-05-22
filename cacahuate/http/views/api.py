@@ -318,17 +318,14 @@ def task_read(id):
     json_data['form_array'] = forms
 
     # If any append previous work done
-    try:
-        node_state = state['state']['items'][pointer.node_id]
-        node_actors = node_state['actors']
+    node_state = state['state']['items'][pointer.node_id]
+    node_actors = node_state['actors']
 
-        user_identifier = g.user.identifier
-        if user_identifier in node_actors['items']:
-            action = node_actors['items'][user_identifier]
+    user_identifier = g.user.identifier
+    if user_identifier in node_actors['items']:
+        action = node_actors['items'][user_identifier]
 
-            json_data['prev_work'] = action['forms']
-    except TypeError:
-        pass
+        json_data['prev_work'] = action['forms']
 
     # Append validation
     if node.tagName == 'validation':

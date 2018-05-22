@@ -1037,7 +1037,7 @@ def test_task_validation(client, mongo, config):
     juan.proxy.tasks.add(ptr)
     execution = ptr.proxy.execution.get()
 
-    state = Xml.load(config, 'validation').get_state()
+    state = Xml.load(config, 'validation.2018-05-09').get_state()
     node = state['items']['start-node']
 
     node['state'] = 'valid'

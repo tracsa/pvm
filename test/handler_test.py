@@ -457,7 +457,7 @@ def test_approve(config, mongo):
         'user_identifier': user.identifier,
         'input': [{
             '_type': 'form',
-            'ref': 'approval',
+            'ref': 'approval-node',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
@@ -503,7 +503,7 @@ def test_approve(config, mongo):
                 },
                 'forms': [{
                     '_type': 'form',
-                    'ref': 'approval',
+                    'ref': 'approval-node',
                     'inputs': {
                         '_type': ':sorted_map',
                         'items': {
@@ -594,7 +594,7 @@ def test_reject(config, mongo):
         'user_identifier': user.identifier,
         'input': [{
             '_type': 'form',
-            'ref': 'approval',
+            'ref': 'approval-node',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
@@ -690,7 +690,7 @@ def test_reject(config, mongo):
                                 '_type': 'actor',
                                 'forms': [{
                                     '_type': 'form',
-                                    'ref': 'approval',
+                                    'ref': 'approval-node',
                                     'state': 'invalid',
                                     'inputs': {
                                         '_type': ':sorted_map',
@@ -748,7 +748,7 @@ def test_reject(config, mongo):
             'item_order': ['start-node', 'approval-node', 'final-node'],
         },
         'values': {
-            'approval': {
+            'approval-node': {
                 'comment': 'I do not like it',
                 'response': 'reject',
                 'inputs': [{'ref': 'start-node.juan.0:work.task'}],
@@ -773,7 +773,7 @@ def test_reject(config, mongo):
                 '_type': 'actor',
                 'forms': [{
                     '_type': 'form',
-                    'ref': 'approval',
+                    'ref': 'approval-node',
                     'inputs': {
                         '_type': ':sorted_map',
                         'items': {
@@ -893,7 +893,7 @@ def test_reject_with_dependencies(config, mongo):
         'user_identifier': user.identifier,
         'input': [{
             '_type': 'form',
-            'ref': 'approval',
+            'ref': 'node4',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
@@ -967,7 +967,7 @@ def test_reject_with_dependencies(config, mongo):
         'user_identifier': user.identifier,
         'input': [{
             '_type': 'form',
-            'ref': 'approval',
+            'ref': 'node4',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
@@ -1144,7 +1144,7 @@ def test_reject_with_dependencies(config, mongo):
                                 '_type': 'actor',
                                 'forms': [{
                                     '_type': 'form',
-                                    'ref': 'approval',
+                                    'ref': 'node4',
                                     'inputs': {
                                         '_type': ':sorted_map',
                                         'items': {
@@ -1219,7 +1219,7 @@ def test_reject_with_dependencies(config, mongo):
         },
         'status': 'finished',
         'values': {
-            'approval': {
+            'node4': {
                 'comment': 'I like it',
                 'inputs': None,
                 'response': 'accept',

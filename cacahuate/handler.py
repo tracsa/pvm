@@ -57,7 +57,7 @@ class Handler:
         self.teardown(node, pointer, user, input)
 
         # compute the next node in the sequence
-        next_node = self.next(xml, node, input, execution)
+        next_node = self.next(xml, node, execution)
 
         if next_node:
             collection = self.get_mongo()[
@@ -93,8 +93,7 @@ class Handler:
         if not next_node:
             self.finish_execution(execution)
 
-
-    def next(self, xml, node, input, execution):
+    def next(self, xml, node, execution):
         ''' Given a position in the script, return the next position '''
         # Return next node by simple adjacency, works for actions and accepted
         # validations
@@ -109,7 +108,6 @@ class Handler:
                 node = node.next(
                     xml,
                     state,
-                    input,
                     self.get_mongo(),
                     self.config
                 )
@@ -117,7 +115,6 @@ class Handler:
 
                 if node.id in state['state']['items']:
                     if state['state']['items'][node.id]['state'] == 'valid':
-                        print('will skip', node.id)
                         continue
 
                 return node

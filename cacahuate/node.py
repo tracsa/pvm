@@ -100,7 +100,7 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
-    def next(self, xml, state, input, mongo, config):
+    def next(self, xml, state, mongo, config):
         # Return next node by simple adjacency
         xmliter = iter(xml)
         xmliter.find(lambda e: e.getAttribute('id') == self.id)
@@ -390,16 +390,16 @@ class Validation(UserAttachedNode):
     def is_async(self):
         return True
 
-    def next(self, xml, state, input, mongo, config):
-        if input[0]['inputs']['items']['response']['value'] == 'accept':
-            return super().next(xml, state, input, mongo, config)
+    def next(self, xml, state, mongo, config):
+        if state['values'][self.id]['response'] == 'accept':
+            return super().next(xml, state, mongo, config)
 
         # find the data backwards
         first_node_found = False
         first_invalid_node = None
         invalidated = set(
             i['ref']
-            for i in input[0]['inputs']['items']['inputs']['value']
+            for i in state['values'][self.id]['inputs']
         )
 
         for element in iter(xml):
@@ -413,7 +413,7 @@ class Validation(UserAttachedNode):
                 first_node_found = True
                 first_invalid_node = node
 
-        comment = input[0]['inputs']['items']['comment']['value']
+        comment = state['values'][self.id]['comment']
 
         def get_update_keys(invalidated):
             ikeys = set()
@@ -549,7 +549,7 @@ class Validation(UserAttachedNode):
 
         return [{
             '_type': 'form',
-            'ref': 'approval',
+            'ref': self.id,
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
@@ -676,7 +676,7 @@ class Exit(Node):
     def is_async(self):
         return False
 
-    def next(self, xml, state, input, mongo, config):
+    def next(self, xml, state, mongo, config):
         raise StopIteration
 
     def work(self, config, state, channel, mongo):
@@ -694,7 +694,7 @@ class If(Node):
     def is_async(self):
         return False
 
-    def next(self, xml, state, input, mongo, config):
+    def next(self, xml, state, mongo, config):
         # Return next node by simple adjacency
         xmliter = iter(xml)
         xmliter.find(lambda e: e.getAttribute('id') == self.id)

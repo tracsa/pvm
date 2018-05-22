@@ -1,10 +1,10 @@
 <process-spec>
   <process-info>
     <author>Og Astorga</author>
-    <date>2018-05-21</date>
-    <name>Validation</name>
+    <date>2018-05-22</date>
+    <name>Validation multiform</name>
     <public>true</public>
-    <description>A process with a validation node</description>
+    <description>A process with a validation node and a multi-form</description>
   </process-info>
   <process>
     <action id="start-node">

@@ -1113,12 +1113,12 @@ def test_task_validation(client, mongo, config):
 
 
 def test_task_with_prev_work(client, config, mongo):
-    ptr = make_pointer('validation.2018-05-21.xml', 'start-node')
+    ptr = make_pointer('validation-multiform.2018-05-22.xml', 'start-node')
     juan = make_user('juan', 'Juan')
     juan.proxy.tasks.add(ptr)
     execution = ptr.proxy.execution.get()
 
-    state = Xml.load(config, 'validation.2018-05-21').get_state()
+    state = Xml.load(config, 'validation-multiform.2018-05-22').get_state()
     node = state['items']['start-node']
 
     prev_work = [{

@@ -433,7 +433,11 @@ def test_start_process(client, mocker, config, mongo):
                         '_type': ':map',
                         'items': {},
                     },
+                    'milestone': False,
+                    'name': 'Primer paso',
+                    'description': 'Resolver una tarea',
                 },
+
                 'mid-node': {
                     '_type': 'node',
                     'type': 'action',
@@ -444,7 +448,11 @@ def test_start_process(client, mocker, config, mongo):
                         '_type': ':map',
                         'items': {},
                     },
+                    'milestone': False,
+                    'name': 'Segundo paso',
+                    'description': 'añadir información',
                 },
+
                 'final-node': {
                     '_type': 'node',
                     'type': 'action',
@@ -455,6 +463,9 @@ def test_start_process(client, mocker, config, mongo):
                         '_type': ':map',
                         'items': {},
                     },
+                    'milestone': False,
+                    'name': '',
+                    'description': '',
                 },
             },
             'item_order': [
@@ -1436,3 +1447,8 @@ def test_pagination_v1_log(client, mongo, config):
     assert json.loads(res.data)['data'][1]["finished_at"] == \
         '2018-05-23T08:08:08+00:00'
     assert len(json.loads(res.data)['data']) == 2
+
+
+def test_name_with_if(client, mongo, config):
+    xml = Xml.load(config, 'pollo')
+    assert xml.name == 'pollo.2018-05-20.xml'

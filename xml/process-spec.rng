@@ -61,21 +61,27 @@
   <define name="action">
     <element name="action">
       <attribute name="id"><text/></attribute>
-        <interleave>
-          <optional>
-            <ref name="node-info" />
-          </optional>
-          <ref name="auth-filter" />
-          <optional>
-            <ref name="form-array" />
-          </optional>
-        </interleave>
+      <optional>
+        <attribute name="milestone"><text/></attribute>
+      </optional>
+      <interleave>
+        <optional>
+          <ref name="node-info" />
+        </optional>
+        <ref name="auth-filter" />
+        <optional>
+          <ref name="form-array" />
+        </optional>
+      </interleave>
     </element>
   </define>
 
   <define name="validation">
     <element name="validation">
       <attribute name="id"><text/></attribute>
+      <optional>
+        <attribute name="milestone"><text/></attribute>
+      </optional>
       <interleave>
         <optional>
           <ref name="node-info" />

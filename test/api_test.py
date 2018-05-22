@@ -1104,6 +1104,95 @@ def test_task_validation(client, mongo, config):
     }
 
 
+def test_task_with_prev_work(client, config, mongo):
+    ptr = make_pointer('validation.2018-05-21.xml', 'start-node')
+    juan = make_user('juan', 'Juan')
+    juan.proxy.tasks.add(ptr)
+    execution = ptr.proxy.execution.get()
+
+    state = Xml.load(config, 'validation.2018-05-21').get_state()
+    node = state['items']['start-node']
+
+    prev_work = [{
+        '_type': 'form',
+        'ref': 'set',
+        'state': 'invalid',
+        'inputs': {
+            '_type': ':sorted_map',
+            'items': {
+                'A': {'_type': 'field', 'value': 'a1', 'state': 'valid'},
+                'B': {'_type': 'field', 'value': 'b1', 'state': 'valid'},
+                'C': {'_type': 'field', 'value': 'c1', 'state': 'invalid'},
+                'D': {'_type': 'field', 'value': 'd1', 'state': 'valid'},
+            },
+            'item_order': ['A', 'B', 'C', 'D'],
+        },
+    }, {
+        '_type': 'form',
+        'ref': 'set',
+        'state': 'valid',
+        'inputs': {
+            '_type': ':sorted_map',
+            'items': {
+                'A': {'_type': 'field', 'value': 'a2', 'state': 'valid'},
+                'B': {'_type': 'field', 'value': 'b2', 'state': 'valid'},
+                'C': {'_type': 'field', 'value': 'c2', 'state': 'valid'},
+                'D': {'_type': 'field', 'value': 'd2', 'state': 'valid'},
+            },
+            'item_order': ['A', 'B', 'C', 'D'],
+        },
+    }]
+
+    node['state'] = 'valid'
+    node['actors']['items']['juan'] = {
+        '_type': 'actor',
+        'state': 'valid',
+        'user': {
+            '_type': 'user',
+            'identifier': 'juan',
+            'fullname': None,
+        },
+        'forms': prev_work,
+    }
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': state,
+    })
+
+    res = client.get('/v1/task/{}'.format(ptr.id), headers=make_auth(juan))
+    body = json.loads(res.data)['data']
+
+    assert res.status_code == 200
+    assert body == {
+        '_type': 'pointer',
+        'description': None,
+        'execution': {
+            '_type': 'execution',
+            'description': None,
+            'id': execution.id,
+            'name': None,
+            'process_name': execution.process_name,
+        },
+        'form_array': [{
+            'inputs': [
+                {'label': 'Value A', 'name': 'A', 'type': 'text'},
+                {'label': 'Value B', 'name': 'B', 'type': 'text'},
+                {'label': 'Value C', 'name': 'C', 'type': 'text'},
+                {'label': 'Value D', 'name': 'D', 'type': 'text'}
+            ],
+            'multiple': '1-5',
+            'ref': 'set'
+        }],
+        'id': ptr.id,
+        'name': None,
+        'node_id': ptr.node_id,
+        'node_type': 'action',
+        'prev_work': node['actors']['items']['juan']['forms'],
+    }
+
+
 def test_execution_has_node_info(client):
     juan = make_user('juan', 'Juan')
 

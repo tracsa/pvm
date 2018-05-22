@@ -53,8 +53,6 @@ class Handler:
             lambda e: e.getAttribute('id') == pointer.node_id
         ))
 
-        to_queue = []  # pointers to be sent to the queue
-
         # node's lifetime ends here
         self.teardown(node, pointer, user, input)
 
@@ -64,166 +62,57 @@ class Handler:
         ]
 
         state = next(collection.find({'id': execution.id}))
-        next_nodes = self.next(xml, node, state, input)
+        next_node = self.next(xml, node, state, input)
+        # previous call to next() might have updated the state (e.g. when 
+        # invalidating)
         state = next(collection.find({'id': execution.id}))
 
-        for node in next_nodes:
+        if next_node:
             # node's begining of life
             qdata = self.wakeup(node, execution, channel, state)
 
-            # async nodes don't return theirs pointers so they are not queued
+            # Sync nodes are queued immediatly
             if qdata:
-                to_queue.append(qdata)
+                channel.queue_declare(
+                    queue=self.config['RABBIT_QUEUE'],
+                    durable=True
+                )
+
+                channel.basic_publish(
+                    exchange='',
+                    routing_key=self.config['RABBIT_QUEUE'],
+                    body=json.dumps({
+                        'command': 'step',
+                        'pointer_id': pointer.id,
+                        'user_identifier': '__system__',
+                        'input': input,
+                    }),
+                    properties=pika.BasicProperties(
+                        delivery_mode=2,
+                    ),
+                )
 
         if execution.proxy.pointers.count() == 0:
             self.finish_execution(execution)
 
-        channel.queue_declare(
-            queue=self.config['RABBIT_QUEUE'],
-            durable=True
-        )
-
-        # Sync nodes are queued immediatly
-        for pointer, input in to_queue:
-            channel.basic_publish(
-                exchange='',
-                routing_key=self.config['RABBIT_QUEUE'],
-                body=json.dumps({
-                    'command': 'step',
-                    'pointer_id': pointer.id,
-                    'user_identifier': '__system__',
-                    'input': input,
-                }),
-                properties=pika.BasicProperties(
-                    delivery_mode=2,
-                ),
-            )
 
     def next(self, xml, node, state, input):
         ''' Given a position in the script, return the next position '''
-        if isinstance(node, Exit):
-            return []
-
-        elif isinstance(node, Validation) and \
-                input[0]['inputs']['items']['response']['value'] == 'reject':
-            # find the data backwards
-            first_node_found = False
-            first_invalid_node = None
-            invalidated = set(
-                i['ref']
-                for i in input[0]['inputs']['items']['inputs']['value']
-            )
-
-            for element in iter(xml):
-                node = make_node(element)
-
-                more_fields = node.get_invalidated_fields(invalidated, state)
-
-                invalidated.update(more_fields)
-
-                if more_fields and not first_node_found:
-                    first_node_found = True
-                    first_invalid_node = node
-
-            comment = input[0]['inputs']['items']['comment']['value']
-
-            def get_update_keys(invalidated):
-                ikeys = set()
-                fkeys = set()
-                akeys = set()
-                nkeys = set()
-                ckeys = set()
-
-                for key in invalidated:
-                    node, actor, form, input = key.split('.')
-                    index, ref = form.split(':')
-
-                    ikeys.add(('state.items.{node}.actors.items.{actor}.'
-                               'forms.{index}.inputs.items.{input}.'
-                               'state'.format(
-                                    node=node,
-                                    actor=actor,
-                                    index=index,
-                                    input=input,
-                                ), 'invalid'))
-
-                    fkeys.add(('state.items.{node}.actors.items.{actor}.'
-                               'forms.{index}.state'.format(
-                                    node=node,
-                                    actor=actor,
-                                    index=index,
-                                ), 'invalid'))
-
-                    akeys.add(('state.items.{node}.actors.items.{actor}.'
-                               'state'.format(
-                                    node=node,
-                                    actor=actor,
-                                ), 'invalid'))
-
-                    nkeys.add(('state.items.{node}.state'.format(
-                        node=node,
-                    ), 'invalid'))
-
-                for key, _ in nkeys:
-                    key = '.'.join(key.split('.')[:-1]) + '.comment'
-                    ckeys.add((key, comment))
-
-                return fkeys | akeys | nkeys | ikeys | ckeys
-
-            updates = dict(get_update_keys(invalidated))
-
-            # update state
-            collection = self.get_mongo()[
-                self.config['EXECUTION_COLLECTION']
-            ]
-            collection.update_one({
-                'id': state['id'],
-            }, {
-                '$set': updates,
-            })
-
-            return [first_invalid_node]
-
         # Return next node by simple adjacency, works for actions and accepted
         # validations
 
         try:
-            # Return next node by simple adjacency
-            xmliter = iter(xml)
-            xmliter.find(lambda e: e.getAttribute('id') == node.id)
-
-            # skip nodes in certain conditions, like anidated ifs and already
-            # validated nodes
-            grammar = None
-            element = None
-
-            # TODO expropiese
             while True:
-                element = next(xmliter)
-                el_id = element.getAttribute('id')
+                next_node = node.next(xml, state, input)
 
-                if element.tagName == 'if':
-                    if grammar is None:
-                        grammar = Condition(state['state'])
+                if next_node.id in state['state']['items']:
+                    if state['state']['items'][next_node.id]['state'] == 'valid':
+                        continue
 
-                    condition = xmliter.get_next_condition()
-
-                    if not grammar.parse(condition):
-                        xmliter.expand(element)
-                if element.tagName == 'exit':
-                    break
-                if element.tagName == 'call':
-                    break
-                if element.tagName == 'request':
-                    break
-                elif el_id in state['state']['items']:
-                    if state['state']['items'][el_id]['state'] != 'valid':
-                        break
-
-            return [make_node(element)]
+                return next_node
         except StopIteration:
             # End of process
-            return []
+            return None
 
     def wakeup(self, node, execution, channel, state):
         ''' Waking up a node often means to notify someone or something about

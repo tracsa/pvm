@@ -100,6 +100,13 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
+    def next(self, xml, state, input):
+        # Return next node by simple adjacency
+        xmliter = iter(xml)
+        xmliter.find(lambda e: e.getAttribute('id') == self.id)
+
+        return make_node(next(xmliter))
+
     def pointer_entry(self, execution, pointer, notified_users=None):
         return {
             'id': pointer.id,
@@ -383,6 +390,88 @@ class Validation(UserAttachedNode):
     def is_async(self):
         return True
 
+    def next(self, xml, state, input):
+        if response_is_accept:
+            return super().next(xml, state, input)
+
+        # find the data backwards
+        first_node_found = False
+        first_invalid_node = None
+        invalidated = set(
+            i['ref']
+            for i in input[0]['inputs']['items']['inputs']['value']
+        )
+
+        for element in iter(xml):
+            node = make_node(element)
+
+            more_fields = node.get_invalidated_fields(invalidated, state)
+
+            invalidated.update(more_fields)
+
+            if more_fields and not first_node_found:
+                first_node_found = True
+                first_invalid_node = node
+
+        comment = input[0]['inputs']['items']['comment']['value']
+
+        def get_update_keys(invalidated):
+            ikeys = set()
+            fkeys = set()
+            akeys = set()
+            nkeys = set()
+            ckeys = set()
+
+            for key in invalidated:
+                node, actor, form, input = key.split('.')
+                index, ref = form.split(':')
+
+                ikeys.add(('state.items.{node}.actors.items.{actor}.'
+                           'forms.{index}.inputs.items.{input}.'
+                           'state'.format(
+                                node=node,
+                                actor=actor,
+                                index=index,
+                                input=input,
+                            ), 'invalid'))
+
+                fkeys.add(('state.items.{node}.actors.items.{actor}.'
+                           'forms.{index}.state'.format(
+                                node=node,
+                                actor=actor,
+                                index=index,
+                            ), 'invalid'))
+
+                akeys.add(('state.items.{node}.actors.items.{actor}.'
+                           'state'.format(
+                                node=node,
+                                actor=actor,
+                            ), 'invalid'))
+
+                nkeys.add(('state.items.{node}.state'.format(
+                    node=node,
+                ), 'invalid'))
+
+            for key, _ in nkeys:
+                key = '.'.join(key.split('.')[:-1]) + '.comment'
+                ckeys.add((key, comment))
+
+            return fkeys | akeys | nkeys | ikeys | ckeys
+
+        updates = dict(get_update_keys(invalidated))
+
+        # update state
+        collection = self.get_mongo()[
+            self.config['EXECUTION_COLLECTION']
+        ]
+        collection.update_one({
+            'id': state['id'],
+        }, {
+            '$set': updates,
+        })
+
+        return first_invalid_node
+
     def __init__(self, element):
         super().__init__(element)
 
@@ -587,6 +676,9 @@ class Exit(Node):
     def is_async(self):
         return False
 
+    def next(self, xml, state, input):
+        raise StopIteration
+
     def work(self, config, state, channel, mongo):
         return []
 
@@ -601,6 +693,21 @@ class If(Node):
 
     def is_async(self):
         return False
+
+    def next(self, xml, state, input):
+        # Return next node by simple adjacency
+        xmliter = iter(xml)
+        xmliter.find(lambda e: e.getAttribute('id') == self.id)
+
+        element = next(xmliter)
+        grammar = Condition(state['state'])
+        condition = xmliter.get_next_condition()
+
+        if not grammar.parse(condition):
+            # this will skip if's content
+            xmliter.expand(element)
+
+        return make_node(next(xmliter))
 
     def work(self, config, state, channel, mongo):
         return []

@@ -1381,11 +1381,32 @@ def test_true_condition_node(config, mongo):
         ],
     }, channel)
 
-    # assertions
+    # pointer moved
     assert Pointer.get(ptr.id) is None
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'condition1'
 
-    new_ptr = Pointer.get_all()[0]
-    assert new_ptr.node_id == 'mistical-node'
+    # rabbit called
+    channel.basic_publish.assert_called_once()
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'input': [{
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'condition': True,
+                },
+                'item_order': ['condition'],
+            },
+        }],
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
+
+    handler.call(rabbit_call, channel)
 
 
 def test_elseif_condition_node(config, mongo):

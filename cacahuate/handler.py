@@ -56,20 +56,17 @@ class Handler:
         # node's lifetime ends here
         self.teardown(node, pointer, user, input)
 
-        # retrieve the state so we can use it in wakeup and to find next node
-        collection = self.get_mongo()[
-            self.config['EXECUTION_COLLECTION']
-        ]
-
-        state = next(collection.find({'id': execution.id}))
-        next_node = self.next(xml, node, state, input)
-        # previous call to next() might have updated the state (e.g. when 
-        # invalidating)
-        state = next(collection.find({'id': execution.id}))
+        # compute the next node in the sequence
+        next_node = self.next(xml, node, input, execution)
 
         if next_node:
+            collection = self.get_mongo()[
+                self.config['EXECUTION_COLLECTION']
+            ]
+            state = next(collection.find({'id': execution.id}))
+
             # node's begining of life
-            qdata = self.wakeup(node, execution, channel, state)
+            qdata = self.wakeup(next_node, execution, channel, state)
 
             # Sync nodes are queued immediatly
             if qdata:
@@ -92,24 +89,38 @@ class Handler:
                     ),
                 )
 
-        if execution.proxy.pointers.count() == 0:
+        # finish the execution
+        if not next_node:
             self.finish_execution(execution)
 
 
-    def next(self, xml, node, state, input):
+    def next(self, xml, node, input, execution):
         ''' Given a position in the script, return the next position '''
         # Return next node by simple adjacency, works for actions and accepted
         # validations
 
+        collection = self.get_mongo()[
+            self.config['EXECUTION_COLLECTION']
+        ]
+        state = next(collection.find({'id': execution.id}))
+
         try:
             while True:
-                next_node = node.next(xml, state, input)
+                node = node.next(
+                    xml,
+                    state,
+                    input,
+                    self.get_mongo(),
+                    self.config
+                )
+                state = next(collection.find({'id': execution.id}))
 
-                if next_node.id in state['state']['items']:
-                    if state['state']['items'][next_node.id]['state'] == 'valid':
+                if node.id in state['state']['items']:
+                    if state['state']['items'][node.id]['state'] == 'valid':
+                        print('will skip', node.id)
                         continue
 
-                return next_node
+                return node
         except StopIteration:
             # End of process
             return None

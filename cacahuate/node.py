@@ -100,7 +100,7 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
-    def next(self, xml, state, input):
+    def next(self, xml, state, input, mongo, config):
         # Return next node by simple adjacency
         xmliter = iter(xml)
         xmliter.find(lambda e: e.getAttribute('id') == self.id)
@@ -390,9 +390,9 @@ class Validation(UserAttachedNode):
     def is_async(self):
         return True
 
-    def next(self, xml, state, input):
-        if response_is_accept:
-            return super().next(xml, state, input)
+    def next(self, xml, state, input, mongo, config):
+        if input[0]['inputs']['items']['response']['value'] == 'accept':
+            return super().next(xml, state, input, mongo, config)
 
         # find the data backwards
         first_node_found = False
@@ -461,8 +461,8 @@ class Validation(UserAttachedNode):
         updates = dict(get_update_keys(invalidated))
 
         # update state
-        collection = self.get_mongo()[
-            self.config['EXECUTION_COLLECTION']
+        collection = mongo[
+            config['EXECUTION_COLLECTION']
         ]
         collection.update_one({
             'id': state['id'],
@@ -676,7 +676,7 @@ class Exit(Node):
     def is_async(self):
         return False
 
-    def next(self, xml, state, input):
+    def next(self, xml, state, input, mongo, config):
         raise StopIteration
 
     def work(self, config, state, channel, mongo):
@@ -694,7 +694,7 @@ class If(Node):
     def is_async(self):
         return False
 
-    def next(self, xml, state, input):
+    def next(self, xml, state, input, mongo, config):
         # Return next node by simple adjacency
         xmliter = iter(xml)
         xmliter.find(lambda e: e.getAttribute('id') == self.id)

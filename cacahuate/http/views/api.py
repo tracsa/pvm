@@ -18,6 +18,7 @@ from cacahuate.models import Execution, Pointer, User, Token
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict, get_text
 from cacahuate.node import make_node
+import typing
 
 
 DATE_FIELDS = [

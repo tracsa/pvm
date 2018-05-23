@@ -1,4 +1,6 @@
 from coralillo.errors import BadField
+import typing
+from typing import Union, Optional
 
 
 class EndOfProcess(Exception):
@@ -51,8 +53,8 @@ class NoPointerAlive(BadField):
 
 
 class InputError(Exception):
-    detail = None
-    code = None
+    detail = None # type: Union[None, str]
+    code = None # type: Union[None, str]
 
     def __init__(self, input, where):
         self.input = input

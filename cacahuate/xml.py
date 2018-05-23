@@ -1,6 +1,6 @@
 from datetime import datetime
 from jinja2 import Template, TemplateError
-from typing import Iterator, TextIO, Callable
+from typing import Iterator, TextIO, Callable, Optional, Any, Union
 from xml.dom import pulldom
 from xml.dom.minidom import Element
 from xml.sax._exceptions import SAXParseException
@@ -76,7 +76,7 @@ class Xml:
     name = property(get_name, set_name)
 
     @classmethod
-    def load(cls, config: dict, common_name: str, direct=False) -> TextIO:
+    def load(cls, config: dict, common_name: str, direct=False) -> Union[TextIO, Xml]:
         ''' Loads an xml file and returns the corresponding TextIOWrapper for
         further usage. The file might contain multiple versions so the latest
         one is chosen.
@@ -91,7 +91,9 @@ class Xml:
         try:
             name, version = common_name.split('.')
         except ValueError:
-            name, version = common_name, None
+            name = common_name
+            version = None # type: ignore
+            # name, version = common_name, None
 
         files = reversed(sorted(os.listdir(config['XML_PATH'])))
 

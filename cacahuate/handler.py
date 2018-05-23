@@ -129,7 +129,7 @@ class Handler:
         log.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,
             node.id,
-            execution.id,
+            execution.name,
         ))
 
         # notify someone
@@ -213,7 +213,7 @@ class Handler:
         log.debug('Deleted pointer p:{} n:{} e:{}'.format(
             pointer.id,
             pointer.node_id,
-            execution.id,
+            execution.name,
         ))
 
         pointer.delete()
@@ -223,7 +223,7 @@ class Handler:
         mongo = self.get_mongo()
         collection = mongo[self.config['EXECUTION_COLLECTION']]
         collection.update_one({
-            'id': execution.id
+            'id': execution.id,
         }, {
             '$set': {
                 'status': 'finished',
@@ -231,7 +231,7 @@ class Handler:
             }
         })
 
-        log.debug('Finished e:{}'.format(execution.id))
+        log.debug('Finished e:{}'.format(execution.name))
 
         execution.delete()
 
@@ -299,7 +299,7 @@ class Handler:
                     user.identifier,
                     medium,
                     node.id,
-                    pointer.proxy.execution.get().id,
+                    pointer.proxy.execution.get().name,
                 ))
                 channel.basic_publish(
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
@@ -372,7 +372,7 @@ class Handler:
         ]
 
         collection.update_one({
-            'id': execution.id
+            'id': execution.id,
         }, {
             '$set': {
                 'status': 'cancelled',

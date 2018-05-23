@@ -1,0 +1,53 @@
+<process-spec>
+  <process-info>
+    <author>Og Astorga</author>
+    <date>2018-05-22</date>
+    <name>Validation multiform</name>
+    <public>true</public>
+    <description>A process with a validation node and a multi-form</description>
+  </process-info>
+  <process>
+    <action id="start-node">
+      <auth-filter backend="anyone" />
+      <node-info>
+        <name>Primer paso</name>
+        <description>Resolver una tarea</description>
+      </node-info>
+      <form-array>
+        <form id="set" multiple="1-5">
+          <input label="Value A" type="text" name="A" />
+          <input label="Value B" type="text" name="B" />
+          <input label="Value C" type="text" name="C" />
+          <input label="Value D" type="text" name="D" />
+        </form>
+      </form-array>
+    </action>
+
+    <validation id="approval-node" >
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start-node</param>
+      </auth-filter>
+      <dependencies>
+        <dep>set.A</dep>
+        <dep>set.B</dep>
+        <dep>set.C</dep>
+        <dep>set.D</dep>
+      </dependencies>
+      <node-info>
+        <name>Aprobación gerente reserva</name>
+        <description>aprobar reserva</description>
+      </node-info>
+    </validation>
+
+    <action id="final-node">
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start-node</param>
+      </auth-filter>
+      <form-array>
+        <form id="confirm">
+          <input type="text" name="exit"></input>
+        </form>
+      </form-array>
+    </action>
+  </process>
+</process-spec>

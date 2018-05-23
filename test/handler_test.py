@@ -431,7 +431,7 @@ def test_approve(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'validation').get_state(),
+        'state': Xml.load(config, 'validation.2018-05-09').get_state(),
     })
 
     # thing to test
@@ -536,7 +536,7 @@ def test_reject(config, mongo):
         },
     })
 
-    state = Xml.load(config, 'validation').get_state()
+    state = Xml.load(config, 'validation.2018-05-09').get_state()
 
     state['items']['start-node']['state'] = 'valid'
     state['items']['start-node']['actors']['items']['juan'] = {

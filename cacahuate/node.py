@@ -10,7 +10,7 @@ import re
 
 from cacahuate.errors import ElementNotFound, IncompleteBranch, \
     ValidationErrors, RequiredInputError, InvalidInputError, InputError, \
-    RequiredListError, RequiredDictError
+    RequiredListError, RequiredDictError, EndOfProcess
 from cacahuate.inputs import make_input
 from cacahuate.logger import log
 from cacahuate.utils import user_import
@@ -18,6 +18,7 @@ from cacahuate.xml import get_text, NODES, Xml
 from cacahuate.http.errors import BadRequest
 from cacahuate.jsontypes import Map
 from cacahuate.jsontypes import SortedMap
+from cacahuate.grammar import Condition
 
 
 class AuthParam:
@@ -691,7 +692,7 @@ class Exit(FullyContainedNode):
         return False
 
     def next(self, xml, state, mongo, config):
-        raise StopIteration
+        raise EndOfProcess
 
     def work(self, config, state, channel, mongo):
         return []
@@ -705,26 +706,44 @@ class If(Node):
         self.name = 'If ' + self.id
         self.description = 'If ' + self.id
 
+        self.condition = xmliter.get_next_condition()
+
     def is_async(self):
         return False
 
     def next(self, xml, state, mongo, config):
-        # Return next node by simple adjacency
         xmliter = iter(xml)
-        xmliter.find(lambda e: e.getAttribute('id') == self.id)
 
-        element = next(xmliter)
-        grammar = Condition(state['state'])
-        condition = xmliter.get_next_condition()
+        # consume up to this node
+        ifnode = xmliter.find(lambda e: e.getAttribute('id') == self.id)
 
-        if not grammar.parse(condition):
-            # this will skip if's content
-            xmliter.expand(element)
+        if not state['values'][self.id]['condition']:
+            xmliter.expand(ifnode)
 
         return make_node(next(xmliter), xmliter)
 
     def work(self, config, state, channel, mongo):
-        return []
+        grammar = Condition(state['state'])
+
+        value = grammar.parse(self.condition)
+
+        return [{
+            '_type': 'form',
+            'ref': self.id,
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'condition': {
+                        'name': 'condition',
+                        'state': 'valid',
+                        'type': 'bool',
+                        'value': value,
+                    },
+                },
+                'item_order': ['condition'],
+            },
+        }]
 
 
 class Request(FullyContainedNode):
@@ -778,9 +797,9 @@ class Request(FullyContainedNode):
     def work(self, config, state, channel, mongo):
         response = self.make_request(state['values'])
 
-        state = [{
+        return [{
             '_type': 'form',
-            'ref': 'request-node',
+            'ref': self.id,
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
@@ -801,8 +820,6 @@ class Request(FullyContainedNode):
                 'item_order': ['status_code', 'raw_response'],
             },
         }]
-
-        return state
 
     def is_async(self):
         return False

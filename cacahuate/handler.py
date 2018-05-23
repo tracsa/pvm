@@ -7,7 +7,7 @@ import pika
 import pymongo
 
 from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
-    MisconfiguredProvider
+    MisconfiguredProvider, EndOfProcess
 from cacahuate.logger import log
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
@@ -57,41 +57,37 @@ class Handler:
         self.teardown(node, pointer, user, input)
 
         # compute the next node in the sequence
-        next_node = self.next(xml, node, execution)
+        try:
+            next_node, state = self.next(xml, node, execution)
+        except EndOfProcess:
+            # finish the execution
+            return self.finish_execution(execution)
 
-        if next_node:
-            collection = self.get_mongo()[
-                self.config['EXECUTION_COLLECTION']
-            ]
-            state = next(collection.find({'id': execution.id}))
+        # node's begining of life
+        qdata = self.wakeup(next_node, execution, channel, state)
 
-            # node's begining of life
-            qdata = self.wakeup(next_node, execution, channel, state)
+        # Sync nodes are queued immediatly
+        if qdata:
+            new_pointer, new_input = qdata
 
-            # Sync nodes are queued immediatly
-            if qdata:
-                channel.queue_declare(
-                    queue=self.config['RABBIT_QUEUE'],
-                    durable=True
-                )
+            channel.queue_declare(
+                queue=self.config['RABBIT_QUEUE'],
+                durable=True
+            )
 
-                channel.basic_publish(
-                    exchange='',
-                    routing_key=self.config['RABBIT_QUEUE'],
-                    body=json.dumps({
-                        'command': 'step',
-                        'pointer_id': pointer.id,
-                        'user_identifier': '__system__',
-                        'input': input,
-                    }),
-                    properties=pika.BasicProperties(
-                        delivery_mode=2,
-                    ),
-                )
-
-        # finish the execution
-        if not next_node:
-            self.finish_execution(execution)
+            channel.basic_publish(
+                exchange='',
+                routing_key=self.config['RABBIT_QUEUE'],
+                body=json.dumps({
+                    'command': 'step',
+                    'pointer_id': new_pointer.id,
+                    'user_identifier': '__system__',
+                    'input': new_input,
+                }),
+                properties=pika.BasicProperties(
+                    delivery_mode=2,
+                ),
+            )
 
     def next(self, xml, node, execution):
         ''' Given a position in the script, return the next position '''
@@ -111,16 +107,18 @@ class Handler:
                     self.get_mongo(),
                     self.config
                 )
+
+                # refresh state because previous call might have changed it
                 state = next(collection.find({'id': execution.id}))
 
                 if node.id in state['state']['items']:
                     if state['state']['items'][node.id]['state'] == 'valid':
                         continue
 
-                return node
+                return node, state
         except StopIteration:
             # End of process
-            return None
+            raise EndOfProcess
 
     def wakeup(self, node, execution, channel, state):
         ''' Waking up a node often means to notify someone or something about

@@ -1,6 +1,10 @@
 from coralillo.errors import BadField
 
 
+class EndOfProcess(Exception):
+    pass
+
+
 class AuthenticationError(Exception):
     pass
 

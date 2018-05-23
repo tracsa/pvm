@@ -1378,10 +1378,17 @@ def test_true_condition_node(config, mongo):
         'pointer_id': ptr.id,
         'input': [{
             '_type': 'form',
+            'ref': 'condition1',
+            'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
-                    'condition': True,
+                    'condition': {
+                        'name': 'condition',
+                        'state': 'valid',
+                        'type': 'bool',
+                        'value': True,
+                    },
                 },
                 'item_order': ['condition'],
             },
@@ -1391,6 +1398,11 @@ def test_true_condition_node(config, mongo):
     assert json.loads(args['body']) == rabbit_call
 
     handler.call(rabbit_call, channel)
+
+    # pointer moved
+    assert Pointer.get(ptr.id) is None
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'mistical-node'
 
 
 def test_elseif_condition_node(config, mongo):
@@ -1433,9 +1445,42 @@ def test_elseif_condition_node(config, mongo):
 
     # assertions
     assert Pointer.get(ptr.id) is None
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'condition1'
 
-    new_ptr = Pointer.get_all()[0]
-    assert new_ptr.node_id == '123456-node'
+    # rabbit called
+    channel.basic_publish.assert_called_once()
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'input': [{
+            '_type': 'form',
+            'ref': 'condition1',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'condition': {
+                        'name': 'condition',
+                        'state': 'valid',
+                        'type': 'bool',
+                        'value': False,
+                    },
+                },
+                'item_order': ['condition'],
+            },
+        }],
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
+
+    handler.call(rabbit_call, channel)
+
+    # pointer moved
+    assert Pointer.get(ptr.id) is None
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'condition2'
 
 
 def test_false_condition_node(config, mongo):

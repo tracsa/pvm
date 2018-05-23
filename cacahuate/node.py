@@ -152,6 +152,7 @@ class FullyContainedNode(Node):
 
         xmliter.parser.expandNode(element)
 
+
 class UserAttachedNode(FullyContainedNode):
     ''' Types of nodes that require human interaction, thus being asyncronous
     and containing a common structure like auth-filter and node-info
@@ -600,8 +601,8 @@ class Validation(UserAttachedNode):
 
 class CallFormInput(Node):
 
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
 
         self.value = get_text(element)
         self.type = element.getAttribute('type')
@@ -620,13 +621,13 @@ class CallFormInput(Node):
 
 class CallForm(Node):
 
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
 
         self.inputs = []
 
         for input_el in element.getElementsByTagName('input'):
-            self.inputs.append(CallFormInput(input_el))
+            self.inputs.append(CallFormInput(input_el, xmliter))
 
     def render(self, context):
         res = {
@@ -657,7 +658,7 @@ class Call(FullyContainedNode):
         data_el = element.getElementsByTagName('data')[0]
 
         for form_el in data_el.getElementsByTagName('form'):
-            self.forms.append(CallForm(form_el))
+            self.forms.append(CallForm(form_el, xmliter))
 
     def is_async(self):
         return False

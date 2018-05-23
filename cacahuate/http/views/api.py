@@ -161,8 +161,9 @@ def continue_process():
 
     try:
         continue_point = make_node(
-            xmliter.find(lambda e: e.getAttribute('id') == node_id)
-        , xmliter)
+            xmliter.find(lambda e: e.getAttribute('id') == node_id),
+            xmliter
+        )
     except ElementNotFound as e:
         raise BadRequest([{
             'detail': 'node_id is not a valid node',

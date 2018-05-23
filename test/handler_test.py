@@ -1405,7 +1405,7 @@ def test_true_condition_node(config, mongo):
     assert ptr.node_id == 'mistical-node'
 
 
-def test_elseif_condition_node(config, mongo):
+def test_false_condition_node(config, mongo):
     ''' conditional node won't be executed if its condition is false '''
     # test setup
     handler = Handler(config)
@@ -1483,51 +1483,6 @@ def test_elseif_condition_node(config, mongo):
     assert ptr.node_id == 'condition2'
 
 
-def test_false_condition_node(config, mongo):
-    ''' conditional node won't be executed if its condition is false '''
-    # test setup
-    handler = Handler(config)
-    user = make_user('juan', 'Juan')
-    ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
-    channel = MagicMock()
-
-    mongo[config["EXECUTION_COLLECTION"]].insert_one({
-        '_type': 'execution',
-        'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'condition').get_state(),
-    })
-
-    handler.call({
-        'command': 'step',
-        'pointer_id': ptr.id,
-        'user_identifier': user.identifier,
-        'input': [
-            {
-                'ref': 'mistery',
-                '_type': 'form',
-                'inputs': {
-                    '_type': ':sorted_map',
-                    'item_order': [
-                        'password',
-                    ],
-                    'items': {
-                        'password': {
-                            'type': 'text',
-                            'value': 'npi',
-                        },
-                    },
-                },
-            },
-        ],
-    }, channel)
-
-    # assertions
-    assert Pointer.get(ptr.id) is None
-
-    new_ptr = Pointer.get_all()[0]
-    assert new_ptr.node_id == 'final-node'
-
-
 def test_anidated_conditions(config, mongo):
     ''' conditional node won't be executed if its condition is false '''
     # test setup
@@ -1559,6 +1514,41 @@ def test_anidated_conditions(config, mongo):
         }],
     }, channel)
 
+    # assertions
+    assert Pointer.get(ptr.id) is None
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'outer'
+
+    # rabbit called
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'input': [{
+            '_type': 'form',
+            'ref': 'outer',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'condition': {
+                        'name': 'condition',
+                        'state': 'valid',
+                        'type': 'bool',
+                        'value': True,
+                    },
+                },
+                'item_order': ['condition'],
+            },
+        }],
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
+
+    handler.call(rabbit_call, channel)
+
+    # assertions
+    assert Pointer.get(ptr.id) is None
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'b'
 
@@ -1573,52 +1563,47 @@ def test_anidated_conditions(config, mongo):
                 '_type': ':sorted_map',
                 'item_order': ['b'],
                 'items': {
-                    'b': {'value': '0.00004'},
+                    'b': {'value': '-1'},
                 },
             },
         }],
     }, channel)
 
+    # assertions
+    assert Pointer.get(ptr.id) is None
     ptr = Pointer.get_all()[0]
-    assert ptr.node_id == 'c'
+    assert ptr.node_id == 'inner1'
 
-    handler.call({
+    # rabbit called
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'user_identifier': user.identifier,
         'input': [{
-            'ref': 'c',
             '_type': 'form',
+            'ref': 'inner1',
+            'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
-                'item_order': ['c'],
                 'items': {
-                    'c': {'value': '-1'},
+                    'condition': {
+                        'name': 'condition',
+                        'state': 'valid',
+                        'type': 'bool',
+                        'value': False,
+                    },
                 },
+                'item_order': ['condition'],
             },
         }],
-    }, channel)
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
 
-    ptr = Pointer.get_all()[0]
-    assert ptr.node_id == 'e'
+    handler.call(rabbit_call, channel)
 
-    handler.call({
-        'command': 'step',
-        'pointer_id': ptr.id,
-        'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'e',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['e'],
-                'items': {
-                    'e': {'value': '-1'},
-                },
-            },
-        }],
-    }, channel)
-
+    # assertions
+    assert Pointer.get(ptr.id) is None
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'f'
 

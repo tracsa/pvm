@@ -248,10 +248,15 @@ class Handler:
 
     def get_invalid_users(self, node_state):
         users = [
-            username
-            for username, actor in node_state['actors']['items'].items()
+            identifier
+            for identifier, actor in node_state['actors']['items'].items()
             if actor['state'] == 'invalid'
         ]
+
+        log.debug('Invalidated node {} found users: {}'.format(
+            node_state['id'],
+            ', '.join(u for u in users),
+        ))
 
         return list(map(
             lambda u: User.get_by('identifier', u),

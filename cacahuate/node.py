@@ -230,9 +230,16 @@ class UserAttachedNode(FullyContainedNode):
 
         hierarchy_provider = HiPro(config)
 
-        return hierarchy_provider.find_users(
+        users = hierarchy_provider.find_users(
             **self.resolve_params(state)
         )
+
+        log.debug('Waking up n:{} found users: {}'.format(
+            self.id,
+            ', '.join(u.identifier for u in users),
+        ))
+
+        return users
 
     def in_state(self, ref, node_state):
         ''' returns true if this ref is part of this state '''

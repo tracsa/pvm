@@ -121,7 +121,7 @@ def start_process():
         }])
 
     xmliter = iter(xml)
-    node = make_node(next(xmliter))
+    node = make_node(next(xmliter), xmliter)
 
     # Check for authorization
     validate_auth(node, g.user)
@@ -157,12 +157,12 @@ def continue_process():
         }])
 
     xml = Xml.load(app.config, execution.process_name, direct=True)
+    xmliter = iter(xml)
 
     try:
         continue_point = make_node(
-
-            iter(xml).find(lambda e: e.getAttribute('id') == node_id)
-        )
+            xmliter.find(lambda e: e.getAttribute('id') == node_id)
+        , xmliter)
     except ElementNotFound as e:
         raise BadRequest([{
             'detail': 'node_id is not a valid node',
@@ -215,8 +215,11 @@ def list_process():
     def add_form(xml):
         json_xml = xml.to_json()
         forms = []
+        xmliter = iter(xml)
+        first_node = next(xmliter)
+        xmliter.parser.expandNode(first_node)
 
-        for form in next(iter(xml)).getElementsByTagName('form'):
+        for form in first_node.getElementsByTagName('form'):
             forms.append(form_to_dict(form))
 
         json_xml['form_array'] = forms
@@ -303,7 +306,10 @@ def task_read(id):
         execution.process_name,
         direct=True
     )
-    node = iter(xml).find(lambda e: e.getAttribute('id') == pointer.node_id)
+    xmliter = iter(xml)
+    node = xmliter.find(lambda e: e.getAttribute('id') == pointer.node_id)
+
+    xmliter.parser.expandNode(node)
 
     # Response body
     json_data = pointer.to_json(include=['*', 'execution'])

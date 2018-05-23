@@ -663,7 +663,7 @@ def test_regression_approval(client, mocker, config):
         'user_identifier': 'juan',
         'input': [{
             '_type': 'form',
-            'ref': 'approval',
+            'ref': 'approval-node',
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
@@ -725,7 +725,7 @@ def test_regression_reject(client, mocker, config):
         'user_identifier': 'juan',
         'input': [{
             '_type': 'form',
-            'ref': 'approval',
+            'ref': 'approval-node',
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',

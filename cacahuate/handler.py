@@ -51,7 +51,7 @@ class Handler:
 
         node = make_node(xmliter.find(
             lambda e: e.getAttribute('id') == pointer.node_id
-        ))
+        ), xmliter)
 
         # node's lifetime ends here
         self.teardown(node, pointer, user, input)

@@ -201,9 +201,6 @@ class Xml:
                         if event == pulldom.START_ELEMENT and \
                                 node.tagName in iterables:
 
-                            if not node.tagName == 'if':
-                                self.parser.expandNode(node)
-
                             return node
                 except SAXParseException:
                     raise MalformedProcess
@@ -216,7 +213,11 @@ class Xml:
         return Iter(self.config, self.filename)
 
     def get_info_node(self):
-        return next(self.make_iterator('process-info'))
+        xmliter = self.make_iterator('process-info')
+        info_node = next(xmliter)
+        xmliter.parser.expandNode(info_node)
+
+        return info_node
 
     def __iter__(self):
         ''' Returns an inerator over the nodes and edges of a process defined
@@ -227,13 +228,15 @@ class Xml:
     def get_state(self):
         from cacahuate.node import make_node  # noqa
 
+        xmliter = iter(self)
+
         return SortedMap(map(
             lambda node: node.get_state(),
             filter(
                 lambda node: node,
                 map(
-                    lambda node: make_node(node),
-                    iter(self)
+                    lambda node: make_node(node, xmliter),
+                    xmliter
                 )
             )
         ), key='id').to_json()

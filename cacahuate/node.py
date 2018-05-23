@@ -90,7 +90,7 @@ class Node:
     ''' An XML tag that represents an action or instruction for the virtual
     machine '''
 
-    def __init__(self, element):
+    def __init__(self, element, xmliter):
         for attrname, value in element.attributes.items():
             setattr(self, attrname, value)
 
@@ -105,7 +105,7 @@ class Node:
         xmliter = iter(xml)
         xmliter.find(lambda e: e.getAttribute('id') == self.id)
 
-        return make_node(next(xmliter))
+        return make_node(next(xmliter), xmliter)
 
     def pointer_entry(self, execution, pointer, notified_users=None):
         return {
@@ -141,10 +141,23 @@ class Node:
         }
 
 
-class UserAttachedNode(Node):
+class FullyContainedNode(Node):
+    ''' this type of node can load all of the xml element to memory as oposed
+    to nodes that contain blocks of nodes, thus not being able of loading
+    themselves to memory from the begining '''
 
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
+
+        xmliter.parser.expandNode(element)
+
+class UserAttachedNode(FullyContainedNode):
+    ''' Types of nodes that require human interaction, thus being asyncronous
+    and containing a common structure like auth-filter and node-info
+    '''
+
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
 
         # node info
         node_info = element.getElementsByTagName('node-info')
@@ -257,8 +270,8 @@ class Action(UserAttachedNode):
     ''' A node from the process's graph. It is initialized from an Element
     '''
 
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
 
         # Form resolving
         self.form_array = []
@@ -387,6 +400,18 @@ class Validation(UserAttachedNode):
 
     VALID_RESPONSES = ('accept', 'reject')
 
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
+
+        # Dependency resolving
+        self.dependencies = []
+
+        deps_node = element.getElementsByTagName('dependencies')
+
+        if len(deps_node) > 0:
+            for dep_node in deps_node[0].getElementsByTagName('dep'):
+                self.dependencies.append(get_text(dep_node))
+
     def is_async(self):
         return True
 
@@ -401,9 +426,10 @@ class Validation(UserAttachedNode):
             i['ref']
             for i in state['values'][self.id]['inputs']
         )
+        xmliter = iter(xml)
 
-        for element in iter(xml):
-            node = make_node(element)
+        for element in xmliter:
+            node = make_node(element, xmliter)
 
             more_fields = node.get_invalidated_fields(invalidated, state)
 
@@ -471,18 +497,6 @@ class Validation(UserAttachedNode):
         })
 
         return first_invalid_node
-
-    def __init__(self, element):
-        super().__init__(element)
-
-        # Dependency resolving
-        self.dependencies = []
-
-        deps_node = element.getElementsByTagName('dependencies')
-
-        if len(deps_node) > 0:
-            for dep_node in deps_node[0].getElementsByTagName('dep'):
-                self.dependencies.append(get_text(dep_node))
 
     def validate_field(self, field, index):
         if type(field) != dict:
@@ -626,11 +640,11 @@ class CallForm(Node):
         return res
 
 
-class Call(Node):
+class Call(FullyContainedNode):
     ''' Calls a subprocess '''
 
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
 
         self.name = 'Call ' + self.id
         self.description = 'Call ' + self.id
@@ -651,7 +665,7 @@ class Call(Node):
         xml = Xml.load(config, self.procname)
 
         xmliter = iter(xml)
-        node = make_node(next(xmliter))
+        node = make_node(next(xmliter), xmliter)
 
         data = {
             'form_array': [f.render(state['values']) for f in self.forms],
@@ -664,11 +678,11 @@ class Call(Node):
         return []
 
 
-class Exit(Node):
+class Exit(FullyContainedNode):
     ''' A node that kills an execution with some status '''
 
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
 
         self.name = 'Exit ' + self.id
         self.description = 'Exit ' + self.id
@@ -685,8 +699,8 @@ class Exit(Node):
 
 class If(Node):
 
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
 
         self.name = 'If ' + self.id
         self.description = 'If ' + self.id
@@ -707,16 +721,17 @@ class If(Node):
             # this will skip if's content
             xmliter.expand(element)
 
-        return make_node(next(xmliter))
+        return make_node(next(xmliter), xmliter)
 
     def work(self, config, state, channel, mongo):
         return []
 
 
-class Request(Node):
+class Request(FullyContainedNode):
     ''' A node that makes a TCP Request '''
-    def __init__(self, element):
-        super().__init__(element)
+
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
 
         urls = list(map(
             lambda e: get_text(e),
@@ -793,7 +808,7 @@ class Request(Node):
         return False
 
 
-def make_node(element) -> Node:
+def make_node(element, xmliter) -> Node:
     ''' returns a build Node object given an Element object '''
     if element.tagName not in NODES:
         raise ValueError(
@@ -803,4 +818,4 @@ def make_node(element) -> Node:
     class_name = pascalcase(element.tagName)
     available_classes = __import__(__name__).node
 
-    return getattr(available_classes, class_name)(element)
+    return getattr(available_classes, class_name)(element, xmliter)

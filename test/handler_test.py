@@ -40,27 +40,11 @@ def test_recover_step(config):
 def test_create_pointer(config):
     handler = Handler(config)
 
-    ele = Document().createElement('node')
-    ele.setAttribute('class', 'simple')
-    ele.setAttribute('id', 'chubaca')
+    xml = Xml.load(config, 'simple')
+    xmliter = iter(xml)
 
-    node_name = Document().createTextNode('nombre')
-    node_desc = Document().createTextNode('descripción')
+    node = Action(next(xmliter), xmliter)
 
-    # Build node structure
-    node_info_el = Document().createElement('node-info')
-    node_name_el = Document().createElement('name')
-    node_desc_el = Document().createElement('description')
-
-    node_name_el.appendChild(node_name)
-    node_info_el.appendChild(node_name_el)
-
-    node_desc_el.appendChild(node_desc)
-    node_info_el.appendChild(node_desc_el)
-
-    ele.appendChild(node_info_el)
-
-    node = Action(ele)
     exc = Execution.validate(
         process_name='simple.2018-02-19.xml',
         name='nombre',
@@ -69,7 +53,7 @@ def test_create_pointer(config):
     pointer = handler.create_pointer(node, exc)
     execution = pointer.proxy.execution.get()
 
-    assert pointer.node_id == 'chubaca'
+    assert pointer.node_id == 'start-node'
 
     assert execution.process_name == 'simple.2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1

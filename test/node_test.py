@@ -8,7 +8,7 @@ def test_resolve_params(config):
     xml = Xml.load(config, 'exit_request')
     xmliter = iter(xml)
     next(xmliter)
-    node = make_node(next(xmliter))
+    node = make_node(next(xmliter), xmliter)
 
     state = {
         'values': {
@@ -45,7 +45,7 @@ def test_request_node(config, mocker):
 
     action = next(xmliter)
     request = next(xmliter)
-    node = make_node(request)
+    node = make_node(request, xmliter)
 
     response = node.make_request({
         'request': {

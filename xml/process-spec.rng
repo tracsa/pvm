@@ -109,14 +109,16 @@
         </choice>
       </attribute>
       <element name="url"><text/></element>
-      <element name="headers">
-        <zeroOrMore>
-          <element name="header">
-            <attribute name="name"><text/></attribute>
-            <text/>
-          </element>
-        </zeroOrMore>
-      </element>
+      <optional>
+        <element name="headers">
+          <oneOrMore>
+            <element name="header">
+              <attribute name="name"><text/></attribute>
+              <text/>
+            </element>
+          </oneOrMore>
+        </element>
+      </optional>
       <element name="body">
         <text/>
       </element>

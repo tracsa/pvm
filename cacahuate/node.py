@@ -4,7 +4,7 @@ from case_conversion import pascalcase
 from datetime import datetime
 from typing import Iterator
 from xml.dom.minidom import Element
-from jinja2 import Template
+from jinja2 import Template, TemplateError
 import requests
 import re
 
@@ -786,24 +786,30 @@ class Request(FullyContainedNode):
             )
 
     def make_request(self, context):
-        url = Template(self.url).render(**context)
-        body = Template(self.body).render(**context)
-        headers = dict(map(
-            lambda t: (t[0], Template(t[1]).render(**context)),
-            self.headers
-        ))
+        try:
+            url = Template(self.url).render(**context)
+            body = Template(self.body).render(**context)
+            headers = dict(map(
+                lambda t: (t[0], Template(t[1]).render(**context)),
+                self.headers
+            ))
 
-        response = requests.request(
-            self.method,
-            url,
-            headers=headers,
-            data=body
-        )
+            response = requests.request(
+                self.method,
+                url,
+                headers=headers,
+                data=body
+            )
 
-        res_dict = {
-            'status_code': response.status_code,
-            'response': response.text,
-        }
+            res_dict = {
+                'status_code': response.status_code,
+                'response': response.text,
+            }
+        except TemplateError:
+            res_dict = {
+                'status_code': 0,
+                'response': 'Jinja error prevented this request',
+            }
 
         return res_dict
 

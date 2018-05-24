@@ -129,7 +129,7 @@ class Handler:
         log.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,
             node.id,
-            execution.name,
+            execution.id,
         ))
 
         # notify someone
@@ -213,7 +213,7 @@ class Handler:
         log.debug('Deleted pointer p:{} n:{} e:{}'.format(
             pointer.id,
             pointer.node_id,
-            execution.name,
+            execution.id,
         ))
 
         pointer.delete()
@@ -231,7 +231,7 @@ class Handler:
             }
         })
 
-        log.debug('Finished e:{}'.format(execution.name))
+        log.debug('Finished e:{}'.format(execution.id))
 
         execution.delete()
 
@@ -295,12 +295,6 @@ class Handler:
             mediums = self.get_contact_channels(user)
 
             for medium, params in mediums:
-                log.debug('Notified user {} via {} about n:{} e:{}'.format(
-                    user.identifier,
-                    medium,
-                    node.id,
-                    pointer.proxy.execution.get().name,
-                ))
                 channel.basic_publish(
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
                     routing_key=medium,

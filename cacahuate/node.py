@@ -108,6 +108,42 @@ class Node:
 
         return make_node(next(xmliter), xmliter)
 
+    def dependent_refs(self, invalidated, node_state):
+        raise NotImplementedError('Must be implemented in subclass')
+
+    def in_state(self, ref, node_state):
+        ''' returns true if this ref is part of this state '''
+        n, user, form, field = ref.split('.')
+
+        i, ref = form.split(':')
+
+        try:
+            forms = node_state['actors']['items'][user]['forms']
+            forms[int(i)]['inputs']['items'][field]
+
+            return True
+        except KeyError:
+            return False
+
+    def get_invalidated_fields(self, invalidated, state):
+        ''' debe devolver un conjunto de referencias a campos que deben ser
+        invalidados, a partir de campos invalidados previamente '''
+        node_state = state['state']['items'][self.id]
+
+        if node_state['state'] == 'unfilled':
+            return []
+
+        found_refs = []
+
+        for ref in invalidated:
+            # for refs in this node's forms
+            if self.in_state(ref, node_state):
+                found_refs.append(ref)
+
+        found_refs += self.dependent_refs(invalidated, node_state)
+
+        return found_refs
+
     def pointer_entry(self, execution, pointer, notified_users=None):
         return {
             'id': pointer.id,
@@ -240,39 +276,6 @@ class UserAttachedNode(FullyContainedNode):
         ))
 
         return users
-
-    def in_state(self, ref, node_state):
-        ''' returns true if this ref is part of this state '''
-        n, user, form, field = ref.split('.')
-
-        i, ref = form.split(':')
-
-        try:
-            forms = node_state['actors']['items'][user]['forms']
-            forms[int(i)]['inputs']['items'][field]
-
-            return True
-        except KeyError:
-            return False
-
-    def get_invalidated_fields(self, invalidated, state):
-        ''' debe devolver un conjunto de referencias a campos que deben ser
-        invalidados, a partir de campos invalidados previamente '''
-        node_state = state['state']['items'][self.id]
-
-        if node_state['state'] == 'unfilled':
-            return []
-
-        found_refs = []
-
-        for ref in invalidated:
-            # for refs in this node's forms
-            if self.in_state(ref, node_state):
-                found_refs.append(ref)
-
-        found_refs += self.dependent_refs(invalidated, node_state)
-
-        return found_refs
 
 
 class Action(UserAttachedNode):
@@ -686,6 +689,9 @@ class Call(FullyContainedNode):
 
         return []
 
+    def dependent_refs(self, invalidated, node_state):
+        return set()
+
 
 class Exit(FullyContainedNode):
     ''' A node that kills an execution with some status '''
@@ -753,6 +759,9 @@ class If(Node):
             },
         }]
 
+    def dependent_refs(self, invalidated, node_state):
+        return set()
+
 
 class Request(FullyContainedNode):
     ''' A node that makes a TCP Request '''
@@ -760,25 +769,21 @@ class Request(FullyContainedNode):
     def __init__(self, element, xmliter):
         super().__init__(element, xmliter)
 
-        urls = list(map(
-            lambda e: get_text(e),
-            element.getElementsByTagName('url')
-        ))
-        bodies = list(map(
-            lambda e: get_text(e),
-            element.getElementsByTagName('body')
-        ))
-        headers = list(map(
-            lambda e: (e.getAttribute('name'), get_text(e)),
-            element.getElementsByTagName('header')
-        ))
-
         self.name = 'Request ' + self.id
         self.description = 'Request ' + self.id
+        self.url = get_text(element.getElementsByTagName('url')[0])
 
-        self.url = urls[0]
-        self.body = bodies[0]
-        self.headers = headers
+        try:
+            self.body = get_text(element.getElementsByTagName('body')[0])
+        except IndexError:
+            self.body = ''
+
+        self.headers = []
+
+        for header in element.getElementsByTagName('header'):
+            self.headers.append(
+                (header.getAttribute('name'), get_text(header))
+            )
 
     def make_request(self, context):
         url = Template(self.url).render(**context)
@@ -831,6 +836,9 @@ class Request(FullyContainedNode):
 
     def is_async(self):
         return False
+
+    def dependent_refs(self, invalidated, node_state):
+        return set()
 
 
 def make_node(element, xmliter) -> Node:

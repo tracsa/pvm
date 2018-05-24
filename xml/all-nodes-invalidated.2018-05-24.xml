@@ -1,0 +1,56 @@
+<process-spec>
+  <process-info>
+    <author>Og Astorga</author>
+    <date>2018-05-24</date>
+    <name>Fail</name>
+    <public>true</public>
+    <description>A process that fails</description>
+  </process-info>
+  <process>
+    <action id="start-node">
+      <auth-filter backend="anyone"/>
+      <node-info>
+        <name>Primer paso</name>
+        <description>Resolver una tarea</description>
+      </node-info>
+      <form-array>
+        <form id="work">
+          <input label="task" type="text" name="task"/>
+        </form>
+      </form-array>
+    </action>
+
+    <request id="request-node" method="GET">
+      <url>https://httpbin.org/get</url>
+    </request>
+
+    <call id="call-node">
+      <procname>simple</procname>
+      <data>
+        <form ref="start_form">
+          <input name="data">foo</input>
+        </form>
+      </data>
+    </call>
+
+    <if id="if-node">
+      <condition>work.task > "2"</condition>
+      <block>
+        <exit id="exit-node" />
+      </block>
+    </if>
+
+    <validation id="validation-node">
+      <dependencies>
+        <dep>work.task</dep>
+      </dependencies>
+      <node-info>
+        <name>Aprobación gerente reserva</name>
+        <description>aprobar reserva</description>
+      </node-info>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start-node</param>
+      </auth-filter>
+    </validation>
+  </process>
+</process-spec>

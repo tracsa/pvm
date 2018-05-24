@@ -232,12 +232,9 @@ class Xml:
 
         return SortedMap(map(
             lambda node: node.get_state(),
-            filter(
-                lambda node: node,
-                map(
-                    lambda node: make_node(node, xmliter),
-                    xmliter
-                )
+            map(
+                lambda node: make_node(node, xmliter),
+                xmliter
             )
         ), key='id').to_json()
 

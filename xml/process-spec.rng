@@ -29,8 +29,8 @@
     </element>
   </define>
 
-  <define name="body">
-    <element name="body">
+  <define name="block">
+    <element name="block">
       <ref name="element-recursive" />
     </element>
   </define>
@@ -119,9 +119,11 @@
           </oneOrMore>
         </element>
       </optional>
-      <element name="body">
-        <text/>
-      </element>
+      <optional>
+        <element name="body">
+          <text/>
+        </element>
+      </optional>
     </element>
   </define>
 
@@ -131,7 +133,7 @@
       <element name="condition">
         <text />
       </element>
-      <ref name="body" />
+      <ref name="block" />
     </element>
   </define>
 

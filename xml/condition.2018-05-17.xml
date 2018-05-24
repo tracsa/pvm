@@ -18,7 +18,7 @@
 
     <if id="condition1">
       <condition>mistery.password == "abrete sésamo"</condition>
-      <body>
+      <block>
         <action id="mistical-node">
           <auth-filter backend="hardcoded"></auth-filter>
           <form-array>
@@ -27,12 +27,12 @@
             </form>
           </form-array>
         </action>
-      </body>
+      </block>
     </if>
 
     <if id="condition2">
       <condition>mistery.password == "123456"</condition>
-      <body>
+      <block>
         <action id="123456-node">
           <auth-filter backend="hardcoded"></auth-filter>
           <form-array>
@@ -41,7 +41,7 @@
             </form>
           </form-array>
         </action>
-      </body>
+      </block>
     </if>
 
     <action id="final-node">

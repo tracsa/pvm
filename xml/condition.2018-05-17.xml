@@ -31,9 +31,10 @@
     </if>
 
     <if id="condition2">
-      <condition>mistery.password == "123456"</condition>
+      <condition data="test">mistery.password == "123456"</condition>
       <body>
-        <action id="123456-node">
+<!--    <action id="123456-node"> -->
+        <action id="start-node">
           <auth-filter backend="hardcoded"></auth-filter>
           <form-array>
             <form id="123456-form">

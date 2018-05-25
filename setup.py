@@ -48,6 +48,7 @@ setup(
     entry_points={
         'console_scripts': [
             'cacahuated = cacahuate.cacahuated:main',
+            'xmld = cacahuate.xmld:main',
         ],
     },
 

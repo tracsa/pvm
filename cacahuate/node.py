@@ -737,7 +737,7 @@ class If(Node):
         return make_node(next(xmliter), xmliter)
 
     def work(self, config, state, channel, mongo):
-        grammar = Condition(state['state'])
+        grammar = Condition(state['values'])
 
         value = grammar.parse(self.condition)
 

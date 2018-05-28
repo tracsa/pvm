@@ -1,3 +1,4 @@
+import logging
 import pika
 
 from .handler import Handler

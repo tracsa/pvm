@@ -1,7 +1,8 @@
 import pika
 
-from .logger import log
 from .handler import Handler
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Loop:
@@ -28,9 +29,9 @@ class Loop:
             no_ack=self.config['RABBIT_NO_ACK'],
         )
 
-        log.info('cacahuate started')
+        LOGGER.info('cacahuate started')
 
         try:
             channel.start_consuming()
         except KeyboardInterrupt:
-            log.info('cacahuate stopped')
+            LOGGER.info('cacahuate stopped')

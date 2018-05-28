@@ -19,10 +19,12 @@ def main():
     time.tzset()
 
     # Logging stuff
-    if not config['TESTING']:
-        from cacahuate.logger import init_logging
+    import logging
 
-        init_logging(config)
+    logging.basicConfig(
+        format='[%(levelname)s] %(message)s - %(name)s:%(lineno)s',
+        level=config['LOG_LEVEL'],
+    )
 
     # Load the models
     eng = Engine(

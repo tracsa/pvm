@@ -18,7 +18,7 @@
 
     <if id="outer">
       <condition>a.a > "0"</condition>
-      <body>
+      <block>
         <action id="b">
           <auth-filter backend="hardcoded"></auth-filter>
           <form-array>
@@ -30,7 +30,7 @@
 
         <if id="inner1">
           <condition>b.b > "0"</condition>
-          <body>
+          <block>
             <action id="c">
               <auth-filter backend="hardcoded"></auth-filter>
               <form-array>
@@ -42,7 +42,7 @@
 
             <if id="inner2">
               <condition>c.c > "0"</condition>
-              <body>
+              <block>
                 <action id="d">
                   <auth-filter backend="hardcoded"></auth-filter>
                   <form-array>
@@ -51,7 +51,7 @@
                     </form>
                   </form-array>
                 </action>
-              </body>
+              </block>
             </if>
 
             <action id="e">
@@ -62,7 +62,7 @@
                 </form>
               </form-array>
             </action>
-          </body>
+          </block>
         </if>
 
         <action id="f">
@@ -73,7 +73,7 @@
             </form>
           </form-array>
         </action>
-      </body>
+      </block>
     </if>
 
     <action id="g">

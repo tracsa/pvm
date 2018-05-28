@@ -9,31 +9,29 @@ from cacahuate.grammar import Condition
 ids = []
 errores = {'1':'id repetido'}
 
-def main():
 
+def main():
     file = sys.argv[1]
     nodos = ['action', 'call','validation', 'exit', 'request']
 
     doc = pulldom.parse('xml/{}'.format(file))
-    for event, node in doc:
+    # for event, node in doc:
+    #     print (event)
+    #     print (node)
+        # if event == pulldom.START_ELEMENT and node.tagName in nodos:
+        #     doc.expandNode(node)
+        #     check_id(node)
 
-        if event == pulldom.START_ELEMENT and node.tagName in nodos:
-            doc.expandNode(node)
-            check_id(node)
+        # elif  event == pulldom.START_ELEMENT and node.tagName == 'if':
+        #     check_id(node)
 
-        elif  event == pulldom.START_ELEMENT and node.tagName == 'if':
-            check_id(node)
+        # elif  event == pulldom.START_ELEMENT and node.tagName == 'condition':
+        #     check_id(node)
+        #     doc.expandNode(node)
+        #     condition = get_text(node)
+        #     grammar = Condition(state['state'])
 
-        elif  event == pulldom.START_ELEMENT and node.tagName == 'condition':
-            check_id(node)
-            doc.expandNode(node)
-            condition = get_text(node)
-            grammar = Condition(state['state'])
-
-            value = grammar.parse(condition)
-
-
-
+        #     value = grammar.parse(condition)
 
 
 def check_id(node):
@@ -48,6 +46,7 @@ def check_id(node):
 
 if __name__ == '__main__':
     main()
+
 
 def get_text(node):
     node.normalize()

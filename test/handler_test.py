@@ -1993,3 +1993,91 @@ def test_handle_request_node(config, mocker, mongo):
         'name': 'Request request-node',
         'description': 'Request request-node',
     }
+
+
+def test_invalidate_all_nodes(config, mocker, mongo):
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('all-nodes-invalidated.2018-05-24.xml', 'start-node')
+    execution = ptr.proxy.execution.get()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': Xml.load(config, 'all-nodes-invalidated').get_state(),
+    })
+
+    channel = MagicMock()
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'work',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['task'],
+                'items': {
+                    'task': {
+                        'name': 'task',
+                        'value': '2',
+                    },
+                },
+            },
+        }],
+    }, channel)
+    ptr = execution.proxy.pointers.get()[0]
+    assert ptr.node_id == 'request-node'
+    args = channel.basic_publish.call_args[1]
+
+    channel = MagicMock()
+    handler.call(json.loads(args['body']), channel)
+    ptr = execution.proxy.pointers.get()[0]
+    assert ptr.node_id == 'call-node'
+    args = channel.basic_publish.call_args[1]
+
+    channel = MagicMock()
+    handler.call(json.loads(args['body']), channel)
+    ptr = execution.proxy.pointers.get()[0]
+    assert ptr.node_id == 'if-node'
+    args = channel.basic_publish.call_args[1]
+
+    channel = MagicMock()
+    handler.call(json.loads(args['body']), channel)
+    ptr = execution.proxy.pointers.get()[0]
+    assert ptr.node_id == 'validation-node'
+
+    channel = MagicMock()
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [{
+            'ref': 'validation-node',
+            '_type': 'form',
+            'inputs': {
+                '_type': ':sorted_map',
+                'item_order': ['response', 'inputs', 'coment'],
+                'items': {
+                    'response': {
+                        'name': 'response',
+                        'value': 'reject',
+                    },
+                    'inputs': {
+                        'name': 'inputs',
+                        'value': [{
+                            'ref': 'start-node.juan.0:work.task',
+                        }],
+                    },
+                    'comment': {
+                        'name': 'comment',
+                        'value': '',
+                    },
+                },
+            },
+        }],
+    }, channel)
+    ptr = execution.proxy.pointers.get()[0]
+    assert ptr.node_id == 'start-node'
+    args = channel.basic_publish.call_args[1]

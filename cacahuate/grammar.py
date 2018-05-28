@@ -7,7 +7,7 @@ from cacahuate.errors import RefNotFound
 
 class Condition:
 
-    def __init__(self, state):
+    def __init__(self, values):
         filename = os.path.join(
             os.path.dirname(__file__),
             'grammars/condition.g'
@@ -18,7 +18,7 @@ class Condition:
                 grammar_file.read(),
                 start='condition',
                 parser='lalr',
-                transformer=self.ConditionTransformer(state),
+                transformer=self.ConditionTransformer(values),
             )
 
     def parse(self, string):
@@ -26,8 +26,8 @@ class Condition:
 
     class ConditionTransformer(Transformer):
 
-        def __init__(self, state):
-            self._state = state
+        def __init__(self, values):
+            self._values = values
 
         def op_eq(self, _):
             return operator.eq
@@ -95,24 +95,7 @@ class Condition:
         def ref(self, args):
             obj_id, member = args
 
-            # TODO there is an implementation of this in O(log N + K)
-            for node in self._state['items'].values():
-                actors = node['actors']
-                for actor in actors['items'].values():
-                    forms = actor['forms']
-                    for form in forms:
-                        if form['ref'] != obj_id:
-                            continue
-
-                        inputs = form['inputs']
-                        if member in inputs['items']:
-                            input = inputs['items'][member]
-
-                            ret = None
-                            if 'value' in input:
-                                ret = input['value']
-
-                            return ret
+            return self._values[obj_id][member]
 
         def string(self, args):
             return args[0][1:-1]

@@ -3,9 +3,35 @@ import logging
 
 base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 
-# Testing and log stuff
-TESTING = False
-LOG_LEVEL = logging.DEBUG
+# Default logging config
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'default': {
+            'format': '[%(levelname)s] %(message)s - %(name)s:%(lineno)s'
+        },
+    },
+    'handlers': {
+        'console':{
+            'level':'DEBUG',
+            'class':'logging.StreamHandler',
+            'formatter': 'default'
+        },
+        # 'charpe': {
+            # 'level': 'ERROR',
+            # 'class': 'django.utils.log.AdminEmailHandler',
+            # 'filters': ['special']
+        # }
+    },
+    'loggers': {
+        'cacahuate': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'filters': [],
+        }
+    }
+}
 
 # Where to store xml files
 XML_PATH = os.path.join(base_dir, 'xml')

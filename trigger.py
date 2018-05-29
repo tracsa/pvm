@@ -5,7 +5,7 @@ import os
 import argparse
 from itacate import Config
 
-from cacahuate.logger import log
+LOGGER = logging.getLogger(__name__)
 
 
 class Trigger:
@@ -41,7 +41,7 @@ class Trigger:
             ),
         )
 
-        log.info("Process queued for start")
+        LOGGER.info("Process queued for start")
 
     def step(self, args):
         self.channel.basic_publish(

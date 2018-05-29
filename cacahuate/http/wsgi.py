@@ -1,9 +1,10 @@
+from cacahuate.indexes import create_indexes
 from flask import Flask
 from flask_coralillo import Coralillo
 from flask_cors import CORS
 from flask_pymongo import PyMongo
-from cacahuate.indexes import create_indexes
 
+import logging.config
 import os
 import time
 
@@ -13,6 +14,9 @@ from cacahuate.models import bind_models
 app = Flask(__name__)
 app.config.from_object('cacahuate.settings')
 app.config.from_envvar('CACAHUATE_SETTINGS', silent=True)
+
+# Setup logging
+logging.config.dictConfig(app.config['LOGGING'])
 
 # Enalble cross origin
 CORS(app)

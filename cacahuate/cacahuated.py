@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-from cacahuate.loop import Loop
-from cacahuate.indexes import create_indexes
-from cacahuate.models import bind_models
 from coralillo import Engine
 from itacate import Config
-import time
+import logging
+import logging.config
 import os
+import time
+
+from cacahuate.indexes import create_indexes
+from cacahuate.loop import Loop
+from cacahuate.models import bind_models
 
 
 def main():
@@ -18,11 +21,8 @@ def main():
     os.environ['TZ'] = config['TIMEZONE']
     time.tzset()
 
-    # Logging stuff
-    if not config['TESTING']:
-        from cacahuate.logger import init_logging
-
-        init_logging(config)
+    # Setup logging
+    logging.config.dictConfig(config['LOGGING'])
 
     # Load the models
     eng = Engine(

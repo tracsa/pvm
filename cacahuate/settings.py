@@ -9,19 +9,19 @@ LOGGING = {
     'disable_existing_loggers': True,
     'formatters': {
         'default': {
-            'format': '[%(levelname)s] %(message)s - %(name)s:%(lineno)s'
+            'format': '[%(levelname)s] %(message)s - %(name)s:%(lineno)s',
         },
     },
     'handlers': {
-        'console':{
-            'level':'DEBUG',
-            'class':'logging.StreamHandler',
-            'formatter': 'default'
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
         },
         # 'charpe': {
             # 'level': 'ERROR',
             # 'class': 'django.utils.log.AdminEmailHandler',
-            # 'filters': ['special']
+            # 'filters': ['special'],
         # }
     },
     'loggers': {
@@ -29,8 +29,8 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
             'filters': [],
-        }
-    }
+        },
+    },
 }
 
 # Where to store xml files

@@ -1,5 +1,6 @@
 import logging
 import pika
+import traceback
 
 from .handler import Handler
 
@@ -36,3 +37,5 @@ class Loop:
             channel.start_consuming()
         except KeyboardInterrupt:
             LOGGER.info('cacahuate stopped')
+        except Exception as e:
+            LOGGER.error(traceback.format_exc())

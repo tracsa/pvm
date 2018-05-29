@@ -26,16 +26,16 @@ LOGGING = {
             'formatter': 'default',
         },
         # 'charpe': {
-            # 'class': 'cacahuate.log.CharpeHandler',
-            # 'level': 'ERROR',
-            # 'host': RABBIT_HOST,
-            # 'medium': 'email',
-            # 'exchange': RABBIT_NOTIFY_EXCHANGE,
-            # 'params': {
-                # 'recipient': 'support@example.com',
-                # 'subject': '[cacahuate] Server Error',
-                # 'template': 'server-error',
-            # },
+        #     'class': 'cacahuate.log.CharpeHandler',
+        #     'level': 'ERROR',
+        #     'host': RABBIT_HOST,
+        #     'medium': 'email',
+        #     'exchange': RABBIT_NOTIFY_EXCHANGE,
+        #     'params': {
+        #         'recipient': 'support@example.com',
+        #         'subject': '[cacahuate] Server Error',
+        #         'template': 'server-error',
+        #     },
         # },
     },
     'loggers': {

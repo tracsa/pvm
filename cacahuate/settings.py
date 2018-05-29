@@ -3,6 +3,13 @@ import logging
 
 base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 
+# Rabbitmq
+RABBIT_HOST = 'localhost'
+RABBIT_QUEUE = 'cacahuate_process'
+RABBIT_NOTIFY_EXCHANGE = 'cacahuate_notify'
+RABBIT_CONSUMER_TAG = 'cacahuate_consumer_1'
+RABBIT_NO_ACK = True
+
 # Default logging config
 LOGGING = {
     'version': 1,
@@ -19,10 +26,17 @@ LOGGING = {
             'formatter': 'default',
         },
         # 'charpe': {
+            # 'class': 'cacahuate.log.CharpeHandler',
             # 'level': 'ERROR',
-            # 'class': 'django.utils.log.AdminEmailHandler',
-            # 'filters': ['special'],
-        # }
+            # 'host': RABBIT_HOST,
+            # 'medium': 'email',
+            # 'exchange': RABBIT_NOTIFY_EXCHANGE,
+            # 'params': {
+                # 'recipient': 'support@example.com',
+                # 'subject': '[cacahuate] Server Error',
+                # 'template': 'server-error',
+            # },
+        # },
     },
     'loggers': {
         'cacahuate': {
@@ -35,13 +49,6 @@ LOGGING = {
 
 # Where to store xml files
 XML_PATH = os.path.join(base_dir, 'xml')
-
-# Rabbitmq
-RABBIT_HOST = 'localhost'
-RABBIT_QUEUE = 'cacahuate_process'
-RABBIT_NOTIFY_EXCHANGE = 'cacahuate_notify'
-RABBIT_CONSUMER_TAG = 'cacahuate_consumer_1'
-RABBIT_NO_ACK = True
 
 # Mongodb
 MONGO_URI = 'mongodb://localhost/cacahuate'

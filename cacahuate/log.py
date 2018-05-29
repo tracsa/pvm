@@ -5,7 +5,7 @@ import pika
 
 class CharpeHandler(logging.Handler):
 
-    def __init__(self, host, medium, exchange, params):
+    def __init__(self, host, medium, exchange, params, service_name):
         super().__init__()
 
         connection = pika.BlockingConnection(pika.ConnectionParameters(
@@ -15,6 +15,7 @@ class CharpeHandler(logging.Handler):
         self.medium = medium
         self.exchange = exchange
         self.params = params
+        self.service_name = service_name
         self.channel = connection.channel()
 
     def emit(self, record):
@@ -24,6 +25,7 @@ class CharpeHandler(logging.Handler):
             params = self.params.copy()
             params['data'] = {
                 'traceback': traceback,
+                'service_name': self.service_name,
             }
 
             self.channel.basic_publish(

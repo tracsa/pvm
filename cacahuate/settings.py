@@ -31,6 +31,7 @@ LOGGING = {
         #     'host': RABBIT_HOST,
         #     'medium': 'email',
         #     'exchange': RABBIT_NOTIFY_EXCHANGE,
+        #     'service_name': 'cacahuate',
         #     'params': {
         #         'recipient': 'support@example.com',
         #         'subject': '[cacahuate] Server Error',

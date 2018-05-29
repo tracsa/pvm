@@ -42,6 +42,7 @@
           <dependencies>
             <dep>mistery.answer</dep>
           </dependencies>
+          <auth-filter backend="hardcoded"></auth-filter>
         </validation>
         <action id="mistical-node">
           <auth-filter backend="hardcoded">

@@ -13,7 +13,7 @@ RABBIT_NO_ACK = True
 # Default logging config
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'formatters': {
         'default': {
             'format': '[%(levelname)s] %(message)s - %(name)s:%(lineno)s',

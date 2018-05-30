@@ -128,7 +128,6 @@ def start_process():
 
     # check if there are any forms present
     input = node.validate_input(request.json)
-
     # get rabbit channel for process queue
     channel = get_channel()
 

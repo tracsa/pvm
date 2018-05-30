@@ -18,6 +18,7 @@ INPUTS = [
     'datetime',
     'date',
     'select',
+    'hidden',
 ]
 
 
@@ -80,6 +81,9 @@ class Input:
 
 
 class TextInput(Input):
+    pass
+
+class HiddenInput(Input):
     pass
 
 

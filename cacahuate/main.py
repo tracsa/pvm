@@ -79,7 +79,7 @@ def xml_validate(filename=None):
             conditions.append(get_text(node))
             continue
 
-        if not node.tagName in NODES:
+        if node.tagName not in NODES:
             continue
 
         check_id(node)
@@ -143,11 +143,11 @@ def xml_validate(filename=None):
         try:
             con.parse(condition)
         except GrammarError as e:
-            sys.exit(str(e))
+            sys.exit('Grammar error in condition')
         except ParseError as e:
-            sys.exit(str(e))
+            sys.exit('Parse error in condition')
         except LexError as e:
-            sys.exit(str(e))
+            sys.exit('Lex error in condition')
 
     return True
 

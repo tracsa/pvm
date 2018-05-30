@@ -17,10 +17,12 @@
     </action>
 
     <if id="condition1">
-      <condition>mistery.answer == "abrete sesamo"</condition>
+      <condition>mistery.password == "abrete sesamo"</condition>
       <block>
         <action id="mistery-node">
-          <auth-filter backend="hardcoded"></auth-filter>
+          <auth-filter backend="hardcoded">
+            <param name="foo" type="ref">form#a.b</param>
+          </auth-filter>
           <form-array>
             <form id="mistery">
               <input type="text" name="answer" default="abrete sesamo" />
@@ -29,37 +31,5 @@
         </action>
       </block>
     </if>
-
-    <if id="condition2">
-
-      <condition>mistical.answer == "123456"</condition>
-      <block>
-        <validation id="gerente-reserva-validation" >
-          <node-info>
-            <name>Aprobacion gerente informacion </name>
-            <description>validar informacion</description>
-          </node-info>
-          <dependencies>
-            <dep>mistery.answer</dep>
-          </dependencies>
-          <auth-filter backend="hardcoded"></auth-filter>
-        </validation>
-        <action id="mistical-node">
-          <auth-filter backend="hardcoded">
-            <param name="relation">gerente</param>
-            <param name="inventario" type="ref">form#mistery.answesr</param>
-          </auth-filter>
-          <form-array>
-            <form id="mistical">
-              <input type="text" name="answer" default="123456" />
-            </form>
-          </form-array>
-        </action>
-      </block>
-    </if>
-
-    <action id="final-node">
-      <auth-filter backend="hardcoded"></auth-filter>
-    </action>
   </process>
 </process-spec>

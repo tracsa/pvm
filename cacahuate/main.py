@@ -47,16 +47,14 @@ def main():
 
 
 def xml_validate(filename=None):
-    ids = []
-    data_form = {}
-
     if not filename:
         if not len(sys.argv) == 2:
             sys.exit("Must specify a file to analyze")
         filename = sys.argv[1]
 
-    param_auth_filter = {}
-    conditions = []
+    ids = []
+    data_form = {}
+    passed_nodes = []
 
     def check_id(node):
         if node.getAttribute('id'):
@@ -70,18 +68,37 @@ def xml_validate(filename=None):
                 ))
 
     doc = pulldom.parse(filename)
+
     for event, node in doc:
         if event != pulldom.START_ELEMENT:
             continue
 
         if node.tagName == 'condition':
             doc.expandNode(node)
-            conditions.append(get_text(node))
+
+            con = Condition(data_form)
+
+            try:
+                con.parse(get_text(node))
+            except GrammarError:
+                sys.exit('Grammar error in condition')
+            except ParseError:
+                sys.exit('Parse error in condition')
+            except LexError:
+                sys.exit('Lex error in condition')
+            except KeyError as e:
+                sys.exit(
+                    'variable used in condition does not exist: {}'.format(
+                        str(e)
+                    )
+                )
+
             continue
 
         if node.tagName not in NODES:
             continue
 
+        # Duplicate ids
         check_id(node)
 
         if node.tagName == 'if':
@@ -90,64 +107,66 @@ def xml_validate(filename=None):
         # Expand and check this node. <if> nodes are not expanded
         doc.expandNode(node)
 
-        if node.tagName == 'action':
-            if node.getElementsByTagName("form"):
-                form_id = node.getElementsByTagName("form")[0]\
-                 .getAttribute('id')
-                inputs = node.getElementsByTagName("input")
-                array_input = {}
+        # Check auth-filter params
+        params = node.getElementsByTagName("param")
 
-                for inpt in inputs:
-                    array_input[inpt.getAttribute('name')] = \
-                     inpt.getAttribute('default')
+        for param in params:
+            if param.getAttribute('type') != 'ref':
+                continue
 
-                data_form[form_id] = array_input
+            ref_type, ref = get_text(param).split('#')
 
-            params = node.getElementsByTagName("param")
-
-            for param in params:
-                if param.getAttribute('type'):
-                    if param.getAttribute('type') == 'ref':
-                        reference_form = \
-                         (get_text(param).split('#')[1]).split('.')[0]
-                        field_form = \
-                            get_text(param).split('#')[1].split('.')[1]
-
-                        try:
-                            data_form[reference_form][field_form]
-                        except KeyError:
-                            sys.exit(
-                                "Referenced param does not exist '{}'".format(
-                                    reference_form+'.'+field_form,
-                                )
-                            )
-
-        if node.tagName == 'validation':
-            deps = node.getElementsByTagName("dep")
-
-            for dep in deps:
-                form, field = get_text(dep).split('.')
+            if ref_type == 'form':
+                reference_form, field_form = ref.split('.')
 
                 try:
-                    data_form[form][field]
+                    data_form[reference_form][field_form]
                 except KeyError:
                     sys.exit(
-                        "Referenced dependency does not exist '{}'".format(
-                            form + '.' + field,
+                        "Referenced param does not exist '{}'".format(
+                            reference_form+'.'+field_form,
                         )
                     )
+            elif ref_type == 'user':
+                if ref not in passed_nodes:
+                    sys.exit(
+                        'Referenced user is never created: {}'.format(ref)
+                    )
 
-    con = Condition(data_form)
+        # Check dependencies
+        deps = node.getElementsByTagName("dep")
 
-    for condition in conditions:
-        try:
-            con.parse(condition)
-        except GrammarError as e:
-            sys.exit('Grammar error in condition')
-        except ParseError as e:
-            sys.exit('Parse error in condition')
-        except LexError as e:
-            sys.exit('Lex error in condition')
+        for dep in deps:
+            form, field = get_text(dep).split('.')
+
+            try:
+                data_form[form][field]
+            except KeyError:
+                sys.exit(
+                    "Referenced dependency does not exist '{}'".format(
+                        form + '.' + field,
+                    )
+                )
+
+        # fill forms for later usage
+        forms = node.getElementsByTagName('form')
+
+        for form in forms:
+            form_id = form.getAttribute('id')
+            inputs = form.getElementsByTagName("input")
+            array_input = {}
+
+            for inpt in inputs:
+                array_input[inpt.getAttribute('name')] = \
+                 inpt.getAttribute('default')
+
+            data_form[form_id] = array_input
+
+        # add this node to the list of revised nodes
+        has_auth_filter = len(node.getElementsByTagName('auth-filter')) > 0
+
+        if has_auth_filter:
+            passed_nodes.append(node.getAttribute('id'))
 
     return True
 

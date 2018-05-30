@@ -14,7 +14,7 @@ setup(
     long_description=long_description,
     url='https://github.com/tracsa/cacahuate',
 
-    version='2.0.2',
+    version='2.0.3',
 
     author='Abraham Toriz Cruz',
     author_email='categulario@gmail.com',
@@ -43,7 +43,9 @@ setup(
         'cacahuate.auth.hierarchy',
     ],
 
-    package_data={'cacahuate': ['grammars/*.g']},
+    package_data={
+        'cacahuate': ['grammars/*.g', 'xml/*.rng'],
+    },
 
     entry_points={
         'console_scripts': [

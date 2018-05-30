@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 from coralillo import Engine
 from itacate import Config
+from xml.dom import pulldom
 import logging
 import logging.config
 import os
+import sys
 import time
 
 from cacahuate.indexes import create_indexes
 from cacahuate.loop import Loop
 from cacahuate.models import bind_models
+from cacahuate.xml import NODES, get_text
+from cacahuate.grammar import Condition
 
 
 def main():
@@ -50,8 +54,6 @@ def xml_validate(file=''):
     param_auth_filter = {}
     conditions = []
 
-    nodos = list(NODES)
-
     def check_id(node):
         if node.getAttribute('id'):
             id_element = node.getAttribute('id')
@@ -67,7 +69,7 @@ def xml_validate(file=''):
     for event, node in doc:
 
         if event == pulldom.START_ELEMENT and \
-         node.tagName in nodos and not node.tagName == 'if':
+         node.tagName in NODES and not node.tagName == 'if':
             check_id(node)
             doc.expandNode(node)
             if node.tagName == 'action':

@@ -9,9 +9,13 @@ from cacahuate.xml import get_text
 from cacahuate.xml import NODES
 
 
-def main(file):
+def main(file=''):
     ids = []
     data_form = {}
+    if file == '':
+        if not len(sys.argv) == 2:
+            sys.exit("Error no received file")
+        file = sys.argv[1]
     param_auth_filter = {}
     conditions = []
 

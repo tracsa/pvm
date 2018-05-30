@@ -47,8 +47,8 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'cacahuated = cacahuate.cacahuated:main',
-            'xml_validate = cacahuate.xml_validate:main',
+            'cacahuated = cacahuate.main:main',
+            'xml_validate = cacahuate.main:xml_validate',
         ],
     },
 

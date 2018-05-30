@@ -17,7 +17,7 @@
     </action>
 
     <if id="condition1">
-      <condition>mistery.answer == "abrete sesamod"</condition>
+      <condition>mistery.answer == "abrete sesamod</condition>
       <block>
         <action id="mistery-node">
           <auth-filter backend="hardcoded"></auth-filter>

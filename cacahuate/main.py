@@ -7,6 +7,8 @@ import logging.config
 import os
 import sys
 import time
+from lark.common import GrammarError, ParseError
+from lark.lexer import LexError
 
 from cacahuate.indexes import create_indexes
 from cacahuate.loop import Loop
@@ -44,13 +46,15 @@ def main():
     loop.start()
 
 
-def xml_validate(file=''):
+def xml_validate(filename=None):
     ids = []
     data_form = {}
-    if file == '':
+
+    if not filename:
         if not len(sys.argv) == 2:
-            sys.exit("Error no received file")
-        file = sys.argv[1]
+            sys.exit("Must specify a file to analyze")
+        filename = sys.argv[1]
+
     param_auth_filter = {}
     conditions = []
 
@@ -61,69 +65,90 @@ def xml_validate(file=''):
             if id_element not in ids:
                 ids.append(id_element)
             else:
-                sys.exit("Error id: '{}' repeat in {}".format(
-                    id_element, file)
-                )
+                sys.exit("Duplicated id: '{}'".format(
+                    id_element, filename
+                ))
 
-    doc = pulldom.parse('xml/{}'.format(file))
+    doc = pulldom.parse(filename)
     for event, node in doc:
+        if event != pulldom.START_ELEMENT:
+            continue
 
-        if event == pulldom.START_ELEMENT and \
-         node.tagName in NODES and not node.tagName == 'if':
-            check_id(node)
-            doc.expandNode(node)
-            if node.tagName == 'action':
-                if node.getElementsByTagName("form"):
-                    form_id = node.getElementsByTagName("form")[0]\
-                     .getAttribute('id')
-                    inputs = node.getElementsByTagName("input")
-                    array_input = {}
-                    for inpt in inputs:
-                        array_input[inpt.getAttribute('name')] = \
-                         inpt.getAttribute('default')
-                    data_form[form_id] = array_input
-
-                params = node.getElementsByTagName("param")
-                for param in params:
-                    if param.getAttribute('type'):
-                        if param.getAttribute('type') == 'ref':
-                            reference_form = \
-                             (get_text(param).split('#')[1]).split('.')[0]
-                            field_form = \
-                                get_text(param).split('#')[1].split('.')[1]
-                            try:
-                                data_form[reference_form][field_form]
-                            except Exception:
-                                sys.exit(
-                                    "Not param '{}' in form#{} in {}".format(
-                                        field_form, reference_form, file
-                                    )
-                                )
-
-            if node.tagName == 'validation':
-                deps = node.getElementsByTagName("dep")
-                for dep in deps:
-                    form, field = get_text(dep).split('.')
-                    try:
-                        data_form[form][field]
-                    except Exception:
-                        sys.exit(
-                            "Not dependence 'form#{}.{}' in {}".format(
-                                form, field, file
-                            )
-                        )
-
-        if event == pulldom.START_ELEMENT and node.tagName == 'if':
-            check_id(node)
-
-        if event == pulldom.START_ELEMENT and node.tagName == 'condition':
+        if node.tagName == 'condition':
             doc.expandNode(node)
             conditions.append(get_text(node))
+            continue
+
+        if not node.tagName in NODES:
+            continue
+
+        check_id(node)
+
+        if node.tagName == 'if':
+            continue
+
+        # Expand and check this node. <if> nodes are not expanded
+        doc.expandNode(node)
+
+        if node.tagName == 'action':
+            if node.getElementsByTagName("form"):
+                form_id = node.getElementsByTagName("form")[0]\
+                 .getAttribute('id')
+                inputs = node.getElementsByTagName("input")
+                array_input = {}
+
+                for inpt in inputs:
+                    array_input[inpt.getAttribute('name')] = \
+                     inpt.getAttribute('default')
+
+                data_form[form_id] = array_input
+
+            params = node.getElementsByTagName("param")
+
+            for param in params:
+                if param.getAttribute('type'):
+                    if param.getAttribute('type') == 'ref':
+                        reference_form = \
+                         (get_text(param).split('#')[1]).split('.')[0]
+                        field_form = \
+                            get_text(param).split('#')[1].split('.')[1]
+
+                        try:
+                            data_form[reference_form][field_form]
+                        except KeyError:
+                            sys.exit(
+                                "Referenced param does not exist '{}'".format(
+                                    reference_form+'.'+field_form,
+                                )
+                            )
+
+        if node.tagName == 'validation':
+            deps = node.getElementsByTagName("dep")
+
+            for dep in deps:
+                form, field = get_text(dep).split('.')
+
+                try:
+                    data_form[form][field]
+                except KeyError:
+                    sys.exit(
+                        "Referenced dependency does not exist '{}'".format(
+                            form + '.' + field,
+                        )
+                    )
 
     con = Condition(data_form)
+
     for condition in conditions:
-        if not con.parse(condition):
-            sys.exit('Error {} in  {}'.format(condition, file))
+        try:
+            con.parse(condition)
+        except GrammarError as e:
+            sys.exit(str(e))
+        except ParseError as e:
+            sys.exit(str(e))
+        except LexError as e:
+            sys.exit(str(e))
+
     return True
 
 

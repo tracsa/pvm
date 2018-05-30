@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-02-19</date>
+    <name>Simplest process ever{% if start_form %} started with: {{ start_form.data }}{% endif %}</name>
+    <public>true</public>
+    <description>A simple process that does nothing</description>
+  </process-info>
+  <process>
+    <action id="start-node">
+      <auth-filter backend="anyone"></auth-filter>
+      <node-info>
+        <name>Primer paso</name>
+        <description>Resolver una tarea con input hidden</description>
+      </node-info>
+      <form-array>
+        <form id="start_form">
+          <input type="text" name="data" required="required" label="Info" />
+        </form>
+      </form-array>
+    </action>
+
+    <action id="mid-node">
+      <auth-filter backend="hardcoded">
+        <param name="identifier" type="ref">user#start-node</param>
+        <param name="relation">manager</param>
+      </auth-filter>
+      <node-info>
+        <name>Segundo paso</name>
+        <description>añadir información</description>
+      </node-info>
+      <form-array>
+        <form id="mid-form">
+          <input type="hidden" name="data" required="required" />
+        </form>
+      </form-array>
+    </action>
+
+    <action id="final-node">
+      <auth-filter backend="hardcoded"></auth-filter>
+    </action>
+  </process>
+</process-spec>

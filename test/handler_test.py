@@ -157,6 +157,8 @@ def test_teardown(config, mongo):
 
     state = Xml.load(config, 'simple').get_state()
     state['items']['start-node']['state'] = 'valid'
+    print (state)
+    assert False
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',

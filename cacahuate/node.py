@@ -18,7 +18,7 @@ from cacahuate.xml import get_text, NODES, Xml
 from cacahuate.http.errors import BadRequest
 from cacahuate.jsontypes import Map
 from cacahuate.jsontypes import SortedMap
-from cacahuate.grammar import Condition
+from cacahuate.grammar import Condition, ConditionTransformer
 
 LOGGER = logging.getLogger(__name__)
 
@@ -739,9 +739,8 @@ class If(Node):
         return make_node(next(xmliter), xmliter)
 
     def work(self, config, state, channel, mongo):
-        grammar = Condition(state['values'])
-
-        value = grammar.parse(self.condition)
+        tree = Condition().parse(self.condition)
+        value = ConditionTransformer(state['values']).transform(tree)
 
         return [{
             '_type': 'form',

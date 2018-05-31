@@ -173,8 +173,6 @@ def xml_validate(filename=None):
         if has_auth_filter:
             passed_nodes.append(node.getAttribute('id'))
 
-    print('{} seems correct...'.format(filename), file=sys.stderr)
-
 
 if __name__ == '__main__':
     main()

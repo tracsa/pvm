@@ -3,7 +3,7 @@ import pytest
 from cacahuate.grammar import Condition, ConditionTransformer
 
 
-def test_condition(config):
+def test_condition():
     values = {
         'first-form': {
             'param1': 'value1',
@@ -36,7 +36,7 @@ def test_condition(config):
     assert ConditionTransformer(values).transform(tree) is False
 
 
-def test_aritmetic_operators(config):
+def test_aritmetic_operators():
     values = {
         'set': {
             'A': -1,
@@ -62,7 +62,7 @@ def test_aritmetic_operators(config):
     assert ConditionTransformer(values).transform(tree) is True
 
 
-def test_logic_operators(config):
+def test_logic_operators():
     values = {
         'set': {
             'A': True,
@@ -78,3 +78,14 @@ def test_logic_operators(config):
 
     tree = Condition().parse('set.A && set.B')
     assert ConditionTransformer(values).transform(tree) is False
+
+
+def test_everything():
+    values = {
+        'form': {
+            'input': "no",
+        },
+    }
+
+    tree = Condition().parse('3>0 || (form.input == "0" && ("da" != "de"))')
+    assert ConditionTransformer(values).transform(tree) is True

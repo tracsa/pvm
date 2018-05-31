@@ -75,9 +75,13 @@ class ConditionTransformer(Transformer):
     def string(self, tokens):
         return tokens[0][1:-1]
 
+    def number(self, tokens):
+        return float(tokens[0])
+
     def expression(self, tokens):
         if len(tokens) == 1:
             return tokens[0]
+
         left, op, right = tokens
 
         return op(left, right)

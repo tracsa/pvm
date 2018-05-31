@@ -76,10 +76,8 @@ def xml_validate(filename=None):
         if node.tagName == 'condition':
             doc.expandNode(node)
 
-            con = Condition(data_form)
-
             try:
-                con.parse(get_text(node))
+                Condition().parse(get_text(node))
             except GrammarError:
                 sys.exit('Grammar error in condition')
             except ParseError:

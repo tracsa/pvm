@@ -3,7 +3,7 @@ from cacahuate.main import xml_validate
 
 
 def test_xml_validates():
-    assert xml_validate('xml/simple.2018-02-19.xml') is True
+    assert xml_validate('xml/simple.2018-02-19.xml') is None
 
 
 def test_id_repeat():

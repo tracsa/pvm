@@ -7,7 +7,7 @@ from cacahuate.errors import RefNotFound
 
 class Condition:
 
-    def __init__(self, values):
+    def __init__(self):
         filename = os.path.join(
             os.path.dirname(__file__),
             'grammars/condition.g'
@@ -16,91 +16,68 @@ class Condition:
         with open(filename) as grammar_file:
             self.parser = Lark(
                 grammar_file.read(),
-                start='condition',
+                start='expression',
                 parser='lalr',
-                transformer=self.ConditionTransformer(values),
             )
 
     def parse(self, string):
+        ''' returns the tree '''
         return self.parser.parse(string)
 
-    class ConditionTransformer(Transformer):
 
-        def __init__(self, values):
-            self._values = values
+class ConditionTransformer(Transformer):
+    ''' can be used to transform a tree like this:
 
-        def op_eq(self, _):
-            return operator.eq
+    ConditionTransformer(values).transform(tree)
 
-        def op_ne(self, _):
-            return operator.ne
+    where values is taken from the state of the execution '''
 
-        def op_lt(self, _):
-            def lt(a, b):
-                a = float(next(a.scan_values(lambda x: True)))
-                b = float(next(b.scan_values(lambda x: True)))
-                return a < b
+    def __init__(self, values):
+        self._values = values
 
-            return lt
+    def op_eq(self, _):
+        return operator.eq
 
-        def op_lte(self, _):
-            def lte(a, b):
-                a = float(next(a.scan_values(lambda x: True)))
-                b = float(next(b.scan_values(lambda x: True)))
-                return a <= b
+    def op_ne(self, _):
+        return operator.ne
 
-            return lte
+    def op_lt(self, _):
+        return operator.lt
 
-        def op_gt(self, _):
-            def gt(a, b):
-                a = float(next(a.scan_values(lambda x: True)))
-                b = float(next(b.scan_values(lambda x: True)))
-                return a > b
+    def op_lte(self, _):
+        return operator.le
 
-            return gt
+    def op_gt(self, _):
+        return operator.gt
 
-        def op_gte(self, _):
-            def gte(a, b):
-                a = float(next(a.scan_values(lambda x: True)))
-                b = float(next(b.scan_values(lambda x: True)))
-                return a >= b
+    def op_gte(self, _):
+        return operator.ge
 
-            return gte
+    def op_or(self, _):
+        return lambda x, y: x or y
 
-        def op_or(self, _):
-            def operator_or(a, b):
-                a = next(a.scan_values(lambda x: True))
-                b = next(b.scan_values(lambda x: True))
-                return a or b
+    def op_and(self, _):
+        return lambda x, y: x and y
 
-            return operator_or
+    def variable(self, tokens):
+        # just copy the token as string
+        return tokens[0][:]
 
-        def op_and(self, _):
-            def operator_and(a, b):
-                a = next(a.scan_values(lambda x: True))
-                b = next(b.scan_values(lambda x: True))
-                return a and b
+    def obj_id(self, tokens):
+        # copy the token as string
+        return tokens[0][:]
 
-            return operator_and
+    def ref(self, tokens):
+        obj_id, member = tokens
 
-        def variable(self, args):
-            return args[0][:]
+        return self._values[obj_id][member]
 
-        def obj_id(self, args):
-            return args[0][:]
+    def string(self, tokens):
+        return tokens[0][1:-1]
 
-        def member(self, args):
-            return args[0][:]
+    def expression(self, tokens):
+        if len(tokens) == 1:
+            return tokens[0]
+        left, op, right = tokens
 
-        def ref(self, args):
-            obj_id, member = args
-
-            return self._values[obj_id][member]
-
-        def string(self, args):
-            return args[0][1:-1]
-
-        def condition(self, args):
-            left, op, right = args
-
-            return op(left, right)
+        return op(left, right)

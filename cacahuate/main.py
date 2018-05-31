@@ -168,8 +168,6 @@ def xml_validate(filename=None):
         if has_auth_filter:
             passed_nodes.append(node.getAttribute('id'))
 
-    return True
-
 
 if __name__ == '__main__':
     main()

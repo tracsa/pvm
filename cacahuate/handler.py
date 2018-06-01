@@ -183,6 +183,7 @@ class Handler:
             'forms': input,
         }
 
+        # update pointer
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.update_one({
             'id': pointer.id,

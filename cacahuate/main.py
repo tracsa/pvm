@@ -63,8 +63,9 @@ def xml_validate(filename=None):
             if id_element not in ids:
                 ids.append(id_element)
             else:
-                sys.exit("Duplicated id: '{}'".format(
-                    id_element, filename
+                sys.exit("{}: Duplicated id: '{}'".format(
+                    filename,
+                    id_element,
                 ))
 
     doc = pulldom.parse(filename)
@@ -76,20 +77,19 @@ def xml_validate(filename=None):
         if node.tagName == 'condition':
             doc.expandNode(node)
 
-            con = Condition(data_form)
-
             try:
-                con.parse(get_text(node))
+                Condition().parse(get_text(node))
             except GrammarError:
-                sys.exit('Grammar error in condition')
+                sys.exit('{}: Grammar error in condition'.format(filename))
             except ParseError:
-                sys.exit('Parse error in condition')
+                sys.exit('{}: Parse error in condition'.format(filename))
             except LexError:
-                sys.exit('Lex error in condition')
+                sys.exit('{}: Lex error in condition'.format(filename))
             except KeyError as e:
                 sys.exit(
-                    'variable used in condition does not exist: {}'.format(
-                        str(e)
+                    '{}: variable used in condition does not exist: {}'.format(
+                        filename,
+                        str(e),
                     )
                 )
 
@@ -123,14 +123,18 @@ def xml_validate(filename=None):
                     data_form[reference_form][field_form]
                 except KeyError:
                     sys.exit(
-                        "Referenced param does not exist '{}'".format(
+                        "{}: Referenced param does not exist '{}'".format(
+                            filename,
                             reference_form+'.'+field_form,
                         )
                     )
             elif ref_type == 'user':
                 if ref not in passed_nodes:
                     sys.exit(
-                        'Referenced user is never created: {}'.format(ref)
+                        '{}: Referenced user is never created: {}'.format(
+                            filename,
+                            ref,
+                        )
                     )
 
         # Check dependencies
@@ -143,7 +147,8 @@ def xml_validate(filename=None):
                 data_form[form][field]
             except KeyError:
                 sys.exit(
-                    "Referenced dependency does not exist '{}'".format(
+                    "{}: Referenced dependency does not exist '{}'".format(
+                        filename,
                         form + '.' + field,
                     )
                 )
@@ -167,8 +172,6 @@ def xml_validate(filename=None):
 
         if has_auth_filter:
             passed_nodes.append(node.getAttribute('id'))
-
-    return True
 
 
 if __name__ == '__main__':

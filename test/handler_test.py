@@ -1827,6 +1827,7 @@ def test_call_node(config, mongo):
                         'type': 'text',
                         'value': value,
                         'value_caption': value,
+                        'hidden': False,
                     },
                 },
                 'item_order': ['data'],

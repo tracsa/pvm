@@ -1,6 +1,9 @@
 from datetime import datetime
 from flask import json
+import pika
 import pytest
+
+from cacahuate.models import Execution
 
 from .utils import make_auth, make_pointer, make_user
 
@@ -531,3 +534,63 @@ def test_start_with_incorrect_form_order(client, mocker, mongo, config):
     }))
 
     assert res.status_code == 400
+
+
+def test_hidden_input(client, mocker, config, mongo):
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
+
+    juan = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'input-hidden',
+        'form_array': [{
+            'ref': 'start_form',
+            'data': {
+                'data': 'yes',
+            },
+        }],
+    }))
+
+    assert res.status_code == 201
+
+    exc = Execution.get_all()[0]
+    ptr = exc.proxy.pointers.get()[0]
+
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.\
+        BlockingChannel.basic_publish.call_args[1]
+
+    json_message = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': 'juan',
+        'input': [{
+            '_type': 'form',
+            'ref': 'start_form',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'data': {
+                        'label': 'data',
+                        'type': 'text',
+                        'value': 'yes',
+                        'value_caption': 'yes',
+                        'name': 'data',
+                        'state': 'valid',
+                        'hidden': True,
+                    },
+                },
+                'item_order': ['data'],
+            },
+        }],
+    }
+
+    assert json.loads(args['body']) == json_message

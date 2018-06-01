@@ -249,6 +249,85 @@ def test_continue_process(client, mocker, config):
     assert pointer.id == ptr.id
 
 
+def test_continue_process_hidden(client, mocker, config):
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
+
+    juan = make_user('juan', 'Juan')
+    manager = make_user('juan_manager', 'Juanote')
+    ptr = make_pointer('simple_attr_hidden.2018-05-30.xml', 'mid-node')
+    manager.proxy.tasks.set([ptr])
+    exc = ptr.proxy.execution.get()
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(manager)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': ptr.node_id,
+        'form_array': [
+            {
+                'ref': 'mid-form',
+                'data': {
+                    'data': 'yes',
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 202
+    assert json.loads(res.data) == {
+        'data': 'accepted',
+    }
+
+    # rabbit is called
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.call_args[1]
+
+    json_message = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': 'juan_manager',
+        'input': [{
+            '_type': 'form',
+            'ref': 'mid-form',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'data': {
+                        "name": "data",
+                        "type": "hidden",
+                        "value": "yes",
+                        'label': 'data',
+                        'value_caption': 'yes',
+                        'state': 'valid',
+                    },
+                },
+                'item_order': ['data'],
+            },
+        }],
+    }
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    body = json.loads(args['body'])
+    assert body == json_message
+
+    # makes a useful call for the handler
+    handler = Handler(config)
+
+    pointer, user, inputs = handler.recover_step(json_message)
+
+    assert pointer.id == ptr.id
+
+
+
+
 def test_start_process_requirements(client, mongo, config):
     # first requirement is to have authentication
     res = client.post('/v1/execution', headers={

@@ -18,6 +18,7 @@ def test_all_inputs(client, config, mongo):
                 'gender': 'female',
                 'interests': ['science', 'music'],
                 'elections': 'amlo',
+                'hide': 'oculto'
             },
         },
     ]
@@ -31,6 +32,32 @@ def test_all_inputs(client, config, mongo):
 
     assert res.status_code == 201
 
+def test_input_hidden(client, config, mongo):
+    user = make_user('juan', 'Juan')
+
+    objeto = [
+        {
+            'ref': 'auth-form',
+            'data': {
+                'name': 'Algo',
+                'datetime': datetime.now().isoformat()+'Z',
+                'secret': '123456',
+                'gender': 'female',
+                'interests': ['science', 'music'],
+                'elections': 'amlo',
+                'hide': 'oculto'
+            },
+        },
+    ]
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'all-inputs',
+        'form_array': objeto
+    }))
+
+    assert res.status_code == 201
 
 def test_datetime_error(client, mocker, config):
     objeto = [
@@ -531,3 +558,4 @@ def test_start_with_incorrect_form_order(client, mocker, mongo, config):
     }))
 
     assert res.status_code == 400
+

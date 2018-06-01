@@ -34,6 +34,14 @@
             required="required"
           />
 
+
+          <input
+            label="Un secreto"
+            type="hidden"
+            name="hide"
+            required="required"
+          />
+
           <input
             label="Género?"
             type="radio"

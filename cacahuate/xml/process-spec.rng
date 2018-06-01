@@ -175,6 +175,7 @@
           <value>select</value>
           <value>file</value>
           <value>date</value>
+          <value>hidden</value>
         </choice>
       </attribute>
       <optional>

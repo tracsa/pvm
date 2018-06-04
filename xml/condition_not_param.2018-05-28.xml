@@ -1,0 +1,35 @@
+<process-spec>
+  <process-info>
+    <author>ramiggu</author>
+    <date>2018-05-17</date>
+    <name>condition Process</name>
+    <public>false</public>
+    <description>Smallest Condition process</description>
+  </process-info>
+  <process>
+    <action id="start-node">
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="mistery">
+          <input type="text" name="password"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <if id="condition1">
+      <condition>mistery.password == "abrete sesamo"</condition>
+      <block>
+        <action id="mistery-node">
+          <auth-filter backend="hardcoded">
+            <param name="foo" type="ref">form#a.b</param>
+          </auth-filter>
+          <form-array>
+            <form id="mistery">
+              <input type="text" name="answer" default="abrete sesamo" />
+            </form>
+          </form-array>
+        </action>
+      </block>
+    </if>
+  </process>
+</process-spec>

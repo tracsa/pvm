@@ -43,6 +43,7 @@ class Input:
         self.name = element.getAttribute('name')
         self.default = element.getAttribute('default') or None
         self.label = element.getAttribute('label') or self.name
+        self.hidden = element.getAttribute('hidden') == 'true'
 
         self.dependencies = []
 
@@ -76,6 +77,7 @@ class Input:
             'label': self.label,
             'value': None,
             'value_caption': None,
+            'hidden': self.hidden,
         }
 
 

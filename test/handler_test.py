@@ -1827,6 +1827,7 @@ def test_call_node(config, mongo):
                         'type': 'text',
                         'value': value,
                         'value_caption': value,
+                        'hidden': False,
                     },
                 },
                 'item_order': ['data'],
@@ -1920,6 +1921,19 @@ def test_handle_request_node(config, mocker, mongo):
     assert Pointer.get(ptr.id) is None
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'request-node'
+
+    # assert requests is called
+    requests.request.assert_called_once()
+    args, kwargs = requests.request.call_args
+
+    assert args[0] == 'GET'
+    assert args[1] == 'http://localhost/mirror?data=' + value
+
+    assert kwargs['data'] == '{"data":"' + value + '"}'
+    assert kwargs['headers'] == {
+        'content-type': 'application/json',
+        'x-url-data': value,
+    }
 
     # aditional rabbit call for new process
     args = channel.basic_publish.call_args_list[0][1]

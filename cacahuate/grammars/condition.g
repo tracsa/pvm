@@ -1,4 +1,8 @@
-condition: expr op expr
+expression: expression op expression
+          | "(" expression ")"
+          | ref
+          | string
+          | number
 
 op: "==" -> op_eq
   | "!=" -> op_ne
@@ -9,17 +13,13 @@ op: "==" -> op_eq
   | "||" -> op_or
   | "&&" -> op_and
 
-expr: ref
-    | string
-
-ref: obj_id "." member
-
-obj_id: variable
-member: variable
+ref: variable "." variable
 
 string : ESCAPED_STRING
 variable: /[a-zA-Z0-9_-]+/
+number: SIGNED_NUMBER
 
 %import common.ESCAPED_STRING
+%import common.SIGNED_NUMBER
 %import common.WS
 %ignore WS

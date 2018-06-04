@@ -3,19 +3,53 @@ import logging
 
 base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 
-# Testing and log stuff
-TESTING = False
-LOG_LEVEL = logging.DEBUG
-
-# Where to store xml files
-XML_PATH = os.path.join(base_dir, 'xml')
-
 # Rabbitmq
 RABBIT_HOST = 'localhost'
 RABBIT_QUEUE = 'cacahuate_process'
 RABBIT_NOTIFY_EXCHANGE = 'cacahuate_notify'
 RABBIT_CONSUMER_TAG = 'cacahuate_consumer_1'
 RABBIT_NO_ACK = True
+
+# Default logging config
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'default': {
+            'format': '[%(levelname)s] %(message)s - %(name)s:%(lineno)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+        },
+        # 'charpe': {
+        #     'class': 'cacahuate.log.CharpeHandler',
+        #     'level': 'ERROR',
+        #     'host': RABBIT_HOST,
+        #     'medium': 'email',
+        #     'exchange': RABBIT_NOTIFY_EXCHANGE,
+        #     'service_name': 'cacahuate',
+        #     'params': {
+        #         'recipient': 'support@example.com',
+        #         'subject': '[cacahuate] Server Error',
+        #         'template': 'server-error',
+        #     },
+        # },
+    },
+    'loggers': {
+        'cacahuate': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'filters': [],
+        },
+    },
+}
+
+# Where to store xml files
+XML_PATH = os.path.join(base_dir, 'xml')
 
 # Mongodb
 MONGO_URI = 'mongodb://localhost/cacahuate'

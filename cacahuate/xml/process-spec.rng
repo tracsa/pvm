@@ -183,6 +183,11 @@
         </attribute>
       </optional>
       <optional>
+        <attribute name="hidden">
+          <value>true</value>
+        </attribute>
+      </optional>
+      <optional>
         <attribute name="label"><text/></attribute>
       </optional>
       <optional>

@@ -2,17 +2,19 @@ from coralillo.errors import ModelNotFoundError
 from datetime import datetime
 from importlib import import_module
 from pymongo import MongoClient
-import simplejson as json
+import logging
 import pika
 import pymongo
+import simplejson as json
 
 from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
     MisconfiguredProvider, EndOfProcess
-from cacahuate.logger import log
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, Exit, Validation, UserAttachedNode
 from cacahuate.grammar import Condition
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Handler:
@@ -35,9 +37,11 @@ class Handler:
             except (ModelNotFoundError, CannotMove, ElementNotFound,
                     MisconfiguredProvider, InconsistentState
                     ) as e:
-                log.error(str(e))
+                LOGGER.error(str(e))
         else:
-            log.warning('Unrecognized command {}'.format(message['command']))
+            LOGGER.warning(
+                'Unrecognized command {}'.format(message['command'])
+            )
 
         if not self.config['RABBIT_NO_ACK']:
             channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -126,7 +130,7 @@ class Handler:
 
         # create a pointer in this node
         pointer = self.create_pointer(node, execution)
-        log.debug('Created pointer p:{} n:{} e:{}'.format(
+        LOGGER.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,
             node.id,
             execution.id,
@@ -179,6 +183,7 @@ class Handler:
             'forms': input,
         }
 
+        # update pointer
         collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
         collection.update_one({
             'id': pointer.id,
@@ -210,7 +215,7 @@ class Handler:
             }, **values},
         })
 
-        log.debug('Deleted pointer p:{} n:{} e:{}'.format(
+        LOGGER.debug('Deleted pointer p:{} n:{} e:{}'.format(
             pointer.id,
             pointer.node_id,
             execution.id,
@@ -231,7 +236,7 @@ class Handler:
             }
         })
 
-        log.debug('Finished e:{}'.format(execution.id))
+        LOGGER.debug('Finished e:{}'.format(execution.id))
 
         execution.delete()
 
@@ -253,7 +258,7 @@ class Handler:
             if actor['state'] == 'invalid'
         ]
 
-        log.debug('Invalidated node {} found users: {}'.format(
+        LOGGER.debug('Invalidated node {} found users: {}'.format(
             node_state['id'],
             ', '.join(u for u in users),
         ))

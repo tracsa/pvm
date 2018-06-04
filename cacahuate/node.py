@@ -2,23 +2,25 @@
 equivalent xml nodes '''
 from case_conversion import pascalcase
 from datetime import datetime
+from jinja2 import Template, TemplateError
 from typing import Iterator
 from xml.dom.minidom import Element
-from jinja2 import Template, TemplateError
-import requests
+import logging
 import re
+import requests
 
 from cacahuate.errors import ElementNotFound, IncompleteBranch, \
     ValidationErrors, RequiredInputError, InvalidInputError, InputError, \
     RequiredListError, RequiredDictError, EndOfProcess
 from cacahuate.inputs import make_input
-from cacahuate.logger import log
 from cacahuate.utils import user_import
 from cacahuate.xml import get_text, NODES, Xml
 from cacahuate.http.errors import BadRequest
 from cacahuate.jsontypes import Map
 from cacahuate.jsontypes import SortedMap
-from cacahuate.grammar import Condition
+from cacahuate.grammar import Condition, ConditionTransformer
+
+LOGGER = logging.getLogger(__name__)
 
 
 class AuthParam:
@@ -270,7 +272,7 @@ class UserAttachedNode(FullyContainedNode):
             **self.resolve_params(state)
         )
 
-        log.debug('Waking up n:{} found users: {}'.format(
+        LOGGER.debug('Waking up n:{} found users: {}'.format(
             self.id,
             ', '.join(u.identifier for u in users),
         ))
@@ -737,9 +739,8 @@ class If(Node):
         return make_node(next(xmliter), xmliter)
 
     def work(self, config, state, channel, mongo):
-        grammar = Condition(state['values'])
-
-        value = grammar.parse(self.condition)
+        tree = Condition().parse(self.condition)
+        value = ConditionTransformer(state['values']).transform(tree)
 
         return [{
             '_type': 'form',

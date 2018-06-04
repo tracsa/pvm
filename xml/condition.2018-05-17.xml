@@ -20,7 +20,9 @@
       <condition>mistery.password == "abrete sésamo"</condition>
       <block>
         <action id="mistical-node">
-          <auth-filter backend="hardcoded"></auth-filter>
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#start-node</param>
+          </auth-filter>
           <form-array>
             <form id="mistical-form">
               <input type="text" name="answer" default="42" />
@@ -35,7 +37,9 @@
       <condition>mistery.password == "123456"</condition>
       <block>
         <action id="123456-node">
-          <auth-filter backend="hardcoded"></auth-filter>
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#start-node</param>
+          </auth-filter>
           <form-array>
             <form id="123456-form">
               <input type="text" name="answer" default="oh boy, please don't" />
@@ -46,7 +50,9 @@
     </if>
 
     <action id="final-node">
-      <auth-filter backend="hardcoded"></auth-filter>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start-node</param>
+      </auth-filter>
     </action>
   </process>
 </process-spec>

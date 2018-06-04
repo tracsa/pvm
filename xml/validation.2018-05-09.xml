@@ -34,7 +34,9 @@
     </validation>
 
     <action id="final-node">
-      <auth-filter backend="hardcoded"></auth-filter>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start-node</param>
+      </auth-filter>
       <form-array>
         <form id="confirm">
           <input type="text" name="exit"></input>

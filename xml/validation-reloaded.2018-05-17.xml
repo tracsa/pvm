@@ -21,7 +21,9 @@
     </action>
 
     <action id="node2">
-      <auth-filter backend="hardcoded"></auth-filter>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#node1</param>
+      </auth-filter>
       <node-info>
         <name>Segundo paso</name>
         <description>depender de la info</description>
@@ -38,7 +40,9 @@
     </action>
 
     <action id="node3">
-      <auth-filter backend="hardcoded"></auth-filter>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#node1</param>
+      </auth-filter>
       <node-info>
         <name>Tercer paso</name>
         <description>no depender de nada</description>
@@ -51,7 +55,9 @@
     </action>
 
     <validation id="node4" >
-      <auth-filter backend="hardcoded"></auth-filter>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#node1</param>
+      </auth-filter>
       <dependencies>
         <dep>form1.task</dep>
       </dependencies>
@@ -62,7 +68,9 @@
     </validation>
 
     <action id="node5">
-      <auth-filter backend="hardcoded"></auth-filter>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#node1</param>
+      </auth-filter>
       <form-array>
         <form id="form5">
           <input type="text" name="task"></input>

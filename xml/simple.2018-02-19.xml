@@ -38,7 +38,9 @@
     </action>
 
     <action id="final-node">
-      <auth-filter backend="hardcoded"></auth-filter>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start-node</param>
+      </auth-filter>
     </action>
   </process>
 </process-spec>

@@ -163,6 +163,9 @@ def test_teardown(config, mongo):
         'id': execution.id,
         'state': state,
         'values': {},
+        'actors': {
+            'start-node': 'juan',
+        },
     })
 
     mongo[config["POINTER_COLLECTION"]].insert_one({
@@ -345,6 +348,7 @@ def test_teardown(config, mongo):
     }
 
     assert reg['actors'] == {
+        'start-node': 'juan',
         'mid-node': 'manager',
     }
 
@@ -432,6 +436,9 @@ def test_approve(config, mongo):
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
         'state': Xml.load(config, 'validation.2018-05-09').get_state(),
+        'actors': {
+            'start-node': 'juan',
+        },
     })
 
     # thing to test

@@ -279,7 +279,7 @@ class Handler:
         if type(users) != list:
             raise MisconfiguredProvider('Provider returned non list')
 
-        if len(notified_users) == 0:
+        if len(users) == 0:
             raise InconsistentState(
                 'No user assigned, dead execution {}'.format(
                     pointer.proxy.execution.get().id,

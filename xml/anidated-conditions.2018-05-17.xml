@@ -20,7 +20,9 @@
       <condition>a.a > "0"</condition>
       <block>
         <action id="b">
-          <auth-filter backend="hardcoded"></auth-filter>
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#a</param>
+          </auth-filter>
           <form-array>
             <form id="b">
               <input type="text" name="b" />
@@ -32,7 +34,9 @@
           <condition>b.b > "0"</condition>
           <block>
             <action id="c">
-              <auth-filter backend="hardcoded"></auth-filter>
+              <auth-filter backend="backref">
+                <param name="identifier" type="ref">user#a</param>
+              </auth-filter>
               <form-array>
                 <form id="c">
                   <input type="text" name="c" />
@@ -44,7 +48,9 @@
               <condition>c.c > "0"</condition>
               <block>
                 <action id="d">
-                  <auth-filter backend="hardcoded"></auth-filter>
+                  <auth-filter backend="backref">
+                    <param name="identifier" type="ref">user#a</param>
+                  </auth-filter>
                   <form-array>
                     <form id="d">
                       <input type="text" name="d" />
@@ -55,7 +61,9 @@
             </if>
 
             <action id="e">
-              <auth-filter backend="hardcoded"></auth-filter>
+              <auth-filter backend="backref">
+                <param name="identifier" type="ref">user#a</param>
+              </auth-filter>
               <form-array>
                 <form id="e">
                   <input type="text" name="e" />
@@ -66,7 +74,9 @@
         </if>
 
         <action id="f">
-          <auth-filter backend="hardcoded"></auth-filter>
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#a</param>
+          </auth-filter>
           <form-array>
             <form id="f">
               <input type="text" name="f" />
@@ -77,7 +87,9 @@
     </if>
 
     <action id="g">
-      <auth-filter backend="hardcoded"></auth-filter>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#a</param>
+      </auth-filter>
     </action>
   </process>
 </process-spec>

@@ -23,6 +23,7 @@ class Loop:
             queue=self.config['RABBIT_QUEUE'],
             durable=True,
         )
+        LOGGER.info('Declared queue {}'.format(self.config['RABBIT_QUEUE']))
 
         channel.basic_consume(
             self.handler,

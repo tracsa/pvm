@@ -149,8 +149,6 @@ def test_continue_process_requires_user_hierarchy(client):
 
 
 def test_continue_process_requires_data(client):
-    juan = make_user('juan', 'Juan')
-
     manager = make_user('juan_manager', 'Juanote')
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     manager.proxy.tasks.set([ptr])
@@ -177,7 +175,6 @@ def test_continue_process(client, mocker, config):
         'BlockingChannel.basic_publish'
     )
 
-    juan = make_user('juan', 'Juan')
     manager = make_user('juan_manager', 'Juanote')
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
     manager.proxy.tasks.set([ptr])
@@ -883,9 +880,8 @@ def test_list_activities(client):
     '''Given 4 activities, two for the current user and two for
     another, list only the two belonging to him or her'''
     juan = make_user('juan', 'Juan')
-    other = make_user('other', 'Otero')
 
-    exc = Execution(
+    Execution(
         process_name='simple.2018-02-19.xml',
     ).save()
 

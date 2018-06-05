@@ -142,7 +142,7 @@ def test_teardown(config, mongo):
     p_0 = make_pointer('simple.2018-02-19.xml', 'mid-node')
     execution = p_0.proxy.execution.get()
 
-    juan = User(identifier='juan').save()
+    User(identifier='juan').save()
     manager = User(identifier='manager').save()
     manager2 = User(identifier='manager2').save()
 

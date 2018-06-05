@@ -308,7 +308,11 @@ class Handler:
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
                     routing_key=medium,
                     body=json.dumps({**{
-                        'pointer': pointer.to_json(include=['*', 'execution']),
+                        'data': {
+                            'pointer': pointer.to_json(
+                                include=['*', 'execution']
+                            ),
+                        },
                     }, **params}),
                     properties=pika.BasicProperties(
                         delivery_mode=2,
@@ -327,7 +331,11 @@ class Handler:
         return self.mongo
 
     def get_contact_channels(self, user: User):
-        return [('email', {'email': user.get_x_info('email')})]
+        return [('email', {
+            'recipient': user.get_contact_info('email'),
+            'subject': '[procesos] Tarea asignada',
+            'template': 'assigned-task.html',
+        })]
 
     def create_pointer(self, node, execution: Execution):
         ''' Given a node, its process, and a specific execution of the former

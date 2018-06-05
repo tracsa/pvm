@@ -1,4 +1,4 @@
-from coralillo.errors import ValidationErrors, ModelNotFoundError, BadField
+from coralillo.errors import ModelNotFoundError
 from flask import jsonify
 
 from cacahuate.http.wsgi import app

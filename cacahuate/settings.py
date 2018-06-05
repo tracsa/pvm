@@ -1,5 +1,4 @@
 import os
-import logging
 
 base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 

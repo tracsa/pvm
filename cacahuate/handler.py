@@ -1,18 +1,15 @@
 from coralillo.errors import ModelNotFoundError
 from datetime import datetime
-from importlib import import_module
 from pymongo import MongoClient
 import logging
 import pika
-import pymongo
 import simplejson as json
 
 from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
     MisconfiguredProvider, EndOfProcess
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
-from cacahuate.node import make_node, Exit, Validation, UserAttachedNode
-from cacahuate.grammar import Condition
+from cacahuate.node import make_node, UserAttachedNode
 
 LOGGER = logging.getLogger(__name__)
 

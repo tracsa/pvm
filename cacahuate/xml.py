@@ -1,6 +1,6 @@
 from datetime import datetime
 from jinja2 import Template, TemplateError
-from typing import Iterator, TextIO, Callable
+from typing import TextIO, Callable
 from xml.dom import pulldom
 from xml.dom.minidom import Element
 from xml.sax._exceptions import SAXParseException
@@ -128,10 +128,10 @@ class Xml:
 
         # log to mongo
         collection = mongo[self.config['POINTER_COLLECTION']]
-        res = collection.insert_one(node.pointer_entry(execution, pointer))
+        collection.insert_one(node.pointer_entry(execution, pointer))
 
         collection = mongo[self.config['EXECUTION_COLLECTION']]
-        res = collection.insert_one({
+        collection.insert_one({
             '_type': 'execution',
             'id': execution.id,
             'name': execution.name,

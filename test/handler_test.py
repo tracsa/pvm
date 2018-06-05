@@ -1,7 +1,5 @@
 from datetime import datetime
 from unittest.mock import MagicMock
-from xml.dom.minidom import Document
-import pika
 import pytest
 import simplejson as json
 import requests
@@ -17,7 +15,6 @@ from .utils import make_pointer, make_user, assert_near_date, random_string
 def test_recover_step(config):
     handler = Handler(config)
     ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
-    exc = ptr.proxy.execution.get()
     manager = make_user('juan_manager', 'Manager')
 
     pointer, user, input = \

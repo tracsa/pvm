@@ -1,5 +1,3 @@
-import pytest
-
 from cacahuate.grammar import Condition, ConditionTransformer
 
 

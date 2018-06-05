@@ -1,6 +1,6 @@
 from cacahuate.xml import Xml
 from cacahuate.node import make_node
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 import requests
 
 
@@ -43,7 +43,7 @@ def test_request_node(config, mocker):
     xml = Xml.load(config, 'request.2018-05-18')
     xmliter = iter(xml)
 
-    action = next(xmliter)
+    next(xmliter)
     request = next(xmliter)
     node = make_node(request, xmliter)
 

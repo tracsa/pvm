@@ -1,9 +1,7 @@
 from coralillo.errors import ModelNotFoundError
 from datetime import datetime
-from flask import g, abort
+from flask import g
 from flask import request, jsonify, json
-from functools import reduce
-import os
 import pika
 import pymongo
 
@@ -14,7 +12,7 @@ from cacahuate.http.middleware import requires_json, requires_auth, \
     pagination
 from cacahuate.http.validation import validate_json, validate_auth
 from cacahuate.http.wsgi import app, mongo
-from cacahuate.models import Execution, Pointer, User, Token
+from cacahuate.models import Execution, Pointer
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict, get_text
 from cacahuate.node import make_node

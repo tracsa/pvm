@@ -3,15 +3,13 @@ equivalent xml nodes '''
 from case_conversion import pascalcase
 from datetime import datetime
 from jinja2 import Template, TemplateError
-from typing import Iterator
-from xml.dom.minidom import Element
 import logging
 import re
 import requests
 
-from cacahuate.errors import ElementNotFound, IncompleteBranch, \
-    ValidationErrors, RequiredInputError, InvalidInputError, InputError, \
-    RequiredListError, RequiredDictError, EndOfProcess
+from cacahuate.errors import ValidationErrors, RequiredInputError, \
+    InvalidInputError, InputError, RequiredListError, RequiredDictError, \
+    EndOfProcess
 from cacahuate.inputs import make_input
 from cacahuate.utils import user_import
 from cacahuate.xml import get_text, NODES, Xml

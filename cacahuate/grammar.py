@@ -2,8 +2,6 @@ from lark import Lark, Transformer
 import operator
 import os
 
-from cacahuate.errors import RefNotFound
-
 
 class Condition:
 

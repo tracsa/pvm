@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+from itacate import Config
+import argparse
+import logging
+import os
 import pika
 import simplejson as json
-import os
-import argparse
-from itacate import Config
 
 LOGGER = logging.getLogger(__name__)
 

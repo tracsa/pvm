@@ -4,9 +4,9 @@ from functools import reduce
 from operator import and_
 import ast
 
-from cacahuate.errors import ValidationErrors, RequiredInputError, \
-    HierarchyError, InvalidDateError, InvalidInputError, \
-    RequiredListError, RequiredStrError, MisconfiguredProvider
+from cacahuate.errors import RequiredInputError, InvalidDateError, \
+    InvalidInputError, RequiredListError, RequiredStrError, \
+    MisconfiguredProvider
 from cacahuate.xml import get_text
 
 INPUTS = [
@@ -219,7 +219,9 @@ class FileInput(Input):
                         )
                     )
         else:
-            abort(500, 'File provider `{}` not implemented'.format(provider))
+            raise MisconfiguredProvider(
+                'File provider `{}` not implemented'.format(provider)
+            )
 
         return value
 

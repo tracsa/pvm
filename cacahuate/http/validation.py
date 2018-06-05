@@ -1,24 +1,10 @@
-from importlib import import_module
-from xml.dom.minidom import Element
-from flask import request, abort
-import os
-import sys
-import ast
-from datetime import datetime
-from functools import reduce
-from operator import and_
-import json
-import case_conversion
+from flask import abort
 
-from cacahuate.errors import ValidationErrors, InputError,\
-    RequiredInputError, HierarchyError, InvalidDateError, InvalidInputError, \
-    RequiredListError, RequiredStrError, MisconfiguredProvider
-from cacahuate.http.errors import BadRequest, Unauthorized, Forbidden
-from cacahuate.models import User, Token
-from cacahuate.xml import input_to_dict, get_form_specs
+from cacahuate.errors import RequiredInputError, HierarchyError, \
+    MisconfiguredProvider
+from cacahuate.http.errors import BadRequest, Forbidden
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
-from cacahuate import inputs
 
 
 def validate_json(json_data: dict, req: list):

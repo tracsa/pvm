@@ -1,12 +1,7 @@
 from flask import abort
-from importlib import import_module
 from werkzeug.routing import BaseConverter
-import case_conversion
-import os
-import sys
 
 from cacahuate.errors import MisconfiguredProvider
-from cacahuate.http.errors import NotFound
 from cacahuate.http.wsgi import app
 from cacahuate.utils import user_import
 

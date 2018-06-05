@@ -2,7 +2,6 @@ from coralillo import Engine
 from itacate import Config
 import os
 import pytest
-import sys
 from pymongo import MongoClient
 
 from cacahuate.models import bind_models as bimo

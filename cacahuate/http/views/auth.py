@@ -1,4 +1,3 @@
-from datetime import datetime
 from flask import request, jsonify, abort
 from cacahuate.errors import AuthenticationError
 from cacahuate.http.errors import Unauthorized

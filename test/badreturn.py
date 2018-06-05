@@ -1,6 +1,4 @@
 from cacahuate.auth.base import BaseHierarchyProvider
-from cacahuate.errors import HierarchyError
-from cacahuate.models import User
 
 
 class BadreturnHierarchyProvider(BaseHierarchyProvider):

@@ -5,7 +5,7 @@ import pytest
 
 from cacahuate.models import Execution
 
-from .utils import make_auth, make_pointer, make_user
+from .utils import make_auth, make_user, assert_near_date
 
 
 def test_all_inputs(client, config, mongo):
@@ -397,7 +397,7 @@ def test_default_inputs(client):
         ],
     }))
 
-    ques = Questionaire.get_all()[0].to_json()
+    ques = None
 
     assert res.status_code == 201
 
@@ -437,7 +437,7 @@ def test_required_inputs_with_defaults(client):
         ],
     }))
 
-    ques = Questionaire.get_all()[0].to_json()
+    ques = None
 
     assert res.status_code == 201
 

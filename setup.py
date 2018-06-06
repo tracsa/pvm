@@ -14,7 +14,7 @@ setup(
     long_description=long_description,
     url='https://github.com/tracsa/cacahuate',
 
-    version='2.0.5',
+    version='2.1.0',
 
     author='Abraham Toriz Cruz',
     author_email='categulario@gmail.com',

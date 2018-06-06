@@ -133,23 +133,6 @@ class Handler:
             execution.id,
         ))
 
-        # notify someone
-        if isinstance(node, UserAttachedNode):
-            notified_users = self.notify_users(node, pointer, channel, state)
-        else:
-            notified_users = []
-
-        if not node.is_async():
-            input = node.work(self.config, state, channel, self.get_mongo())
-        else:
-            input = []
-
-        # update registry about this pointer
-        collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
-        collection.insert_one(node.pointer_entry(
-            execution, pointer, notified_users
-        ))
-
         # mark this node as ongoing
         collection = self.get_mongo()[self.config['EXECUTION_COLLECTION']]
         collection.update_one({
@@ -159,6 +142,24 @@ class Handler:
                 'state.items.{}.state'.format(node.id): 'ongoing',
             },
         })
+
+        # update registry about this pointer
+        collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
+        collection.insert_one(node.pointer_entry(
+            execution, pointer, notified_users
+        ))
+
+        # notify someone (can raise an exception
+        if isinstance(node, UserAttachedNode):
+            notified_users = self.notify_users(node, pointer, channel, state)
+        else:
+            notified_users = []
+
+        # do some work (can raise an exception
+        if not node.is_async():
+            input = node.work(self.config, state, channel, self.get_mongo())
+        else:
+            input = []
 
         # nodes with forms are not queued
         if not node.is_async():

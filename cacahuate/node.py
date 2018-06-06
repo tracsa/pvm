@@ -9,7 +9,7 @@ import requests
 
 from cacahuate.errors import ValidationErrors, RequiredInputError, \
     InvalidInputError, InputError, RequiredListError, RequiredDictError, \
-    EndOfProcess
+    EndOfProcess, InconsistentState
 from cacahuate.inputs import make_input
 from cacahuate.utils import user_import
 from cacahuate.xml import get_text, NODES, Xml
@@ -738,7 +738,13 @@ class If(Node):
 
     def work(self, config, state, channel, mongo):
         tree = Condition().parse(self.condition)
-        value = ConditionTransformer(state['values']).transform(tree)
+
+        try:
+            value = ConditionTransformer(state['values']).transform(tree)
+        except ValueError as e:
+            raise InconsistentState('Could not evaluate condition: {}'.format(
+                str(e)
+            ))
 
         return [{
             '_type': 'form',

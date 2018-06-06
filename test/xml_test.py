@@ -152,7 +152,7 @@ def test_form_to_dict(config):
                 "options": [
                     {
                         "value": "amlo",
-                        "label": "Andres Manuel López Obrador",
+                        "label": "Andrés Manuel López Obrador",
                     },
                     {
                         "value": "meade",
@@ -167,6 +167,18 @@ def test_form_to_dict(config):
                         "label": "Ricardo Anaya Cortés",
                     },
                 ],
+            },
+            {
+                'label': 'Un entero',
+                'type': 'int',
+                'required': True,
+                'name': 'int',
+            },
+            {
+                'label': 'Un flotante',
+                'type': 'float',
+                'required': True,
+                'name': 'float',
             },
         ]
     }

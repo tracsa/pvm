@@ -130,10 +130,6 @@ def test_all_inputs(client, config, mongo, mocker):
     assert body['input'][0]['inputs']['items'] == json_message
 
 
-def test_int_input_requirements():
-    assert False, 'zero passes required'
-
-
 def test_datetime_error(client, mocker, config):
     objeto = [
         {

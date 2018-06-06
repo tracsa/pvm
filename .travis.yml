@@ -14,4 +14,5 @@ install:
 script:
   - pytest -vv
   - pycodestyle --statistics --show-source --exclude=.env,.tox,dist,docs,build,*.egg .
+  - flake8 --exclude=.env,.tox,dist,docs,build,*.egg .
   - xml/validate.sh

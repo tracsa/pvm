@@ -312,6 +312,7 @@ class Handler:
                             'pointer': pointer.to_json(
                                 include=['*', 'execution']
                             ),
+                            'cacahuate_url': self.config['GUI_URL'],
                         },
                     }, **params}),
                     properties=pika.BasicProperties(

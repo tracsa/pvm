@@ -96,6 +96,16 @@ class RequiredStrError(InputError):
     code = 'validation.required_str'
 
 
+class RequiredIntError(InputError):
+    detail = "'{input}' required an int"
+    code = 'validation.required_int'
+
+
+class RequiredFloatError(InputError):
+    detail = "'{input}' required a float"
+    code = 'validation.required_float'
+
+
 class ValidationErrors(Exception):
 
     def __init__(self, errors):

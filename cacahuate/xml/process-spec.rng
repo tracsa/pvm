@@ -166,7 +166,6 @@
       <attribute name="name"><text/></attribute>
       <attribute name="type">
         <choice>
-          <value>approval</value>
           <value>text</value>
           <value>datetime</value>
           <value>password</value>
@@ -175,6 +174,8 @@
           <value>select</value>
           <value>file</value>
           <value>date</value>
+          <value>int</value>
+          <value>float</value>
         </choice>
       </attribute>
       <optional>

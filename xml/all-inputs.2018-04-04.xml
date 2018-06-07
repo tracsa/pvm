@@ -65,12 +65,24 @@
             name="elections"
             required="required">
             <options>
-              <option value="amlo">Andres Manuel López Obrador</option>
+              <option value="amlo">Andrés Manuel López Obrador</option>
               <option value="meade">José Antonio Meade Kuribreña</option>
               <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>
               <option value="anaya">Ricardo Anaya Cortés</option>
             </options>
           </input>
+
+          <input
+            type="int"
+            label="Un entero"
+            name="int"
+            required="required" />
+
+          <input
+            type="float"
+            label="Un flotante"
+            name="float"
+            required="required" />
         </form>
       </form-array>
     </action>

@@ -95,8 +95,15 @@ def test_wakeup(config, mongo):
     assert args['exchange'] == config['RABBIT_NOTIFY_EXCHANGE']
     assert args['routing_key'] == 'email'
     assert json.loads(args['body']) == {
-        'email': 'hardcoded@mailinator.com',
-        'pointer': Pointer.get_all()[0].to_json(include=['*', 'execution']),
+        'recipient': 'hardcoded@mailinator.com',
+        'subject': '[procesos] Tarea asignada',
+        'template': 'assigned-task.html',
+        'data': {
+            'pointer': Pointer.get_all()[0].to_json(
+                include=['*', 'execution']
+            ),
+            'cacahuate_url': config['GUI_URL'],
+        },
     }
 
     # pointer collection updated

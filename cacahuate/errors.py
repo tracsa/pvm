@@ -6,7 +6,10 @@ class EndOfProcess(Exception):
 
 
 class AuthenticationError(Exception):
-    pass
+
+    def __init__(self, json):
+        super().__init__(json['detail'])
+        self.json = json
 
 
 class ProcessNotFound(Exception):

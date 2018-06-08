@@ -11,9 +11,17 @@ class LdapAuthProvider(BaseAuthProvider):
 
     def authenticate(self, **credentials):
         if 'username' not in credentials:
-            raise AuthenticationError('request.body.username.required')
+            raise AuthenticationError({
+                'description': 'username not sent',
+                'code': 'validation.required',
+                'where': 'request.body.username.required',
+            })
         if 'password' not in credentials:
-            raise AuthenticationError('request.body.password.required')
+            raise AuthenticationError({
+                'description': 'password not sent',
+                'code': 'validation.required',
+                'where': 'request.body.password.required',
+            })
 
         server_uri = app.config['LDAP_URI']
         use_ssl = app.config['LDAP_SSL']

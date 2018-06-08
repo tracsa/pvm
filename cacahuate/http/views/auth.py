@@ -1,5 +1,4 @@
 from flask import request, jsonify, abort
-from cacahuate.errors import AuthenticationError
 from cacahuate.http.errors import Unauthorized
 from cacahuate.http.wsgi import app
 from cacahuate.models import User, Token
@@ -9,10 +8,8 @@ from string import ascii_letters
 
 @app.route('/v1/auth/signin/<AuthProvider:backend>', methods=['POST'])
 def signin(backend):
-    try:
-        user = backend.authenticate(**request.form.to_dict())
-    except AuthenticationError as e:
-        abort(401, str(e))
+    # this raises AuthenticationError exception if failed
+    user = backend.authenticate(**request.form.to_dict())
 
     # creates auth token
     if user.proxy.tokens.count() > 0:

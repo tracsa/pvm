@@ -255,11 +255,6 @@ class Handler:
             if actor['state'] == 'invalid'
         ]
 
-        LOGGER.debug('Invalidated node {} found users: {}'.format(
-            node_state['id'],
-            ', '.join(u for u in users),
-        ))
-
         return list(map(
             lambda u: User.get_by('identifier', u),
             users
@@ -319,6 +314,11 @@ class Handler:
                         delivery_mode=2,
                     ),
                 )
+
+        LOGGER.debug('Waking up n:{} found users: {}'.format(
+            node.id,
+            ', '.join(u.identifier for u in users),
+        ))
 
         return notified_users
 

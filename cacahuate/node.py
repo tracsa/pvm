@@ -270,11 +270,6 @@ class UserAttachedNode(FullyContainedNode):
             **self.resolve_params(state)
         )
 
-        LOGGER.debug('Waking up n:{} found users: {}'.format(
-            self.id,
-            ', '.join(u.identifier for u in users),
-        ))
-
         return users
 
 

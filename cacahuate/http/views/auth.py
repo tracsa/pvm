@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort
+from flask import request, jsonify
 from cacahuate.http.errors import Unauthorized
 from cacahuate.http.wsgi import app
 from cacahuate.models import User, Token

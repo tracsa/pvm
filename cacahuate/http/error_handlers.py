@@ -34,6 +34,7 @@ def handler_auth_error(e):
         'errors': [e.json],
     }), 401
 
+
 @app.errorhandler(404)
 def handle_404(e):
     return jsonify({

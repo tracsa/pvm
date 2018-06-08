@@ -134,8 +134,8 @@ class Handler:
         ))
 
         # mark this node as ongoing
-        collection = self.get_mongo()[self.config['EXECUTION_COLLECTION']]
-        collection.update_one({
+        exc_col = self.get_mongo()[self.config['EXECUTION_COLLECTION']]
+        exc_col.update_one({
             'id': execution.id,
         }, {
             '$set': {
@@ -144,10 +144,8 @@ class Handler:
         })
 
         # update registry about this pointer
-        collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
-        collection.insert_one(node.pointer_entry(
-            execution, pointer, notified_users
-        ))
+        ptr_col = self.get_mongo()[self.config['POINTER_COLLECTION']]
+        ptr_col.insert_one(node.pointer_entry(execution, pointer))
 
         # notify someone (can raise an exception
         if isinstance(node, UserAttachedNode):
@@ -160,6 +158,15 @@ class Handler:
             input = node.work(self.config, state, channel, self.get_mongo())
         else:
             input = []
+
+        # set actors to this pointer (means everything succeeded)
+        ptr_col.update_one({
+            'id': pointer.id,
+        }, {
+            '$set': {
+                'notified_users': notified_users,
+            },
+        })
 
         # nodes with forms are not queued
         if not node.is_async():

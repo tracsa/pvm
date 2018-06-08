@@ -6,7 +6,10 @@ class EndOfProcess(Exception):
 
 
 class AuthenticationError(Exception):
-    pass
+
+    def __init__(self, json):
+        super().__init__(json['detail'])
+        self.json = json
 
 
 class ProcessNotFound(Exception):
@@ -94,6 +97,16 @@ class RequiredDictError(InputError):
 class RequiredStrError(InputError):
     detail = "'{input}' required a str"
     code = 'validation.required_str'
+
+
+class RequiredIntError(InputError):
+    detail = "'{input}' required an int"
+    code = 'validation.required_int'
+
+
+class RequiredFloatError(InputError):
+    detail = "'{input}' required a float"
+    code = 'validation.required_float'
 
 
 class ValidationErrors(Exception):

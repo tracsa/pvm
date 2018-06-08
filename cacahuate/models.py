@@ -46,7 +46,7 @@ class User(Model):
         inverse='candidates'
     )
 
-    def get_x_info(self, attr):
+    def get_contact_info(self, attr):
         return getattr(self, attr)
 
 

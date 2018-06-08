@@ -8,31 +8,126 @@ from cacahuate.models import Execution
 from .utils import make_auth, make_user, assert_near_date
 
 
-def test_all_inputs(client, config, mongo):
-    user = make_user('juan', 'Juan')
+def test_all_inputs(client, config, mongo, mocker):
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
 
-    objeto = [
-        {
-            'ref': 'auth-form',
-            'data': {
-                'name': 'Algo',
-                'datetime': datetime.now().isoformat()+'Z',
-                'secret': '123456',
-                'gender': 'female',
-                'interests': ['science', 'music'],
-                'elections': 'amlo',
-            },
-        },
-    ]
+    user = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'process_name': 'all-inputs',
-        'form_array': objeto
+        'form_array': [
+            {
+                'ref': 'auth-form',
+                'data': {
+                    'name': 'Algo',
+                    'datetime': "2018-06-06T18:15:43.539603Z",
+                    'secret': '123456',
+                    'gender': 'female',
+                    'interests': ['science', 'music'],
+                    'elections': 'amlo',
+                    'int': 15,
+                    'float': 3.14,
+                },
+            },
+        ],
     }))
 
     assert res.status_code == 201
+
+    args = pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.call_args[1]
+
+    json_message = {
+        'name': {
+            "name": "name",
+            "type": "text",
+            "value": "Algo",
+            'label': 'Nombre',
+            'value_caption': 'Algo',
+            'state': 'valid',
+            'hidden': False,
+        },
+
+        'datetime': {
+            "name": "datetime",
+            "type": "datetime",
+            "value": "2018-06-06T18:15:43.539603Z",
+            'label': 'Fecha de nacimiento',
+            'value_caption': 'Wed Jun  6 18:15:43 2018',
+            'state': 'valid',
+            'hidden': False,
+        },
+
+        'secret': {
+            "name": "secret",
+            "type": "password",
+            "value": "123456",
+            'label': 'Un secreto',
+            'value_caption': '******',
+            'state': 'valid',
+            'hidden': False,
+        },
+
+        'gender': {
+            "name": "gender",
+            "type": "radio",
+            "value": "female",
+            'label': 'Género?',
+            'value_caption': 'Femenino',
+            'state': 'valid',
+            'hidden': False,
+        },
+
+        'interests': {
+            "name": "interests",
+            "type": "checkbox",
+            "value": ['science', 'music'],
+            'label': 'Marque sus intereses',
+            'value_caption': 'Ciencia, Música',
+            'state': 'valid',
+            'hidden': False,
+        },
+
+        'elections': {
+            "name": "elections",
+            "type": "select",
+            "value": "amlo",
+            'label': 'Emita su voto',
+            'value_caption': 'Andrés Manuel López Obrador',
+            'state': 'valid',
+            'hidden': False,
+        },
+
+        'int': {
+            "name": "int",
+            "type": "int",
+            "value": 15,
+            'label': 'Un entero',
+            'value_caption': '15',
+            'state': 'valid',
+            'hidden': False,
+        },
+
+        'float': {
+            "name": "float",
+            "type": "float",
+            "value": 3.14,
+            'label': 'Un flotante',
+            'value_caption': '3.14',
+            'state': 'valid',
+            'hidden': False,
+        },
+    }
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    body = json.loads(args['body'])
+    assert body['input'][0]['inputs']['items'] == json_message
 
 
 def test_datetime_error(client, mocker, config):

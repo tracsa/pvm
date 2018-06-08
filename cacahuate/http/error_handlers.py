@@ -3,7 +3,7 @@ from flask import jsonify
 
 from cacahuate.http.wsgi import app
 from cacahuate.http.errors import JsonReportedException
-from cacahuate.errors import InputError
+from cacahuate.errors import InputError, AuthenticationError
 
 
 @app.errorhandler(JsonReportedException)
@@ -26,6 +26,13 @@ def handle_input_error(e):
     return jsonify({
         'errors': [e.to_json()],
     }), 400
+
+
+@app.errorhandler(AuthenticationError)
+def handler_auth_error(e):
+    return jsonify({
+        'errors': [e.json],
+    }), 401
 
 
 @app.errorhandler(404)
@@ -53,7 +60,8 @@ def handle_401(e):
     return jsonify({
         'errors': [{
             'detail': str(e),
-            'where': 'request.body',
+            'code': str(e),
+            'where': 'request.authorization',
         }],
     }), e.code
 

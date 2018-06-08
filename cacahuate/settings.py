@@ -89,3 +89,6 @@ LOGIN_PROVIDERS = {
 HIERARCHY_PROVIDERS = {
     # 'name': 'importable.path',
 }
+
+# will be sent to charpe for rendering of emails
+GUI_URL = 'http://localhost:8080'

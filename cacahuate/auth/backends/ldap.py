@@ -1,5 +1,4 @@
 from ldap3 import Server, Connection, ALL
-from ldap3.core.exceptions import LDAPBindError
 
 from cacahuate.auth.base import BaseAuthProvider
 from cacahuate.errors import AuthenticationError
@@ -10,9 +9,18 @@ from cacahuate.models import User
 class LdapAuthProvider(BaseAuthProvider):
 
     def authenticate(self, **credentials):
-        if 'username' not in credentials or \
-           'password' not in credentials:
-            raise AuthenticationError
+        if 'username' not in credentials:
+            raise AuthenticationError({
+                'description': 'username not sent',
+                'code': 'validation.required',
+                'where': 'request.body.username.required',
+            })
+        if 'password' not in credentials:
+            raise AuthenticationError({
+                'description': 'password not sent',
+                'code': 'validation.required',
+                'where': 'request.body.password.required',
+            })
 
         server_uri = app.config['LDAP_URI']
         use_ssl = app.config['LDAP_SSL']
@@ -32,15 +40,12 @@ class LdapAuthProvider(BaseAuthProvider):
             use_ssl=use_ssl,
         )
 
-        try:
-            conn = Connection(
-                server,
-                user='{}\\{}'.format(domain, username),
-                password=password,
-                auto_bind=True,
-            )
-        except LDAPBindError:
-            raise AuthenticationError
+        conn = Connection(
+            server,
+            user='{}\\{}'.format(domain, username),
+            password=password,
+            auto_bind=True,
+        )
 
         conn.search(
             base,

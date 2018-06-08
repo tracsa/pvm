@@ -1,10 +1,14 @@
+.PHONY: release pytest clean lint flake8 xmllint clear-objects
+
 release:
 	./setup.py test && ./setup.py sdist && ./setup.py bdist_wheel && twine upload dist/* && git push && git push --tags
+
+test: pytest lint flake8 xmllint
 
 clean:
 	rm -rf dist/
 
-test:
+pytest:
 	pytest -xvv
 
 lint:

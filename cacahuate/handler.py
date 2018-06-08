@@ -256,11 +256,6 @@ class Handler:
             if actor['state'] == 'invalid'
         ]
 
-        LOGGER.debug('Invalidated node {} found users: {}'.format(
-            node_state['id'],
-            ', '.join(u for u in users),
-        ))
-
         return list(map(
             lambda u: User.get_by('identifier', u),
             users
@@ -309,12 +304,22 @@ class Handler:
                     exchange=self.config['RABBIT_NOTIFY_EXCHANGE'],
                     routing_key=medium,
                     body=json.dumps({**{
-                        'pointer': pointer.to_json(include=['*', 'execution']),
+                        'data': {
+                            'pointer': pointer.to_json(
+                                include=['*', 'execution']
+                            ),
+                            'cacahuate_url': self.config['GUI_URL'],
+                        },
                     }, **params}),
                     properties=pika.BasicProperties(
                         delivery_mode=2,
                     ),
                 )
+
+        LOGGER.debug('Waking up n:{} found users: {}'.format(
+            node.id,
+            ', '.join(u.identifier for u in users),
+        ))
 
         return notified_users
 
@@ -328,7 +333,11 @@ class Handler:
         return self.mongo
 
     def get_contact_channels(self, user: User):
-        return [('email', {'email': user.get_x_info('email')})]
+        return [('email', {
+            'recipient': user.get_contact_info('email'),
+            'subject': '[procesos] Tarea asignada',
+            'template': 'assigned-task.html',
+        })]
 
     def create_pointer(self, node, execution: Execution):
         ''' Given a node, its process, and a specific execution of the former

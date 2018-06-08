@@ -95,8 +95,15 @@ def test_wakeup(config, mongo):
     assert args['exchange'] == config['RABBIT_NOTIFY_EXCHANGE']
     assert args['routing_key'] == 'email'
     assert json.loads(args['body']) == {
-        'email': 'hardcoded@mailinator.com',
-        'pointer': Pointer.get_all()[0].to_json(include=['*', 'execution']),
+        'recipient': 'hardcoded@mailinator.com',
+        'subject': '[procesos] Tarea asignada',
+        'template': 'assigned-task.html',
+        'data': {
+            'pointer': Pointer.get_all()[0].to_json(
+                include=['*', 'execution']
+            ),
+            'cacahuate_url': config['GUI_URL'],
+        },
     }
 
     # pointer collection updated
@@ -1952,14 +1959,20 @@ def test_handle_request_node(config, mocker, mongo):
                 'status_code': {
                     'name': 'status_code',
                     'state': 'valid',
-                    'type': 'text',
+                    'type': 'int',
                     'value': 200,
+                    'value_caption': '200',
+                    'hidden': False,
+                    'label': 'Status Code',
                 },
                 'raw_response': {
                     'name': 'raw_response',
                     'state': 'valid',
                     'type': 'text',
                     'value': 'request response',
+                    'value_caption': 'request response',
+                    'hidden': False,
+                    'label': 'Response',
                 },
             },
             'item_order': ['status_code', 'raw_response'],

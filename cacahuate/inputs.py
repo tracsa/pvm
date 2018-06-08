@@ -6,7 +6,7 @@ import ast
 
 from cacahuate.errors import RequiredInputError, InvalidDateError, \
     InvalidInputError, RequiredListError, RequiredStrError, \
-    MisconfiguredProvider
+    MisconfiguredProvider, RequiredIntError, RequiredFloatError
 from cacahuate.xml import get_text
 
 INPUTS = [
@@ -18,6 +18,8 @@ INPUTS = [
     'datetime',
     'date',
     'select',
+    'int',
+    'float',
 ]
 
 
@@ -76,7 +78,7 @@ class Input:
             'name': self.name,
             'label': self.label,
             'value': None,
-            'value_caption': None,
+            'value_caption': None,  # This is computed in node.py
             'hidden': self.hidden,
         }
 
@@ -86,7 +88,73 @@ class TextInput(Input):
 
 
 class PasswordInput(TextInput):
-    pass
+
+    def make_caption(self, value):
+        return '******'
+
+
+class IntInput(Input):
+
+    def get_default(self):
+        try:
+            return int(self.default)
+        except ValueError:
+            return 0
+
+    def validate(self, value, form_index):
+        if self.required and type(value) != int and not value:
+            raise RequiredInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
+
+        if type(value) != int and not value:
+            value = self.get_default()
+
+        try:
+            value = int(value)
+        except ValueError:
+            raise RequiredIntError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
+
+        return value
+
+    def make_caption(self, value):
+        return str(value)
+
+
+class FloatInput(Input):
+
+    def get_default(self):
+        try:
+            return float(self.default)
+        except ValueError:
+            return 0
+
+    def validate(self, value, form_index):
+        if self.required and type(value) != float and not value:
+            raise RequiredInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
+
+        if type(value) != float and not value:
+            value = self.get_default()
+
+        try:
+            value = float(value)
+        except ValueError:
+            raise RequiredFloatError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
+
+        return value
+
+    def make_caption(self, value):
+        return str(value)
 
 
 class FiniteOptionInput(Input):
@@ -109,15 +177,10 @@ class FiniteOptionInput(Input):
 
         return False
 
-    def to_json(self):
-        json_data = super().to_json()
-
-        json_data['options'] = list(map(
-            lambda o: o.to_json(),
-            self.options
-        ))
-
-        return json_data
+    def make_caption(self, value):
+        for opt in self.options:
+            if opt.value == value:
+                return opt.label
 
 
 class CheckboxInput(FiniteOptionInput):
@@ -146,6 +209,14 @@ class CheckboxInput(FiniteOptionInput):
                 )
 
         return value
+
+    def make_caption(self, value):
+        def find_cap(val):
+            for opt in self.options:
+                if opt.value == val:
+                    return opt.label
+
+        return ', '.join(find_cap(val) for val in value)
 
 
 class RadioInput(FiniteOptionInput):
@@ -254,6 +325,12 @@ class DatetimeInput(Input):
             return datetime.now().isoformat() + 'Z'
 
         return ''
+
+    def make_caption(self, value):
+        if not value:
+            return
+
+        return datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ').strftime('%c')
 
 
 class DateInput(DatetimeInput):

@@ -270,11 +270,6 @@ class UserAttachedNode(FullyContainedNode):
             **self.resolve_params(state)
         )
 
-        LOGGER.debug('Waking up n:{} found users: {}'.format(
-            self.id,
-            ', '.join(u.identifier for u in users),
-        ))
-
         return users
 
 
@@ -815,6 +810,11 @@ class Request(FullyContainedNode):
                 'status_code': 0,
                 'response': 'Jinja error prevented this request',
             }
+        except requests.exceptions.ConnectionError as e:
+            res_dict = {
+                'status_code': 0,
+                'response': str(e),
+            }
 
         return res_dict
 
@@ -831,14 +831,20 @@ class Request(FullyContainedNode):
                     'status_code': {
                         'name': 'status_code',
                         'state': 'valid',
-                        'type': 'text',
+                        'type': 'int',
                         'value': response['status_code'],
+                        'label': 'Status Code',
+                        'value_caption': str(response['status_code']),
+                        'hidden': False,
                     },
                     'raw_response': {
                         'name': 'raw_response',
                         'state': 'valid',
                         'type': 'text',
                         'value': response['response'],
+                        'label': 'Response',
+                        'value_caption': response['response'],
+                        'hidden': False,
                     },
                 },
                 'item_order': ['status_code', 'raw_response'],

@@ -11,8 +11,8 @@ from string import ascii_letters
 def signin(backend):
     try:
         user = backend.authenticate(**request.form.to_dict())
-    except AuthenticationError:
-        abort(401, 'Provided user credentials are invalid')
+    except AuthenticationError as e:
+        abort(401, str(e))
 
     # creates auth token
     if user.proxy.tokens.count() > 0:

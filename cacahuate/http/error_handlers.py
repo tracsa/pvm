@@ -53,7 +53,8 @@ def handle_401(e):
     return jsonify({
         'errors': [{
             'detail': str(e),
-            'where': 'request.body',
+            'code': str(e),
+            'where': 'request.authorization',
         }],
     }), e.code
 

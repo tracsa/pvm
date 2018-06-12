@@ -9,7 +9,7 @@ import requests
 
 from cacahuate.errors import ValidationErrors, RequiredInputError, \
     InvalidInputError, InputError, RequiredListError, RequiredDictError, \
-    EndOfProcess, InconsistentState
+    EndOfProcess, InconsistentState, MisconfiguredProvider
 from cacahuate.inputs import make_input
 from cacahuate.utils import user_import
 from cacahuate.xml import get_text, NODES, Xml

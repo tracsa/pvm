@@ -1,10 +1,13 @@
 from coralillo.errors import ModelNotFoundError
 from flask import jsonify
+import traceback
+import logging
 
 from cacahuate.http.wsgi import app
 from cacahuate.http.errors import JsonReportedException
 from cacahuate.errors import InputError, AuthenticationError
 
+LOGGER = logging.getLogger(__name__)
 
 @app.errorhandler(JsonReportedException)
 def json_formatted_handler(e):
@@ -68,6 +71,8 @@ def handle_401(e):
 
 @app.errorhandler(500)
 def handle_500(e):
+    LOGGER.error(traceback.format_exc())
+
     return jsonify({
         'errors': [{
             'detail': str(e),

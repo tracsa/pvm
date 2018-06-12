@@ -31,7 +31,7 @@ def handle_input_error(e):
 @app.errorhandler(AuthenticationError)
 def handler_auth_error(e):
     return jsonify({
-        'errors': [e.json],
+        'errors': [e.to_json()],
     }), 401
 
 

@@ -11,6 +11,29 @@ class AuthenticationError(Exception):
         super().__init__(json['detail'])
         self.json = json
 
+    def to_json(self):
+        return self.json
+
+
+class AuthFieldRequired(AuthenticationError):
+
+    def __init__(self, fieldname):
+        super().__init__({
+            'detail': '{} is required'.format(fieldname),
+            'where': 'request.body.{}'.format(fieldname),
+            'code': 'validation.required',
+        })
+
+
+class AuthFieldInvalid(AuthenticationError):
+
+    def __init__(self, fieldname):
+        super().__init__({
+            'detail': '{} is required'.format(fieldname),
+            'where': 'request.body.{}'.format(fieldname),
+            'code': 'validation.required',
+        })
+
 
 class ProcessNotFound(Exception):
     pass

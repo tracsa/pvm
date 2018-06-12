@@ -1,7 +1,7 @@
-from ldap3 import Server, Connection, ALL
+from ldap3 import Server, Connection, ALL, LDAPBindError
 
 from cacahuate.auth.base import BaseAuthProvider
-from cacahuate.errors import AuthenticationError
+from cacahuate.errors import AuthFieldRequired, AuthFieldInvalid
 from cacahuate.http.wsgi import app
 from cacahuate.models import User
 
@@ -10,17 +10,9 @@ class LdapAuthProvider(BaseAuthProvider):
 
     def authenticate(self, **credentials):
         if 'username' not in credentials:
-            raise AuthenticationError({
-                'description': 'username not sent',
-                'code': 'validation.required',
-                'where': 'request.body.username.required',
-            })
+            raise AuthFieldRequired('username')
         if 'password' not in credentials:
-            raise AuthenticationError({
-                'description': 'password not sent',
-                'code': 'validation.required',
-                'where': 'request.body.password.required',
-            })
+            raise AuthFieldRequired('password')
 
         server_uri = app.config['LDAP_URI']
         use_ssl = app.config['LDAP_SSL']
@@ -40,12 +32,15 @@ class LdapAuthProvider(BaseAuthProvider):
             use_ssl=use_ssl,
         )
 
-        conn = Connection(
-            server,
-            user='{}\\{}'.format(domain, username),
-            password=password,
-            auto_bind=True,
-        )
+        try:
+            conn = Connection(
+                server,
+                user='{}\\{}'.format(domain, username),
+                password=password,
+                auto_bind=True,
+            )
+        except LDAPBindError:
+            raise AuthFieldInvalid('password')
 
         conn.search(
             base,

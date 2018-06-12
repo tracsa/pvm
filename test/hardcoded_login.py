@@ -1,5 +1,5 @@
 from cacahuate.auth.base import BaseAuthProvider
-from cacahuate.errors import AuthenticationError
+from cacahuate.errors import AuthFieldRequired, AuthFieldInvalid
 from cacahuate.models import User
 
 
@@ -7,27 +7,15 @@ class HardcodedAuthProvider(BaseAuthProvider):
 
     def authenticate(self, **credentials):
         if 'username' not in credentials:
-            raise AuthenticationError({
-                'detail': 'username is required',
-                'code': 'validation.required',
-                'where': 'request.body.username',
-            })
+            raise AuthFieldRequired('username')
         if 'password' not in credentials:
-            raise AuthenticationError({
-                'detail': 'password is required',
-                'code': 'validation.required',
-                'where': 'request.body.password',
-            })
+            raise AuthFieldRequired('password')
 
         username = credentials['username']
         password = credentials['password']
 
         if username != 'juan' or password != '123456':
-            raise AuthenticationError({
-                'detail': 'Invalid username',
-                'code': 'validation.invalid',
-                'where': 'request.body.username',
-            })
+            raise AuthFieldInvalid('password')
 
         user = User.get_by('identifier', username)
 

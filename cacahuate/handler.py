@@ -294,12 +294,6 @@ class Handler:
         notified_users = []
 
         for user in users:
-            if not isinstance(user, User):
-                raise MisconfiguredProvider(
-                    'User returned by hierarchy provider is not User, '
-                    'but {}'.format(type(user))
-                )
-
             notified_users.append(user.to_json())
 
             user.proxy.tasks.add(pointer)

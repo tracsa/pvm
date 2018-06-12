@@ -12,5 +12,7 @@ def test_backref_backend(config):
 
     user = users[0]
 
-    assert isinstance(user, User)
-    assert user.identifier == 'juan'
+    assert user[0] == 'juan'
+    assert user[1] == {
+        'identifier': 'juan',
+    }

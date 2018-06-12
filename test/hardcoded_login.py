@@ -1,6 +1,5 @@
 from cacahuate.auth.base import BaseAuthProvider
 from cacahuate.errors import AuthFieldRequired, AuthFieldInvalid
-from cacahuate.models import User
 
 
 class HardcodedAuthProvider(BaseAuthProvider):
@@ -17,13 +16,8 @@ class HardcodedAuthProvider(BaseAuthProvider):
         if username != 'juan' or password != '123456':
             raise AuthFieldInvalid('password')
 
-        user = User.get_by('identifier', username)
-
-        if user is None:
-            user = User(
-                identifier=username,
-                fullname='Juan Peréz',
-                email='hardcoded@mailinator.com'
-            ).save()
-
-        return user
+        return username, {
+            'identifier': username,
+            'fullname': 'Juan Peréz',
+            'email': 'hardcoded@mailinator.com'
+        }

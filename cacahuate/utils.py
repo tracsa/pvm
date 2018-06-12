@@ -1,9 +1,11 @@
 from case_conversion import pascalcase
 from importlib import import_module
+from coralillo.errors import ModelNotFoundError
 import os
 import sys
 
 from cacahuate.errors import MisconfiguredProvider
+from cacahuate.models import User
 
 
 def user_import(module_key, class_sufix, import_maper, default_path):
@@ -33,3 +35,10 @@ def user_import(module_key, class_sufix, import_maper, default_path):
         ))
 
     return cls
+
+
+def get_or_create(identifier, data):
+    try:
+        return User.get_by_or_exception('identifier', identifier)
+    except ModelNotFoundError:
+        return User(**data).save()

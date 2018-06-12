@@ -17,6 +17,7 @@ from cacahuate.http.errors import BadRequest
 from cacahuate.jsontypes import Map
 from cacahuate.jsontypes import SortedMap
 from cacahuate.grammar import Condition, ConditionTransformer
+from cacahuate.utils import get_or_create
 
 LOGGER = logging.getLogger(__name__)
 
@@ -270,7 +271,22 @@ class UserAttachedNode(FullyContainedNode):
             **self.resolve_params(state)
         )
 
-        return users
+        def render_users(user):
+            try:
+                identifier, data = user
+                if type(identifier) != str:
+                    raise ValueError
+                if type(data) != dict:
+                    raise ValueError
+            except ValueError:
+                raise MisconfiguredProvider(
+                    'User returned by hierarchy provider is not in the form '
+                    '("identifier", {data}), got: {}'.format(user)
+                )
+
+            return get_or_create(identifier, data)
+
+        return list(map(render_users, users))
 
 
 class Action(UserAttachedNode):

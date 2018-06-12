@@ -1,15 +1,19 @@
 from flask import request, jsonify
+from random import choice
+from string import ascii_letters
+
 from cacahuate.http.errors import Unauthorized
 from cacahuate.http.wsgi import app
 from cacahuate.models import User, Token
-from random import choice
-from string import ascii_letters
+from cacahuate.utils import get_or_create
 
 
 @app.route('/v1/auth/signin/<AuthProvider:backend>', methods=['POST'])
 def signin(backend):
     # this raises AuthenticationError exception if failed
-    user = backend.authenticate(**request.form.to_dict())
+    identifier, data = backend.authenticate(**request.form.to_dict())
+
+    user = get_or_create(identifier, data)
 
     # creates auth token
     if user.proxy.tokens.count() > 0:

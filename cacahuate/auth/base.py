@@ -1,12 +1,12 @@
-from cacahuate.models import User
-
-
 class BaseAuthProvider:
 
     def __init__(self, config):
         self.config = config
 
-    def authenticate(self, **credentials) -> ['identifier', 'properties']:
+    def authenticate(self, **credentials):
+        ''' validates credentials and returns an user in the format:
+        ('identifier', {data}) or raises an exception like AuthFieldInvalid or
+        AuthFieldRequired'''
         raise NotImplementedError('Must be implemented in subclasses')
 
 
@@ -21,7 +21,7 @@ class BaseHierarchyProvider:
         the first node of a process '''
         raise NotImplementedError('Must be implemented in subclasses')
 
-    def find_users(self, **params) -> [User]:
-        ''' given the params, retrieves the user identifiers that match them
-        '''
+    def find_users(self, **params):
+        ''' given the params, retrieves the user identifiers that match them in
+        the format: ('identifier', {data}). '''
         raise NotImplementedError('Must be implemented in subclasses')

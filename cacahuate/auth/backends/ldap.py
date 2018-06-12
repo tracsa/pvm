@@ -3,7 +3,6 @@ from ldap3 import Server, Connection, ALL, LDAPBindError
 from cacahuate.auth.base import BaseAuthProvider
 from cacahuate.errors import AuthFieldRequired, AuthFieldInvalid
 from cacahuate.http.wsgi import app
-from cacahuate.models import User
 
 
 class LdapAuthProvider(BaseAuthProvider):
@@ -56,14 +55,8 @@ class LdapAuthProvider(BaseAuthProvider):
         surname = str(entry.sn)
         fullname = '{} {}'.format(name, surname)
 
-        # fetchs redis mirror user if there is None then creates one
-        user = User.get_by('identifier', identifier)
-
-        if user is None:
-            user = User(
-                identifier=identifier,
-                email=email,
-                fullname=fullname
-            ).save()
-
-        return user
+        return (identifier, {
+            'identifier': identifier,
+            'email': email,
+            'fullname': fullname,
+        })

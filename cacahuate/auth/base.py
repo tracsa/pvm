@@ -6,7 +6,7 @@ class BaseAuthProvider:
     def __init__(self, config):
         self.config = config
 
-    def authenticate(self, **credentials) -> User:
+    def authenticate(self, **credentials) -> ['identifier', 'properties']:
         raise NotImplementedError('Must be implemented in subclasses')
 
 

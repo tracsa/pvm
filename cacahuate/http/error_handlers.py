@@ -9,6 +9,7 @@ from cacahuate.errors import InputError, AuthenticationError
 
 LOGGER = logging.getLogger(__name__)
 
+
 @app.errorhandler(JsonReportedException)
 def json_formatted_handler(e):
     return jsonify(e.to_json()), e.status_code, e.headers

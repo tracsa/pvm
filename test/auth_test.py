@@ -69,3 +69,9 @@ def test_login_token(client):
     assert res.status_code == 200
     assert data['data']['_type'] == 'user'
     assert data['data']['identifier'] == user
+
+
+def test_ldap_backend():
+    from cacahuate.auth.backends.ldap import LdapAuthProvider  # noqa
+
+    assert LdapAuthProvider

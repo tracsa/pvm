@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 from coralillo import Engine
 from itacate import Config
+from lark.common import GrammarError, ParseError
+from lark.lexer import LexError
 from xml.dom import pulldom
 import logging
 import logging.config
 import os
+import re
 import sys
 import time
-from lark.common import GrammarError, ParseError
-from lark.lexer import LexError
 
 from cacahuate.indexes import create_indexes
 from cacahuate.loop import Loop
@@ -55,18 +56,24 @@ def xml_validate(filename=None):
     ids = []
     data_form = {}
     passed_nodes = []
+    variable_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
     def check_id(node):
-        if node.getAttribute('id'):
-            id_element = node.getAttribute('id')
+        id_element = node.getAttribute('id')
 
-            if id_element not in ids:
-                ids.append(id_element)
-            else:
-                sys.exit("{}: Duplicated id: '{}'".format(
-                    filename,
-                    id_element,
-                ))
+        if not id_element:
+            sys.exit('{}: All nodes must have an id'.format(filename))
+
+        if not variable_re.match(id_element):
+            sys.exit('{}: Id must be a valid variable name'.format(filename))
+
+        if id_element not in ids:
+            ids.append(id_element)
+        else:
+            sys.exit("{}: Duplicated id: '{}'".format(
+                filename,
+                id_element,
+            ))
 
     doc = pulldom.parse(filename)
 
@@ -158,11 +165,28 @@ def xml_validate(filename=None):
 
         for form in forms:
             form_id = form.getAttribute('id')
+
+            if not variable_re.match(form_id):
+                sys.exit(
+                    '{}: Form ids must be valid variable names'.format(
+                        filename
+                    )
+                )
+
             inputs = form.getElementsByTagName("input")
             array_input = {}
 
             for inpt in inputs:
-                array_input[inpt.getAttribute('name')] = \
+                inpt_name = inpt.getAttribute('name')
+
+                if not variable_re.match(inpt_name):
+                    sys.exit(
+                        '{}: Field names must be valid variable names'.format(
+                            filename
+                        )
+                    )
+
+                array_input[inpt_name] = \
                  inpt.getAttribute('default')
 
             data_form[form_id] = array_input

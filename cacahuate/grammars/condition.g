@@ -16,7 +16,7 @@ op: "==" -> op_eq
 ref: variable "." variable
 
 string : ESCAPED_STRING
-variable: /[a-zA-Z0-9_-]+/
+variable: /[a-zA-Z_][a-zA-Z0-9_]*/
 number: SIGNED_NUMBER
 
 %import common.ESCAPED_STRING

@@ -1,0 +1,25 @@
+<process-spec>
+  <process-info>
+    <author>categulairo</author>
+    <date>2018-06-13</date>
+    <name>Validate id in fieldname</name>
+    <public>false</public>
+    <description></description>
+  </process-info>
+  <process>
+    <action id="start_node">
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="the_mistery">
+          <input type="text" name="the_pass"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <if id="if">
+      <condition>a.foo-var == "log"</condition>
+      <block>
+      </block>
+    </if>
+  </process>
+</process-spec>

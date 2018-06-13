@@ -1,4 +1,5 @@
-from ldap3 import Server, Connection, ALL, LDAPBindError
+from ldap3 import Server, Connection, ALL
+from ldap3.core.exceptions import LDAPBindError
 
 from cacahuate.auth.base import BaseAuthProvider
 from cacahuate.errors import AuthFieldRequired, AuthFieldInvalid

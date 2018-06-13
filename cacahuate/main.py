@@ -173,9 +173,18 @@ def xml_validate(filename=None):
         for form in forms:
             form_id = form.getAttribute('id')
 
-            if not variable_re.match(form_id):
+            if form_id and not variable_re.match(form_id):
                 sys.exit(
                     '{}: Form ids must be valid variable names'.format(
+                        filename
+                    )
+                )
+
+            form_ref = form.getAttribute('ref')
+
+            if form_ref and not variable_re.match(form_ref):
+                sys.exit(
+                    '{}: Form refs must be valid variable names'.format(
                         filename
                     )
                 )

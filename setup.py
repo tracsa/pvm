@@ -51,6 +51,7 @@ setup(
         'console_scripts': [
             'cacahuated = cacahuate.main:main',
             'xml_validate = cacahuate.main:xml_validate',
+            'rng_path = cacahuate.main:rng_path',
         ],
     },
 

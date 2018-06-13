@@ -47,6 +47,13 @@ def main():
     loop.start()
 
 
+def rng_path():
+    print(os.path.abspath(os.path.join(
+        os.path.dirname(__file__),
+        'xml/process-spec.rng'
+    )))
+
+
 def xml_validate(filename=None):
     if not filename:
         if not len(sys.argv) == 2:

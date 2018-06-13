@@ -187,7 +187,7 @@ def xml_validate(filename=None):
                     )
 
                 array_input[inpt_name] = \
-                 inpt.getAttribute('default')
+                    inpt.getAttribute('default')
 
             data_form[form_id] = array_input
 

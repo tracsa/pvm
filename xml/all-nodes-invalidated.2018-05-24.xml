@@ -7,7 +7,7 @@
     <description>A process that fails</description>
   </process-info>
   <process>
-    <action id="start-node">
+    <action id="start_node">
       <auth-filter backend="anyone"/>
       <node-info>
         <name>Primer paso</name>
@@ -20,11 +20,11 @@
       </form-array>
     </action>
 
-    <request id="request-node" method="GET">
+    <request id="request_node" method="GET">
       <url>https://httpbin.org/get</url>
     </request>
 
-    <call id="call-node">
+    <call id="call_node">
       <procname>simple</procname>
       <data>
         <form ref="start_form">
@@ -33,14 +33,14 @@
       </data>
     </call>
 
-    <if id="if-node">
+    <if id="if_node">
       <condition>work.task > "2"</condition>
       <block>
-        <exit id="exit-node" />
+        <exit id="exit_node" />
       </block>
     </if>
 
-    <validation id="validation-node">
+    <validation id="validation_node">
       <dependencies>
         <dep>work.task</dep>
       </dependencies>
@@ -49,7 +49,7 @@
         <description>aprobar reserva</description>
       </node-info>
       <auth-filter backend="backref">
-        <param name="identifier" type="ref">user#start-node</param>
+        <param name="identifier" type="ref">user#start_node</param>
       </auth-filter>
     </validation>
   </process>

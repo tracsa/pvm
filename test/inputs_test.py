@@ -22,7 +22,7 @@ def test_all_inputs(client, config, mongo, mocker):
         'process_name': 'all-inputs',
         'form_array': [
             {
-                'ref': 'auth-form',
+                'ref': 'auth_form',
                 'data': {
                     'name': 'Algo',
                     'datetime': "2018-06-06T18:15:43.539603Z",
@@ -133,7 +133,7 @@ def test_all_inputs(client, config, mongo, mocker):
 def test_datetime_error(client, mocker, config):
     objeto = [
         {
-            'ref': 'auth-form',
+            'ref': 'auth_form',
             'data': {
                 'name': 'Algo',
                 'datetime': 'FECHA ERRONEA',
@@ -169,7 +169,7 @@ def test_visible_document_provider(client, mocker, config):
 
     assert res.status_code == 200
     assert document_process['form_array'][0] == {
-        'ref': 'doc-form',
+        'ref': 'doc_form',
         'inputs': [
             {
                 'label': 'Documento de identidad oficial',
@@ -185,7 +185,7 @@ def test_visible_document_provider(client, mocker, config):
 def test_allow_document(client, mocker, config):
     form_array = [
         {
-            'ref': 'doc-form',
+            'ref': 'doc_form',
             'data': {
                 'identity_card': {
                     'id': 102214720680704176,
@@ -211,7 +211,7 @@ def test_allow_document(client, mocker, config):
 def test_deny_invalid_document(client, mocker, config):
     form_array = [
         {
-            'ref': 'doc-form',
+            'ref': 'doc_form',
             'data': {
                 'identity_card': {
                     'this': 'is invalid'
@@ -232,7 +232,7 @@ def test_deny_invalid_document(client, mocker, config):
 
     form_array = [
         {
-            'ref': 'doc-form',
+            'ref': 'doc_form',
             'data': {
                 'identity_card': 'also invalid'
             },
@@ -252,7 +252,7 @@ def test_deny_invalid_document(client, mocker, config):
 def test_check_errors(client, mocker, config):
     objeto = [
         {
-            'ref': 'auth-form',
+            'ref': 'auth_form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -276,7 +276,7 @@ def test_check_errors(client, mocker, config):
 
     objeto = [
         {
-            'ref': 'auth-form',
+            'ref': 'auth_form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -301,7 +301,7 @@ def test_check_errors(client, mocker, config):
 def test_radio_errors(client, mocker, config):
     objeto = [
         {
-            'ref': 'auth-form',
+            'ref': 'auth_form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -325,7 +325,7 @@ def test_radio_errors(client, mocker, config):
 
     objeto = [
         {
-            'ref': 'auth-form',
+            'ref': 'auth_form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -350,7 +350,7 @@ def test_radio_errors(client, mocker, config):
 def test_select_errors(client, mocker, config):
     objeto = [
         {
-            'ref': 'auth-form',
+            'ref': 'auth_form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -374,7 +374,7 @@ def test_select_errors(client, mocker, config):
 
     objeto = [
         {
-            'ref': 'auth-form',
+            'ref': 'auth_form',
             'data': {
                 'name': 'Algo',
                 'datetime': datetime.now().strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -405,13 +405,13 @@ def test_validate_form_multiple(client):
         'process_name': 'form-multiple',
         'form_array': [
             {
-                'ref': 'single-form',
+                'ref': 'single_form',
                 'data': {
                     'name': 'jorge',
                 },
             },
             {
-                'ref': 'multiple-form',
+                'ref': 'multiple_form',
                 'data': {},
             },
         ],
@@ -438,19 +438,19 @@ def test_validate_form_multiple_error_position(client):
         'process_name': 'form-multiple',
         'form_array': [
             {
-                'ref': 'single-form',
+                'ref': 'single_form',
                 'data': {
                     'name': 'jorge',
                 },
             },
             {
-                'ref': 'multiple-form',
+                'ref': 'multiple_form',
                 'data': {
                     'phone': '12432',
                 },
             },
             {
-                'ref': 'multiple-form',
+                'ref': 'multiple_form',
                 'data': {},
             },
         ],
@@ -486,7 +486,7 @@ def test_default_inputs(client):
         'process_name': 'all-default-input',
         'form_array': [
             {
-                'ref': 'auth-form',
+                'ref': 'auth_form',
                 'data': {}
             },
         ],
@@ -526,7 +526,7 @@ def test_required_inputs_with_defaults(client):
         'process_name': 'not-default-required-input',
         'form_array': [
             {
-                'ref': 'auth-form',
+                'ref': 'auth_form',
                 'data': {}
             },
         ],
@@ -564,25 +564,25 @@ def test_start_with_correct_form_order(client, mocker, mongo, config):
         'process_name': 'form-multiple',
         'form_array': [
             {
-                'ref': 'single-form',
+                'ref': 'single_form',
                 'data': {
                     'name': 'og',
                 },
             },
             {
-                'ref': 'multiple-form',
+                'ref': 'multiple_form',
                 'data': {
                     'phone': '3312345678'
                 },
             },
             {
-                'ref': 'multiple-form',
+                'ref': 'multiple_form',
                 'data': {
                     'phone': '3312345678'
                 },
             },
             {
-                'ref': 'multiple-form',
+                'ref': 'multiple_form',
                 'data': {
                     'phone': '3312345678'
                 },
@@ -602,25 +602,25 @@ def test_start_with_incorrect_form_order(client, mocker, mongo, config):
         'process_name': 'form-multiple',
         'form_array': [
             {
-                'ref': 'multiple-form',
+                'ref': 'multiple_form',
                 'data': {
                     'phone': '3312345678'
                 },
             },
             {
-                'ref': 'multiple-form',
+                'ref': 'multiple_form',
                 'data': {
                     'phone': '3312345678'
                 },
             },
             {
-                'ref': 'multiple-form',
+                'ref': 'multiple_form',
                 'data': {
                     'phone': '3312345678'
                 },
             },
             {
-                'ref': 'single-form',
+                'ref': 'single_form',
                 'data': {
                     'name': 'og',
                 },

@@ -12,7 +12,7 @@ def test_resolve_params(config):
 
     state = {
         'values': {
-            'exit-form': {
+            'exit_form': {
                 'reason': 'nones',
             },
         },

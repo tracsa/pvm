@@ -7,7 +7,7 @@
     <description>Smallest Condition process</description>
   </process-info>
   <process>
-    <action id="start-node">
+    <action id="start_node">
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="mistery">
@@ -16,10 +16,10 @@
       </form-array>
     </action>
 
-    <if id="if-node">
+    <if id="if_node">
       <condition>mistery.password == "efe"</condition>
       <block>
-        <action id="start-node">
+        <action id="start_node">
           <auth-filter backend="hardcoded"></auth-filter>
           <form-array>
             <form id="mistery">

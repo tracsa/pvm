@@ -8,7 +8,7 @@
     <description>A process for testing of various decision mechanisms</description>
   </process-info>
   <process>
-    <action id="start-node" >
+    <action id="start_node" >
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="start_form">
@@ -22,16 +22,16 @@
       </form-array>
     </action>
 
-    <action id="mid-node" >
+    <action id="mid_node" >
       <auth-filter backend="hardcoded"></auth-filter>
       <form-array>
-        <form id="mid-form">
+        <form id="mid_form">
           <input type="text" name="data" required="required" />
         </form>
       </form-array>
     </action>
 
-    <action id="final-node">
+    <action id="final_node">
       <auth-filter backend="hardcoded"></auth-filter>
     </action>
   </process>

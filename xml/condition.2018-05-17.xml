@@ -7,7 +7,7 @@
     <description>Smallest Condition process</description>
   </process-info>
   <process>
-    <action id="start-node">
+    <action id="start_node">
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="mistery">
@@ -19,12 +19,12 @@
     <if id="condition1">
       <condition>mistery.password == "abrete sésamo"</condition>
       <block>
-        <action id="mistical-node">
+        <action id="mistical_node">
           <auth-filter backend="backref">
-            <param name="identifier" type="ref">user#start-node</param>
+            <param name="identifier" type="ref">user#start_node</param>
           </auth-filter>
           <form-array>
-            <form id="mistical-form">
+            <form id="mistical_form">
               <input type="text" name="answer" default="42" />
             </form>
           </form-array>
@@ -36,12 +36,12 @@
 
       <condition>mistery.password == "123456"</condition>
       <block>
-        <action id="123456-node">
+        <action id="123456_node">
           <auth-filter backend="backref">
-            <param name="identifier" type="ref">user#start-node</param>
+            <param name="identifier" type="ref">user#start_node</param>
           </auth-filter>
           <form-array>
-            <form id="123456-form">
+            <form id="123456_form">
               <input type="text" name="answer" default="oh boy, please don't" />
             </form>
           </form-array>
@@ -49,9 +49,9 @@
       </block>
     </if>
 
-    <action id="final-node">
+    <action id="final_node">
       <auth-filter backend="backref">
-        <param name="identifier" type="ref">user#start-node</param>
+        <param name="identifier" type="ref">user#start_node</param>
       </auth-filter>
     </action>
   </process>

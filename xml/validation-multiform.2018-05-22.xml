@@ -4,10 +4,10 @@
     <date>2018-05-22</date>
     <name>Validation multiform</name>
     <public>true</public>
-    <description>A process with a validation node and a multi-form</description>
+    <description>A process with a validation node and a multi_form</description>
   </process-info>
   <process>
-    <action id="start-node">
+    <action id="start_node">
       <auth-filter backend="anyone" />
       <node-info>
         <name>Primer paso</name>
@@ -23,9 +23,9 @@
       </form-array>
     </action>
 
-    <validation id="approval-node" >
+    <validation id="approval_node" >
       <auth-filter backend="backref">
-        <param name="identifier" type="ref">user#start-node</param>
+        <param name="identifier" type="ref">user#start_node</param>
       </auth-filter>
       <dependencies>
         <dep>set.A</dep>
@@ -39,9 +39,9 @@
       </node-info>
     </validation>
 
-    <action id="final-node">
+    <action id="final_node">
       <auth-filter backend="backref">
-        <param name="identifier" type="ref">user#start-node</param>
+        <param name="identifier" type="ref">user#start_node</param>
       </auth-filter>
       <form-array>
         <form id="confirm">

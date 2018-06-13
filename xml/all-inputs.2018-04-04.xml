@@ -8,10 +8,10 @@
     <public>true</public>
   </process-info>
   <process>
-    <action id="inputs-node" >
+    <action id="inputs_node" >
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
-        <form id="auth-form">
+        <form id="auth_form">
           <input
             type="text"
             label="Nombre"

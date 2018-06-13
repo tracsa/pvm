@@ -7,7 +7,7 @@
     <description>A process with a validation node</description>
   </process-info>
   <process>
-    <action id="start-node">
+    <action id="start_node">
       <auth-filter backend="anyone"></auth-filter>
       <node-info>
         <name>Primer paso</name>
@@ -20,7 +20,7 @@
       </form-array>
     </action>
 
-    <validation id="approval-node" >
+    <validation id="approval_node" >
       <dependencies>
         <dep>work.task</dep>
       </dependencies>
@@ -29,13 +29,13 @@
         <description>aprobar reserva</description>
       </node-info>
       <auth-filter backend="backref">
-        <param name="identifier" type="ref">user#start-node</param>
+        <param name="identifier" type="ref">user#start_node</param>
       </auth-filter>
     </validation>
 
-    <action id="final-node">
+    <action id="final_node">
       <auth-filter backend="backref">
-        <param name="identifier" type="ref">user#start-node</param>
+        <param name="identifier" type="ref">user#start_node</param>
       </auth-filter>
       <form-array>
         <form id="confirm">

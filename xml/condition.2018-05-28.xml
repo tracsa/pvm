@@ -7,7 +7,7 @@
     <description>Smallest Condition process</description>
   </process-info>
   <process>
-    <action id="start-node">
+    <action id="start_node">
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="mistery">
@@ -19,7 +19,7 @@
     <if id="condition1">
       <condition>mistery.answer == "abrete sesamo"</condition>
       <block>
-        <action id="mistery-node">
+        <action id="mistery_node">
           <auth-filter backend="hardcoded"></auth-filter>
           <form-array>
             <form id="mistery">
@@ -44,7 +44,7 @@
           </dependencies>
           <auth-filter backend="hardcoded"></auth-filter>
         </validation>
-        <action id="mistical-node">
+        <action id="mistical_node">
           <auth-filter backend="hardcoded">
             <param name="relation">gerente</param>
             <param name="inventario" type="ref">form#mistery.answer</param>
@@ -58,7 +58,7 @@
       </block>
     </if>
 
-    <action id="final-node">
+    <action id="final_node">
       <auth-filter backend="hardcoded"></auth-filter>
     </action>
   </process>

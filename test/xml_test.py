@@ -67,21 +67,21 @@ def test_find(config):
     start = next(xmliter)
 
     assert start.tagName == 'action'
-    assert start.getAttribute('id') == 'start-node'
+    assert start.getAttribute('id') == 'start_node'
 
     echo = xmliter.find(
-        lambda e: e.getAttribute('id') == 'mid-node'
+        lambda e: e.getAttribute('id') == 'mid_node'
     )
 
     assert echo.tagName == 'action'
-    assert echo.getAttribute('id') == 'mid-node'
+    assert echo.getAttribute('id') == 'mid_node'
 
     end = xmliter.find(
-        lambda e: e.getAttribute('id') == 'final-node'
+        lambda e: e.getAttribute('id') == 'final_node'
     )
 
     assert end.tagName == 'action'
-    assert end.getAttribute('id') == 'final-node'
+    assert end.getAttribute('id') == 'final_node'
 
 
 def test_form_to_dict(config):
@@ -94,7 +94,7 @@ def test_form_to_dict(config):
     ))
 
     assert dict_forms[0] == {
-        'ref': 'auth-form',
+        'ref': 'auth_form',
         'inputs': [
             {
                 "type": "text",

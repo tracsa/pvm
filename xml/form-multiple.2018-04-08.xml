@@ -7,13 +7,13 @@
     <public>true</public>
   </process-info>
   <process>
-    <action id="form-node" >
+    <action id="form_node" >
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
-        <form id="single-form">
+        <form id="single_form">
           <input type="text" name="name" required="required" />
         </form>
-        <form id="multiple-form" multiple="1-10">
+        <form id="multiple_form" multiple="1-10">
           <input type="text" name="phone" required="required" />
         </form>
       </form-array>

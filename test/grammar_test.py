@@ -3,34 +3,34 @@ from cacahuate.grammar import Condition, ConditionTransformer
 
 def test_condition():
     values = {
-        'first-form': {
+        'first_form': {
             'param1': 'value1',
         },
-        'second-form': {
+        'second_form': {
             'param1': 'value1',
             'param2': 'value2',
         },
     }
 
-    tree = Condition().parse('first-form.param1 == "value1"')
+    tree = Condition().parse('first_form.param1 == "value1"')
     assert ConditionTransformer(values).transform(tree) is True
 
-    tree = Condition().parse('second-form.param1 == "value1"')
+    tree = Condition().parse('second_form.param1 == "value1"')
     assert ConditionTransformer(values).transform(tree) is True
 
-    tree = Condition().parse('second-form.param2 == "value2"')
+    tree = Condition().parse('second_form.param2 == "value2"')
     assert ConditionTransformer(values).transform(tree) is True
 
-    tree = Condition().parse('first-form.param1 != "nonsense"')
+    tree = Condition().parse('first_form.param1 != "nonsense"')
     assert ConditionTransformer(values).transform(tree) is True
 
-    tree = Condition().parse('first-form.param1 == "nonsense"')
+    tree = Condition().parse('first_form.param1 == "nonsense"')
     assert ConditionTransformer(values).transform(tree) is False
 
-    tree = Condition().parse('first-form.param1 == second-form.param1')
+    tree = Condition().parse('first_form.param1 == second_form.param1')
     assert ConditionTransformer(values).transform(tree) is True
 
-    tree = Condition().parse('first-form.param1 == second-form.param2')
+    tree = Condition().parse('first_form.param1 == second_form.param2')
     assert ConditionTransformer(values).transform(tree) is False
 
 

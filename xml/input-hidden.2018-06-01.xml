@@ -8,7 +8,7 @@
     <description>Test of the hidden input</description>
   </process-info>
   <process>
-    <action id="start-node">
+    <action id="start_node">
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="start_form">

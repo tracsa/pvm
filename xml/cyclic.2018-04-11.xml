@@ -7,7 +7,7 @@
     <description>Smallest Cyclic process</description>
   </process-info>
   <process>
-    <action id="start-node" >
+    <action id="start_node" >
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="work">
@@ -16,7 +16,7 @@
       </form-array>
     </action>
 
-    <validation id="approval-node" >
+    <validation id="approval_node" >
       <auth-filter backend="hardcoded"></auth-filter>
       <dependencies>
         <dep>work.task</dep>

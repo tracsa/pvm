@@ -8,10 +8,10 @@
     <public>true</public>
   </process-info>
   <process>
-    <action id="document-node" >
+    <action id="document_node" >
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
-        <form id="doc-form">
+        <form id="doc_form">
           <input
             type="file"
             provider="doqer"

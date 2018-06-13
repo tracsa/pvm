@@ -10,7 +10,7 @@
     <action id="requester" >
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
-        <form id="exit-form">
+        <form id="exit_form">
           <input type="text" name="reason" required="required" />
         </form>
       </form-array>
@@ -20,11 +20,11 @@
       <auth-filter backend="hardcoded">
         <param name="identifier" type="ref">user#requester</param>
         <param name="relation">manager</param>
-        <param name="reason" type="ref">form#exit-form.reason</param>
+        <param name="reason" type="ref">form#exit_form.reason</param>
       </auth-filter>
 
       <form-array>
-        <form id="auth-form">
+        <form id="auth_form">
           <input type="radio" name="auth" required="required">
             <options>
               <option value="yes">Ándale mijito, ve</option>
@@ -41,7 +41,7 @@
       </auth-filter>
 
       <form-array>
-        <form id="confirm-form">
+        <form id="confirm_form">
           <input type="checkbox" name="confirmed" />
         </form>
       </form-array>

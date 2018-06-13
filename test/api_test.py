@@ -111,7 +111,7 @@ def test_continue_process_requires_living_pointer(client):
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': 'mid-node',
+        'node_id': 'mid_node',
     }))
 
     assert res.status_code == 400
@@ -130,7 +130,7 @@ def test_continue_process_requires_user_hierarchy(client):
     ''' a node whose auth has a filter must be completed by a person matching
     the filter '''
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid_node')
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ def test_continue_process_requires_user_hierarchy(client):
 
 def test_continue_process_requires_data(client):
     manager = make_user('juan_manager', 'Juanote')
-    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid_node')
     manager.proxy.tasks.set([ptr])
 
     res = client.post('/v1/pointer', headers={**{
@@ -163,7 +163,7 @@ def test_continue_process_requires_data(client):
     assert res.status_code == 400
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': "form count lower than expected for ref mid-form",
+            'detail': "form count lower than expected for ref mid_form",
             'where': 'request.body.form_array',
         }],
     }
@@ -176,7 +176,7 @@ def test_continue_process(client, mocker, config):
     )
 
     manager = make_user('juan_manager', 'Juanote')
-    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid_node')
     manager.proxy.tasks.set([ptr])
     exc = ptr.proxy.execution.get()
 
@@ -187,7 +187,7 @@ def test_continue_process(client, mocker, config):
         'node_id': ptr.node_id,
         'form_array': [
             {
-                'ref': 'mid-form',
+                'ref': 'mid_form',
                 'data': {
                     'data': 'yes',
                 },
@@ -213,7 +213,7 @@ def test_continue_process(client, mocker, config):
         'user_identifier': 'juan_manager',
         'input': [{
             '_type': 'form',
-            'ref': 'mid-form',
+            'ref': 'mid_form',
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
@@ -351,7 +351,7 @@ def test_start_process(client, mocker, config, mongo):
 
     ptr = exc.proxy.pointers.get()[0]
 
-    assert ptr.node_id == 'start-node'
+    assert ptr.node_id == 'start_node'
 
     pika.adapters.blocking_connection.BlockingChannel.\
         basic_publish.assert_called_once()
@@ -421,10 +421,10 @@ def test_start_process(client, mocker, config, mongo):
         'state': {
             '_type': ':sorted_map',
             'items': {
-                'start-node': {
+                'start_node': {
                     '_type': 'node',
                     'type': 'action',
-                    'id': 'start-node',
+                    'id': 'start_node',
                     'state': 'unfilled',
                     'comment': '',
                     'actors': {
@@ -436,10 +436,10 @@ def test_start_process(client, mocker, config, mongo):
                     'description': 'Resolver una tarea',
                 },
 
-                'mid-node': {
+                'mid_node': {
                     '_type': 'node',
                     'type': 'action',
-                    'id': 'mid-node',
+                    'id': 'mid_node',
                     'state': 'unfilled',
                     'comment': '',
                     'actors': {
@@ -451,10 +451,10 @@ def test_start_process(client, mocker, config, mongo):
                     'description': 'añadir información',
                 },
 
-                'final-node': {
+                'final_node': {
                     '_type': 'node',
                     'type': 'action',
-                    'id': 'final-node',
+                    'id': 'final_node',
                     'state': 'unfilled',
                     'comment': '',
                     'actors': {
@@ -467,9 +467,9 @@ def test_start_process(client, mocker, config, mongo):
                 },
             },
             'item_order': [
-                'start-node',
-                'mid-node',
-                'final-node',
+                'start_node',
+                'mid_node',
+                'final_node',
             ],
         },
         'values': {},
@@ -479,7 +479,7 @@ def test_start_process(client, mocker, config, mongo):
 
 def test_regression_requirements(client):
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
     exc = ptr.proxy.execution.get()
     user.proxy.tasks.add(ptr)
 
@@ -487,7 +487,7 @@ def test_regression_requirements(client):
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': 'approval-node',
+        'node_id': 'approval_node',
     }))
 
     assert res.status_code == 400
@@ -505,7 +505,7 @@ def test_regression_requirements(client):
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': 'approval-node',
+        'node_id': 'approval_node',
         'response': ''.join(choice(ascii_letters) for c in range(10)),
     }))
 
@@ -524,7 +524,7 @@ def test_regression_requirements(client):
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': 'approval-node',
+        'node_id': 'approval_node',
         'response': 'reject',
     }))
 
@@ -543,7 +543,7 @@ def test_regression_requirements(client):
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': 'approval-node',
+        'node_id': 'approval_node',
         'response': 'reject',
         'inputs': 'de',
     }))
@@ -563,7 +563,7 @@ def test_regression_requirements(client):
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': 'approval-node',
+        'node_id': 'approval_node',
         'response': 'reject',
         'inputs': ['de'],
     }))
@@ -583,7 +583,7 @@ def test_regression_requirements(client):
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': 'approval-node',
+        'node_id': 'approval_node',
         'response': 'reject',
         'inputs': [{
         }],
@@ -604,7 +604,7 @@ def test_regression_requirements(client):
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': 'approval-node',
+        'node_id': 'approval_node',
         'response': 'reject',
         'inputs': [{
             'ref': 'de',
@@ -631,7 +631,7 @@ def test_regression_approval(client, mocker, config):
     )
 
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
     exc = ptr.proxy.execution.get()
     user.proxy.tasks.add(ptr)
 
@@ -639,7 +639,7 @@ def test_regression_approval(client, mocker, config):
         'Content-Type': 'application/json',
     }, **make_auth(user)}, data=json.dumps({
         'execution_id': exc.id,
-        'node_id': 'approval-node',
+        'node_id': 'approval_node',
         'response': 'accept',
         'comment': 'I like the previous work',
     }))
@@ -661,7 +661,7 @@ def test_regression_approval(client, mocker, config):
         'user_identifier': 'juan',
         'input': [{
             '_type': 'form',
-            'ref': 'approval-node',
+            'ref': 'approval_node',
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
@@ -690,7 +690,7 @@ def test_regression_reject(client, mocker, config):
     )
 
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
     exc = ptr.proxy.execution.get()
     user.proxy.tasks.add(ptr)
 
@@ -702,7 +702,7 @@ def test_regression_reject(client, mocker, config):
         'response': 'reject',
         'comment': 'I dont like it',
         'inputs': [{
-            'ref': 'start-node.juan.0:work.task',
+            'ref': 'start_node.juan.0:work.task',
         }],
     }))
 
@@ -723,7 +723,7 @@ def test_regression_reject(client, mocker, config):
         'user_identifier': 'juan',
         'input': [{
             '_type': 'form',
-            'ref': 'approval-node',
+            'ref': 'approval_node',
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
@@ -736,7 +736,7 @@ def test_regression_reject(client, mocker, config):
                     },
                     'inputs': {
                         'value': [{
-                            'ref': 'start-node.juan.0:work.task',
+                            'ref': 'start_node.juan.0:work.task',
                         }],
                     },
                 },
@@ -827,7 +827,7 @@ def test_list_processes_multiple(client):
         'versions': ['2018-04-08'],
         'form_array': [
             {
-                'ref': 'single-form',
+                'ref': 'single_form',
                 'inputs': [
                     {
                         'type': 'text',
@@ -837,7 +837,7 @@ def test_list_processes_multiple(client):
                 ],
             },
             {
-                'ref': 'multiple-form',
+                'ref': 'multiple_form',
                 'multiple': '1-10',
                 'inputs': [
                     {
@@ -908,7 +908,7 @@ def test_logs_activity(mongo, client, config):
             'id': EXECUTION_ID,
         },
         'node': {
-            'id': 'mid-node',
+            'id': 'mid_node',
         },
     })
 
@@ -923,7 +923,7 @@ def test_logs_activity(mongo, client, config):
         },
     })
 
-    res = client.get('/v1/log/{}?node_id=mid-node'.format(EXECUTION_ID))
+    res = client.get('/v1/log/{}?node_id=mid_node'.format(EXECUTION_ID))
 
     ans = json.loads(res.data)
 
@@ -936,7 +936,7 @@ def test_logs_activity(mongo, client, config):
                 'id': EXECUTION_ID,
             },
             'node': {
-                'id': 'mid-node',
+                'id': 'mid_node',
             },
         }],
     }
@@ -957,7 +957,7 @@ def test_task_list_requires_auth(client):
 def test_task_list(client):
     juan = make_user('user', 'User')
 
-    pointer = make_pointer('simple.2018-02-19.xml', 'mid-node')
+    pointer = make_pointer('simple.2018-02-19.xml', 'mid_node')
     juan.proxy.tasks.set([pointer])
 
     res = client.get('/v1/task', headers=make_auth(juan))
@@ -982,7 +982,7 @@ def test_task_read_requires(client):
     assert res.status_code == 404
 
     # assigned task
-    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid_node')
     juan = make_user('juan', 'Juan')
 
     res = client.get('/v1/task/{}'.format(ptr.id), headers=make_auth(juan))
@@ -991,7 +991,7 @@ def test_task_read_requires(client):
 
 
 def test_task_read(client, config, mongo):
-    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid_node')
     juan = make_user('juan', 'Juan')
     juan.proxy.tasks.set([ptr])
     execution = ptr.proxy.execution.get()
@@ -1024,7 +1024,7 @@ def test_task_read(client, config, mongo):
             },
             'form_array': [
                 {
-                    'ref': 'mid-form',
+                    'ref': 'mid_form',
                     'inputs': [
                         {
                             'name': 'data',
@@ -1039,13 +1039,13 @@ def test_task_read(client, config, mongo):
 
 
 def test_task_validation(client, mongo, config):
-    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
     juan = make_user('juan', 'Juan')
     juan.proxy.tasks.add(ptr)
     execution = ptr.proxy.execution.get()
 
     state = Xml.load(config, 'validation.2018-05-09').get_state()
-    node = state['items']['start-node']
+    node = state['items']['start_node']
 
     node['state'] = 'valid'
     node['actors']['items']['juan'] = {
@@ -1098,7 +1098,7 @@ def test_task_validation(client, mongo, config):
         'fields': [
             {
                 '_type': 'field',
-                'ref': 'start-node.juan.0:work.task',
+                'ref': 'start_node.juan.0:work.task',
                 'label': 'task',
                 'value': 'Get some milk and eggs',
             }
@@ -1112,13 +1112,13 @@ def test_task_validation(client, mongo, config):
 
 
 def test_task_with_prev_work(client, config, mongo):
-    ptr = make_pointer('validation-multiform.2018-05-22.xml', 'start-node')
+    ptr = make_pointer('validation-multiform.2018-05-22.xml', 'start_node')
     juan = make_user('juan', 'Juan')
     juan.proxy.tasks.add(ptr)
     execution = ptr.proxy.execution.get()
 
     state = Xml.load(config, 'validation-multiform.2018-05-22').get_state()
-    node = state['items']['start-node']
+    node = state['items']['start_node']
 
     prev_work = [{
         '_type': 'form',
@@ -1255,7 +1255,7 @@ def test_log_has_node_info(client):
     body = json.loads(res.data)
     data = body['data'][0]
 
-    assert data['node']['id'] == 'start-node'
+    assert data['node']['id'] == 'start_node'
     assert data['node']['name'] == 'Primer paso'
     assert data['node']['description'] == 'Resolver una tarea'
 
@@ -1272,7 +1272,7 @@ def test_delete_process(config, client, mongo, mocker):
         'BlockingChannel.basic_publish'
     )
 
-    p_0 = make_pointer('simple.2018-02-19.xml', 'mid-node')
+    p_0 = make_pointer('simple.2018-02-19.xml', 'mid_node')
     execution = p_0.proxy.execution.get()
 
     juan = make_user('juan', 'Juan')
@@ -1305,7 +1305,7 @@ def test_status_notfound(client):
 
 
 def test_status(config, client, mongo):
-    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid_node')
     execution = ptr.proxy.execution.get()
 
     mongo[config['EXECUTION_COLLECTION']].insert_one({
@@ -1507,36 +1507,36 @@ def test_pagination_v1_log(client, mongo, config):
 
     mongo[config["POINTER_COLLECTION"]].insert_many([
         make_node_reg(
-            'simple.2018-02-19', 'mid-node',
+            'simple.2018-02-19', 'mid_node',
             make_date(),
             make_date(2018, 5, 20, 5, 5, 5)
         ),
         make_node_reg(
-            'simple.2018-02-19', 'mid-node',
+            'simple.2018-02-19', 'mid_node',
             make_date(),
             make_date(2018, 5, 21, 6, 6, 6)
             ),
         make_node_reg(
-            'simple.2018-02-19', 'mid-node',
+            'simple.2018-02-19', 'mid_node',
             make_date(),
             make_date(2018, 5, 22, 7, 7, 7)
         ),
         make_node_reg(
             'simple.2018-02-19',
-            'mid-node',
+            'mid_node',
             make_date(),
             make_date(2018, 5, 23, 8, 8, 8)
         ),
         make_node_reg(
             'simple.2018-02-19',
-            'mid-node',
+            'mid_node',
             make_date(),
             make_date(2018, 5, 24, 9, 9, 9)
         ),
     ])
 
     res = client.get(
-        '/v1/log/{}?node_id=mid-node&offset=2&limit=2'.format(EXECUTION_ID)
+        '/v1/log/{}?node_id=mid_node&offset=2&limit=2'.format(EXECUTION_ID)
     )
     assert json.loads(res.data)['data'][0]["finished_at"] == \
         '2018-05-22T07:07:07+00:00'

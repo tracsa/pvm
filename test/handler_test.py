@@ -14,7 +14,7 @@ from .utils import make_pointer, make_user, assert_near_date, random_string
 
 def test_recover_step(config):
     handler = Handler(config)
-    ptr = make_pointer('simple.2018-02-19.xml', 'mid-node')
+    ptr = make_pointer('simple.2018-02-19.xml', 'mid_node')
     manager = make_user('juan_manager', 'Manager')
 
     pointer, user, input = \
@@ -23,7 +23,7 @@ def test_recover_step(config):
             'pointer_id': ptr.id,
             'user_identifier': 'juan_manager',
             'input': [[
-                'auth-form',
+                'auth_form',
                 [{
                     'auth': 'yes',
                 }],
@@ -50,7 +50,7 @@ def test_create_pointer(config):
     pointer = handler.create_pointer(node, exc)
     execution = pointer.proxy.execution.get()
 
-    assert pointer.node_id == 'start-node'
+    assert pointer.node_id == 'start_node'
 
     assert execution.process_name == 'simple.2018-02-19.xml'
     assert execution.proxy.pointers.count() == 1
@@ -61,7 +61,7 @@ def test_wakeup(config, mongo):
     # setup stuff
     handler = Handler(config)
 
-    pointer = make_pointer('simple.2018-02-19.xml', 'start-node')
+    pointer = make_pointer('simple.2018-02-19.xml', 'start_node')
     execution = pointer.proxy.execution.get()
     juan = User(identifier='juan').save()
     manager = User(
@@ -73,7 +73,7 @@ def test_wakeup(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, 'simple').get_state(),
-        'actors': {'start-node': 'juan'},
+        'actors': {'start_node': 'juan'},
     })
 
     channel = MagicMock()
@@ -113,7 +113,7 @@ def test_wakeup(config, mongo):
     assert reg['finished_at'] is None
     assert reg['execution']['id'] == execution.id
     assert reg['node'] == {
-        'id': 'mid-node',
+        'id': 'mid_node',
         'type': 'action',
         'description': 'añadir información',
         'name': 'Segundo paso',
@@ -129,7 +129,7 @@ def test_wakeup(config, mongo):
     # execution collection updated
     reg = next(mongo[config["EXECUTION_COLLECTION"]].find())
 
-    assert reg['state']['items']['mid-node']['state'] == 'ongoing'
+    assert reg['state']['items']['mid_node']['state'] == 'ongoing'
 
     # tasks where asigned
     assert manager.proxy.tasks.count() == 1
@@ -137,7 +137,7 @@ def test_wakeup(config, mongo):
     task = manager.proxy.tasks.get()[0]
 
     assert isinstance(task, Pointer)
-    assert task.node_id == 'mid-node'
+    assert task.node_id == 'mid_node'
     assert task.proxy.execution.get().id == execution.id
 
 
@@ -146,7 +146,7 @@ def test_teardown(config, mongo):
     # test setup
     handler = Handler(config)
 
-    p_0 = make_pointer('simple.2018-02-19.xml', 'mid-node')
+    p_0 = make_pointer('simple.2018-02-19.xml', 'mid_node')
     execution = p_0.proxy.execution.get()
 
     User(identifier='juan').save()
@@ -160,7 +160,7 @@ def test_teardown(config, mongo):
     manager2.proxy.tasks.set([p_0])
 
     state = Xml.load(config, 'simple').get_state()
-    state['items']['start-node']['state'] = 'valid'
+    state['items']['start_node']['state'] = 'valid'
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
@@ -168,7 +168,7 @@ def test_teardown(config, mongo):
         'state': state,
         'values': {},
         'actors': {
-            'start-node': 'juan',
+            'start_node': 'juan',
         },
     })
 
@@ -190,14 +190,14 @@ def test_teardown(config, mongo):
 
     channel = MagicMock()
 
-    # will teardown mid-node
+    # will teardown mid_node
     handler.call({
         'command': 'step',
         'pointer_id': p_0.id,
         'user_identifier': manager.identifier,
         'input': [{
             '_type': 'form',
-            'ref': 'mid-form',
+            'ref': 'mid_form',
             'state': 'valid',
             'inputs': {
                 '_type': ':sorted_map',
@@ -217,7 +217,7 @@ def test_teardown(config, mongo):
     assert Pointer.get(p_0.id) is None
 
     assert Pointer.count() == 1
-    assert Pointer.get_all()[0].node_id == 'final-node'
+    assert Pointer.get_all()[0].node_id == 'final_node'
 
     # mongo has a registry
     reg = next(mongo[config["POINTER_COLLECTION"]].find())
@@ -239,7 +239,7 @@ def test_teardown(config, mongo):
                 },
                 'forms': [{
                     '_type': 'form',
-                    'ref': 'mid-form',
+                    'ref': 'mid_form',
                     'state': 'valid',
                     'inputs': {
                         '_type': ':sorted_map',
@@ -267,10 +267,10 @@ def test_teardown(config, mongo):
     assert reg['state'] == {
         '_type': ':sorted_map',
         'items': {
-            'start-node': {
+            'start_node': {
                 '_type': 'node',
                 'type': 'action',
-                'id': 'start-node',
+                'id': 'start_node',
                 'state': 'valid',
                 'comment': '',
                 'actors': {
@@ -282,10 +282,10 @@ def test_teardown(config, mongo):
                 'description': 'Resolver una tarea',
             },
 
-            'mid-node': {
+            'mid_node': {
                 '_type': 'node',
                 'type': 'action',
-                'id': 'mid-node',
+                'id': 'mid_node',
                 'state': 'valid',
                 'comment': '',
                 'actors': {
@@ -301,7 +301,7 @@ def test_teardown(config, mongo):
                             },
                             'forms': [{
                                 '_type': 'form',
-                                'ref': 'mid-form',
+                                'ref': 'mid_form',
                                 'state': 'valid',
                                 'inputs': {
                                     '_type': ':sorted_map',
@@ -323,10 +323,10 @@ def test_teardown(config, mongo):
                 'description': 'añadir información',
             },
 
-            'final-node': {
+            'final_node': {
                 '_type': 'node',
                 'type': 'action',
-                'id': 'final-node',
+                'id': 'final_node',
                 'state': 'ongoing',
                 'comment': '',
                 'actors': {
@@ -339,21 +339,21 @@ def test_teardown(config, mongo):
             },
         },
         'item_order': [
-            'start-node',
-            'mid-node',
-            'final-node',
+            'start_node',
+            'mid_node',
+            'final_node',
         ],
     }
 
     assert reg['values'] == {
-        'mid-form': {
+        'mid_form': {
             'data': 'yes',
         },
     }
 
     assert reg['actors'] == {
-        'start-node': 'juan',
-        'mid-node': 'manager',
+        'start_node': 'juan',
+        'mid_node': 'manager',
     }
 
     assert manager in execution.proxy.actors
@@ -417,7 +417,7 @@ def test_approve(config, mongo):
     # test setup
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
     channel = MagicMock()
 
     mongo[config["POINTER_COLLECTION"]].insert_one({
@@ -428,7 +428,7 @@ def test_approve(config, mongo):
             'id': ptr.proxy.execution.get().id,
         },
         'node': {
-            'id': 'approval-node',
+            'id': 'approval_node',
         },
         'actors': {
             '_type': ':map',
@@ -441,7 +441,7 @@ def test_approve(config, mongo):
         'id': ptr.proxy.execution.get().id,
         'state': Xml.load(config, 'validation.2018-05-09').get_state(),
         'actors': {
-            'start-node': 'juan',
+            'start_node': 'juan',
         },
     })
 
@@ -452,7 +452,7 @@ def test_approve(config, mongo):
         'user_identifier': user.identifier,
         'input': [{
             '_type': 'form',
-            'ref': 'approval-node',
+            'ref': 'approval_node',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
@@ -464,7 +464,7 @@ def test_approve(config, mongo):
                     },
                     'inputs': {
                         'value': [{
-                            'ref': 'start-node.juan.0.task',
+                            'ref': 'start_node.juan.0.task',
                         }],
                     },
                 },
@@ -477,14 +477,14 @@ def test_approve(config, mongo):
     assert Pointer.get(ptr.id) is None
 
     new_ptr = Pointer.get_all()[0]
-    assert new_ptr.node_id == 'final-node'
+    assert new_ptr.node_id == 'final_node'
 
     reg = next(mongo[config["POINTER_COLLECTION"]].find())
 
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
     assert_near_date(reg['finished_at'])
     assert reg['execution']['id'] == ptr.execution
-    assert reg['node']['id'] == 'approval-node'
+    assert reg['node']['id'] == 'approval_node'
     assert reg['actors'] == {
         '_type': ':map',
         'items': {
@@ -498,7 +498,7 @@ def test_approve(config, mongo):
                 },
                 'forms': [{
                     '_type': 'form',
-                    'ref': 'approval-node',
+                    'ref': 'approval_node',
                     'inputs': {
                         '_type': ':sorted_map',
                         'items': {
@@ -510,7 +510,7 @@ def test_approve(config, mongo):
                             },
                             'inputs': {
                                 'value': [{
-                                    'ref': 'start-node.juan.0.task',
+                                    'ref': 'start_node.juan.0.task',
                                 }],
                             },
                         },
@@ -527,7 +527,7 @@ def test_reject(config, mongo):
     # test setup
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('validation.2018-05-09.xml', 'approval-node')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
     channel = MagicMock()
     execution = ptr.proxy.execution.get()
 
@@ -539,7 +539,7 @@ def test_reject(config, mongo):
             'id': execution.id,
         },
         'node': {
-            'id': 'approval-node',
+            'id': 'approval_node',
         },
         'actors': {
             '_type': ':map',
@@ -549,8 +549,8 @@ def test_reject(config, mongo):
 
     state = Xml.load(config, 'validation.2018-05-09').get_state()
 
-    state['items']['start-node']['state'] = 'valid'
-    state['items']['start-node']['actors']['items']['juan'] = {
+    state['items']['start_node']['state'] = 'valid'
+    state['items']['start_node']['actors']['items']['juan'] = {
         '_type': 'actor',
         'state': 'valid',
         'user': {
@@ -589,7 +589,7 @@ def test_reject(config, mongo):
         'user_identifier': user.identifier,
         'input': [{
             '_type': 'form',
-            'ref': 'approval-node',
+            'ref': 'approval_node',
             'inputs': {
                 '_type': ':sorted_map',
                 'items': {
@@ -601,7 +601,7 @@ def test_reject(config, mongo):
                     },
                     'inputs': {
                         'value': [{
-                            'ref': 'start-node.juan.0:work.task',
+                            'ref': 'start_node.juan.0:work.task',
                         }],
                     },
                 },
@@ -614,7 +614,7 @@ def test_reject(config, mongo):
     assert Pointer.get(ptr.id) is None
 
     new_ptr = Pointer.get_all()[0]
-    assert new_ptr.node_id == 'start-node'
+    assert new_ptr.node_id == 'start_node'
 
     assert new_ptr in user.proxy.tasks
 
@@ -631,10 +631,10 @@ def test_reject(config, mongo):
         'state': {
             '_type': ':sorted_map',
             'items': {
-                'start-node': {
+                'start_node': {
                     '_type': 'node',
                     'type': 'action',
-                    'id': 'start-node',
+                    'id': 'start_node',
                     'state': 'ongoing',
                     'comment': 'I do not like it',
                     'actors': {
@@ -672,10 +672,10 @@ def test_reject(config, mongo):
                     'description': 'Resolver una tarea',
                 },
 
-                'approval-node': {
+                'approval_node': {
                     '_type': 'node',
                     'type': 'validation',
-                    'id': 'approval-node',
+                    'id': 'approval_node',
                     'state': 'invalid',
                     'comment': 'I do not like it',
                     'actors': {
@@ -685,7 +685,7 @@ def test_reject(config, mongo):
                                 '_type': 'actor',
                                 'forms': [{
                                     '_type': 'form',
-                                    'ref': 'approval-node',
+                                    'ref': 'approval_node',
                                     'state': 'invalid',
                                     'inputs': {
                                         '_type': ':sorted_map',
@@ -699,7 +699,7 @@ def test_reject(config, mongo):
                                             },
                                             'inputs': {
                                                 'value': [{
-                                                    'ref': 'start-node.'
+                                                    'ref': 'start_node.'
                                                            'juan.0:work.task',
                                                 }],
                                             },
@@ -725,10 +725,10 @@ def test_reject(config, mongo):
                     'description': 'aprobar reserva',
                 },
 
-                'final-node': {
+                'final_node': {
                     '_type': 'node',
                     'type': 'action',
-                    'id': 'final-node',
+                    'id': 'final_node',
                     'state': 'unfilled',
                     'comment': '',
                     'actors': {
@@ -740,17 +740,17 @@ def test_reject(config, mongo):
                     'description': '',
                 },
             },
-            'item_order': ['start-node', 'approval-node', 'final-node'],
+            'item_order': ['start_node', 'approval_node', 'final_node'],
         },
         'values': {
-            'approval-node': {
+            'approval_node': {
                 'comment': 'I do not like it',
                 'response': 'reject',
-                'inputs': [{'ref': 'start-node.juan.0:work.task'}],
+                'inputs': [{'ref': 'start_node.juan.0:work.task'}],
             },
         },
         'actors': {
-            'approval-node': 'juan',
+            'approval_node': 'juan',
         },
     }
 
@@ -760,7 +760,7 @@ def test_reject(config, mongo):
     assert reg['started_at'] == datetime(2018, 4, 1, 21, 45)
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == ptr.execution
-    assert reg['node']['id'] == 'approval-node'
+    assert reg['node']['id'] == 'approval_node'
     assert reg['actors'] == {
         '_type': ':map',
         'items': {
@@ -768,7 +768,7 @@ def test_reject(config, mongo):
                 '_type': 'actor',
                 'forms': [{
                     '_type': 'form',
-                    'ref': 'approval-node',
+                    'ref': 'approval_node',
                     'inputs': {
                         '_type': ':sorted_map',
                         'items': {
@@ -780,7 +780,7 @@ def test_reject(config, mongo):
                             },
                             'inputs': {
                                 'value': [{
-                                    'ref': 'start-node.juan.0:work.task',
+                                    'ref': 'start_node.juan.0:work.task',
                                 }],
                             },
                         },
@@ -1243,7 +1243,7 @@ def test_patch():
 def test_resistance_unexisteng_hierarchy_backend(config, mongo):
     handler = Handler(config)
 
-    ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
+    ptr = make_pointer('wrong.2018-04-11.xml', 'start_node')
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
 
@@ -1265,7 +1265,7 @@ def test_resistance_unexisteng_hierarchy_backend(config, mongo):
 def test_resistance_hierarchy_return(config, mongo):
     handler = Handler(config)
 
-    ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
+    ptr = make_pointer('wrong.2018-04-11.xml', 'start_node')
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
 
@@ -1287,7 +1287,7 @@ def test_resistance_hierarchy_return(config, mongo):
 def test_resistance_hierarchy_item(config, mongo):
     handler = Handler(config)
 
-    ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
+    ptr = make_pointer('wrong.2018-04-11.xml', 'start_node')
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
 
@@ -1309,7 +1309,7 @@ def test_resistance_hierarchy_item(config, mongo):
 def test_resistance_node_not_found(config, mongo):
     handler = Handler(config)
 
-    ptr = make_pointer('wrong.2018-04-11.xml', 'start-node')
+    ptr = make_pointer('wrong.2018-04-11.xml', 'start_node')
     exc = ptr.proxy.execution.get()
     user = make_user('juan', 'Juan')
 
@@ -1343,7 +1343,7 @@ def test_true_condition_node(config, mongo):
     # test setup
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
+    ptr = make_pointer('condition.2018-05-17.xml', 'start_node')
     channel = MagicMock()
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
@@ -1413,7 +1413,7 @@ def test_true_condition_node(config, mongo):
     # pointer moved
     assert Pointer.get(ptr.id) is None
     ptr = Pointer.get_all()[0]
-    assert ptr.node_id == 'mistical-node'
+    assert ptr.node_id == 'mistical_node'
 
 
 def test_false_condition_node(config, mongo):
@@ -1421,7 +1421,7 @@ def test_false_condition_node(config, mongo):
     # test setup
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('condition.2018-05-17.xml', 'start-node')
+    ptr = make_pointer('condition.2018-05-17.xml', 'start_node')
     channel = MagicMock()
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
@@ -1642,7 +1642,7 @@ def test_anidated_conditions(config, mongo):
 def test_exit_interaction(config, mongo):
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('exit.2018-05-03.xml', 'start-node')
+    ptr = make_pointer('exit.2018-05-03.xml', 'start_node')
     channel = MagicMock()
     execution = ptr.proxy.execution.get()
 
@@ -1698,10 +1698,10 @@ def test_exit_interaction(config, mongo):
         'state': {
             '_type': ':sorted_map',
             'items': {
-                'start-node': {
+                'start_node': {
                     '_type': 'node',
                     'type': 'action',
-                    'id': 'start-node',
+                    'id': 'start_node',
                     'state': 'valid',
                     'comment': '',
                     'actors': {
@@ -1750,10 +1750,10 @@ def test_exit_interaction(config, mongo):
                     'description': 'Exit exit',
                 },
 
-                'final-node': {
+                'final_node': {
                     '_type': 'node',
                     'type': 'action',
-                    'id': 'final-node',
+                    'id': 'final_node',
                     'state': 'unfilled',
                     'comment': '',
                     'actors': {
@@ -1765,12 +1765,12 @@ def test_exit_interaction(config, mongo):
                     'description': '',
                 },
             },
-            'item_order': ['start-node', 'exit', 'final-node'],
+            'item_order': ['start_node', 'exit', 'final_node'],
         },
         'status': 'finished',
         'actors': {
             'exit': '__system__',
-            'start-node': 'juan',
+            'start_node': 'juan',
         },
     }
 
@@ -1778,7 +1778,7 @@ def test_exit_interaction(config, mongo):
 def test_call_node(config, mongo):
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('call.2018-05-18.xml', 'start-node')
+    ptr = make_pointer('call.2018-05-18.xml', 'start_node')
     channel = MagicMock()
     execution = ptr.proxy.execution.get()
     value = random_string()
@@ -1813,7 +1813,7 @@ def test_call_node(config, mongo):
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'call'
 
-    new_ptr = next(Pointer.q().filter(node_id='start-node'))
+    new_ptr = next(Pointer.q().filter(node_id='start_node'))
 
     # aditional rabbit call for new process
     args = channel.basic_publish.call_args_list[0][1]
@@ -1862,7 +1862,7 @@ def test_call_node(config, mongo):
     reg = next(mongo[config["POINTER_COLLECTION"]].find({
         'id': new_ptr.id,
     }))
-    assert reg['node']['id'] == 'start-node'
+    assert reg['node']['id'] == 'start_node'
 
     # mongo execution registry created for new process
     reg = next(mongo[config["EXECUTION_COLLECTION"]].find({
@@ -1899,7 +1899,7 @@ def test_handle_request_node(config, mocker, mongo):
 
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('request.2018-05-18.xml', 'start-node')
+    ptr = make_pointer('request.2018-05-18.xml', 'start_node')
     channel = MagicMock()
     execution = ptr.proxy.execution.get()
     value = random_string()
@@ -1931,7 +1931,7 @@ def test_handle_request_node(config, mocker, mongo):
     }, channel)
     assert Pointer.get(ptr.id) is None
     ptr = execution.proxy.pointers.get()[0]
-    assert ptr.node_id == 'request-node'
+    assert ptr.node_id == 'request_node'
 
     # assert requests is called
     requests.request.assert_called_once()
@@ -1951,7 +1951,7 @@ def test_handle_request_node(config, mocker, mongo):
 
     expected_inputs = [{
         '_type': 'form',
-        'ref': 'request-node',
+        'ref': 'request_node',
         'state': 'valid',
         'inputs': {
             '_type': ':sorted_map',
@@ -1999,10 +1999,10 @@ def test_handle_request_node(config, mocker, mongo):
         'id': execution.id,
     })
 
-    assert state['state']['items']['request-node'] == {
+    assert state['state']['items']['request_node'] == {
         '_type': 'node',
         'type': 'request',
-        'id': 'request-node',
+        'id': 'request_node',
         'comment': '',
         'state': 'valid',
         'actors': {
@@ -2021,15 +2021,15 @@ def test_handle_request_node(config, mocker, mongo):
             },
         },
         'milestone': False,
-        'name': 'Request request-node',
-        'description': 'Request request-node',
+        'name': 'Request request_node',
+        'description': 'Request request_node',
     }
 
 
 def test_invalidate_all_nodes(config, mocker, mongo):
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('all-nodes-invalidated.2018-05-24.xml', 'start-node')
+    ptr = make_pointer('all-nodes-invalidated.2018-05-24.xml', 'start_node')
     execution = ptr.proxy.execution.get()
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
@@ -2059,25 +2059,25 @@ def test_invalidate_all_nodes(config, mocker, mongo):
         }],
     }, channel)
     ptr = execution.proxy.pointers.get()[0]
-    assert ptr.node_id == 'request-node'
+    assert ptr.node_id == 'request_node'
     args = channel.basic_publish.call_args[1]
 
     channel = MagicMock()
     handler.call(json.loads(args['body']), channel)
     ptr = execution.proxy.pointers.get()[0]
-    assert ptr.node_id == 'call-node'
+    assert ptr.node_id == 'call_node'
     args = channel.basic_publish.call_args[1]
 
     channel = MagicMock()
     handler.call(json.loads(args['body']), channel)
     ptr = execution.proxy.pointers.get()[0]
-    assert ptr.node_id == 'if-node'
+    assert ptr.node_id == 'if_node'
     args = channel.basic_publish.call_args[1]
 
     channel = MagicMock()
     handler.call(json.loads(args['body']), channel)
     ptr = execution.proxy.pointers.get()[0]
-    assert ptr.node_id == 'validation-node'
+    assert ptr.node_id == 'validation_node'
 
     channel = MagicMock()
     handler.call({
@@ -2085,7 +2085,7 @@ def test_invalidate_all_nodes(config, mocker, mongo):
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
         'input': [{
-            'ref': 'validation-node',
+            'ref': 'validation_node',
             '_type': 'form',
             'inputs': {
                 '_type': ':sorted_map',
@@ -2098,7 +2098,7 @@ def test_invalidate_all_nodes(config, mocker, mongo):
                     'inputs': {
                         'name': 'inputs',
                         'value': [{
-                            'ref': 'start-node.juan.0:work.task',
+                            'ref': 'start_node.juan.0:work.task',
                         }],
                     },
                     'comment': {
@@ -2110,5 +2110,5 @@ def test_invalidate_all_nodes(config, mocker, mongo):
         }],
     }, channel)
     ptr = execution.proxy.pointers.get()[0]
-    assert ptr.node_id == 'start-node'
+    assert ptr.node_id == 'start_node'
     args = channel.basic_publish.call_args[1]

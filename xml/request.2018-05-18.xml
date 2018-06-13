@@ -8,7 +8,7 @@
     <description>Makes an HTTP request</description>
   </process-info>
   <process>
-    <action id="start-node" >
+    <action id="start_node" >
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="request">
@@ -17,7 +17,7 @@
       </form-array>
     </action>
 
-    <request id="request-node" method="GET">
+    <request id="request_node" method="GET">
       <url>http://localhost/mirror?data={{ request.data }}</url>
       <headers>
         <header name="content-type">application/json</header>

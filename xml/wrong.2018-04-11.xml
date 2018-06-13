@@ -7,7 +7,7 @@
     <description>Created for testing the resistance of the handler against faulty hierarchy providers</description>
   </process-info>
   <process>
-    <action id="start-node" >
+    <action id="start_node" >
       <auth-filter backend="hardcoded"></auth-filter>
       <form-array>
         <form id="form">

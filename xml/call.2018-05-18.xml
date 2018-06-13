@@ -8,7 +8,7 @@
     <description>Este proceso llama a otro proceso y se muere</description>
   </process-info>
   <process>
-    <action id="start-node">
+    <action id="start_node">
       <auth-filter backend="anyone"></auth-filter>
       <node-info>
         <name>Primer paso</name>

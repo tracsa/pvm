@@ -9,9 +9,9 @@ from cacahuate.http.wsgi import app
 class LdapAuthProvider(BaseAuthProvider):
 
     def authenticate(self, **credentials):
-        if 'username' not in credentials:
+        if 'username' not in credentials or not credentials['username']:
             raise AuthFieldRequired('username')
-        if 'password' not in credentials:
+        if 'password' not in credentials or not credentials['password']:
             raise AuthFieldRequired('password')
 
         server_uri = app.config['LDAP_URI']

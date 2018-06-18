@@ -29,9 +29,9 @@ class AuthFieldInvalid(AuthenticationError):
 
     def __init__(self, fieldname):
         super().__init__({
-            'detail': '{} is required'.format(fieldname),
+            'detail': '{} is invalid'.format(fieldname),
             'where': 'request.body.{}'.format(fieldname),
-            'code': 'validation.required',
+            'code': 'validation.invalid',
         })
 
 

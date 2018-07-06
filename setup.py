@@ -60,7 +60,7 @@ setup(
     install_requires=[
         'Flask-Coralillo',
         'Flask-Cors',
-        'Flask_PyMongo',
+        'Flask_PyMongo < 2.0',
         'case_conversion',
         'coralillo >= 0.8',
         'flask >= 1.0',

@@ -1508,29 +1508,27 @@ def test_pagination_v1_log(client, mongo, config):
     mongo[config["POINTER_COLLECTION"]].insert_many([
         make_node_reg(
             'simple.2018-02-19', 'mid_node',
-            make_date(),
+            make_date(2018, 5, 20, 5, 5, 5),
             make_date(2018, 5, 20, 5, 5, 5)
         ),
         make_node_reg(
             'simple.2018-02-19', 'mid_node',
-            make_date(),
+            make_date(2018, 5, 21, 6, 6, 6),
             make_date(2018, 5, 21, 6, 6, 6)
             ),
         make_node_reg(
             'simple.2018-02-19', 'mid_node',
-            make_date(),
+            make_date(2018, 5, 22, 7, 7, 7),
             make_date(2018, 5, 22, 7, 7, 7)
         ),
         make_node_reg(
-            'simple.2018-02-19',
-            'mid_node',
-            make_date(),
+            'simple.2018-02-19', 'mid_node',
+            make_date(2018, 5, 23, 8, 8, 8),
             make_date(2018, 5, 23, 8, 8, 8)
         ),
         make_node_reg(
-            'simple.2018-02-19',
-            'mid_node',
-            make_date(),
+            'simple.2018-02-19', 'mid_node',
+            make_date(2018, 5, 24, 9, 9, 9),
             make_date(2018, 5, 24, 9, 9, 9)
         ),
     ])
@@ -1541,7 +1539,7 @@ def test_pagination_v1_log(client, mongo, config):
     assert json.loads(res.data)['data'][0]["finished_at"] == \
         '2018-05-22T07:07:07+00:00'
     assert json.loads(res.data)['data'][1]["finished_at"] == \
-        '2018-05-23T08:08:08+00:00'
+        '2018-05-21T06:06:06+00:00'
     assert len(json.loads(res.data)['data']) == 2
 
 

@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 from coralillo import Engine
 from itacate import Config
-from lark.common import GrammarError, ParseError
-from lark.lexer import LexError
+from lark.exceptions import GrammarError, ParseError, LexError
 from xml.dom import pulldom
 import logging
 import logging.config

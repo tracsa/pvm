@@ -65,7 +65,7 @@ setup(
         'coralillo >= 0.8',
         'flask >= 1.0',
         'itacate',
-        'lark-parser',
+        'lark-parser >= 0.6',
         'ldap3',
         'pika',
         'simplejson',

@@ -1,4 +1,4 @@
-.env/
+.env
 __pycache__/
 .pytest_cache/
 settings_*.py
@@ -8,3 +8,4 @@ settings_*.py
 build/
 dist/
 *.json
+Pipfile.lock

@@ -14,7 +14,7 @@ class Condition:
         with open(filename) as grammar_file:
             self.parser = Lark(
                 grammar_file.read(),
-                start='expression',
+                start='or_test',
                 parser='lalr',
             )
 
@@ -52,10 +52,13 @@ class ConditionTransformer(Transformer):
         return operator.ge
 
     def op_or(self, _):
-        return lambda x, y: x or y
+        return operator.or_
 
     def op_and(self, _):
-        return lambda x, y: x and y
+        return operator.and_
+
+    def op_not(self, _):
+        return operator.not_
 
     def variable(self, tokens):
         # just copy the token as string
@@ -76,10 +79,26 @@ class ConditionTransformer(Transformer):
     def number(self, tokens):
         return float(tokens[0])
 
-    def expression(self, tokens):
+    def test_aux(self, tokens):
         if len(tokens) == 1:
             return tokens[0]
-
+        if len(tokens) == 2:
+            op, right = tokens
+            return op(right)
         left, op, right = tokens
-
         return op(left, right)
+
+    def or_test(self, tokens):
+        return self.test_aux(tokens)
+
+    def and_test(self, tokens):
+        return self.test_aux(tokens)
+
+    def not_test(self, tokens):
+        return self.test_aux(tokens)
+
+    def comparison(self, tokens):
+        return self.test_aux(tokens)
+
+    def atom_expr(self, tokens):
+        return self.test_aux(tokens)

@@ -77,6 +77,25 @@ def test_logic_operators():
     tree = Condition().parse('set.A && set.B')
     assert ConditionTransformer(values).transform(tree) is False
 
+def test_no():
+    values = {
+        'set': {
+            'A' : True,
+            'B' : False,
+        },
+    }
+
+    tree = Condition().parse('!set.A')
+    assert ConditionTransformer(values).transform(tree) is False
+
+    tree = Condition().parse('set.A && !set.B')
+    assert ConditionTransformer(values).transform(tree) is True
+
+    tree = Condition().parse('!set.A && set.B')
+    assert ConditionTransformer(values).transform(tree) is False
+
+    tree = Condition().parse('!!0>-2')
+    assert ConditionTransformer(values).transform(tree) is True
 
 def test_everything():
     values = {
@@ -85,5 +104,5 @@ def test_everything():
         },
     }
 
-    tree = Condition().parse('3>0 || (form.input == "0" && ("da" != "de"))')
+    tree = Condition().parse('!!3<0 || !(form.input == "0" && ("da" != "de"))')
     assert ConditionTransformer(values).transform(tree) is True

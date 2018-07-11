@@ -14,19 +14,15 @@ the process.
 Develop
 -------
 
-You will need the **redis** and **mongo** databases, and **rabbitmq** for this to work.
+You will need the **redis** and **mongo** databases, and **rabbitmq** for this
+to work. I recommend using `pipenv` or `virtualenv` in your python projetcs ;)
 
-.. code-block:: bash
+* clone the repo
+* install the requirements listed in `requirements.txt`
+* run the tests (`pytest`)
 
-   git clone https://github.com/tracsa/cacahuate.git && cd cacahuate
-   virtualenv -p /usr/bin/python3 .env
-   echo "export CACAHUATE_SETTINGS=$(pwd)/settings_develop.py" >> .env/bin/activate
-   echo "export FLASK_APP=cacahuate.http.wsgi" >> .env/bin/activate
-   echo "export FLASK_DEBUG=1" >> .env/bin/activate
-   touch settings_develop.py
-   source .env/bin/activate
-   pip install -r requirements.txt
-   pytest
+you can control your cacahuate installation using this three environment
+variables: `CACAHUATE_SETTINGS`, `FLASK_APP`, `FLASK_DEBUG`.
 
 Installation
 ------------

@@ -16,45 +16,59 @@
       </form-array>
     </action>
 
-  <if id="condition01">
-    <condition>secret01.password == "Stuff"</condition>
-    <block>
-      <action id="action01">
-        <auth-filter backend="anyone"></auth-filter>
-      </action>
-    </block>
-  </if>
-  <elif id="elif01">
-    <condition>secret01.password != "Stuff"</condition>
-    <block>
-      <action id="action02">
-        <auth-filter backend="anyone"></auth-filter>
-      </action>
-    </block>
-  </elif>
-  <else id="else01">
-    <block>
-      <action id="action03">
-        <auth-filter backend="anyone"></auth-filter>
-      </action>
-    </block>
-  </else>
+    <if id="condition01">
+      <condition>secret01.password == "hocus pocus"</condition>
+      <block>
+        <action id="action01">
+          <auth-filter backend="anyone">
+            <param name="identifier" type="ref">user#start_node</param>
+          </auth-filter>
+          <form-array>
+            <form id="secret02">
+              <input type="text" name="answer" default="pass"></input>
+            </form>
+          </form-array>
+        </action>
+      </block>
+    </if>
+    <elif id="elif01">
+      <condition>secret01.password != "Stuff"</condition>
+      <block>
+        <action id="action02">
+          <auth-filter backend="anyone">
+            <param name="identifier" type="ref">user#start_node</param>
+          </auth-filter>
+          <form-array>
+            <form id="secret03">
+              <input type="text" name="answer" default="aleatoria"/>
+            </form>
+          </form-array>
+        </action>
+      </block>
+    </elif>
+    <else id="else01">
+      <block>
+        <action id="action03">
+          <auth-filter backend="anyone"></auth-filter>
+        </action>
+      </block>
+    </else>
 
-  <if id="condition02">
-    <condition>secret01.password == "1234"</condition>
-    <block>
-      <action id="action03">
-        <auth-filter backend="anyone"></auth-filter>
-      </action>
-    </block>
-  </if>
-  <else id="else02">
-    <block>
-      <action id="action04">
-        <auth-filter backend="anyone"></auth-filter>
-      </action>
-    </block>
-  </else>
+    <if id="condition02">
+      <condition>secret01.password == "1234"</condition>
+      <block>
+        <action id="action03">
+          <auth-filter backend="anyone"></auth-filter>
+        </action>
+      </block>
+    </if>
+    <else id="else02">
+      <block>
+        <action id="action04">
+          <auth-filter backend="anyone"></auth-filter>
+        </action>
+      </block>
+    </else>
 
   </process>
 </process-spec>

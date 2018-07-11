@@ -1639,6 +1639,84 @@ def test_anidated_conditions(config, mongo):
     assert ptr.node_id == 'g'
 
 
+def test_else_statement(config, mongo):
+    ''' else will be executed if preceding condition is false'''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('else.2018-07-10.xml', 'start_node')
+    channel = MagicMock()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, 'condition').get_state(),
+    })
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [
+            {
+                'ref': 'secret01',
+                '_type': 'form',
+                'inputs': {
+                    '_type': ':sorted_map',
+                    'item_order': [
+                        'password',
+                    ],
+                    'items': {
+                        'password': {
+                            'type': 'text',
+                            'value': 'hocus pocus',
+                        },
+                    },
+                },
+            },
+        ],
+    }, channel)
+
+    # pointer moved
+    assert Pointer.get(ptr.id) is None
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'condition01'
+
+    # rabbit called
+    channel.basic_publish.assert_called_once()
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'input': [{
+            '_type': 'form',
+            'ref': 'condition01',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'condition': {
+                        'name': 'condition',
+                        'state': 'valid',
+                        'type': 'bool',
+                        'value': True,
+                    },
+                },
+                'item_order': ['condition'],
+            },
+        }],
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
+
+    handler.call(rabbit_call, channel)
+
+    # pointer moved
+    assert Pointer.get(ptr.id) is None
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'mistical_node'
+
+
 def test_exit_interaction(config, mongo):
     handler = Handler(config)
     user = make_user('juan', 'Juan')

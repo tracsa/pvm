@@ -90,4 +90,5 @@ def test_xml_validation_undefined_form_by_scope():
         xml_validate('xml/condition_undefined_form_by_scope.2018-07-10.xml')
 
     assert str(cm.value) == \
-        'xml/condition_undefined_form_by_scope.2018-07-10.xml: some error'
+        'xml/condition_undefined_form_by_scope.2018-07-10.xml: variable used' \
+        ' in if is not defined \'task.answer\''

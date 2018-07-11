@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from collections import ChainMap
 from coralillo import Engine
 from itacate import Config
 from lark.exceptions import GrammarError, ParseError, LexError
@@ -60,7 +61,7 @@ def xml_validate(filename=None):
         filename = sys.argv[1]
 
     ids = []
-    data_form = {}
+    data_form = ChainMap()
     passed_nodes = []
     variable_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
@@ -84,6 +85,12 @@ def xml_validate(filename=None):
     doc = pulldom.parse(filename)
 
     for event, node in doc:
+        if event == pulldom.START_ELEMENT and node.tagName == 'block':
+            data_form.maps.append(dict())
+
+        if event == pulldom.END_ELEMENT and node.tagName == 'block':
+            data_form.maps.pop()
+
         if event != pulldom.START_ELEMENT:
             continue
 
@@ -221,7 +228,7 @@ def xml_validate(filename=None):
                 array_input[inpt_name] = \
                     inpt.getAttribute('default')
 
-            data_form[form_id] = array_input
+            data_form.maps[-1][form_id] = array_input
 
         # add this node to the list of revised nodes
         has_auth_filter = len(node.getElementsByTagName('auth-filter')) > 0

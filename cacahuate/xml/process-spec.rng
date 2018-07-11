@@ -135,6 +135,27 @@
       </element>
       <ref name="block" />
     </element>
+    <optional>
+      <ref name="else"/>
+    </optional>
+  </define>
+
+  <define name="else">
+    <zeroOrMore>
+      <element name="elif">
+        <attribute name="id"><text/></attribute>
+        <element name="condition">
+          <text />
+        </element>
+        <ref name="block"/>
+      </element>
+    </zeroOrMore>
+    <optional>
+      <element name="else">
+        <attribute name="id"><text/></attribute>
+        <ref name="block"/>
+      </element>
+    </optional>
   </define>
 
   <define name="call">

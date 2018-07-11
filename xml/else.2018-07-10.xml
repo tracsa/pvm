@@ -1,0 +1,60 @@
+<process-spec>
+  <process-info>
+    <author>KYSXD</author>
+    <date>2018-07-10</date>
+    <name>yet to name</name>
+    <public>false</public>
+    <description>Else condition test</description>
+  </process-info>
+  <process>
+    <action id="start_node">
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="secret01">
+          <input type="text" name="password" default="stuff"></input>
+        </form>
+      </form-array>
+    </action>
+
+  <if id="condition01">
+    <condition>secret01.password == "Stuff"</condition>
+    <block>
+      <action id="action01">
+        <auth-filter backend="anyone"></auth-filter>
+      </action>
+    </block>
+  </if>
+  <elif id="elif01">
+    <condition>secret01.password != "Stuff"</condition>
+    <block>
+      <action id="action02">
+        <auth-filter backend="anyone"></auth-filter>
+      </action>
+    </block>
+  </elif>
+  <else id="else01">
+    <block>
+      <action id="action03">
+        <auth-filter backend="anyone"></auth-filter>
+      </action>
+    </block>
+  </else>
+
+  <if id="condition02">
+    <condition>secret01.password == "1234"</condition>
+    <block>
+      <action id="action03">
+        <auth-filter backend="anyone"></auth-filter>
+      </action>
+    </block>
+  </if>
+  <else id="else02">
+    <block>
+      <action id="action04">
+        <auth-filter backend="anyone"></auth-filter>
+      </action>
+    </block>
+  </else>
+
+  </process>
+</process-spec>

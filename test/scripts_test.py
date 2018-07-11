@@ -74,3 +74,20 @@ def test_xml_validation_no_hyphen_in_grammar():
     assert str(cm.value) == \
         'xml/validate_hyphen_if_condition.2018-06-13.xml: Lex error in ' \
         'condition'
+
+
+def test_xml_validation_undefined_form():
+    with pytest.raises(SystemExit) as cm:
+        xml_validate('xml/condition_undefined_form.2018-07-10.xml')
+
+    assert str(cm.value) == \
+        'xml/condition_undefined_form.2018-07-10.xml: variable used in if is' \
+        ' not defined \'misterio.password\''
+
+
+def test_xml_validation_undefined_form_by_scope():
+    with pytest.raises(SystemExit) as cm:
+        xml_validate('xml/condition_undefined_form_by_scope.2018-07-10.xml')
+
+    assert str(cm.value) == \
+        'xml/condition_undefined_form_by_scope.2018-07-10.xml: some error'

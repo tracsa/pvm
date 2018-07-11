@@ -1,0 +1,33 @@
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-07-10</date>
+    <name>undefined variable</name>
+    <public>false</public>
+    <description>a process that tries to use an undefined variable</description>
+  </process-info>
+  <process>
+    <action id="start_node">
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="mistery">
+          <input type="text" name="password"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <if id="if_node">
+      <condition>misterio.password == "efe"</condition>
+      <block>
+        <action id="other_node">
+          <auth-filter backend="hardcoded"></auth-filter>
+          <form-array>
+            <form id="mistery">
+              <input type="text" name="answer" default="abrete sesamo" />
+            </form>
+          </form-array>
+        </action>
+      </block>
+    </if>
+  </process>
+</process-spec>

@@ -91,7 +91,7 @@ def xml_validate(filename=None):
             doc.expandNode(node)
 
             try:
-                Condition().parse(get_text(node))
+                tree = Condition().parse(get_text(node))
             except GrammarError:
                 sys.exit('{}: Grammar error in condition'.format(filename))
             except ParseError:
@@ -105,6 +105,23 @@ def xml_validate(filename=None):
                         str(e),
                     )
                 )
+
+            # validate variables used in condition
+            for tree in tree.find_data('ref'):
+                reference_form, field_form = list(map(
+                    lambda x: x.children[0][:],
+                    tree.children
+                ))
+
+                try:
+                    data_form[reference_form][field_form]
+                except KeyError:
+                    sys.exit(
+                        "{}: variable used in if is not defined '{}'".format(
+                            filename,
+                            reference_form+'.'+field_form,
+                        )
+                    )
 
             continue
 

@@ -798,7 +798,7 @@ class Elif(Node):
         elsenode = xmliter.find(lambda e: e.getAttribute('id') == self.id)
 
         if not state['values'][self.id]['condition']:
-           xmliter.expand(elsenode)
+            xmliter.expand(elsenode)
 
         return make_node(next(xmliter), xmliter)
 
@@ -832,7 +832,6 @@ class Elif(Node):
 
         def dependent_refs(self, invalidated, node_state):
             return set()
-
 
 
 class Request(FullyContainedNode):

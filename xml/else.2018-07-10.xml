@@ -17,10 +17,10 @@
     </action>
 
     <if id="condition01">
-      <condition>secret01.password == "hocus pocus"</condition>
+      <condition>secret01.password == "incorrect!"</condition>
       <block>
         <action id="action01">
-          <auth-filter backend="anyone">
+          <auth-filter backend="backref">
             <param name="identifier" type="ref">user#start_node</param>
           </auth-filter>
           <form-array>
@@ -32,10 +32,10 @@
       </block>
     </if>
     <elif id="elif01">
-      <condition>secret01.password != "Stuff"</condition>
+      <condition>secret01.password != "hocus pocus"</condition>
       <block>
         <action id="action02">
-          <auth-filter backend="anyone">
+          <auth-filter backend="backref">
             <param name="identifier" type="ref">user#start_node</param>
           </auth-filter>
           <form-array>

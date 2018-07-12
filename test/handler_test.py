@@ -1650,7 +1650,7 @@ def test_else_statement(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'condition').get_state(),
+        'state': Xml.load(config, 'else').get_state(),
     })
 
     handler.call({
@@ -1699,7 +1699,7 @@ def test_else_statement(config, mongo):
                         'name': 'condition',
                         'state': 'valid',
                         'type': 'bool',
-                        'value': True,
+                        'value': False,
                     },
                 },
                 'item_order': ['condition'],
@@ -1714,7 +1714,7 @@ def test_else_statement(config, mongo):
     # pointer moved
     assert Pointer.get(ptr.id) is None
     ptr = Pointer.get_all()[0]
-    assert ptr.node_id == 'mistical_node'
+    assert ptr.node_id == 'elif01'
 
 
 def test_exit_interaction(config, mongo):

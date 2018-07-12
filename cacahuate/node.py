@@ -779,6 +779,62 @@ class If(Node):
         return set()
 
 
+class Elif(Node):
+
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
+
+        self.name = 'Else' + self.id
+        self.description = 'Else' + self.id
+
+        self.condition = xmliter.get_next_condition()
+
+    def is_async(self):
+        return False
+
+    def next(self, xml, state, mongo, config):
+        xmliter = iter(xml)
+
+        elsenode = xmliter.find(lambda e: e.getAttribute('id') == self.id)
+
+        if not state['values'][self.id]['condition']:
+           xmliter.expand(elsenode)
+
+        return make_node(next(xmliter), xmliter)
+
+    def work(self, config, state, channel, mongo):
+        tree = Condition().parse(self.condition)
+
+        try:
+            value = ConditionTransformer(state['values']).transform(tree)
+        except ValueError as e:
+            raise InconsistentState('Could not evaluate condition: {}'.format(
+                str(e)
+            ))
+
+        return [{
+            '_type': 'form',
+            'ref': self.id,
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'condition': {
+                        'name': 'condition',
+                        'state': 'valid',
+                        'type': 'bool',
+                        'value': value,
+                    },
+                },
+                'item_order': ['condition'],
+            },
+        }]
+
+        def dependent_refs(self, invalidated, node_state):
+            return set()
+
+
+
 class Request(FullyContainedNode):
     ''' A node that makes a TCP Request '''
 

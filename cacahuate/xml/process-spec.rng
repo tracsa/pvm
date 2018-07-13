@@ -135,9 +135,7 @@
       </element>
       <ref name="block" />
     </element>
-    <optional>
-      <ref name="else"/>
-    </optional>
+    <ref name="else"/>
   </define>
 
   <define name="else">

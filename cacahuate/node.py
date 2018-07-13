@@ -107,7 +107,7 @@ class Node:
         xmliter = iter(xml)
         xmliter.find(lambda e: e.getAttribute('id') == self.id)
 
-        return make_node(next(xmliter), xmliter)
+        return make_node(xmliter.next_skipping_elifelse(), xmliter)
 
     def dependent_refs(self, invalidated, node_state):
         raise NotImplementedError('Must be implemented in subclass')
@@ -723,13 +723,13 @@ class Exit(FullyContainedNode):
         return []
 
 
-class If(Node):
+class Conditional(Node):
 
-    def __init__(self, element, xmliter):
+    def __init__(self, element, xmliter, type='IF'):
         super().__init__(element, xmliter)
 
-        self.name = 'If ' + self.id
-        self.description = 'If ' + self.id
+        self.name = type + ' ' + self.id
+        self.description = type + ' ' + self.id
 
         self.condition = xmliter.get_next_condition()
 
@@ -745,7 +745,7 @@ class If(Node):
         if not state['values'][self.id]['condition']:
             xmliter.expand(ifnode)
 
-        return make_node(next(xmliter), xmliter)
+        return make_node(xmliter.next_skipping_elifelse(), xmliter)
 
     def work(self, config, state, channel, mongo):
         tree = Condition().parse(self.condition)
@@ -779,39 +779,30 @@ class If(Node):
         return set()
 
 
-class Elif(Node):
+class If(Conditional):
 
     def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+        super().__init__(element, xmliter, 'IF')
 
-        self.name = 'Else' + self.id
-        self.description = 'Else' + self.id
 
-        self.condition = xmliter.get_next_condition()
+class Elif(Conditional):
+
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter, 'ELIF')
+
+
+class Else(Node):
 
     def is_async(self):
         return False
 
-    def next(self, xml, state, mongo, config):
-        xmliter = iter(xml)
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
 
-        elsenode = xmliter.find(lambda e: e.getAttribute('id') == self.id)
-
-        if not state['values'][self.id]['condition']:
-            xmliter.expand(elsenode)
-
-        return make_node(next(xmliter), xmliter)
+        self.name = 'ELSE ' + self.id
+        self.description = 'ELSE ' + self.id
 
     def work(self, config, state, channel, mongo):
-        tree = Condition().parse(self.condition)
-
-        try:
-            value = ConditionTransformer(state['values']).transform(tree)
-        except ValueError as e:
-            raise InconsistentState('Could not evaluate condition: {}'.format(
-                str(e)
-            ))
-
         return [{
             '_type': 'form',
             'ref': self.id,
@@ -823,15 +814,12 @@ class Elif(Node):
                         'name': 'condition',
                         'state': 'valid',
                         'type': 'bool',
-                        'value': value,
+                        'value': True,
                     },
                 },
                 'item_order': ['condition'],
             },
         }]
-
-        def dependent_refs(self, invalidated, node_state):
-            return set()
 
 
 class Request(FullyContainedNode):

@@ -2003,6 +2003,41 @@ def test_ifelifelse_else(config, mongo):
     # pointer moved
     assert Pointer.get(ptr.id) is None
     ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'else01'
+
+    # rabbit called
+    channel.basic_publish.assert_called_once()
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'input': [{
+            '_type': 'form',
+            'ref': 'else01',
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'condition': {
+                        'name': 'condition',
+                        'state': 'valid',
+                        'type': 'bool',
+                        'value': True,
+                    },
+                },
+                'item_order': ['condition'],
+            },
+        }],
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
+
+    channel = MagicMock()
+    handler.call(rabbit_call, channel)
+
+    # pointer moved
+    assert Pointer.get(ptr.id) is None
+    ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'action03'
 
     # rabbit called to notify the user

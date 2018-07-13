@@ -84,6 +84,15 @@ def test_find(config):
     assert end.getAttribute('id') == 'final_node'
 
 
+def test_skip_else(config):
+    xmliter = iter(Xml.load(config, 'else'))
+
+    node = xmliter.find(lambda x: x.getAttribute('id') == 'action01')
+
+    with pytest.raises(StopIteration):
+        xmliter.next_skipping_elifelse()
+
+
 def test_form_to_dict(config):
     xml = parse(os.path.join(config['XML_PATH'], 'all-inputs.2018-04-04.xml'))
     forms = xml.getElementsByTagName('form')

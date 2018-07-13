@@ -87,7 +87,7 @@ def test_find(config):
 def test_skip_else(config):
     xmliter = iter(Xml.load(config, 'else'))
 
-    node = xmliter.find(lambda x: x.getAttribute('id') == 'action01')
+    xmliter.find(lambda x: x.getAttribute('id') == 'action01')
 
     with pytest.raises(StopIteration):
         xmliter.next_skipping_elifelse()

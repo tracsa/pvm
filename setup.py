@@ -8,13 +8,16 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst')) as f:
     long_description = f.read()
 
+with open(path.join(here, 'version.txt')) as f:
+    version = f.read().strip()
+
 setup(
     name='cacahuate',
     description='The process virtual machine',
     long_description=long_description,
     url='https://github.com/tracsa/cacahuate',
 
-    version='2.5.0',
+    version=version,
 
     author='Abraham Toriz Cruz',
     author_email='categulario@gmail.com',

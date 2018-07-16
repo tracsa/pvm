@@ -40,12 +40,16 @@
     </validation>
 
     <action id="final_node">
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed description</description>
+      </node-info>
       <auth-filter backend="backref">
         <param name="identifier" type="ref">user#start_node</param>
       </auth-filter>
       <form-array>
         <form id="confirm">
-          <input type="text" name="exit"></input>
+          <input type="text" name="exit" label="Label-less form"></input>
         </form>
       </form-array>
     </action>

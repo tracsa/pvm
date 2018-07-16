@@ -8,15 +8,23 @@
   </process-info>
   <process>
     <action id="start">
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="start">
-          <input type="text" name="info" />
+          <input type="text" name="info" label="Label-less form"/>
         </form>
       </form-array>
     </action>
 
     <validation id="end" milestone="true">
+      <node-info>
+        <name>Unnamed validation</name>
+        <description>Undescribed validation</description>
+      </node-info>
       <auth-filter backend="backref">
         <param name="identifier" type="ref">user#start</param>
       </auth-filter>

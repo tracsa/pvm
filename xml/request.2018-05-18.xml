@@ -9,10 +9,14 @@
   </process-info>
   <process>
     <action id="start_node" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="request">
-          <input type="text" name="data"></input>
+          <input type="text" name="data" label="Label-less form"></input>
         </form>
       </form-array>
     </action>

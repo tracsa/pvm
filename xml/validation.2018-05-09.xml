@@ -8,11 +8,11 @@
   </process-info>
   <process>
     <action id="start_node">
-      <auth-filter backend="anyone"></auth-filter>
       <node-info>
         <name>Primer paso</name>
         <description>Resolver una tarea</description>
       </node-info>
+      <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="work">
           <input label="task" type="text" name="task"></input>
@@ -34,12 +34,16 @@
     </validation>
 
     <action id="final_node">
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="backref">
         <param name="identifier" type="ref">user#start_node</param>
       </auth-filter>
       <form-array>
         <form id="confirm">
-          <input type="text" name="exit"></input>
+          <input type="text" name="exit" label="Label-less form"></input>
         </form>
       </form-array>
     </action>

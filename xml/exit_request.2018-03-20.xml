@@ -8,15 +8,23 @@
   </process-info>
   <process>
     <action id="requester" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="exit_form">
-          <input type="text" name="reason" required="required" />
+          <input type="text" name="reason" required="required" label="Label-less form"/>
         </form>
       </form-array>
     </action>
 
     <action id="manager" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="hardcoded">
         <param name="identifier" type="ref">user#requester</param>
         <param name="relation">manager</param>
@@ -25,7 +33,7 @@
 
       <form-array>
         <form id="auth_form">
-          <input type="radio" name="auth" required="required">
+          <input type="radio" name="auth" required="required" label="Label-less form">
             <options>
               <option value="yes">Ándale mijito, ve</option>
               <option value="no">Ni madres</option>
@@ -36,18 +44,26 @@
     </action>
 
     <action id="security" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="hardcoded">
         <param name="ou">Security</param>
       </auth-filter>
 
       <form-array>
         <form id="confirm_form">
-          <input type="checkbox" name="confirmed" />
+          <input type="checkbox" name="confirmed" label="Label-less form"/>
         </form>
       </form-array>
     </action>
 
     <action id="noauth" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="hardcoded">
         <param name="ou">Security</param>
       </auth-filter>

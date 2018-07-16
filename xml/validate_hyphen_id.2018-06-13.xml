@@ -8,10 +8,14 @@
   </process-info>
   <process>
     <action id="start-node">
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="mistery">
-          <input type="text" name="password"></input>
+          <input type="text" name="password" label="Label-less form"></input>
         </form>
       </form-array>
     </action>

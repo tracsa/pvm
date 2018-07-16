@@ -8,10 +8,14 @@
   </process-info>
   <process>
     <action id="start_node" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="hardcoded"></auth-filter>
       <form-array>
         <form id="form">
-          <input type="select" name="choice">
+          <input type="select" name="choice" label="Label-less form">
             <options>
               <option value="noprov">Unexistent provider</option>
             </options>
@@ -21,16 +25,28 @@
     </action>
 
     <action id="noprov" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="noexist" />
     </action>
 
     <action id="return" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="badreturn">
         <param name="opt">return</param>
       </auth-filter>
     </action>
 
     <action id="item" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="badreturn">
         <param name="opt">item</param>
       </auth-filter>

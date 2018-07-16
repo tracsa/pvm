@@ -8,13 +8,17 @@
   </process-info>
   <process>
     <action id="form_node" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="single_form">
-          <input type="text" name="name" required="required" />
+          <input type="text" name="name" required="required" label="Label-less form"/>
         </form>
         <form id="multiple_form" multiple="1-10">
-          <input type="text" name="phone" required="required" />
+          <input type="text" name="phone" required="required" label="Label-less form"/>
         </form>
       </form-array>
     </action>

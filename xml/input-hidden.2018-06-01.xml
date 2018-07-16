@@ -16,7 +16,7 @@
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="start_form">
-          <input type="text" name="data" hidden="true" label="Label-less form"/>
+          <input type="text" name="data" hidden="true" label="data"/>
         </form>
       </form-array>
     </action>

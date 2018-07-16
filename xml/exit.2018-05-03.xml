@@ -10,8 +10,8 @@
   <process>
     <action id="start_node">
       <node-info>
-        <name>Unnamed action</name>
-        <description>Undescribed action</description>
+        <name></name>
+        <description></description>
       </node-info>
       <auth-filter backend="anyone"></auth-filter>
     </action>
@@ -20,8 +20,8 @@
 
     <action id="final_node">
       <node-info>
-        <name>Unnamed action</name>
-        <description>Undescribed action</description>
+        <name></name>
+        <description></description>
       </node-info>
       <auth-filter backend="hardcoded"></auth-filter>
     </action>

@@ -35,8 +35,8 @@
 
     <action id="final_node">
       <node-info>
-        <name>Unnamed action</name>
-        <description>Undescribed action</description>
+        <name></name>
+        <description></description>
       </node-info>
       <auth-filter backend="backref">
         <param name="identifier" type="ref">user#start_node</param>

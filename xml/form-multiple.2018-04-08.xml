@@ -15,10 +15,10 @@
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="single_form">
-          <input type="text" name="name" required="required" label="Label-less form"/>
+          <input type="text" name="name" required="required" label="Single Form"/>
         </form>
         <form id="multiple_form" multiple="1-10">
-          <input type="text" name="phone" required="required" label="Label-less form"/>
+          <input type="text" name="phone" required="required" label="Multi Form"/>
         </form>
       </form-array>
     </action>

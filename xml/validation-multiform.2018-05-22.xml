@@ -49,7 +49,7 @@
       </auth-filter>
       <form-array>
         <form id="confirm">
-          <input type="text" name="exit" label="Label-less form"></input>
+          <input type="text" name="exit" label="Confirmation"></input>
         </form>
       </form-array>
     </action>

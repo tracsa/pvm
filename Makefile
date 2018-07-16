@@ -9,13 +9,13 @@ clean:
 	rm -rf dist/
 
 pytest:
-	pipenv run pytest -xvv
+	pytest -xvv
 
 lint:
-	pipenv run pycodestyle --statistics --show-source --exclude=.env,.tox,dist,docs,build,*.egg .
+	pycodestyle --statistics --show-source --exclude=.env,.tox,dist,docs,build,*.egg .
 
 flake8:
-	pipenv run flake8 --exclude=.env,.tox,dist,docs,build,*.egg .
+	flake8 --exclude=.env,.tox,dist,docs,build,*.egg .
 
 xmllint:
 	xml/validate.sh

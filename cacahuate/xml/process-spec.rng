@@ -65,9 +65,7 @@
         <attribute name="milestone"><text/></attribute>
       </optional>
       <interleave>
-        <optional>
-          <ref name="node-info" />
-        </optional>
+        <ref name="node-info" />
         <ref name="auth-filter" />
         <optional>
           <ref name="form-array" />
@@ -83,9 +81,7 @@
         <attribute name="milestone"><text/></attribute>
       </optional>
       <interleave>
-        <optional>
-          <ref name="node-info" />
-        </optional>
+        <ref name="node-info" />
         <ref name="auth-filter" />
         <ref name="dependencies"/>
       </interleave>
@@ -207,9 +203,7 @@
           <value>true</value>
         </attribute>
       </optional>
-      <optional>
-        <attribute name="label"><text/></attribute>
-      </optional>
+      <attribute name="label"><text/></attribute>
       <optional>
         <attribute name="placeholder"><text/></attribute>
       </optional>

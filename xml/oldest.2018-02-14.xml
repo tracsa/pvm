@@ -8,6 +8,10 @@
     </process-info>
     <process>
       <action id="start">
+        <node-info>
+          <name>Unnamed action</name>
+          <description>Undescribed action</description>
+        </node-info>
        <auth-filter backend="anyone"></auth-filter>
       </action>
     </process>

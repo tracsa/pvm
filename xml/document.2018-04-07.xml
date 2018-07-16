@@ -9,6 +9,10 @@
   </process-info>
   <process>
     <action id="document_node" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="doc_form">

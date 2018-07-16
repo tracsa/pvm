@@ -8,10 +8,14 @@
   </process-info>
   <process>
     <action id="a">
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="a">
-          <input type="text" name="a" />
+          <input type="text" name="a" label="Label-less form" />
         </form>
       </form-array>
     </action>
@@ -20,12 +24,16 @@
       <condition>a.a > "0"</condition>
       <block>
         <action id="b">
+          <node-info>
+            <name>Unnamed action</name>
+            <description>Undescribed action</description>
+          </node-info>
           <auth-filter backend="backref">
             <param name="identifier" type="ref">user#a</param>
           </auth-filter>
           <form-array>
             <form id="b">
-              <input type="text" name="b" />
+              <input type="text" name="b" label="Label-less form"/>
             </form>
           </form-array>
         </action>
@@ -34,12 +42,16 @@
           <condition>b.b > "0"</condition>
           <block>
             <action id="c">
+              <node-info>
+                <name>Unnamed action</name>
+                <description>Undescribed action</description>
+              </node-info>
               <auth-filter backend="backref">
                 <param name="identifier" type="ref">user#a</param>
               </auth-filter>
               <form-array>
                 <form id="c">
-                  <input type="text" name="c" />
+                  <input type="text" name="c" label="Label-less form" />
                 </form>
               </form-array>
             </action>
@@ -48,12 +60,16 @@
               <condition>c.c > "0"</condition>
               <block>
                 <action id="d">
+                  <node-info>
+                    <name>Unnamed action</name>
+                    <description>Undescribed action</description>
+                  </node-info>
                   <auth-filter backend="backref">
                     <param name="identifier" type="ref">user#a</param>
                   </auth-filter>
                   <form-array>
                     <form id="d">
-                      <input type="text" name="d" />
+                      <input type="text" name="d" label="Label-less form" />
                     </form>
                   </form-array>
                 </action>
@@ -61,12 +77,16 @@
             </if>
 
             <action id="e">
+              <node-info>
+                <name>Unnamed action</name>
+                <description>Undescribed action</description>
+              </node-info>
               <auth-filter backend="backref">
                 <param name="identifier" type="ref">user#a</param>
               </auth-filter>
               <form-array>
                 <form id="e">
-                  <input type="text" name="e" />
+                  <input type="text" name="e" label="Label-less form"/>
                 </form>
               </form-array>
             </action>
@@ -74,12 +94,16 @@
         </if>
 
         <action id="f">
+          <node-info>
+            <name>Unnamed action</name>
+            <description>Undescribed action</description>
+          </node-info>
           <auth-filter backend="backref">
             <param name="identifier" type="ref">user#a</param>
           </auth-filter>
           <form-array>
             <form id="f">
-              <input type="text" name="f" />
+              <input type="text" name="f" label="Label-less form"/>
             </form>
           </form-array>
         </action>
@@ -87,6 +111,10 @@
     </if>
 
     <action id="g">
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="backref">
         <param name="identifier" type="ref">user#a</param>
       </auth-filter>

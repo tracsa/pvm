@@ -12,8 +12,8 @@ Documentación de cacahuate
 
 
 
-Indices and tables
-==================
+Índices y tablas
+================
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -65,24 +65,42 @@ def xml_validate(filename=None):
     passed_nodes = []
     variable_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
+    class StreamWrapper:
+
+        def __init__(self, filename):
+            self.f = open(filename)
+            self.lineno = 0
+
+        def read(self, b):
+            self.lineno += 1
+            return self.f.readline()
+
+    sw = StreamWrapper(filename)
+
     def check_id(node):
         id_element = node.getAttribute('id')
 
         if not id_element:
-            sys.exit('{}: All nodes must have an id'.format(filename))
+            sys.exit(
+                '{}:{} All nodes must have an id'.format(filename, sw.lineno)
+            )
 
         if not variable_re.match(id_element):
-            sys.exit('{}: Id must be a valid variable name'.format(filename))
+            sys.exit(
+                '{}:{} Id must be a valid variable name'.format(
+                    filename, sw.lineno,
+                )
+            )
 
         if id_element not in ids:
             ids.append(id_element)
         else:
-            sys.exit("{}: Duplicated id: '{}'".format(
-                filename,
+            sys.exit("{}:{} Duplicated id: '{}'".format(
+                filename, sw.lineno,
                 id_element,
             ))
 
-    doc = pulldom.parse(filename)
+    doc = pulldom.parse(sw)
 
     for event, node in doc:
         if event == pulldom.START_ELEMENT and node.tagName == 'block':
@@ -100,15 +118,25 @@ def xml_validate(filename=None):
             try:
                 tree = Condition().parse(get_text(node))
             except GrammarError:
-                sys.exit('{}: Grammar error in condition'.format(filename))
+                sys.exit(
+                    '{}:{} Grammar error in condition'.format(
+                        filename, sw.lineno,
+                    )
+                )
             except ParseError:
-                sys.exit('{}: Parse error in condition'.format(filename))
+                sys.exit(
+                    '{}:{} Parse error in condition'.format(
+                        filename, sw.lineno,
+                    )
+                )
             except LexError:
-                sys.exit('{}: Lex error in condition'.format(filename))
+                sys.exit(
+                    '{}:{} Lex error in condition'.format(filename, sw.lineno)
+                )
             except KeyError as e:
                 sys.exit(
-                    '{}: variable used in condition does not exist: {}'.format(
-                        filename,
+                    '{}:{} variable does not exist: {}'.format(
+                        filename, sw.lineno,
                         str(e),
                     )
                 )
@@ -124,8 +152,8 @@ def xml_validate(filename=None):
                     data_form[reference_form][field_form]
                 except KeyError:
                     sys.exit(
-                        "{}: variable used in if is not defined '{}'".format(
-                            filename,
+                        "{}:{} variable used in if is not defined '{}'".format(
+                            filename, sw.lineno,
                             reference_form+'.'+field_form,
                         )
                     )
@@ -160,16 +188,16 @@ def xml_validate(filename=None):
                     data_form[reference_form][field_form]
                 except KeyError:
                     sys.exit(
-                        "{}: Referenced param does not exist '{}'".format(
-                            filename,
+                        "{}:{} Referenced param does not exist '{}'".format(
+                            filename, sw.lineno,
                             reference_form+'.'+field_form,
                         )
                     )
             elif ref_type == 'user':
                 if ref not in passed_nodes:
                     sys.exit(
-                        '{}: Referenced user is never created: {}'.format(
-                            filename,
+                        '{}:{} Referenced user is never created: {}'.format(
+                            filename, sw.lineno,
                             ref,
                         )
                     )
@@ -184,8 +212,8 @@ def xml_validate(filename=None):
                 data_form[form][field]
             except KeyError:
                 sys.exit(
-                    "{}: Referenced dependency does not exist '{}'".format(
-                        filename,
+                    "{}:{} Referenced dependency does not exist '{}'".format(
+                        filename, sw.lineno,
                         form + '.' + field,
                     )
                 )
@@ -198,8 +226,8 @@ def xml_validate(filename=None):
 
             if form_id and not variable_re.match(form_id):
                 sys.exit(
-                    '{}: Form ids must be valid variable names'.format(
-                        filename
+                    '{}:{} Form ids must be valid variable names'.format(
+                        filename, sw.lineno,
                     )
                 )
 
@@ -207,8 +235,8 @@ def xml_validate(filename=None):
 
             if form_ref and not variable_re.match(form_ref):
                 sys.exit(
-                    '{}: Form refs must be valid variable names'.format(
-                        filename
+                    '{}:{} Form refs must be valid variable names'.format(
+                        filename, sw.lineno,
                     )
                 )
 
@@ -220,8 +248,8 @@ def xml_validate(filename=None):
 
                 if not variable_re.match(inpt_name):
                     sys.exit(
-                        '{}: Field names must be valid variable names'.format(
-                            filename
+                        '{}:{} Field names must match [a-zA-Z0-9_]+'.format(
+                            filename, sw.lineno,
                         )
                     )
 

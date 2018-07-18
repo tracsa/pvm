@@ -73,6 +73,7 @@ setup(
         'pika',
         'simplejson',
         'requests',
+        'passlib',
     ],
 
     setup_requires=[

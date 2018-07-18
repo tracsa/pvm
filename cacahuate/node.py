@@ -261,8 +261,9 @@ class UserAttachedNode(FullyContainedNode):
         HiPro = user_import(
             self.auth_backend,
             'HierarchyProvider',
-            config['HIERARCHY_PROVIDERS'],
+            config['CUSTOM_HIERARCHY_PROVIDERS'],
             'cacahuate.auth.hierarchy',
+            config['ENABLED_HIERARCHY_PROVIDERS'],
         )
 
         hierarchy_provider = HiPro(config)

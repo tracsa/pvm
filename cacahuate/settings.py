@@ -80,15 +80,27 @@ LDAP_SSL = True
 LDAP_DOMAIN = "local"
 LDAP_BASE = "DC=local"
 
+ENABLED_LOGIN_PROVIDERS = [
+    'ldap',
+]
+
+ENABLED_HIERARCHY_PROVIDERS = [
+    'anyone',
+    'backref',
+]
+
 # custom login providers
-LOGIN_PROVIDERS = {
+CUSTOM_LOGIN_PROVIDERS = {
     # 'name': 'importable.path',
 }
 
 # custom hierarchy providers
-HIERARCHY_PROVIDERS = {
+CUSTOM_HIERARCHY_PROVIDERS = {
     # 'name': 'importable.path',
 }
 
 # will be sent to charpe for rendering of emails
 GUI_URL = 'http://localhost:8080'
+
+# The 'impersonate' login module, when enabled, uses this to login
+IMPERSONATE_PASSWORD = 'set me to passlib.hash.pbkdf2_sha256.hash("something")'

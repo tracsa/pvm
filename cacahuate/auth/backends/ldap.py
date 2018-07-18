@@ -3,7 +3,6 @@ from ldap3.core.exceptions import LDAPBindError
 
 from cacahuate.auth.base import BaseAuthProvider
 from cacahuate.errors import AuthFieldRequired, AuthFieldInvalid
-from cacahuate.http.wsgi import app
 
 
 class LdapAuthProvider(BaseAuthProvider):
@@ -14,10 +13,10 @@ class LdapAuthProvider(BaseAuthProvider):
         if 'password' not in credentials or not credentials['password']:
             raise AuthFieldRequired('password')
 
-        server_uri = app.config['LDAP_URI']
-        use_ssl = app.config['LDAP_SSL']
-        base = app.config['LDAP_BASE']
-        domain = app.config['LDAP_DOMAIN']
+        server_uri = self.config['LDAP_URI']
+        use_ssl = self.config['LDAP_SSL']
+        base = self.config['LDAP_BASE']
+        domain = self.config['LDAP_DOMAIN']
 
         # Use credentials to authenticate
         username = credentials['username']

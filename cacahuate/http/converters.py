@@ -13,8 +13,9 @@ class AuthProviderConverter(BaseConverter):
             cls = user_import(
                 value,
                 'AuthProvider',
-                app.config['LOGIN_PROVIDERS'],
+                app.config['CUSTOM_LOGIN_PROVIDERS'],
                 'cacahuate.auth.backends',
+                app.config['ENABLED_LOGIN_PROVIDERS'],
             )
         except MisconfiguredProvider as e:
             abort(500, str(e))

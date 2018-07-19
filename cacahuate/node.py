@@ -755,23 +755,14 @@ class Conditional(Node):
                 str(e)
             ))
 
-        return [{
-            '_type': 'form',
-            'ref': self.id,
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': value,
-                    },
-                },
-                'item_order': ['condition'],
-            },
-        }]
+        return [Form.state_json(self.id, [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': value,
+            }
+        ])]
 
     def dependent_refs(self, invalidated, node_state):
         return set()
@@ -801,23 +792,14 @@ class Else(Node):
         self.description = 'ELSE ' + self.id
 
     def work(self, config, state, channel, mongo):
-        return [{
-            '_type': 'form',
-            'ref': self.id,
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': True,
-                    },
-                },
-                'item_order': ['condition'],
+        return [Form.state_json(self.id, [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': True,
             },
-        }]
+        ])]
 
 
 class Request(FullyContainedNode):
@@ -878,35 +860,26 @@ class Request(FullyContainedNode):
     def work(self, config, state, channel, mongo):
         response = self.make_request(state['values'])
 
-        return [{
-            '_type': 'form',
-            'ref': self.id,
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'status_code': {
-                        'name': 'status_code',
-                        'state': 'valid',
-                        'type': 'int',
-                        'value': response['status_code'],
-                        'label': 'Status Code',
-                        'value_caption': str(response['status_code']),
-                        'hidden': False,
-                    },
-                    'raw_response': {
-                        'name': 'raw_response',
-                        'state': 'valid',
-                        'type': 'text',
-                        'value': response['response'],
-                        'label': 'Response',
-                        'value_caption': response['response'],
-                        'hidden': False,
-                    },
-                },
-                'item_order': ['status_code', 'raw_response'],
+        return [Form.state_json(self.id, [
+            {
+                'name': 'status_code',
+                'state': 'valid',
+                'type': 'int',
+                'value': response['status_code'],
+                'label': 'Status Code',
+                'value_caption': str(response['status_code']),
+                'hidden': False,
             },
-        }]
+            {
+                'name': 'raw_response',
+                'state': 'valid',
+                'type': 'text',
+                'value': response['response'],
+                'label': 'Response',
+                'value_caption': response['response'],
+                'hidden': False,
+            },
+        ])]
 
     def is_async(self):
         return False

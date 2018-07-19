@@ -4,6 +4,7 @@ from flask import g
 from flask import request, jsonify, json
 import pika
 import pymongo
+import os
 
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
@@ -257,6 +258,27 @@ def find_process(name):
     return jsonify({
         'data': xml.to_json()
     })
+
+
+@app.route('/v1/process/<name>.xml', methods=['GET'])
+def xml_process(name):
+    version = request.args.get('version', '')
+
+    if version:
+        version = ".{}".format(version)
+
+    process_name = "{}{}".format(name, version)
+
+    try:
+        xml = Xml.load(app.config, process_name)
+    except ProcessNotFound as e:
+        raise NotFound([{
+            'detail': '{} process does not exist'
+                      .format(process_name),
+            'where': 'request.body.process_name',
+        }])
+    ruta = os.path.join(app.config['XML_PATH'], xml.filename)
+    return open(ruta).read(), {'Content-Type': 'text/xml; charset=utf-8'}
 
 
 @app.route('/v1/activity', methods=['GET'])

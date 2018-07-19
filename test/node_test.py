@@ -1,7 +1,9 @@
-from cacahuate.xml import Xml
-from cacahuate.node import make_node
 from unittest.mock import MagicMock
 import requests
+
+from cacahuate.xml import Xml
+from cacahuate.node import make_node, Form
+from cacahuate.inputs import Input
 
 
 def test_resolve_params(config):
@@ -70,4 +72,17 @@ def test_request_node(config, mocker):
     assert response == {
         'status_code': 200,
         'response': 'request response',
+    }
+
+
+def test_form_state_json():
+    assert Form.state_json('ref', []) == {
+        '_type': 'form',
+        'ref': 'ref',
+        'state': 'valid',
+        'inputs': {
+            '_type': ':sorted_map',
+            'items': {},
+            'item_order': [],
+        },
     }

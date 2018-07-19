@@ -4,9 +4,10 @@ from functools import reduce
 from operator import and_
 import ast
 
-from cacahuate.errors import RequiredInputError, InvalidDateError, \
-    InvalidInputError, RequiredListError, RequiredStrError, \
-    MisconfiguredProvider, RequiredIntError, RequiredFloatError
+from cacahuate.errors import InvalidInputError, RequiredListError
+from cacahuate.errors import MisconfiguredProvider, RequiredIntError
+from cacahuate.errors import RequiredFloatError, RequiredStrError
+from cacahuate.errors import RequiredInputError, InvalidDateError
 from cacahuate.xml import get_text
 
 INPUTS = [

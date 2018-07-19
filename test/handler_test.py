@@ -1224,23 +1224,15 @@ def test_true_condition_node(config, mongo):
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'input': [{
-            '_type': 'form',
-            'ref': 'condition1',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': True,
-                    },
-                },
-                'item_order': ['condition'],
+        'input': [Form.state_json('condition1', [
+            {
+                'name': 'condition',
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': True,
             },
-        }],
+        ])],
         'user_identifier': '__system__',
     }
     assert json.loads(args['body']) == rabbit_call
@@ -1271,24 +1263,13 @@ def test_false_condition_node(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [
+        'input': [Form.state_json('mistery', [
             {
-                'ref': 'mistery',
-                '_type': 'form',
-                'inputs': {
-                    '_type': ':sorted_map',
-                    'item_order': [
-                        'password',
-                    ],
-                    'items': {
-                        'password': {
-                            'type': 'text',
-                            'value': '123456',
-                        },
-                    },
-                },
+                'name': 'password',
+                'type': 'text',
+                'value': '123456',
             },
-        ],
+        ])],
     }, channel)
 
     # assertions
@@ -1302,23 +1283,14 @@ def test_false_condition_node(config, mongo):
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'input': [{
-            '_type': 'form',
-            'ref': 'condition1',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': False,
-                    },
-                },
-                'item_order': ['condition'],
+        'input': [Form.state_json('condition1', [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': False,
             },
-        }],
+        ])],
         'user_identifier': '__system__',
     }
     assert json.loads(args['body']) == rabbit_call
@@ -1349,17 +1321,12 @@ def test_anidated_conditions(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'a',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['a'],
-                'items': {
-                    'a': {'value': '1'},
-                },
+        'input': [Form.state_json('a', [
+            {
+                'name': 'a',
+                'value': '1',
             },
-        }],
+        ])],
     }, channel)
 
     # assertions
@@ -1372,23 +1339,14 @@ def test_anidated_conditions(config, mongo):
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'input': [{
-            '_type': 'form',
-            'ref': 'outer',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': True,
-                    },
-                },
-                'item_order': ['condition'],
+        'input': [Form.state_json('outer', [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': True,
             },
-        }],
+        ])],
         'user_identifier': '__system__',
     }
     assert json.loads(args['body']) == rabbit_call
@@ -1404,17 +1362,12 @@ def test_anidated_conditions(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'b',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['b'],
-                'items': {
-                    'b': {'value': '-1'},
-                },
+        'input': [Form.state_json('b', [
+            {
+                'name': 'b',
+                'value': '-1',
             },
-        }],
+        ])],
     }, channel)
 
     # assertions
@@ -1427,23 +1380,15 @@ def test_anidated_conditions(config, mongo):
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'input': [{
-            '_type': 'form',
-            'ref': 'inner1',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': False,
-                    },
-                },
-                'item_order': ['condition'],
+        'input': [Form.state_json('inner1', [
+            {
+                'name': 'condition',
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': False,
             },
-        }],
+        ])],
         'user_identifier': '__system__',
     }
     assert json.loads(args['body']) == rabbit_call
@@ -1459,17 +1404,12 @@ def test_anidated_conditions(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'f',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['f'],
-                'items': {
-                    'f': {'value': '-1'},
-                },
+        'input': [Form.state_json('f', [
+            {
+                'name': 'f',
+                'value': '-1',
             },
-        }],
+        ])],
     }, channel)
 
     ptr = Pointer.get_all()[0]
@@ -1494,24 +1434,13 @@ def test_ifelifelse_if(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [
+        'input': [Form.state_json('secret01', [
             {
-                'ref': 'secret01',
-                '_type': 'form',
-                'inputs': {
-                    '_type': ':sorted_map',
-                    'item_order': [
-                        'password',
-                    ],
-                    'items': {
-                        'password': {
-                            'type': 'text',
-                            'value': 'incorrect!',
-                        },
-                    },
-                },
+                'name': 'password',
+                'type': 'text',
+                'value': 'incorrect!',
             },
-        ],
+        ])],
     }, channel)
 
     # pointer moved
@@ -1525,23 +1454,14 @@ def test_ifelifelse_if(config, mongo):
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'input': [{
-            '_type': 'form',
-            'ref': 'condition01',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': True,
-                    },
-                },
-                'item_order': ['condition'],
+        'input': [Form.state_json('condition01', [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': True,
             },
-        }],
+        ])],
         'user_identifier': '__system__',
     }
     assert json.loads(args['body']) == rabbit_call
@@ -1564,20 +1484,12 @@ def test_ifelifelse_if(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'form01',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['answer'],
-                'items': {
-                    'answer': {
-                        'name': 'answer',
-                        'value': 'answer',
-                    },
-                },
+        'input': [Form.state_json('form01', [
+            {
+                'name': 'answer',
+                'value': 'answer',
             },
-        }],
+        ])],
     }, channel)
 
     # execution finished
@@ -1603,24 +1515,13 @@ def test_ifelifelse_elif(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [
+        'input': [Form.state_json('secret01', [
             {
-                'ref': 'secret01',
-                '_type': 'form',
-                'inputs': {
-                    '_type': ':sorted_map',
-                    'item_order': [
-                        'password',
-                    ],
-                    'items': {
-                        'password': {
-                            'type': 'text',
-                            'value': 'hocus pocus',
-                        },
-                    },
-                },
+                'name': 'password',
+                'type': 'text',
+                'value': 'hocus pocus',
             },
-        ],
+        ])],
     }, channel)
 
     # pointer moved
@@ -1634,23 +1535,15 @@ def test_ifelifelse_elif(config, mongo):
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'input': [{
-            '_type': 'form',
-            'ref': 'condition01',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': False,
-                    },
-                },
-                'item_order': ['condition'],
+        'input': [Form.state_json('condition01', [
+            {
+                'name': 'condition',
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': False,
             },
-        }],
+        ])],
         'user_identifier': '__system__',
     }
     assert json.loads(args['body']) == rabbit_call
@@ -1669,23 +1562,15 @@ def test_ifelifelse_elif(config, mongo):
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'input': [{
-            '_type': 'form',
-            'ref': 'elif01',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': True,
-                    },
-                },
-                'item_order': ['condition'],
+        'input': [Form.state_json('elif01', [
+            {
+                'name': 'condition',
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': True,
             },
-        }],
+        ])],
         'user_identifier': '__system__',
     }
     assert json.loads(args['body']) == rabbit_call
@@ -1708,20 +1593,12 @@ def test_ifelifelse_elif(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'form01',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['answer'],
-                'items': {
-                    'answer': {
-                        'name': 'answer',
-                        'value': 'answer',
-                    },
-                },
+        'input': [Form.state_json('form01', [
+            {
+                'name': 'answer',
+                'value': 'answer',
             },
-        }],
+        ])],
     }, channel)
 
     # execution finished
@@ -1747,24 +1624,13 @@ def test_ifelifelse_else(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [
+        'input': [Form.state_json('secret01', [
             {
-                'ref': 'secret01',
-                '_type': 'form',
-                'inputs': {
-                    '_type': ':sorted_map',
-                    'item_order': [
-                        'password',
-                    ],
-                    'items': {
-                        'password': {
-                            'type': 'text',
-                            'value': 'cuca',
-                        },
-                    },
-                },
+                'name': 'password',
+                'type': 'text',
+                'value': 'cuca',
             },
-        ],
+        ])],
     }, channel)
 
     # pointer moved
@@ -1778,23 +1644,15 @@ def test_ifelifelse_else(config, mongo):
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'input': [{
-            '_type': 'form',
-            'ref': 'condition01',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': False,
-                    },
-                },
-                'item_order': ['condition'],
+        'input': [Form.state_json('condition01', [
+            {
+                'name': 'condition',
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': False,
             },
-        }],
+        ])],
         'user_identifier': '__system__',
     }
     assert json.loads(args['body']) == rabbit_call
@@ -1813,23 +1671,14 @@ def test_ifelifelse_else(config, mongo):
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'input': [{
-            '_type': 'form',
-            'ref': 'elif01',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': False,
-                    },
-                },
-                'item_order': ['condition'],
+        'input': [Form.state_json('elif01', [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': False,
             },
-        }],
+        ])],
         'user_identifier': '__system__',
     }
     assert json.loads(args['body']) == rabbit_call
@@ -1848,23 +1697,14 @@ def test_ifelifelse_else(config, mongo):
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
-        'input': [{
-            '_type': 'form',
-            'ref': 'else01',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'condition': {
-                        'name': 'condition',
-                        'state': 'valid',
-                        'type': 'bool',
-                        'value': True,
-                    },
-                },
-                'item_order': ['condition'],
+        'input': [Form.state_json('else01', [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': True,
             },
-        }],
+        ])],
         'user_identifier': '__system__',
     }
     assert json.loads(args['body']) == rabbit_call
@@ -1887,20 +1727,12 @@ def test_ifelifelse_else(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'form01',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['answer'],
-                'items': {
-                    'answer': {
-                        'name': 'answer',
-                        'value': 'answer',
-                    },
-                },
+        'input': [Form.state_json('form01', [
+            {
+                'name': 'answer',
+                'value': 'answer',
             },
-        }],
+        ])],
     }, channel)
 
     # execution finished
@@ -2063,20 +1895,13 @@ def test_call_node(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'start_form',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['data'],
-                'items': {
-                    'data': {
-                        'name': 'data',
-                        'value': value,
-                    },
-                },
+        'input': [Form.state_json('start_form', [
+            {
+                'name': 'data',
+                'name': 'data',
+                'value': value,
             },
-        }],
+        ])],
     }, channel)
     assert Pointer.get(ptr.id) is None
     ptr = execution.proxy.pointers.get()[0]
@@ -2093,26 +1918,17 @@ def test_call_node(config, mongo):
         'command': 'step',
         'pointer_id': new_ptr.id,
         'user_identifier': '__system__',
-        'input': [{
-            '_type': 'form',
-            'ref': 'start_form',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'data': {
-                        'label': 'Info',
-                        'name': 'data',
-                        'state': 'valid',
-                        'type': 'text',
-                        'value': value,
-                        'value_caption': value,
-                        'hidden': False,
-                    },
-                },
-                'item_order': ['data'],
+        'input': [Form.state_json('start_form', [
+            {
+                'label': 'Info',
+                'name': 'data',
+                'state': 'valid',
+                'type': 'text',
+                'value': value,
+                'value_caption': value,
+                'hidden': False,
             },
-        }],
+        ])],
     }
 
     # normal rabbit call
@@ -2184,19 +2000,12 @@ def test_handle_request_node(config, mocker, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'request',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['data'],
-                'items': {
-                    'data': {
-                        'value': value
-                    },
-                },
+        'input': [Form.state_json('request', [
+            {
+                'name': 'data',
+                'value': value
             },
-        }],
+        ])],
     }, channel)
     assert Pointer.get(ptr.id) is None
     ptr = execution.proxy.pointers.get()[0]
@@ -2218,35 +2027,26 @@ def test_handle_request_node(config, mocker, mongo):
     # aditional rabbit call for new process
     args = channel.basic_publish.call_args_list[0][1]
 
-    expected_inputs = [{
-        '_type': 'form',
-        'ref': 'request_node',
-        'state': 'valid',
-        'inputs': {
-            '_type': ':sorted_map',
-            'items': {
-                'status_code': {
-                    'name': 'status_code',
-                    'state': 'valid',
-                    'type': 'int',
-                    'value': 200,
-                    'value_caption': '200',
-                    'hidden': False,
-                    'label': 'Status Code',
-                },
-                'raw_response': {
-                    'name': 'raw_response',
-                    'state': 'valid',
-                    'type': 'text',
-                    'value': 'request response',
-                    'value_caption': 'request response',
-                    'hidden': False,
-                    'label': 'Response',
-                },
-            },
-            'item_order': ['status_code', 'raw_response'],
+    expected_inputs = [Form.state_json('request_node', [
+        {
+            'name': 'status_code',
+            'state': 'valid',
+            'type': 'int',
+            'value': 200,
+            'value_caption': '200',
+            'hidden': False,
+            'label': 'Status Code',
         },
-    }]
+        {
+            'name': 'raw_response',
+            'state': 'valid',
+            'type': 'text',
+            'value': 'request response',
+            'value_caption': 'request response',
+            'hidden': False,
+            'label': 'Response',
+        },
+    ])]
 
     assert args['exchange'] == ''
     assert args['routing_key'] == config['RABBIT_QUEUE']
@@ -2312,20 +2112,12 @@ def test_invalidate_all_nodes(config, mocker, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'work',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['task'],
-                'items': {
-                    'task': {
-                        'name': 'task',
-                        'value': '2',
-                    },
-                },
+        'input': [Form.state_json('work', [
+            {
+                'name': 'task',
+                'value': '2',
             },
-        }],
+        ])],
     }, channel)
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'request_node'
@@ -2353,30 +2145,22 @@ def test_invalidate_all_nodes(config, mocker, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            'ref': 'validation_node',
-            '_type': 'form',
-            'inputs': {
-                '_type': ':sorted_map',
-                'item_order': ['response', 'inputs', 'coment'],
-                'items': {
-                    'response': {
-                        'name': 'response',
-                        'value': 'reject',
-                    },
-                    'inputs': {
-                        'name': 'inputs',
-                        'value': [{
-                            'ref': 'start_node.juan.0:work.task',
-                        }],
-                    },
-                    'comment': {
-                        'name': 'comment',
-                        'value': '',
-                    },
-                },
+        'input': [Form.state_json('validation_node', [
+            {
+                'name': 'response',
+                'value': 'reject',
             },
-        }],
+            {
+                'name': 'inputs',
+                'value': [{
+                    'ref': 'start_node.juan.0:work.task',
+                }],
+            },
+            {
+                'name': 'comment',
+                'value': '',
+            },
+        ])],
     }, channel)
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'start_node'

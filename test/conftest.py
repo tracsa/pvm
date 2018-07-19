@@ -7,10 +7,10 @@ from pymongo import MongoClient
 from cacahuate.models import bind_models as bimo
 
 TESTING_SETTINGS = {
-    'LOGIN_PROVIDERS': {
+    'CUSTOM_LOGIN_PROVIDERS': {
         'hardcoded': 'test.hardcoded_login',
     },
-    'HIERARCHY_PROVIDERS': {
+    'CUSTOM_HIERARCHY_PROVIDERS': {
         'hardcoded': 'test.hardcoded_hierarchy',
     },
 }

@@ -8,11 +8,11 @@
   </process-info>
   <process>
     <action id="node1">
-      <auth-filter backend="anyone"></auth-filter>
       <node-info>
         <name>Primer paso</name>
         <description>información original</description>
       </node-info>
+      <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="form1">
           <input label="task" type="text" name="task"></input>
@@ -73,7 +73,7 @@
       </auth-filter>
       <form-array>
         <form id="form5">
-          <input type="text" name="task"></input>
+          <input type="text" name="task" label="Label-less form"></input>
         </form>
       </form-array>
       <node-info>

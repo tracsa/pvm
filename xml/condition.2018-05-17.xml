@@ -8,10 +8,14 @@
   </process-info>
   <process>
     <action id="start_node">
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="mistery">
-          <input type="text" name="password"></input>
+          <input type="text" name="password" label="Label-less form"></input>
         </form>
       </form-array>
     </action>
@@ -20,12 +24,16 @@
       <condition>mistery.password == "abrete sésamo"</condition>
       <block>
         <action id="mistical_node">
+          <node-info>
+            <name>Unnamed action</name>
+            <description>Undescribed action</description>
+          </node-info>
           <auth-filter backend="backref">
             <param name="identifier" type="ref">user#start_node</param>
           </auth-filter>
           <form-array>
             <form id="mistical_form">
-              <input type="text" name="answer" default="42" />
+              <input type="text" name="answer" default="42" label="Label-less form"/>
             </form>
           </form-array>
         </action>
@@ -33,16 +41,19 @@
     </if>
 
     <if id="condition2">
-
       <condition>mistery.password == "123456"</condition>
       <block>
         <action id="123456_node">
+          <node-info>
+            <name>Unnamed action</name>
+            <description>Undescribed action</description>
+          </node-info>
           <auth-filter backend="backref">
             <param name="identifier" type="ref">user#start_node</param>
           </auth-filter>
           <form-array>
             <form id="123456_form">
-              <input type="text" name="answer" default="oh boy, please don't" />
+              <input type="text" name="answer" default="oh boy, please don't" label="Label-less form"/>
             </form>
           </form-array>
         </action>
@@ -50,6 +61,10 @@
     </if>
 
     <action id="final_node">
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="backref">
         <param name="identifier" type="ref">user#start_node</param>
       </auth-filter>

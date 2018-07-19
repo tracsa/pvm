@@ -11,8 +11,8 @@ def test_unexistent_backend(client):
     assert res.status_code == 500
     assert json.loads(res.data) == {
         'errors': [{
-            'detail': '500 Internal Server Error: Could not import provider '
-                      'module cacahuate.auth.backends.{}'.format(mth),
+            'detail': '500 Internal Server Error: Provider {} not enabled'
+                      .format(mth),
             'where': 'server',
         }],
     }
@@ -75,3 +75,15 @@ def test_ldap_backend():
     from cacahuate.auth.backends.ldap import LdapAuthProvider  # noqa
 
     assert LdapAuthProvider
+
+
+def test_anyone_backend():
+    from cacahuate.auth.backends.anyone import AnyoneAuthProvider  # noqa
+
+    assert AnyoneAuthProvider
+
+
+def test_impersonate_backend():
+    from cacahuate.auth.backends.impersonate import ImpersonateAuthProvider  # noqa
+
+    assert ImpersonateAuthProvider

@@ -8,7 +8,7 @@ from cacahuate.errors import MisconfiguredProvider
 from cacahuate.models import User
 
 
-def user_import(module_key, class_sufix, import_maper, default_path):
+def user_import(module_key, class_sufix, import_maper, default_path, enabled):
     ''' import a provider defined by the user '''
     if module_key in import_maper:
         import_path = import_maper[module_key]
@@ -17,8 +17,12 @@ def user_import(module_key, class_sufix, import_maper, default_path):
 
         if cwd not in sys.path:
             sys.path.insert(0, cwd)
-    else:
+    elif module_key in enabled:
         import_path = default_path + '.' + module_key
+    else:
+        raise MisconfiguredProvider(
+            'Provider {} not enabled'.format(module_key)
+        )
 
     cls_name = pascalcase(module_key) + class_sufix
 

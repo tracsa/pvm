@@ -8,15 +8,23 @@
   </process-info>
   <process>
     <action id="start_node" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
         <form id="work">
-          <input type="text" name="task"></input>
+          <input type="text" name="task" label="Label-less form"></input>
         </form>
       </form-array>
     </action>
 
     <validation id="approval_node" >
+      <node-info>
+        <name>Unnamed validation</name>
+        <description>Undescribed validation</description>
+      </node-info>
       <auth-filter backend="hardcoded"></auth-filter>
       <dependencies>
         <dep>work.task</dep>

@@ -65,9 +65,7 @@
         <attribute name="milestone"><text/></attribute>
       </optional>
       <interleave>
-        <optional>
-          <ref name="node-info" />
-        </optional>
+        <ref name="node-info" />
         <ref name="auth-filter" />
         <optional>
           <ref name="form-array" />
@@ -83,9 +81,7 @@
         <attribute name="milestone"><text/></attribute>
       </optional>
       <interleave>
-        <optional>
-          <ref name="node-info" />
-        </optional>
+        <ref name="node-info" />
         <ref name="auth-filter" />
         <ref name="dependencies"/>
       </interleave>
@@ -135,6 +131,25 @@
       </element>
       <ref name="block" />
     </element>
+    <ref name="else"/>
+  </define>
+
+  <define name="else">
+    <zeroOrMore>
+      <element name="elif">
+        <attribute name="id"><text/></attribute>
+        <element name="condition">
+          <text />
+        </element>
+        <ref name="block"/>
+      </element>
+    </zeroOrMore>
+    <optional>
+      <element name="else">
+        <attribute name="id"><text/></attribute>
+        <ref name="block"/>
+      </element>
+    </optional>
   </define>
 
   <define name="call">
@@ -188,9 +203,7 @@
           <value>true</value>
         </attribute>
       </optional>
-      <optional>
-        <attribute name="label"><text/></attribute>
-      </optional>
+      <attribute name="label"><text/></attribute>
       <optional>
         <attribute name="placeholder"><text/></attribute>
       </optional>

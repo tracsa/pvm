@@ -1,0 +1,80 @@
+<process-spec>
+  <process-info>
+    <author>KYSXD</author>
+    <date>2018-07-10</date>
+    <name>yet to name</name>
+    <public>false</public>
+    <description>Else condition test</description>
+  </process-info>
+  <process>
+    <action id="start_node">
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="secret01">
+          <input type="text" name="password" default="stuff" label="Label-less form"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <if id="condition01">
+      <condition>secret01.password == "incorrect!"</condition>
+      <block>
+        <action id="action01">
+          <node-info>
+            <name>Unnamed action</name>
+            <description>Undescribed action</description>
+          </node-info>
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#start_node</param>
+          </auth-filter>
+          <form-array>
+            <form id="form01">
+              <input type="text" name="answer" default="pass" label="Label-less form"></input>
+            </form>
+          </form-array>
+        </action>
+      </block>
+    </if>
+    <elif id="elif01">
+      <condition>secret01.password == "hocus pocus"</condition>
+      <block>
+        <action id="action02">
+          <node-info>
+            <name>Unnamed action</name>
+            <description>Undescribed action</description>
+          </node-info>
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#start_node</param>
+          </auth-filter>
+          <form-array>
+            <form id="form02">
+              <input type="text" name="answer" default="aleatoria" label="Label-less form"/>
+            </form>
+          </form-array>
+        </action>
+      </block>
+    </elif>
+    <else id="else01">
+      <block>
+        <action id="action03">
+          <node-info>
+            <name>Unnamed action</name>
+            <description>Undescribed action</description>
+          </node-info>
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#start_node</param>
+          </auth-filter>
+          <form-array>
+            <form id="form03">
+              <input type="text" name="answer" default="aleatoria" label="Label-less form"/>
+            </form>
+          </form-array>
+        </action>
+      </block>
+    </else>
+  </process>
+</process-spec>

@@ -29,8 +29,9 @@ def validate_auth(node, user, state=None):
         HiPro = user_import(
             node.auth_backend,
             'HierarchyProvider',
-            app.config['HIERARCHY_PROVIDERS'],
+            app.config['CUSTOM_HIERARCHY_PROVIDERS'],
             'cacahuate.auth.hierarchy',
+            app.config['ENABLED_HIERARCHY_PROVIDERS'],
         )
     except MisconfiguredProvider:
         abort(500, 'Misconfigured hierarchy provider, sorry')

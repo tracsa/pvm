@@ -1,3 +1,4 @@
+from collections import deque
 from datetime import datetime
 from jinja2 import Template, TemplateError
 from typing import TextIO, Callable
@@ -20,7 +21,16 @@ XML_ATTRIBUTES = {
     'description': lambda x: x,
 }
 
-NODES = ('action', 'validation', 'exit', 'if', 'request', 'call')
+NODES = (
+    'action',
+    'validation',
+    'exit',
+    'if',
+    'elif',
+    'else',
+    'request',
+    'call',
+)
 
 
 class Xml:
@@ -169,6 +179,7 @@ class Xml:
                 self.parser = pulldom.parse(
                     open(os.path.join(config['XML_PATH'], filename))
                 )
+                self.block_stack = deque()
 
             def find(self, testfunc: Callable[[Element], bool]) -> Element:
                 ''' Given an interator returned by the previous function, tries
@@ -185,12 +196,33 @@ class Xml:
 
             def get_next_condition(self):
                 for event, node in self.parser:
-                    if event == pulldom.START_ELEMENT and \
-                            node.tagName == 'condition':
-                        self.parser.expandNode(node)
-                        condition = get_text(node)
+                    if event != pulldom.START_ELEMENT:
+                        continue
 
-                        return condition
+                    if node.tagName != 'condition':
+                        raise ElementNotFound(
+                            'Requested a condition but found {}'.format(
+                                node.tagName
+                            )
+                        )
+
+                    self.parser.expandNode(node)
+
+                    return get_text(node)
+
+                raise ElementNotFound('Condition not found')
+
+            def next_skipping_elifelse(self):
+                old_stack = len(self.block_stack)
+                proposed_next = next(self)
+                new_stack = len(self.block_stack)
+
+                if new_stack < old_stack:
+                    while proposed_next.tagName in ('elif', 'else'):
+                        self.parser.expandNode(proposed_next)
+                        proposed_next = next(self)
+
+                return proposed_next
 
             def expand(self, node):
                 self.parser.expandNode(node)
@@ -198,10 +230,14 @@ class Xml:
             def __next__(self):
                 try:
                     for event, node in self.parser:
-                        if event == pulldom.START_ELEMENT and \
-                                node.tagName in iterables:
-
-                            return node
+                        if event == pulldom.END_ELEMENT and \
+                                node.tagName == 'block':
+                            self.block_stack.pop()
+                        if event == pulldom.START_ELEMENT:
+                            if node.tagName == 'block':
+                                self.block_stack.append(1)
+                            elif node.tagName in iterables:
+                                return node
                 except SAXParseException:
                     raise MalformedProcess
 
@@ -229,14 +265,14 @@ class Xml:
         from cacahuate.node import make_node  # noqa
 
         xmliter = iter(self)
+        items = []
 
-        return SortedMap(map(
-            lambda node: node.get_state(),
-            map(
-                lambda node: make_node(node, xmliter),
-                xmliter
-            )
-        ), key='id').to_json()
+        for node in xmliter:
+            built_node = make_node(node, xmliter)
+
+            items.append(built_node.get_state())
+
+        return SortedMap(items, key='id').to_json()
 
     @classmethod
     def list(cls, config):

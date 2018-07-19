@@ -32,12 +32,16 @@
       </node-info>
       <form-array>
         <form id="mid_form">
-          <input type="text" name="data" required="required" />
+          <input type="text" name="data" required="required" label="data"/>
         </form>
       </form-array>
     </action>
 
     <action id="final_node">
+      <node-info>
+        <name></name>
+        <description></description>
+      </node-info>
       <auth-filter backend="backref">
         <param name="identifier" type="ref">user#start_node</param>
       </auth-filter>

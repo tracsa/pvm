@@ -107,7 +107,7 @@ class Node:
         xmliter = iter(xml)
         xmliter.find(lambda e: e.getAttribute('id') == self.id)
 
-        return make_node(next(xmliter), xmliter)
+        return make_node(xmliter.next_skipping_elifelse(), xmliter)
 
     def dependent_refs(self, invalidated, node_state):
         raise NotImplementedError('Must be implemented in subclass')
@@ -261,8 +261,9 @@ class UserAttachedNode(FullyContainedNode):
         HiPro = user_import(
             self.auth_backend,
             'HierarchyProvider',
-            config['HIERARCHY_PROVIDERS'],
+            config['CUSTOM_HIERARCHY_PROVIDERS'],
             'cacahuate.auth.hierarchy',
+            config['ENABLED_HIERARCHY_PROVIDERS'],
         )
 
         hierarchy_provider = HiPro(config)
@@ -723,13 +724,13 @@ class Exit(FullyContainedNode):
         return []
 
 
-class If(Node):
+class Conditional(Node):
 
-    def __init__(self, element, xmliter):
+    def __init__(self, element, xmliter, type='IF'):
         super().__init__(element, xmliter)
 
-        self.name = 'If ' + self.id
-        self.description = 'If ' + self.id
+        self.name = type + ' ' + self.id
+        self.description = type + ' ' + self.id
 
         self.condition = xmliter.get_next_condition()
 
@@ -745,7 +746,7 @@ class If(Node):
         if not state['values'][self.id]['condition']:
             xmliter.expand(ifnode)
 
-        return make_node(next(xmliter), xmliter)
+        return make_node(xmliter.next_skipping_elifelse(), xmliter)
 
     def work(self, config, state, channel, mongo):
         tree = Condition().parse(self.condition)
@@ -777,6 +778,49 @@ class If(Node):
 
     def dependent_refs(self, invalidated, node_state):
         return set()
+
+
+class If(Conditional):
+
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter, 'IF')
+
+
+class Elif(Conditional):
+
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter, 'ELIF')
+
+
+class Else(Node):
+
+    def is_async(self):
+        return False
+
+    def __init__(self, element, xmliter):
+        super().__init__(element, xmliter)
+
+        self.name = 'ELSE ' + self.id
+        self.description = 'ELSE ' + self.id
+
+    def work(self, config, state, channel, mongo):
+        return [{
+            '_type': 'form',
+            'ref': self.id,
+            'state': 'valid',
+            'inputs': {
+                '_type': ':sorted_map',
+                'items': {
+                    'condition': {
+                        'name': 'condition',
+                        'state': 'valid',
+                        'type': 'bool',
+                        'value': True,
+                    },
+                },
+                'item_order': ['condition'],
+            },
+        }]
 
 
 class Request(FullyContainedNode):

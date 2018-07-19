@@ -11,7 +11,7 @@ def test_xml_validation_repeated_id():
         xml_validate('xml/condition_id_repeat.2018-05-28.xml')
 
     assert str(cm.value) == \
-        "xml/condition_id_repeat.2018-05-28.xml: Duplicated id: 'start_node'"
+        "xml/condition_id_repeat.2018-05-28.xml:26 Duplicated id: 'start_node'"
 
 
 def test_xml_validation_unexistent_param():
@@ -19,8 +19,8 @@ def test_xml_validation_unexistent_param():
         xml_validate('xml/condition_not_param.2018-05-28.xml')
 
     assert str(cm.value) == \
-        "xml/condition_not_param.2018-05-28.xml: Referenced param does not " \
-        "exist 'a.b'"
+        "xml/condition_not_param.2018-05-28.xml:39 Referenced param does " \
+        "not exist 'a.b'"
 
 
 def test_xml_validation_unexistent_dependency():
@@ -28,7 +28,7 @@ def test_xml_validation_unexistent_dependency():
         xml_validate('xml/condition_not_dep.2018-05-28.xml')
 
     assert str(cm.value) == \
-        "xml/condition_not_dep.2018-05-28.xml: Referenced dependency does " \
+        "xml/condition_not_dep.2018-05-28.xml:41 Referenced dependency does " \
         "not exist 'a.b'"
 
 
@@ -37,7 +37,7 @@ def test_xml_validation_invalid_condition():
         xml_validate('xml/condition_not_valid.2018-05-28.xml')
 
     assert str(cm.value) == \
-        'xml/condition_not_valid.2018-05-28.xml: Lex error in condition'
+        'xml/condition_not_valid.2018-05-28.xml:24 Lex error in condition'
 
 
 def test_xml_validation_no_hyphen_in_id():
@@ -45,8 +45,8 @@ def test_xml_validation_no_hyphen_in_id():
         xml_validate('xml/validate_hyphen_id.2018-06-13.xml')
 
     assert str(cm.value) == \
-        'xml/validate_hyphen_id.2018-06-13.xml: Id must be a valid variable ' \
-        'name'
+        'xml/validate_hyphen_id.2018-06-13.xml:10 Id must be a valid ' \
+        'variable name'
 
 
 def test_xml_validation_no_hyphen_in_field_name():
@@ -54,8 +54,8 @@ def test_xml_validation_no_hyphen_in_field_name():
         xml_validate('xml/validate_hyphen_field.2018-06-13.xml')
 
     assert str(cm.value) == \
-        'xml/validate_hyphen_field.2018-06-13.xml: Field names must be ' \
-        'valid variable names'
+        'xml/validate_hyphen_field.2018-06-13.xml:21 Field names must match ' \
+        '[a-zA-Z0-9_]+'
 
 
 def test_xml_validation_no_hyphen_in_form_id():
@@ -63,7 +63,7 @@ def test_xml_validation_no_hyphen_in_form_id():
         xml_validate('xml/validate_hyphen_form.2018-06-13.xml')
 
     assert str(cm.value) == \
-        'xml/validate_hyphen_form.2018-06-13.xml: Form ids must be valid ' \
+        'xml/validate_hyphen_form.2018-06-13.xml:21 Form ids must be valid ' \
         'variable names'
 
 
@@ -72,7 +72,7 @@ def test_xml_validation_no_hyphen_in_grammar():
         xml_validate('xml/validate_hyphen_if_condition.2018-06-13.xml')
 
     assert str(cm.value) == \
-        'xml/validate_hyphen_if_condition.2018-06-13.xml: Lex error in ' \
+        'xml/validate_hyphen_if_condition.2018-06-13.xml:24 Lex error in ' \
         'condition'
 
 
@@ -81,8 +81,8 @@ def test_xml_validation_undefined_form():
         xml_validate('xml/condition_undefined_form.2018-07-10.xml')
 
     assert str(cm.value) == \
-        'xml/condition_undefined_form.2018-07-10.xml: variable used in if is' \
-        ' not defined \'misterio.password\''
+        'xml/condition_undefined_form.2018-07-10.xml:24 variable used in if ' \
+        'is not defined \'misterio.password\''
 
 
 def test_xml_validation_undefined_form_by_scope():
@@ -90,5 +90,5 @@ def test_xml_validation_undefined_form_by_scope():
         xml_validate('xml/condition_undefined_form_by_scope.2018-07-10.xml')
 
     assert str(cm.value) == \
-        'xml/condition_undefined_form_by_scope.2018-07-10.xml: variable used' \
-        ' in if is not defined \'task.answer\''
+        'xml/condition_undefined_form_by_scope.2018-07-10.xml:42 variable ' \
+        'used in if is not defined \'task.answer\''

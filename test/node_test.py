@@ -3,7 +3,6 @@ import requests
 
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, Form
-from cacahuate.inputs import Input
 
 
 def test_resolve_params(config):

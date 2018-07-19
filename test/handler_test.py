@@ -527,22 +527,14 @@ def test_reject(config, mongo):
             'identifier': 'juan',
             'fullname': 'Juan',
         },
-        'forms': [{
-            '_type': 'form',
-            'ref': 'work',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'task': {
-                        '_type': 'field',
-                        'state': 'valid',
-                        'value': '2',
-                    },
-                },
-                'item_order': ['task'],
+        'forms': [Form.state_json('work', [
+            {
+                'name': 'task',
+                '_type': 'field',
+                'state': 'valid',
+                'value': '2',
             },
-        }],
+        ])],
     }
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
@@ -556,27 +548,22 @@ def test_reject(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'approval_node',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'response': {
-                        'value': 'reject',
-                    },
-                    'comment': {
-                        'value': 'I do not like it',
-                    },
-                    'inputs': {
-                        'value': [{
-                            'ref': 'start_node.juan.0:work.task',
-                        }],
-                    },
-                },
-                'item_order': ['response', 'comment', 'inputs'],
+        'input': [Form.state_json('approval_node', [
+            {
+                'name': 'response',
+                'value': 'reject',
             },
-        }],
+            {
+                'name': 'comment',
+                'value': 'I do not like it',
+            },
+            {
+                'name': 'inputs',
+                'value': [{
+                    'ref': 'start_node.juan.0:work.task',
+                }],
+            },
+        ])],
     }, channel)
 
     # assertions
@@ -611,22 +598,14 @@ def test_reject(config, mongo):
                         'items': {
                             'juan': {
                                 '_type': 'actor',
-                                'forms': [{
-                                    '_type': 'form',
-                                    'state': 'invalid',
-                                    'ref': 'work',
-                                    'inputs': {
-                                        '_type': ':sorted_map',
-                                        'items': {
-                                            'task': {
-                                                '_type': 'field',
-                                                'state': 'invalid',
-                                                'value': '2',
-                                            },
-                                        },
-                                        'item_order': ['task'],
+                                'forms': [Form.state_json('work', [
+                                    {
+                                        'name': 'task',
+                                        '_type': 'field',
+                                        'state': 'invalid',
+                                        'value': '2',
                                     },
-                                }],
+                                ], state='invalid')],
                                 'state': 'invalid',
                                 'user': {
                                     '_type': 'user',
@@ -652,34 +631,24 @@ def test_reject(config, mongo):
                         'items': {
                             'juan': {
                                 '_type': 'actor',
-                                'forms': [{
-                                    '_type': 'form',
-                                    'ref': 'approval_node',
-                                    'state': 'invalid',
-                                    'inputs': {
-                                        '_type': ':sorted_map',
-                                        'items': {
-                                            'response': {
-                                                'state': 'invalid',
-                                                'value': 'reject',
-                                            },
-                                            'comment': {
-                                                'value': 'I do not like it',
-                                            },
-                                            'inputs': {
-                                                'value': [{
-                                                    'ref': 'start_node.'
-                                                           'juan.0:work.task',
-                                                }],
-                                            },
-                                        },
-                                        'item_order': [
-                                            'response',
-                                            'comment',
-                                            'inputs',
-                                        ],
+                                'forms': [Form.state_json('approval_node', [
+                                    {
+                                        'name': 'response',
+                                        'state': 'invalid',
+                                        'value': 'reject',
                                     },
-                                }],
+                                    {
+                                        'name': 'comment',
+                                        'value': 'I do not like it',
+                                    },
+                                    {
+                                        'name': 'inputs',
+                                        'value': [{
+                                            'ref': 'start_node.'
+                                                   'juan.0:work.task',
+                                        }],
+                                    },
+                                ], state='invalid')],
                                 'state': 'invalid',
                                 'user': {
                                     '_type': 'user',
@@ -735,31 +704,22 @@ def test_reject(config, mongo):
         'items': {
             'juan': {
                 '_type': 'actor',
-                'forms': [{
-                    '_type': 'form',
-                    'ref': 'approval_node',
-                    'inputs': {
-                        '_type': ':sorted_map',
-                        'items': {
-                            'response': {
-                                'value': 'reject',
-                            },
-                            'comment': {
-                                'value': 'I do not like it',
-                            },
-                            'inputs': {
-                                'value': [{
-                                    'ref': 'start_node.juan.0:work.task',
-                                }],
-                            },
-                        },
-                        'item_order': [
-                            'response',
-                            'comment',
-                            'inputs',
-                        ],
+                'forms': [Form.state_json('approval_node', [
+                    {
+                        'name': 'response',
+                        'value': 'reject',
                     },
-                }],
+                    {
+                        'name': 'comment',
+                        'value': 'I do not like it',
+                    },
+                    {
+                        'name': 'inputs',
+                        'value': [{
+                            'ref': 'start_node.juan.0:work.task',
+                        }],
+                    },
+                ])],
                 'state': 'valid',
                 'user': {
                     '_type': 'user',

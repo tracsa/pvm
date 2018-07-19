@@ -749,19 +749,12 @@ def test_reject_with_dependencies(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'form1',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'task': {
-                        'value': '1',
-                    },
-                },
-                'item_order': ['task'],
+        'input': [Form.state_json('form1', [
+            {
+                'name': 'task',
+                'value': '1',
             },
-        }],
+        ])],
     }, channel)
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'node2'
@@ -771,19 +764,12 @@ def test_reject_with_dependencies(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'form2',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'task': {
-                        'value': '1',
-                    },
-                },
-                'item_order': ['task'],
+        'input': [Form.state_json('form2', [
+            {
+                'name': 'task',
+                'value': '1',
             },
-        }],
+        ])],
     }, channel)
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'node3'
@@ -793,19 +779,12 @@ def test_reject_with_dependencies(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'form3',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'task': {
-                        'value': '1',
-                    },
-                },
-                'item_order': ['task'],
+        'input': [Form.state_json('form3', [
+            {
+                'name': 'task',
+                'value': '1',
             },
-        }],
+        ])],
     }, channel)
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'node4'
@@ -815,27 +794,22 @@ def test_reject_with_dependencies(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'node4',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'response': {
-                        'value': 'reject',
-                    },
-                    'comment': {
-                        'value': 'I do not like it',
-                    },
-                    'inputs': {
-                        'value': [{
-                            'ref': 'node1.juan.0:form1.task',
-                        }],
-                    },
-                },
-                'item_order': ['response', 'comment', 'inputs'],
+        'input': [Form.state_json('node4', [
+            {
+                'name': 'response',
+                'value': 'reject',
             },
-        }],
+            {
+                'name': 'comment',
+                'value': 'I do not like it',
+            },
+            {
+                'name': 'inputs',
+                'value': [{
+                    'ref': 'node1.juan.0:form1.task',
+                }],
+            },
+        ])],
     }, channel)
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'node1'
@@ -845,19 +819,12 @@ def test_reject_with_dependencies(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'form1',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'task': {
-                        'value': '2',
-                    },
-                },
-                'item_order': ['task'],
+        'input': [Form.state_json('form1', [
+            {
+                'name': 'task',
+                'value': '2',
             },
-        }],
+        ])],
     }, channel)
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'node2'
@@ -867,19 +834,12 @@ def test_reject_with_dependencies(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'form2',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'task': {
-                        'value': '2',
-                    },
-                },
-                'item_order': ['task'],
+        'input': [Form.state_json('form2', [
+            {
+                'name': 'task',
+                'value': '2',
             },
-        }],
+        ])],
     }, channel)
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'node4'
@@ -889,25 +849,20 @@ def test_reject_with_dependencies(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'node4',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'response': {
-                        'value': 'accept',
-                    },
-                    'comment': {
-                        'value': 'I like it',
-                    },
-                    'inputs': {
-                        'value': None,
-                    },
-                },
-                'item_order': ['response', 'comment', 'inputs'],
+        'input': [Form.state_json('node4', [
+            {
+                'name': 'response',
+                'value': 'accept',
             },
-        }],
+            {
+                'name': 'comment',
+                'value': 'I like it',
+            },
+            {
+                'name': 'inputs',
+                'value': None,
+            },
+        ])],
     }, channel)
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'node5'
@@ -917,19 +872,12 @@ def test_reject_with_dependencies(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'form5',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'task': {
-                        'value': '1',
-                    },
-                },
-                'item_order': ['task'],
+        'input': [Form.state_json('form5', [
+            {
+                'name': 'task',
+                'value': '1',
             },
-        }],
+        ])],
     }, channel)
     assert Pointer.get_all() == []
 
@@ -958,17 +906,12 @@ def test_reject_with_dependencies(config, mongo):
                         'items': {
                             'juan': {
                                 '_type': 'actor',
-                                'forms': [{
-                                    '_type': 'form',
-                                    'ref': 'form1',
-                                    'inputs': {
-                                        '_type': ':sorted_map',
-                                        'items': {
-                                            'task': {'value': '2'},
-                                        },
-                                        'item_order': ['task'],
+                                'forms': [Form.state_json('form1', [
+                                    {
+                                        'name': 'task',
+                                        'value': '2',
                                     },
-                                }],
+                                ])],
                                 'state': 'valid',
                                 'user': {
                                     '_type': 'user',
@@ -994,17 +937,12 @@ def test_reject_with_dependencies(config, mongo):
                         'items': {
                             'juan': {
                                 '_type': 'actor',
-                                'forms': [{
-                                    '_type': 'form',
-                                    'ref': 'form2',
-                                    'inputs': {
-                                        '_type': ':sorted_map',
-                                        'items': {
-                                            'task': {'value': '2'},
-                                        },
-                                        'item_order': ['task'],
+                                'forms': [Form.state_json('form2', [
+                                    {
+                                        'name': 'task',
+                                        'value': '2',
                                     },
-                                }],
+                                ])],
                                 'state': 'valid',
                                 'user': {
                                     '_type': 'user',
@@ -1030,17 +968,12 @@ def test_reject_with_dependencies(config, mongo):
                         'items': {
                             'juan': {
                                 '_type': 'actor',
-                                'forms': [{
-                                    '_type': 'form',
-                                    'ref': 'form3',
-                                    'inputs': {
-                                        '_type': ':sorted_map',
-                                        'items': {
-                                            'task': {'value': '1'},
-                                        },
-                                        'item_order': ['task'],
+                                'forms': [Form.state_json('form3', [
+                                    {
+                                        'name': 'task',
+                                        'value': '1',
                                     },
-                                }],
+                                ])],
                                 'state': 'valid',
                                 'user': {
                                     '_type': 'user',
@@ -1066,29 +999,20 @@ def test_reject_with_dependencies(config, mongo):
                         'items': {
                             'juan': {
                                 '_type': 'actor',
-                                'forms': [{
-                                    '_type': 'form',
-                                    'ref': 'node4',
-                                    'inputs': {
-                                        '_type': ':sorted_map',
-                                        'items': {
-                                            'response': {
-                                                'value': 'accept',
-                                            },
-                                            'comment': {
-                                                'value': 'I like it',
-                                            },
-                                            'inputs': {
-                                                'value': None,
-                                            },
-                                        },
-                                        'item_order': [
-                                            'response',
-                                            'comment',
-                                            'inputs',
-                                        ],
+                                'forms': [Form.state_json('node4', [
+                                    {
+                                        'name': 'response',
+                                        'value': 'accept',
                                     },
-                                }],
+                                    {
+                                        'name': 'comment',
+                                        'value': 'I like it',
+                                    },
+                                    {
+                                        'name': 'inputs',
+                                        'value': None,
+                                    },
+                                ])],
                                 'state': 'valid',
                                 'user': {
                                     '_type': 'user',
@@ -1114,17 +1038,12 @@ def test_reject_with_dependencies(config, mongo):
                         'items': {
                             'juan': {
                                 '_type': 'actor',
-                                'forms': [{
-                                    '_type': 'form',
-                                    'ref': 'form5',
-                                    'inputs': {
-                                        '_type': ':sorted_map',
-                                        'items': {
-                                            'task': {'value': '1'},
-                                        },
-                                        'item_order': ['task'],
+                                'forms': [Form.state_json('form5', [
+                                    {
+                                        'name': 'task',
+                                        'value': '1',
                                     },
-                                }],
+                                ])],
                                 'state': 'valid',
                                 'user': {
                                     '_type': 'user',
@@ -1285,24 +1204,13 @@ def test_true_condition_node(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [
+        'input': [Form.state_json('mistery', [
             {
-                'ref': 'mistery',
-                '_type': 'form',
-                'inputs': {
-                    '_type': ':sorted_map',
-                    'item_order': [
-                        'password',
-                    ],
-                    'items': {
-                        'password': {
-                            'type': 'text',
-                            'value': 'abrete sésamo',
-                        },
-                    },
-                },
+                'name': 'password',
+                'type': 'text',
+                'value': 'abrete sésamo',
             },
-        ],
+        ])],
     }, channel)
 
     # pointer moved

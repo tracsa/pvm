@@ -6,7 +6,7 @@ import requests
 
 from cacahuate.handler import Handler
 from cacahuate.models import Execution, Pointer, User
-from cacahuate.node import Action
+from cacahuate.node import Action, Form
 from cacahuate.xml import Xml
 
 from .utils import make_pointer, make_user, assert_near_date, random_string
@@ -195,22 +195,14 @@ def test_teardown(config, mongo):
         'command': 'step',
         'pointer_id': p_0.id,
         'user_identifier': manager.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'mid_form',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'data': {
-                        '_type': 'field',
-                        'state': 'valid',
-                        'value': 'yes',
-                    },
-                },
-                'item_order': ['data'],
+        'input': [Form.state_json('mid_form', [
+            {
+                '_type': 'field',
+                'state': 'valid',
+                'value': 'yes',
+                'name': 'data',
             },
-        }],
+        ])],
     }, channel)
 
     # assertions
@@ -237,22 +229,14 @@ def test_teardown(config, mongo):
                     'identifier': 'manager',
                     'fullname': None,
                 },
-                'forms': [{
-                    '_type': 'form',
-                    'ref': 'mid_form',
-                    'state': 'valid',
-                    'inputs': {
-                        '_type': ':sorted_map',
-                        'items': {
-                            'data': {
-                                '_type': 'field',
-                                'state': 'valid',
-                                'value': 'yes',
-                            },
-                        },
-                        'item_order': ['data'],
+                'forms': [Form.state_json('mid_form', [
+                    {
+                        '_type': 'field',
+                        'state': 'valid',
+                        'value': 'yes',
+                        'name': 'data',
                     },
-                }],
+                ])],
             },
         },
     }
@@ -299,22 +283,14 @@ def test_teardown(config, mongo):
                                 'identifier': 'manager',
                                 'fullname': None,
                             },
-                            'forms': [{
-                                '_type': 'form',
-                                'ref': 'mid_form',
-                                'state': 'valid',
-                                'inputs': {
-                                    '_type': ':sorted_map',
-                                    'items': {
-                                        'data': {
-                                            '_type': 'field',
-                                            'state': 'valid',
-                                            'value': 'yes',
-                                        },
-                                    },
-                                    'item_order': ['data'],
+                            'forms': [Form.state_json('mid_form', [
+                                {
+                                    '_type': 'field',
+                                    'state': 'valid',
+                                    'value': 'yes',
+                                    'name': 'data',
                                 },
-                            }],
+                            ])],
                         },
                     },
                 },
@@ -450,27 +426,22 @@ def test_approve(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [{
-            '_type': 'form',
-            'ref': 'approval_node',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'response': {
-                        'value': 'accept',
-                    },
-                    'comment': {
-                        'value': 'I like it',
-                    },
-                    'inputs': {
-                        'value': [{
-                            'ref': 'start_node.juan.0.task',
-                        }],
-                    },
-                },
-                'item_order': ['response', 'comment', 'inputs'],
+        'input': [Form.state_json('approval_node', [
+            {
+                'name': 'response',
+                'value': 'accept',
             },
-        }],
+            {
+                'name': 'comment',
+                'value': 'I like it',
+            },
+            {
+                'name': 'inputs',
+                'value': [{
+                    'ref': 'start_node.juan.0.task',
+                }],
+            },
+        ])],
     }, channel)
 
     # assertions
@@ -496,27 +467,25 @@ def test_approve(config, mongo):
                     'identifier': 'juan',
                     'fullname': 'Juan',
                 },
-                'forms': [{
-                    '_type': 'form',
-                    'ref': 'approval_node',
-                    'inputs': {
-                        '_type': ':sorted_map',
-                        'items': {
-                            'response': {
-                                'value': 'accept',
-                            },
-                            'comment': {
-                                'value': 'I like it',
-                            },
-                            'inputs': {
-                                'value': [{
-                                    'ref': 'start_node.juan.0.task',
-                                }],
-                            },
-                        },
-                        'item_order': ['response', 'comment', 'inputs'],
+                'forms': [Form.state_json('approval_node', [
+                    {
+                        'name': 'response',
+                        'name': 'response',
+                        'value': 'accept',
                     },
-                }],
+                    {
+                        'name': 'comment',
+                        'name': 'comment',
+                        'value': 'I like it',
+                    },
+                    {
+                        'name': 'inputs',
+                        'name': 'inputs',
+                        'value': [{
+                            'ref': 'start_node.juan.0.task',
+                        }],
+                    },
+                ])],
             },
         },
     }

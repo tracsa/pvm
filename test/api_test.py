@@ -1,5 +1,3 @@
-from cacahuate.handler import Handler
-from cacahuate.models import Pointer, Execution
 from datetime import datetime
 from flask import json
 from random import choice
@@ -7,9 +5,13 @@ from string import ascii_letters
 import pika
 import pytest
 
+from cacahuate.handler import Handler
+from cacahuate.models import Pointer, Execution
 from cacahuate.xml import Xml
-from .utils import make_auth, make_pointer, make_user, \
-    make_date, assert_near_date
+from cacahuate.node import Form
+
+from .utils import make_auth, make_pointer, make_user, make_date
+from .utils import assert_near_date
 
 EXECUTION_ID = '15asbs'
 
@@ -211,26 +213,17 @@ def test_continue_process(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan_manager',
-        'input': [{
-            '_type': 'form',
-            'ref': 'mid_form',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'data': {
-                        "name": "data",
-                        "type": "text",
-                        "value": "yes",
-                        'label': 'data',
-                        'value_caption': 'yes',
-                        'state': 'valid',
-                        'hidden': False,
-                    },
-                },
-                'item_order': ['data'],
+        'input': [Form.state_json('mid_form', [
+            {
+                "name": "data",
+                "type": "text",
+                "value": "yes",
+                'label': 'data',
+                'value_caption': 'yes',
+                'state': 'valid',
+                'hidden': False,
             },
-        }],
+        ])],
     }
 
     assert args['exchange'] == ''
@@ -363,26 +356,17 @@ def test_start_process(client, mocker, config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'input': [{
-            '_type': 'form',
-            'ref': 'start_form',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'data': {
-                        'label': 'Info',
-                        'type': 'text',
-                        'value': 'yes',
-                        'value_caption': 'yes',
-                        'name': 'data',
-                        'state': 'valid',
-                        'hidden': False,
-                    },
-                },
-                'item_order': ['data'],
+        'input': [Form.state_json('start_form', [
+            {
+                'label': 'Info',
+                'type': 'text',
+                'value': 'yes',
+                'value_caption': 'yes',
+                'name': 'data',
+                'state': 'valid',
+                'hidden': False,
             },
-        }],
+        ])],
     }
 
     assert args['exchange'] == ''
@@ -659,29 +643,20 @@ def test_regression_approval(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'input': [{
-            '_type': 'form',
-            'ref': 'approval_node',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'response': {
-                        'name': 'response',
-                        'value': 'accept',
-                    },
-                    'comment': {
-                        'name': 'comment',
-                        'value': 'I like the previous work',
-                    },
-                    'inputs': {
-                        'name': 'inputs',
-                        'value': None,
-                    },
-                },
-                'item_order': ['response', 'comment', 'inputs'],
+        'input': [Form.state_json('approval_node', [
+            {
+                'name': 'response',
+                'value': 'accept',
             },
-        }],
+            {
+                'name': 'comment',
+                'value': 'I like the previous work',
+            },
+            {
+                'name': 'inputs',
+                'value': None,
+            },
+        ])],
     }
 
 
@@ -724,31 +699,22 @@ def test_regression_reject(client, mocker, config):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'input': [{
-            '_type': 'form',
-            'ref': 'approval_node',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'response': {
-                        'name': 'response',
-                        'value': 'reject',
-                    },
-                    'comment': {
-                        'name': 'comment',
-                        'value': 'I dont like it',
-                    },
-                    'inputs': {
-                        'name': 'inputs',
-                        'value': [{
-                            'ref': 'start_node.juan.0:work.task',
-                        }],
-                    },
-                },
-                'item_order': ['response', 'comment', 'inputs'],
+        'input': [Form.state_json('approval_node', [
+            {
+                'name': 'response',
+                'value': 'reject',
             },
-        }],
+            {
+                'name': 'comment',
+                'value': 'I dont like it',
+            },
+            {
+                'name': 'inputs',
+                'value': [{
+                    'ref': 'start_node.juan.0:work.task',
+                }],
+            },
+        ])],
     }
 
 
@@ -1065,23 +1031,15 @@ def test_task_validation(client, mongo, config):
             'identifier': 'juan',
             'fullname': None,
         },
-        'forms': [{
-            '_type': 'form',
-            'ref': 'work',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'task': {
-                        '_type': 'field',
-                        'state': 'valid',
-                        'label': 'task',
-                        'value': 'Get some milk and eggs',
-                    },
-                },
-                'item_order': ['task'],
+        'forms': [Form.state_json('work', [
+            {
+                '_type': 'field',
+                'state': 'valid',
+                'label': 'task',
+                'name': 'task',
+                'value': 'Get some milk and eggs',
             },
-        }],
+        ])],
     }
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
@@ -1109,6 +1067,7 @@ def test_task_validation(client, mongo, config):
                 '_type': 'field',
                 'ref': 'start_node.juan.0:work.task',
                 'label': 'task',
+                'name': 'task',
                 'value': 'Get some milk and eggs',
             }
         ],
@@ -1129,35 +1088,17 @@ def test_task_with_prev_work(client, config, mongo):
     state = Xml.load(config, 'validation-multiform.2018-05-22').get_state()
     node = state['items']['start_node']
 
-    prev_work = [{
-        '_type': 'form',
-        'ref': 'set',
-        'state': 'invalid',
-        'inputs': {
-            '_type': ':sorted_map',
-            'items': {
-                'A': {'_type': 'field', 'value': 'a1', 'state': 'valid'},
-                'B': {'_type': 'field', 'value': 'b1', 'state': 'valid'},
-                'C': {'_type': 'field', 'value': 'c1', 'state': 'invalid'},
-                'D': {'_type': 'field', 'value': 'd1', 'state': 'valid'},
-            },
-            'item_order': ['A', 'B', 'C', 'D'],
-        },
-    }, {
-        '_type': 'form',
-        'ref': 'set',
-        'state': 'valid',
-        'inputs': {
-            '_type': ':sorted_map',
-            'items': {
-                'A': {'_type': 'field', 'value': 'a2', 'state': 'valid'},
-                'B': {'_type': 'field', 'value': 'b2', 'state': 'valid'},
-                'C': {'_type': 'field', 'value': 'c2', 'state': 'valid'},
-                'D': {'_type': 'field', 'value': 'd2', 'state': 'valid'},
-            },
-            'item_order': ['A', 'B', 'C', 'D'],
-        },
-    }]
+    prev_work = [Form.state_json('set', [
+        {'_type': 'field', 'name': 'A', 'value': 'a1', 'state': 'valid'},
+        {'_type': 'field', 'name': 'B', 'value': 'b1', 'state': 'valid'},
+        {'_type': 'field', 'name': 'C', 'value': 'c1', 'state': 'invalid'},
+        {'_type': 'field', 'name': 'D', 'value': 'd1', 'state': 'valid'},
+    ]), Form.state_json('set', [
+        {'_type': 'field', 'name': 'A', 'value': 'a2', 'state': 'valid'},
+        {'_type': 'field', 'name': 'B', 'value': 'b2', 'state': 'valid'},
+        {'_type': 'field', 'name': 'C', 'value': 'c2', 'state': 'valid'},
+        {'_type': 'field', 'name': 'D', 'value': 'd2', 'state': 'valid'},
+    ])]
 
     node['state'] = 'valid'
     node['actors']['items']['juan'] = {

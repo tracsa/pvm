@@ -1496,3 +1496,11 @@ def test_pagination_v1_log(client, mongo, config):
 def test_name_with_if(client, mongo, config):
     xml = Xml.load(config, 'pollo')
     assert xml.name == 'pollo.2018-05-20.xml'
+
+
+def test_get_xml(client):
+
+    res = client.get('/v1/process/validation-multiform.xml')
+    assert res.status_code == 200
+    assert res.headers['Content-Type'] == 'text/xml; charset=utf-8'
+    assert res.data.startswith(b'<process-spec>')

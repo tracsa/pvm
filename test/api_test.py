@@ -667,12 +667,15 @@ def test_regression_approval(client, mocker, config):
                 '_type': ':sorted_map',
                 'items': {
                     'response': {
+                        'name': 'response',
                         'value': 'accept',
                     },
                     'comment': {
+                        'name': 'comment',
                         'value': 'I like the previous work',
                     },
                     'inputs': {
+                        'name': 'inputs',
                         'value': None,
                     },
                 },
@@ -729,12 +732,15 @@ def test_regression_reject(client, mocker, config):
                 '_type': ':sorted_map',
                 'items': {
                     'response': {
+                        'name': 'response',
                         'value': 'reject',
                     },
                     'comment': {
+                        'name': 'comment',
                         'value': 'I dont like it',
                     },
                     'inputs': {
+                        'name': 'inputs',
                         'value': [{
                             'ref': 'start_node.juan.0:work.task',
                         }],

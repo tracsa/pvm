@@ -7,17 +7,16 @@ import logging
 import re
 import requests
 
-from cacahuate.errors import ValidationErrors, RequiredInputError, \
-    InvalidInputError, InputError, RequiredListError, RequiredDictError, \
-    EndOfProcess, InconsistentState, MisconfiguredProvider
-from cacahuate.inputs import make_input
-from cacahuate.utils import user_import
-from cacahuate.xml import get_text, NODES, Xml
-from cacahuate.http.errors import BadRequest
-from cacahuate.jsontypes import Map
-from cacahuate.jsontypes import SortedMap
+from cacahuate.errors import InconsistentState, MisconfiguredProvider
+from cacahuate.errors import InvalidInputError, InputError, RequiredListError
+from cacahuate.errors import RequiredDictError
+from cacahuate.errors import ValidationErrors, RequiredInputError, EndOfProcess
 from cacahuate.grammar import Condition, ConditionTransformer
-from cacahuate.utils import get_or_create
+from cacahuate.http.errors import BadRequest
+from cacahuate.inputs import make_input
+from cacahuate.jsontypes import Map, SortedMap
+from cacahuate.utils import get_or_create, user_import
+from cacahuate.xml import get_text, NODES, Xml
 
 LOGGER = logging.getLogger(__name__)
 
@@ -80,11 +79,15 @@ class Form:
         if errors:
             raise ValidationErrors(errors)
 
+        return Form.state_json(self.ref, collected_inputs)
+
+    @staticmethod
+    def state_json(ref, inputs, state='valid'):
         return {
             '_type': 'form',
-            'state': 'valid',
-            'ref': self.ref,
-            'inputs': SortedMap(collected_inputs, key='name').to_json(),
+            'state': state,
+            'ref': ref,
+            'inputs': SortedMap(inputs, key='name').to_json(),
         }
 
 
@@ -585,26 +588,20 @@ class Validation(UserAttachedNode):
                 if errors:
                     raise BadRequest(errors)
 
-        return [{
-            '_type': 'form',
-            'ref': self.id,
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'response': {
-                        'value': json_data['response'],
-                    },
-                    'comment': {
-                        'value': json_data['comment'],
-                    },
-                    'inputs': {
-                        'value': json_data.get('inputs'),
-                    },
-                },
-                'item_order': ['response', 'comment', 'inputs'],
+        return [Form.state_json(self.id, [
+            {
+                'name': 'response',
+                'value': json_data['response'],
             },
-        }]
+            {
+                'name': 'comment',
+                'value': json_data['comment'],
+            },
+            {
+                'name': 'inputs',
+                'value': json_data.get('inputs'),
+            },
+        ])]
 
     def dependent_refs(self, invalidated, node_state):
         ''' finds dependencies of the invalidated set in this node '''

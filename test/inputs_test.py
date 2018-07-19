@@ -4,6 +4,7 @@ import pika
 import pytest
 
 from cacahuate.models import Execution
+from cacahuate.node import Form
 
 from .utils import make_auth, make_user, assert_near_date
 
@@ -666,26 +667,17 @@ def test_hidden_input(client, mocker, config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': 'juan',
-        'input': [{
-            '_type': 'form',
-            'ref': 'start_form',
-            'state': 'valid',
-            'inputs': {
-                '_type': ':sorted_map',
-                'items': {
-                    'data': {
-                        'label': 'data',
-                        'type': 'text',
-                        'value': 'yes',
-                        'value_caption': 'yes',
-                        'name': 'data',
-                        'state': 'valid',
-                        'hidden': True,
-                    },
-                },
-                'item_order': ['data'],
+        'input': [Form.state_json('start_form', [
+            {
+                'label': 'data',
+                'type': 'text',
+                'value': 'yes',
+                'value_caption': 'yes',
+                'name': 'data',
+                'state': 'valid',
+                'hidden': True,
             },
-        }],
+        ])],
     }
 
     assert json.loads(args['body']) == json_message

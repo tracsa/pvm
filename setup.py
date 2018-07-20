@@ -8,7 +8,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst')) as f:
     long_description = f.read()
 
-with open(path.join(here, 'version.txt')) as f:
+with open(path.join(here, 'cacahuate', 'version.txt')) as f:
     version = f.read().strip()
 
 setup(
@@ -47,7 +47,7 @@ setup(
     ],
 
     package_data={
-        'cacahuate': ['grammars/*.g', 'xml/*.rng'],
+        'cacahuate': ['grammars/*.g', 'xml/*.rng', 'version.txt'],
     },
 
     entry_points={
@@ -57,8 +57,6 @@ setup(
             'rng_path = cacahuate.main:rng_path',
         ],
     },
-
-    include_package_data=True,
 
     install_requires=[
         'Flask-Coralillo',

@@ -1,9 +1,12 @@
-.PHONY: release pytest clean lint flake8 xmllint clear-objects
+.PHONY: publish pytest clean lint flake8 xmllint clear-objects build test
+
+build:
+	./setup.py sdist && ./setup.py bdist_wheel
 
 test: pytest lint flake8 xmllint
 
-release:
-	./setup.py test && ./setup.py sdist && ./setup.py bdist_wheel && twine upload dist/* && git push && git push --tags
+publish:
+	twine upload dist/* && git push && git push --tags
 
 clean:
 	rm -rf dist/

@@ -46,3 +46,12 @@ def get_or_create(identifier, data):
         return User.get_by_or_exception('identifier', identifier)
     except ModelNotFoundError:
         return User(**data).save()
+
+
+def clear_email(string):
+    try:
+        string = string[:string.index('@')]
+    except ValueError:
+        pass
+
+    return string.replace('.', '')

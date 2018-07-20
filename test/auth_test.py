@@ -77,10 +77,17 @@ def test_ldap_backend():
     assert LdapAuthProvider
 
 
-def test_anyone_backend():
+def test_anyone_backend(config):
     from cacahuate.auth.backends.anyone import AnyoneAuthProvider  # noqa
 
-    assert AnyoneAuthProvider
+    username, data = AnyoneAuthProvider(config).authenticate(username=' foo@f')
+
+    assert username == 'foo'
+    assert data == {
+        'email': 'foo@f',
+        'identifier': 'foo',
+        'fullname': 'foo@f',
+    }
 
 
 def test_impersonate_backend():

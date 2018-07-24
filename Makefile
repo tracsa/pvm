@@ -21,7 +21,7 @@ flake8:
 	flake8 --exclude=.env,.tox,dist,docs,build,*.egg .
 
 xmllint:
-	xml/validate.sh
+	xmllint --noout --relaxng cacahuate/xml/process-spec.rng xml/*.xml
 
 clear-objects:
 	python -c "from coralillo import Engine; eng=Engine(); eng.lua.drop(args=['*'])"

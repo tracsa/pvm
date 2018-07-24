@@ -13,11 +13,12 @@ import re
 import sys
 import time
 
+from cacahuate.errors import MalformedProcess
+from cacahuate.grammar import Condition
 from cacahuate.indexes import create_indexes
 from cacahuate.loop import Loop
 from cacahuate.models import bind_models
 from cacahuate.xml import NODES, get_text
-from cacahuate.grammar import Condition
 
 
 def main():
@@ -78,12 +79,12 @@ def _validate_file(filename):
         id_element = node.getAttribute('id')
 
         if not id_element:
-            sys.exit(
+            raise MalformedProcess(
                 '{}:{} All nodes must have an id'.format(filename, sw.lineno)
             )
 
         if not variable_re.match(id_element):
-            sys.exit(
+            raise MalformedProcess(
                 '{}:{} Id must be a valid variable name'.format(
                     filename, sw.lineno,
                 )
@@ -92,7 +93,7 @@ def _validate_file(filename):
         if id_element not in ids:
             ids.append(id_element)
         else:
-            sys.exit("{}:{} Duplicated id: '{}'".format(
+            raise MalformedProcess("{}:{} Duplicated id: '{}'".format(
                 filename, sw.lineno,
                 id_element,
             ))
@@ -115,23 +116,23 @@ def _validate_file(filename):
             try:
                 tree = Condition().parse(get_text(node))
             except GrammarError:
-                sys.exit(
+                raise MalformedProcess(
                     '{}:{} Grammar error in condition'.format(
                         filename, sw.lineno,
                     )
                 )
             except ParseError:
-                sys.exit(
+                raise MalformedProcess(
                     '{}:{} Parse error in condition'.format(
                         filename, sw.lineno,
                     )
                 )
             except LexError:
-                sys.exit(
+                raise MalformedProcess(
                     '{}:{} Lex error in condition'.format(filename, sw.lineno)
                 )
             except KeyError as e:
-                sys.exit(
+                raise MalformedProcess(
                     '{}:{} variable does not exist: {}'.format(
                         filename, sw.lineno,
                         str(e),
@@ -148,7 +149,7 @@ def _validate_file(filename):
                 try:
                     data_form[reference_form][field_form]
                 except KeyError:
-                    sys.exit(
+                    raise MalformedProcess(
                         "{}:{} variable used in if is not defined '{}'".format(
                             filename, sw.lineno,
                             reference_form+'.'+field_form,
@@ -184,7 +185,7 @@ def _validate_file(filename):
                 try:
                     data_form[reference_form][field_form]
                 except KeyError:
-                    sys.exit(
+                    raise MalformedProcess(
                         "{}:{} Referenced param does not exist '{}'".format(
                             filename, sw.lineno,
                             reference_form+'.'+field_form,
@@ -192,7 +193,7 @@ def _validate_file(filename):
                     )
             elif ref_type == 'user':
                 if ref not in passed_nodes:
-                    sys.exit(
+                    raise MalformedProcess(
                         '{}:{} Referenced user is never created: {}'.format(
                             filename, sw.lineno,
                             ref,
@@ -208,7 +209,7 @@ def _validate_file(filename):
             try:
                 data_form[form][field]
             except KeyError:
-                sys.exit(
+                raise MalformedProcess(
                     "{}:{} Referenced dependency does not exist '{}'".format(
                         filename, sw.lineno,
                         form + '.' + field,
@@ -222,7 +223,7 @@ def _validate_file(filename):
             form_id = form.getAttribute('id')
 
             if form_id and not variable_re.match(form_id):
-                sys.exit(
+                raise MalformedProcess(
                     '{}:{} Form ids must be valid variable names'.format(
                         filename, sw.lineno,
                     )
@@ -231,7 +232,7 @@ def _validate_file(filename):
             form_ref = form.getAttribute('ref')
 
             if form_ref and not variable_re.match(form_ref):
-                sys.exit(
+                raise MalformedProcess(
                     '{}:{} Form refs must be valid variable names'.format(
                         filename, sw.lineno,
                     )
@@ -244,7 +245,7 @@ def _validate_file(filename):
                 inpt_name = inpt.getAttribute('name')
 
                 if not variable_re.match(inpt_name):
-                    sys.exit(
+                    raise MalformedProcess(
                         '{}:{} Field names must match [a-zA-Z0-9_]+'.format(
                             filename, sw.lineno,
                         )
@@ -275,15 +276,24 @@ def xml_validate(filenames=None):
 
         filenames = args.files
 
+    found_errors = False
+
     for filename in filenames:
         try:
-            _validate_file(filename)
-        except SAXParseException:
-            sys.exit('{}:{} Is not valid xml'.format(
-                filename, 0
-            ))
-        except FileNotFoundError:
-            sys.exit('{} not found'.format(filename))
+            try:
+                _validate_file(filename)
+            except SAXParseException:
+                raise MalformedProcess('{}:{} Is not valid xml'.format(
+                    filename, 0
+                ))
+            except FileNotFoundError:
+                raise MalformedProcess('{} not found'.format(filename))
+        except MalformedProcess as e:
+            found_errors = True
+            print(e)
+
+    if found_errors:
+        sys.exit('** Validation errors found **')
 
 
 if __name__ == '__main__':

@@ -4,6 +4,8 @@ from coralillo import Engine
 from itacate import Config
 from lark.exceptions import GrammarError, ParseError, LexError
 from xml.dom import pulldom
+from xml.sax._exceptions import SAXParseException
+import argparse
 import logging
 import logging.config
 import os
@@ -54,12 +56,7 @@ def rng_path():
     )))
 
 
-def xml_validate(filename=None):
-    if not filename:
-        if not len(sys.argv) == 2:
-            sys.exit("Must specify a file to analyze")
-        filename = sys.argv[1]
-
+def _validate_file(filename):
     ids = []
     data_form = ChainMap()
     passed_nodes = []
@@ -263,6 +260,30 @@ def xml_validate(filename=None):
 
         if has_auth_filter:
             passed_nodes.append(node.getAttribute('id'))
+
+    print('{} seems correct'.format(filename))
+
+
+def xml_validate(filenames=None):
+    if not filenames:
+        parser = argparse.ArgumentParser(description='Validate xmls')
+
+        parser.add_argument('files', metavar='FILE', nargs='+',
+                            help='the files to be validated')
+
+        args = parser.parse_args()
+
+        filenames = args.files
+
+    for filename in filenames:
+        try:
+            _validate_file(filename)
+        except SAXParseException:
+            sys.exit('{}:{} Is not valid xml'.format(
+                filename, 0
+            ))
+        except FileNotFoundError:
+            sys.exit('{} not found'.format(filename))
 
 
 if __name__ == '__main__':

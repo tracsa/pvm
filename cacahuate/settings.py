@@ -25,7 +25,7 @@ LOGGING = {
             'formatter': 'default',
         },
         # 'charpe': {
-        #     'class': 'cacahuate.log.CharpeHandler',
+        #     'class': 'charpe.CharpeHandler',
         #     'level': 'ERROR',
         #     'host': RABBIT_HOST,
         #     'medium': 'email',

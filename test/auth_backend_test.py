@@ -15,4 +15,6 @@ def test_backref_backend(config):
     assert user[0] == 'juan'
     assert user[1] == {
         'identifier': 'juan',
+        'email': 'juan',
+        'fullname': 'juan',
     }

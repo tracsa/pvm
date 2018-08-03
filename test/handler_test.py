@@ -1477,7 +1477,7 @@ def test_ifelifelse_if(config, mongo):
     # rabbit called to notify the user
     channel.basic_publish.assert_called_once()
     args = channel.basic_publish.call_args[1]
-    assert args['exchange'] == 'cacahuate_notify'
+    assert args['exchange'] == 'charpe_notify'
 
     channel = MagicMock()
     handler.call({
@@ -1586,7 +1586,7 @@ def test_ifelifelse_elif(config, mongo):
     # rabbit called to notify the user
     channel.basic_publish.assert_called_once()
     args = channel.basic_publish.call_args[1]
-    assert args['exchange'] == 'cacahuate_notify'
+    assert args['exchange'] == 'charpe_notify'
 
     channel = MagicMock()
     handler.call({
@@ -1720,7 +1720,7 @@ def test_ifelifelse_else(config, mongo):
     # rabbit called to notify the user
     channel.basic_publish.assert_called_once()
     args = channel.basic_publish.call_args[1]
-    assert args['exchange'] == 'cacahuate_notify'
+    assert args['exchange'] == 'charpe_notify'
 
     channel = MagicMock()
     handler.call({

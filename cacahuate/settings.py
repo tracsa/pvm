@@ -5,7 +5,7 @@ base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 # Rabbitmq
 RABBIT_HOST = 'localhost'
 RABBIT_QUEUE = 'cacahuate_process'
-RABBIT_NOTIFY_EXCHANGE = 'cacahuate_notify'
+RABBIT_NOTIFY_EXCHANGE = 'charpe_notify'
 RABBIT_CONSUMER_TAG = 'cacahuate_consumer_1'
 RABBIT_NO_ACK = True
 

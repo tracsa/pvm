@@ -7,5 +7,7 @@ class BackrefHierarchyProvider(BaseHierarchyProvider):
         return [
             (params.get('identifier'), {
                 'identifier': params.get('identifier'),
+                'email': params.get('identifier'),
+                'fullname': params.get('identifier'),
             }),
         ]

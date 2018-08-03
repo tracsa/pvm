@@ -1,5 +1,4 @@
 from cacahuate.auth.base import BaseAuthProvider
-from cacahuate.utils import clear_email
 from cacahuate.errors import AuthFieldRequired
 
 
@@ -11,10 +10,9 @@ class AnyoneAuthProvider(BaseAuthProvider):
             raise AuthFieldRequired('username')
 
         email = credentials['username'].strip()
-        username = clear_email(email)
 
-        return (username, {
-            'identifier': username,
+        return (email, {
+            'identifier': email,
             'email': email,
             'fullname': email,
         })

@@ -82,10 +82,10 @@ def test_anyone_backend(config):
 
     username, data = AnyoneAuthProvider(config).authenticate(username=' foo@f')
 
-    assert username == 'foo'
+    assert username == 'foo@f'
     assert data == {
         'email': 'foo@f',
-        'identifier': 'foo',
+        'identifier': 'foo@f',
         'fullname': 'foo@f',
     }
 

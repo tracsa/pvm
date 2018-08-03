@@ -41,17 +41,26 @@ def user_import(module_key, class_sufix, import_maper, default_path, enabled):
     return cls
 
 
-def get_or_create(identifier, data):
-    try:
-        return User.get_by_or_exception('identifier', identifier)
-    except ModelNotFoundError:
-        return User(**data).save()
+def clear_username(string):
+    ''' because mongo usernames have special requirements '''
+    string = string.strip()
 
+    if string.startswith('$'):
+        string = string[1:]
 
-def clear_email(string):
     try:
         string = string[:string.index('@')]
     except ValueError:
         pass
 
     return string.replace('.', '')
+
+
+def get_or_create(identifier, data):
+    identifier = clear_username(identifier)
+    data['identifier'] = identifier
+
+    try:
+        return User.get_by_or_exception('identifier', identifier)
+    except ModelNotFoundError:
+        return User(**data).save()

@@ -1,9 +1,9 @@
-.PHONY: publish pytest clean lint flake8 xmllint clear-objects build test
+.PHONY: publish pytest clean lint xmllint clear-objects build test
 
 build:
 	./setup.py sdist && ./setup.py bdist_wheel
 
-test: pytest lint flake8 xmllint
+test: pytest lint xmllint
 
 publish:
 	twine upload dist/* && git push && git push --tags
@@ -15,9 +15,6 @@ pytest:
 	pytest -xvv
 
 lint:
-	pycodestyle --statistics --show-source --exclude=.env,.tox,dist,docs,build,*.egg .
-
-flake8:
 	flake8 --exclude=.env,.tox,dist,docs,build,*.egg .
 
 xmllint:

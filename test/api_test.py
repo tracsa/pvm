@@ -1503,4 +1503,4 @@ def test_get_xml(client):
     res = client.get('/v1/process/validation-multiform.xml')
     assert res.status_code == 200
     assert res.headers['Content-Type'] == 'text/xml; charset=utf-8'
-    assert res.data.startswith(b'<process-spec>')
+    assert res.data.startswith(b'<?xml version="1.0" encoding="UTF-8"?>')

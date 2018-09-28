@@ -60,11 +60,11 @@ class Input:
         value = value or self.get_default()
 
         if self.required and (value == '' or value is None):
-
             raise RequiredInputError(
                 self.name,
                 'request.body.form_array.{}.{}'.format(form_index, self.name)
             )
+
         return value
 
     def get_default(self):

@@ -3,7 +3,6 @@ from flask import json
 from random import choice
 from string import ascii_letters
 import pika
-import pytest
 
 from cacahuate.handler import Handler
 from cacahuate.models import Pointer, Execution
@@ -32,11 +31,11 @@ def test_continue_process_asks_for_user(client):
 
 
 def test_continue_process_requires(client):
-    user = make_user('juan', 'Juan')
+    juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({}))
+    }, **make_auth(juan)}, data=json.dumps({}))
 
     assert res.status_code == 400
     assert json.loads(res.data) == {
@@ -57,11 +56,11 @@ def test_continue_process_requires(client):
 
 def test_continue_process_asks_living_objects(client):
     ''' the app must validate that the ids sent are real objects '''
-    user = make_user('juan', 'Juan')
+    juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': 'verde',
         'node_id': 'nada',
     }))
@@ -79,14 +78,14 @@ def test_continue_process_asks_living_objects(client):
 
 
 def test_continue_process_requires_valid_node(client):
-    user = make_user('juan', 'Juan')
+    juan = make_user('juan', 'Juan')
     exc = Execution(
         process_name='simple.2018-02-19.xml',
     ).save()
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'notarealnode',
     }))
@@ -104,14 +103,14 @@ def test_continue_process_requires_valid_node(client):
 
 
 def test_continue_process_requires_living_pointer(client):
-    user = make_user('juan', 'Juan')
+    juan = make_user('juan', 'Juan')
     exc = Execution(
         process_name='simple.2018-02-19.xml',
     ).save()
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'mid_node',
     }))
@@ -131,12 +130,12 @@ def test_continue_process_requires_living_pointer(client):
 def test_continue_process_requires_user_hierarchy(client):
     ''' a node whose auth has a filter must be completed by a person matching
     the filter '''
-    user = make_user('juan', 'Juan')
+    juan = make_user('juan', 'Juan')
     ptr = make_pointer('simple.2018-02-19.xml', 'mid_node')
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': ptr.proxy.execution.get().id,
         'node_id': ptr.node_id,
     }))
@@ -261,11 +260,11 @@ def test_start_process_requirements(client, mongo, config):
     assert Execution.count() == 0
 
     # next, validate the form data
-    user = make_user('juan', 'Juan')
+    juan = make_user('juan', 'Juan')
 
     res = client.post('/v1/execution', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'process_name': 'simple',
     }))
 
@@ -462,14 +461,14 @@ def test_start_process(client, mocker, config, mongo):
 
 
 def test_regression_requirements(client):
-    user = make_user('juan', 'Juan')
+    juan = make_user('juan', 'Juan')
     ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
     exc = ptr.proxy.execution.get()
-    user.proxy.tasks.add(ptr)
+    juan.proxy.tasks.add(ptr)
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'approval_node',
     }))
@@ -487,7 +486,7 @@ def test_regression_requirements(client):
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'approval_node',
         'response': ''.join(choice(ascii_letters) for c in range(10)),
@@ -506,7 +505,7 @@ def test_regression_requirements(client):
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'approval_node',
         'response': 'reject',
@@ -525,7 +524,7 @@ def test_regression_requirements(client):
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'approval_node',
         'response': 'reject',
@@ -545,7 +544,7 @@ def test_regression_requirements(client):
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'approval_node',
         'response': 'reject',
@@ -565,7 +564,7 @@ def test_regression_requirements(client):
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'approval_node',
         'response': 'reject',
@@ -586,7 +585,7 @@ def test_regression_requirements(client):
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'approval_node',
         'response': 'reject',
@@ -614,14 +613,14 @@ def test_regression_approval(client, mocker, config):
         'BlockingChannel.basic_publish'
     )
 
-    user = make_user('juan', 'Juan')
+    juan = make_user('juan', 'Juan')
     ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
     exc = ptr.proxy.execution.get()
-    user.proxy.tasks.add(ptr)
+    juan.proxy.tasks.add(ptr)
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': 'approval_node',
         'response': 'accept',
@@ -667,14 +666,14 @@ def test_regression_reject(client, mocker, config):
         'BlockingChannel.basic_publish'
     )
 
-    user = make_user('juan', 'Juan')
+    juan = make_user('juan', 'Juan')
     ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
     exc = ptr.proxy.execution.get()
-    user.proxy.tasks.add(ptr)
+    juan.proxy.tasks.add(ptr)
 
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
-    }, **make_auth(user)}, data=json.dumps({
+    }, **make_auth(juan)}, data=json.dumps({
         'execution_id': exc.id,
         'node_id': ptr.node_id,
         'response': 'reject',
@@ -718,14 +717,57 @@ def test_regression_reject(client, mocker, config):
     }
 
 
-@pytest.mark.skip
-def test_regression_patch_requirements():
+def test_regression_patch_requirements(client):
+    juan = make_user('juan', 'Juan')
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
+    exc = ptr.proxy.execution.get()
+
+    # ref must exist
+    res = client.patch('/v1/execution/{}'.format(exc.id), headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'comment': 'I dont like it',
+        'inputs': [{
+            'ref': 'start_node.juan.0:work.task',
+        }],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': 'ref does not exist',
+                'where': 'request.body.inputs.0.ref',
+            },
+        ],
+    }
+
+    # ref must pass validation if value present
+    res = client.patch('/v1/execution/{}'.format(execution.id), headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'comment': 'I dont like it',
+        'inputs': [{
+            'ref': 'start_node.juan.0:work.task',
+            'value': 'the value',
+        }],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': 'invalid or something',
+                'where': 'request.body.inputs.0.ref',
+            },
+        ],
+    }
+
     assert False, 'inputs are present'
     assert False, 'every field is valid'
 
 
-@pytest.mark.skip
-def test_regression_patch(client):
+def test_regression_patch_just_invalidate(client):
     ''' patch arbitrary data and cause a regression '''
     juan = make_user('juan', 'Juan')
     ptr = make_pointer(None, None)
@@ -737,6 +779,28 @@ def test_regression_patch(client):
         'comment': 'a comment',
         'inputs': [{
             'ref': '',
+        }],
+    }))
+
+    assert res.status_code == 202
+
+    assert False, 'comment is saved'
+    assert False, 'message is queued'
+
+
+def test_regression_patch_set_value(client):
+    ''' patch arbitrary data and cause a regression '''
+    juan = make_user('juan', 'Juan')
+    ptr = make_pointer(None, None)
+    execution = ptr.proxy.execution.get()
+
+    res = client.patch('/v1/execution/{}'.format(execution.id), headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'comment': 'a comment',
+        'inputs': [{
+            'ref': '',
+            'value': 3,
         }],
     }))
 

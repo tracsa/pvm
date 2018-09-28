@@ -80,10 +80,12 @@ LDAP_SSL = True
 LDAP_DOMAIN = "local"
 LDAP_BASE = "DC=local"
 
+# The different providers that can be used for log in
 ENABLED_LOGIN_PROVIDERS = [
     'ldap',
 ]
 
+# Providers enabled for locating people in the system
 ENABLED_HIERARCHY_PROVIDERS = [
     'anyone',
     'backref',

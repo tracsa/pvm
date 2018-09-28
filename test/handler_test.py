@@ -1082,7 +1082,6 @@ def test_reject_with_dependencies(config, mongo):
     }
 
 
-@pytest.mark.skip
 def test_patch():
     ''' ensure that a patch request moves the pointer accordingly '''
     assert False

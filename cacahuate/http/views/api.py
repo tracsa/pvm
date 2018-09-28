@@ -76,6 +76,34 @@ def process_status(id):
     })
 
 
+@app.route('/v1/execution/<id>', methods=['PATCH'])
+def execution_patch(id):
+    execution = Execution.get_or_exception(id)
+
+    validate_json(request.json, ['comment', 'inputs'])
+
+    xml = Xml.load(app.config, execution.process_name, direct=True)
+    xmliter = iter(xml)
+
+    if type(request.json['inputs']) != list:
+        raise RequiredListError('inputs', 'request.body.inputs')
+
+    for i, patched_input in enumerate(request.json['inputs']):
+        if type(patched_input) != dict:
+            raise RequiredDictError('inputs.{}'.format(i),
+                                    'request.body.inputs.{}'.format(i))
+
+        if 'ref' not in patched_input:
+            raise RequiredInputError('inputs.{}.ref'.format(i),
+                                     'request.body.inputs.{}.ref'.format(i))
+
+        print(patched_input['ref'])
+
+    return jsonify({
+        'data': 'accepted',
+    }), 202
+
+
 @app.route('/v1/execution/<id>', methods=['DELETE'])
 @requires_auth
 def delete_process(id):
@@ -146,6 +174,7 @@ def continue_process():
 
     execution_id = request.json['execution_id']
     node_id = request.json['node_id']
+
     try:
         execution = Execution.get_or_exception(execution_id)
     except ModelNotFoundError:
@@ -294,7 +323,7 @@ def list_activities():
     })
 
 
-@app.route('/v1/task')
+@app.route('/v1/task', methods=['GET'])
 @requires_auth
 def task_list():
     return jsonify({

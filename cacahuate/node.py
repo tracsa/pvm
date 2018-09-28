@@ -358,6 +358,7 @@ class Action(UserAttachedNode):
                 ),
                 'where': 'request.body.form_array',
             }])
+
         for index, form in associated_data:
             if type(form) != dict:
                 raise BadRequest([{

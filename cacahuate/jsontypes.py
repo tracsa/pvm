@@ -7,8 +7,13 @@ class SortedMap:
         self.item_order = []
 
         for item in arg:
-            self.items[item[key]] = item
-            self.item_order.append(item[key])
+            if callable(key):
+                key_value = key(item)
+            else:
+                key_value = item[key]
+
+            self.items[key_value] = item
+            self.item_order.append(key_value)
 
     def to_json(self):
         return {

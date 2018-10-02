@@ -50,6 +50,39 @@ def test_sorted_map():
     }
 
 
+def test_sorted_map_function_key():
+    sm = SortedMap([
+        {
+            'name': 'la',
+            'sub': {
+                'id': '1',
+            },
+        },
+        {
+            'name': 'le',
+            'sub': {
+                'id': '2',
+            },
+        },
+    ], key=lambda x:x['sub']['id'])
+
+    assert sm.item_order == ['1', '2']
+    assert sm.items == {
+        '1': {
+            'name': 'la',
+            'sub': {
+                'id': '1',
+            },
+        },
+        '2': {
+            'name': 'le',
+            'sub': {
+                'id': '2',
+            },
+        },
+    }
+
+
 def test_map():
     sm = Map([
         {

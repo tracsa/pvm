@@ -195,9 +195,10 @@ class Handler:
         }, {
             '$set': {
                 'finished_at': datetime.now(),
-                'actors.items.{identifier}'.format(
-                    identifier=user.identifier,
-                ): actor_json,
+                'actors': SortedMap(
+                    [actor_json],
+                    key=lambda a: a['user']['identifier']
+                ).to_json(),
             },
         })
 

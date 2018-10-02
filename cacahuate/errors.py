@@ -77,6 +77,21 @@ class NoPointerAlive(BadField):
 
 
 class InputError(Exception):
+
+    def __init__(self, detail, where, code):
+        self.detail = detail
+        self.where = where
+        self.code = code
+
+    def to_json(self):
+        return {
+            'detail': self.detail,
+            'where': self.where,
+            'code': self.code,
+        }
+
+
+class WellKnownInputError(InputError):
     detail = None
     code = None
 
@@ -92,42 +107,42 @@ class InputError(Exception):
         }
 
 
-class RequiredInputError(InputError):
+class RequiredInputError(WellKnownInputError):
     detail = "'{input}' is required"
     code = 'validation.required'
 
 
-class InvalidDateError(InputError):
+class InvalidDateError(WellKnownInputError):
     detail = "'{input}' is not date time"
     code = 'validation.invalid_date'
 
 
-class InvalidInputError(InputError):
+class InvalidInputError(WellKnownInputError):
     detail = "'{input}' value invalid"
     code = 'validation.invalid'
 
 
-class RequiredListError(InputError):
+class RequiredListError(WellKnownInputError):
     detail = "'{input}' must be a list"
     code = 'validation.required_list'
 
 
-class RequiredDictError(InputError):
+class RequiredDictError(WellKnownInputError):
     detail = "'{input}' must be an object"
     code = 'validation.required_dict'
 
 
-class RequiredStrError(InputError):
+class RequiredStrError(WellKnownInputError):
     detail = "'{input}' required a str"
     code = 'validation.required_str'
 
 
-class RequiredIntError(InputError):
+class RequiredIntError(WellKnownInputError):
     detail = "'{input}' required an int"
     code = 'validation.required_int'
 
 
-class RequiredFloatError(InputError):
+class RequiredFloatError(WellKnownInputError):
     detail = "'{input}' required a float"
     code = 'validation.required_float'
 

@@ -8,6 +8,7 @@ from cacahuate.handler import Handler
 from cacahuate.models import Pointer, Execution
 from cacahuate.xml import Xml
 from cacahuate.node import Form
+from cacahuate.jsontypes import SortedMap
 
 from .utils import make_auth, make_pointer, make_user, make_date
 from .utils import assert_near_date
@@ -717,18 +718,66 @@ def test_regression_reject(client, mocker, config):
     }
 
 
-def test_regression_patch_requirements(client):
+def test_regression_patch_requirements(client, mongo, config):
     juan = make_user('juan', 'Juan')
-    ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'requester')
     exc = ptr.proxy.execution.get()
 
-    # ref must exist
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': exc.id,
+        'state': Xml.load(config, exc.process_name, direct=True).get_state(),
+    })
+    mongo[config['EXECUTION_COLLECTION']].update_one({
+        'id': exc.id,
+    }, {
+        '$set': {
+            'state.items.requester.actors': SortedMap([{
+                "_type": "actor",
+               "forms": [{
+                   '_type': 'form',
+                   'state': 'valid',
+                   'ref': 'exit_form',
+                   'inputs': SortedMap([{
+                       '_type': 'field',
+                       'state': 'valid',
+                       'value': 'yes',
+                       'name': 'reason',
+                    }], key='name').to_json(),  # Véase Campos
+                }],
+               "state": "valid",
+               "user": {
+                  "_type": "user",
+                  "identifier": "__system__",
+                  "fullname": "System"
+               }
+            }], key=lambda a: a['user']['identifier']).to_json(),
+        },
+    })
+
+    # 'inputs' key is required
+    res = client.patch('/v1/execution/{}'.format(exc.id), headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'comment': 'I dont like it',
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [{
+            'code': 'validation.required',
+            'detail': '\'inputs\' is required',
+            'where': 'request.body.inputs',
+        }],
+    }
+
+    # all refs must exist
     res = client.patch('/v1/execution/{}'.format(exc.id), headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
         'comment': 'I dont like it',
         'inputs': [{
-            'ref': 'start_node.juan.0:work.task',
+            'ref': 'node_id.form_ref.input_name',
         }],
     }))
 
@@ -736,20 +785,21 @@ def test_regression_patch_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'ref does not exist',
+                'detail': 'node node_id not found',
+                'code': 'validation.invalid',
                 'where': 'request.body.inputs.0.ref',
             },
         ],
     }
 
     # ref must pass validation if value present
-    res = client.patch('/v1/execution/{}'.format(execution.id), headers={**{
+    res = client.patch('/v1/execution/{}'.format(exc.id), headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
         'comment': 'I dont like it',
         'inputs': [{
-            'ref': 'start_node.juan.0:work.task',
-            'value': 'the value',
+            'ref': 'requester.exit_form.reason',
+            'value': 'a value',
         }],
     }))
 
@@ -757,14 +807,11 @@ def test_regression_patch_requirements(client):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': 'invalid or something',
-                'where': 'request.body.inputs.0.ref',
+                'detail': '\'value\' value invalid',
+                'where': 'request.body.inputs.0.value',
             },
         ],
     }
-
-    assert False, 'inputs are present'
-    assert False, 'every field is valid'
 
 
 def test_regression_patch_just_invalidate(client):

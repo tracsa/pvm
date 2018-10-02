@@ -2,21 +2,22 @@ from coralillo.errors import ModelNotFoundError
 from datetime import datetime
 from flask import g
 from flask import request, jsonify, json
+import os
 import pika
 import pymongo
-import os
+import re
 
+from cacahuate.errors import InvalidInputError, InputError
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
-from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity, \
-    Forbidden
-from cacahuate.http.middleware import requires_json, requires_auth, \
-    pagination
+from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity
+from cacahuate.http.errors import Forbidden
+from cacahuate.http.middleware import requires_json, requires_auth, pagination
 from cacahuate.http.validation import validate_json, validate_auth
 from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer
+from cacahuate.node import make_node
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict, get_text
-from cacahuate.node import make_node
 
 
 DATE_FIELDS = [
@@ -79,6 +80,8 @@ def process_status(id):
 @app.route('/v1/execution/<id>', methods=['PATCH'])
 def execution_patch(id):
     execution = Execution.get_or_exception(id)
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
+    execution_state = next(collection.find({'id': id}))
 
     validate_json(request.json, ['comment', 'inputs'])
 
@@ -88,16 +91,88 @@ def execution_patch(id):
     if type(request.json['inputs']) != list:
         raise RequiredListError('inputs', 'request.body.inputs')
 
-    for i, patched_input in enumerate(request.json['inputs']):
-        if type(patched_input) != dict:
-            raise RequiredDictError('inputs.{}'.format(i),
-                                    'request.body.inputs.{}'.format(i))
+    for i, field in enumerate(request.json['inputs']):
+        if type(field) != dict:
+            raise RequiredDictError(str(i), 'request.body.inputs.{}'.format(i))
 
-        if 'ref' not in patched_input:
-            raise RequiredInputError('inputs.{}.ref'.format(i),
+        if 'ref' not in field:
+            raise RequiredInputError('id',
                                      'request.body.inputs.{}.ref'.format(i))
 
-        print(patched_input['ref'])
+        if type(field['ref']) != str:
+            raise RequiredStrError('ref',
+                                   'request.body.inputs.{}.ref'.format(i))
+
+        # validate existence of the input
+        pieces = field['ref'].split('.')
+
+        try:
+            node_id = pieces.pop(0)
+            node_state = execution_state['state']['items'][node_id]
+        except IndexError:
+            raise InputError(
+                'Missing segment in ref for node_id',
+                'request.body.inputs.{}.ref'.format(i),
+                'validation.invalid')
+        except KeyError:
+            raise InputError(
+                'node {} not found'.format(node_id),
+                'request.body.inputs.{}.ref'.format(i),
+                'validation.invalid')
+
+        if len(node_state['actors']['items']) == 1:
+            actor_state = node_state['actors']['items'][node_state['actors']['item_order'][0]]
+        else:
+            try:
+                actor_username = pieces.pop(0)
+                actor_state = node_state['actors']['items'][actor_username]
+            except IndexError:
+                raise InputError(
+                    'Missing segment in ref for actor username',
+                    'request.body.inputs.{}.ref'.format(i),
+                    'validation.invalid')
+            except KeyError:
+                raise InputError(
+                    'actor {} not found'.format(actor_username),
+                    'request.body.inputs.{}.ref'.format(i),
+                    'validation.invalid')
+
+        try:
+            form_ref = pieces.pop(0)
+        except IndexError:
+            raise InputError(
+                'Missing segment in ref for form ref',
+                'request.body.inputs.{}.ref'.format(i),
+                'validation.invalid')
+
+        if re.match(r'\d+', form_ref):
+            try:
+                form_state = actor_state['forms'][int(form_ref)]
+            except KeyError:
+                raise InputError(
+                    'form index {} not found'.format(form_ref),
+                    'request.body.inputs.{}.ref'.format(i),
+                    'validation.invalid')
+        else:
+            matching_forms = list(filter(lambda f: f['ref']==form_ref, actor_state['forms']))
+            form_count = len(matching_forms)
+
+            if form_count == 1:
+                form_state = matching_forms[0]
+            elif form_count == 0:
+                raise InputError(
+                    'No forms with ref {} in node'.format(form_ref),
+                    'request.body.inputs.{}.ref'.format(i),
+                    'validation.invalid'
+                )
+            else:
+                raise InputError(
+                    'More than one form with ref {}'.format(form_ref),
+                    'request.body.inputs.{}.ref'.format(i),
+                    'validation.invalid'
+                )
+
+        input_state = form_state['inputs']['items'][pieces.pop(0)]
 
     return jsonify({
         'data': 'accepted',

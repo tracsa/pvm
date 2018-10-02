@@ -370,11 +370,11 @@ def test_call_handler_delete_process(config, mongo):
         % (execution_id, pointer.id)
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
-            'started_at': datetime(2018, 4, 1, 21, 45),
-            'finished_at': None,
-            'status': 'ongoing',
-            'id': execution_id
-        })
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'status': 'ongoing',
+        'id': execution_id
+    })
 
     handler(channel, method, properties, body)
 

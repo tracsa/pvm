@@ -1,0 +1,2 @@
+Almacenamiento Volátil (Redis)
+------------------------------

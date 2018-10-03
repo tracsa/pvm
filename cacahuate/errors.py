@@ -83,6 +83,9 @@ class InputError(Exception):
         self.where = where
         self.code = code
 
+    def __str__(self):
+        return self.to_json()['detail']
+
     def to_json(self):
         return {
             'detail': self.detail,

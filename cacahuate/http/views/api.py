@@ -18,7 +18,8 @@ from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer
 from cacahuate.node import make_node
 from cacahuate.rabbit import get_channel
-from cacahuate.xml import Xml, form_to_dict, get_text
+from cacahuate.xml import Xml, form_to_dict, get_text, get_element_by
+from cacahuate.node import make_input
 
 
 DATE_FIELDS = [
@@ -121,6 +122,15 @@ def execution_patch(id):
                 'request.body.inputs.{}.ref'.format(i),
                 'validation.invalid')
 
+        if node_state['type'] != 'action':
+            raise InputError(
+                'only action nodes may be patched',
+                'request.body.inputs.{}.ref'.format(i),
+                'validation.invalid')
+
+        # node xml element
+        node = get_element_by(dom, 'action', 'id', node_id)
+
         if len(node_state['actors']['items']) == 1:
             only_key = node_state['actors']['item_order'][0]
             actor_state = node_state['actors']['items'][only_key]
@@ -177,6 +187,9 @@ def execution_patch(id):
                     'validation.invalid'
                 )
 
+        # form xml element
+        form = get_element_by(node, 'form', 'id', form_state['ref'])
+
         try:
             input_name = pieces.pop(0)
             form_state['inputs']['items'][input_name]
@@ -191,6 +204,18 @@ def execution_patch(id):
                 'request.body.inputs.{}.ref'.format(i),
                 'validation.invalid'
             )
+
+        # input xml element
+        input_el = get_element_by(form, 'input', 'name', input_name)
+
+        if 'value' in field:
+            try:
+                make_input(input_el).validate(field['value'], 0)
+            except InputError as e:
+                raise InputError(
+                    'value invalid: {}'.format(str(e)),
+                    'request.body.inputs.{}.value'.format(i),
+                    'validation.invalid')
 
     return jsonify({
         'data': 'accepted',

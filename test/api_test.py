@@ -807,8 +807,9 @@ def test_regression_patch_requirements(client, mongo, config):
     assert json.loads(res.data) == {
         'errors': [
             {
-                'detail': '\'value\' value invalid',
+                'detail': 'value invalid: \'reason\' is required',
                 'where': 'request.body.inputs.0.value',
+                'code': 'validation.invalid',
             },
         ],
     }

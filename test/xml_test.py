@@ -3,7 +3,7 @@ import pytest
 
 from cacahuate.errors import ProcessNotFound
 from xml.dom.minidom import parse
-from cacahuate.xml import Xml, form_to_dict
+from cacahuate.xml import Xml, form_to_dict, get_element_by
 
 
 def test_load_not_found(config):
@@ -224,3 +224,23 @@ def test_get_state(config):
         },
         'item_order': ['start', 'end'],
     }
+
+
+def test_get_element_by(config):
+    xml = Xml.load(config, 'exit_request')
+    dom = xml.get_dom()
+
+    node = get_element_by(dom, 'action', 'id', 'requester')
+
+    assert node is not None
+    assert node.getAttribute('id') == 'requester'
+
+    form = get_element_by(node, 'form', 'id', 'exit_form')
+
+    assert form is not None
+    assert form.getAttribute('id') == 'exit_form'
+
+    input = get_element_by(form, 'input', 'name', 'reason')
+
+    assert input is not None
+    assert input.getAttribute('name') == 'reason'

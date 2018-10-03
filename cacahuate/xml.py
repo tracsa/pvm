@@ -446,3 +446,8 @@ def form_to_dict(form):
         form_dict['inputs'].append(input_to_dict(input))
 
     return form_dict
+
+def get_element_by(dom, tag_name, attr, value):
+    for el in dom.getElementsByTagName(tag_name):
+        if el.getAttribute(attr) == value:
+            return el

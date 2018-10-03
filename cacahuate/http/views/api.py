@@ -7,7 +7,8 @@ import pika
 import pymongo
 import re
 
-from cacahuate.errors import InvalidInputError, InputError
+from cacahuate.errors import InputError, RequiredListError, RequiredDictError
+from cacahuate.errors import RequiredInputError, RequiredStrError
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity
 from cacahuate.http.errors import Forbidden
@@ -86,7 +87,7 @@ def execution_patch(id):
     validate_json(request.json, ['comment', 'inputs'])
 
     xml = Xml.load(app.config, execution.process_name, direct=True)
-    xmliter = iter(xml)
+    dom = xml.get_dom()
 
     if type(request.json['inputs']) != list:
         raise RequiredListError('inputs', 'request.body.inputs')
@@ -103,7 +104,7 @@ def execution_patch(id):
             raise RequiredStrError('ref',
                                    'request.body.inputs.{}.ref'.format(i))
 
-        # validate existence of the input
+        # check down the state tree for existence of the requested ref
         pieces = field['ref'].split('.')
 
         try:
@@ -121,7 +122,8 @@ def execution_patch(id):
                 'validation.invalid')
 
         if len(node_state['actors']['items']) == 1:
-            actor_state = node_state['actors']['items'][node_state['actors']['item_order'][0]]
+            only_key = node_state['actors']['item_order'][0]
+            actor_state = node_state['actors']['items'][only_key]
         else:
             try:
                 actor_username = pieces.pop(0)
@@ -154,7 +156,10 @@ def execution_patch(id):
                     'request.body.inputs.{}.ref'.format(i),
                     'validation.invalid')
         else:
-            matching_forms = list(filter(lambda f: f['ref']==form_ref, actor_state['forms']))
+            matching_forms = list(filter(
+                lambda f: f['ref'] == form_ref,
+                actor_state['forms']
+            ))
             form_count = len(matching_forms)
 
             if form_count == 1:
@@ -172,7 +177,20 @@ def execution_patch(id):
                     'validation.invalid'
                 )
 
-        input_state = form_state['inputs']['items'][pieces.pop(0)]
+        try:
+            input_name = pieces.pop(0)
+            form_state['inputs']['items'][input_name]
+        except IndexError:
+            raise InputError(
+                'Missing segment in ref for input name',
+                'request.body.inputs.{}.ref'.format(i),
+                'validation.invalid')
+        except KeyError:
+            raise InputError(
+                'input {} not found'.format(input_name),
+                'request.body.inputs.{}.ref'.format(i),
+                'validation.invalid'
+            )
 
     return jsonify({
         'data': 'accepted',

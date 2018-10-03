@@ -64,7 +64,7 @@ def test_sorted_map_function_key():
                 'id': '2',
             },
         },
-    ], key=lambda x:x['sub']['id'])
+    ], key=lambda x: x['sub']['id'])
 
     assert sm.item_order == ['1', '2']
     assert sm.items == {

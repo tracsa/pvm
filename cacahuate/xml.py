@@ -4,6 +4,7 @@ from jinja2 import Template, TemplateError
 from typing import TextIO, Callable
 from xml.dom import pulldom
 from xml.dom.minidom import Element
+import xml.dom.minidom as minidom
 from xml.sax._exceptions import SAXParseException
 import json
 import os
@@ -64,6 +65,12 @@ class Xml:
                 )
 
             setattr(self, attr, func(get_text(node)))
+
+    def get_file_path(self):
+        return os.path.join(self.config['XML_PATH'], self.filename)
+
+    def get_dom(self):
+        return minidom.parse(self.get_file_path())
 
     def get_name(self, collected_forms=[]):
         context = dict()
@@ -171,14 +178,11 @@ class Xml:
 
         return execution
 
-    def make_iterator(self, iterables):
-
+    def make_iterator(xmlself, iterables):
         class Iter():
 
-            def __init__(self, config, filename):
-                self.parser = pulldom.parse(
-                    open(os.path.join(config['XML_PATH'], filename))
-                )
+            def __init__(self, file_path):
+                self.parser = pulldom.parse(open(file_path))
                 self.block_stack = deque()
 
             def find(self, testfunc: Callable[[Element], bool]) -> Element:
@@ -244,7 +248,7 @@ class Xml:
             def __iter__(self):
                 return self
 
-        return Iter(self.config, self.filename)
+        return Iter(xmlself.get_file_path())
 
     def get_info_node(self):
         xmliter = self.make_iterator('process-info')

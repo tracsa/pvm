@@ -5,11 +5,12 @@ import logging
 import pika
 import simplejson as json
 
-from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState, \
-    MisconfiguredProvider, EndOfProcess
+from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState
+from cacahuate.errors import MisconfiguredProvider, EndOfProcess
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
+from cacahuate.jsontypes import SortedMap
 
 LOGGER = logging.getLogger(__name__)
 

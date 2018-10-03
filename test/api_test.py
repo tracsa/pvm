@@ -734,23 +734,23 @@ def test_regression_patch_requirements(client, mongo, config):
         '$set': {
             'state.items.requester.actors': SortedMap([{
                 "_type": "actor",
-               "forms": [{
-                   '_type': 'form',
-                   'state': 'valid',
-                   'ref': 'exit_form',
-                   'inputs': SortedMap([{
-                       '_type': 'field',
-                       'state': 'valid',
-                       'value': 'yes',
-                       'name': 'reason',
-                    }], key='name').to_json(),  # Véase Campos
+                "forms": [{
+                    '_type': 'form',
+                    'state': 'valid',
+                    'ref': 'exit_form',
+                    'inputs': SortedMap([{
+                        '_type': 'field',
+                        'state': 'valid',
+                        'value': 'yes',
+                        'name': 'reason',
+                    }], key='name').to_json(),
                 }],
-               "state": "valid",
-               "user": {
-                  "_type": "user",
-                  "identifier": "__system__",
-                  "fullname": "System"
-               }
+                "state": "valid",
+                "user": {
+                    "_type": "user",
+                    "identifier": "__system__",
+                    "fullname": "System"
+                },
             }], key=lambda a: a['user']['identifier']).to_json(),
         },
     })
@@ -799,7 +799,7 @@ def test_regression_patch_requirements(client, mongo, config):
         'comment': 'I dont like it',
         'inputs': [{
             'ref': 'requester.exit_form.reason',
-            'value': 'a value',
+            'value': '',
         }],
     }))
 

@@ -2094,7 +2094,7 @@ def test_handle_request_node(config, mocker, mongo):
     }
 
 
-def test_invalidate_all_nodes(config, mocker, mongo):
+def test_invalidate_all_nodes(config, mongo):
     handler = Handler(config)
     user = make_user('juan', 'Juan')
     ptr = make_pointer('all-nodes-invalidated.2018-05-24.xml', 'start_node')

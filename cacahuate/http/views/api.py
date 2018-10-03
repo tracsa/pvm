@@ -217,6 +217,21 @@ def execution_patch(id):
                     'request.body.inputs.{}.value'.format(i),
                     'validation.invalid')
 
+    channel = get_channel()
+    channel.basic_publish(
+        exchange='',
+        routing_key=app.config['RABBIT_QUEUE'],
+        body=json.dumps({
+            'command': 'patch',
+            'execution_id': execution.id,
+            'comment': request.json['comment'],
+            'inputs': request.json['inputs'],
+        }),
+        properties=pika.BasicProperties(
+            delivery_mode=2,
+        ),
+    )
+
     return jsonify({
         'data': 'accepted',
     }), 202

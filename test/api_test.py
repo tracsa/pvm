@@ -815,47 +815,156 @@ def test_regression_patch_requirements(client, mongo, config):
     }
 
 
-def test_regression_patch_just_invalidate(client):
-    ''' patch arbitrary data and cause a regression '''
-    juan = make_user('juan', 'Juan')
-    ptr = make_pointer(None, None)
-    execution = ptr.proxy.execution.get()
+def test_regression_patch_just_invalidate(client, mongo, config, mocker):
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
 
-    res = client.patch('/v1/execution/{}'.format(execution.id), headers={**{
+    juan = make_user('juan', 'Juan')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'requester')
+    exc = ptr.proxy.execution.get()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': exc.id,
+        'state': Xml.load(config, exc.process_name, direct=True).get_state(),
+    })
+    mongo[config['EXECUTION_COLLECTION']].update_one({
+        'id': exc.id,
+    }, {
+        '$set': {
+            'state.items.requester.actors': SortedMap([{
+                "_type": "actor",
+                "forms": [{
+                    '_type': 'form',
+                    'state': 'valid',
+                    'ref': 'exit_form',
+                    'inputs': SortedMap([{
+                        '_type': 'field',
+                        'state': 'valid',
+                        'value': 'yes',
+                        'name': 'reason',
+                    }], key='name').to_json(),
+                }],
+                "state": "valid",
+                "user": {
+                    "_type": "user",
+                    "identifier": "__system__",
+                    "fullname": "System"
+                },
+            }], key=lambda a: a['user']['identifier']).to_json(),
+        },
+    })
+
+    res = client.patch('/v1/execution/{}'.format(exc.id), headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
         'comment': 'a comment',
         'inputs': [{
-            'ref': '',
+            'ref': 'requester.exit_form.reason',
         }],
     }))
 
     assert res.status_code == 202
 
-    assert False, 'comment is saved'
-    assert False, 'message is queued'
+    # message is queued
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.call_args[1]
+
+    json_message = {
+        'command': 'patch',
+        'execution_id': exc.id,
+        'comment': 'a comment',
+        'inputs': [{
+            'ref': 'requester.exit_form.reason',
+        }],
+    }
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    body = json.loads(args['body'])
+    assert body == json_message
 
 
-def test_regression_patch_set_value(client):
-    ''' patch arbitrary data and cause a regression '''
+def test_regression_patch_set_value(client, mongo, config, mocker):
+    mocker.patch(
+        'pika.adapters.blocking_connection.'
+        'BlockingChannel.basic_publish'
+    )
+
     juan = make_user('juan', 'Juan')
-    ptr = make_pointer(None, None)
-    execution = ptr.proxy.execution.get()
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'requester')
+    exc = ptr.proxy.execution.get()
 
-    res = client.patch('/v1/execution/{}'.format(execution.id), headers={**{
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': exc.id,
+        'state': Xml.load(config, exc.process_name, direct=True).get_state(),
+    })
+    mongo[config['EXECUTION_COLLECTION']].update_one({
+        'id': exc.id,
+    }, {
+        '$set': {
+            'state.items.requester.actors': SortedMap([{
+                "_type": "actor",
+                "forms": [{
+                    '_type': 'form',
+                    'state': 'valid',
+                    'ref': 'exit_form',
+                    'inputs': SortedMap([{
+                        '_type': 'field',
+                        'state': 'valid',
+                        'value': 'yes',
+                        'name': 'reason',
+                    }], key='name').to_json(),
+                }],
+                "state": "valid",
+                "user": {
+                    "_type": "user",
+                    "identifier": "__system__",
+                    "fullname": "System"
+                },
+            }], key=lambda a: a['user']['identifier']).to_json(),
+        },
+    })
+
+    res = client.patch('/v1/execution/{}'.format(exc.id), headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
         'comment': 'a comment',
         'inputs': [{
-            'ref': '',
-            'value': 3,
+            'ref': 'requester.exit_form.reason',
+            'value': 'the reason',
         }],
     }))
 
     assert res.status_code == 202
 
-    assert False, 'comment is saved'
-    assert False, 'message is queued'
+    # message is queued
+    pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.assert_called_once()
+
+    args = pika.adapters.blocking_connection.BlockingChannel.\
+        basic_publish.call_args[1]
+
+    json_message = {
+        'command': 'patch',
+        'execution_id': exc.id,
+        'comment': 'a comment',
+        'inputs': [{
+            'ref': 'requester.exit_form.reason',
+            'value': 'the reason',
+        }],
+    }
+
+    assert args['exchange'] == ''
+    assert args['routing_key'] == config['RABBIT_QUEUE']
+    body = json.loads(args['body'])
+    assert body == json_message
 
 
 def test_list_processes(client):

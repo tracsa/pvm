@@ -41,8 +41,8 @@ Map
       }
    }
 
-Ejecuciones
------------
+Ejecuciones (Colección)
+-----------------------
 
 Cada registro en esta colección corresponde a una ejecución iniciada en el sistema y tiene la siguiente estructura:
 
@@ -55,8 +55,8 @@ Cada registro en esta colección corresponde a una ejecución iniciada en el sis
       "state": SortedMap(nodes, key='id'),  # Véase Nodos
    }
 
-Nodos
-^^^^^
+Nodos (Objeto)
+^^^^^^^^^^^^^^
 
 Representa un elemento del archivo xml
 
@@ -74,8 +74,8 @@ Representa un elemento del archivo xml
       "type": "validation",
    }
 
-Actores
-^^^^^^^
+Actores (Objeto)
+^^^^^^^^^^^^^^^^
 
 Representa a un usuario o bot que intervino en el proceso
 
@@ -92,8 +92,8 @@ Representa a un usuario o bot que intervino en el proceso
       }
    }
 
-Formularios
-^^^^^^^^^^^
+Formularios (Objeto)
+^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -104,8 +104,8 @@ Formularios
       'inputs': SortedMap(inputs, key='name').to_json(),  # Véase Campos
    }
 
-Campos
-^^^^^^
+Campos (Objeto)
+^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -116,5 +116,5 @@ Campos
       'name': 'data',
    }
 
-Punteros
---------
+Punteros (Colección)
+--------------------

@@ -27,14 +27,16 @@ class Handler:
         ''' the main callback of cacahuate '''
         message = json.loads(body)
 
-        if message['command'] == 'cancel':
-            self.cancel_execution(message)
-        elif message['command'] == 'step':
+        if message['command'] in self.config['COMMANDS']:
             try:
-                self.call(message, channel)
+                if message['command'] == 'cancel':
+                    self.cancel_execution(message)
+                elif message['command'] == 'step':
+                    self.call(message, channel)
+                elif message['command'] == 'patch':
+                    self.patch(message, channel)
             except (ModelNotFoundError, CannotMove, ElementNotFound,
-                    MisconfiguredProvider, InconsistentState
-                    ) as e:
+                    MisconfiguredProvider, InconsistentState) as e:
                 LOGGER.error(str(e))
         else:
             LOGGER.warning(

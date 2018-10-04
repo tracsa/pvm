@@ -44,7 +44,11 @@ class Map:
         self.items = {}
 
         for item in arg:
-            self.items[item[key]] = item
+            if callable(key):
+                key_value = key(item)
+            else:
+                key_value = item[key]
+            self.items[key_value] = item
 
     def to_json(self):
         return {

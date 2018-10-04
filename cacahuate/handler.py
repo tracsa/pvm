@@ -10,7 +10,7 @@ from cacahuate.errors import MisconfiguredProvider, EndOfProcess
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
-from cacahuate.jsontypes import SortedMap
+from cacahuate.jsontypes import Map
 
 LOGGER = logging.getLogger(__name__)
 
@@ -196,7 +196,7 @@ class Handler:
         }, {
             '$set': {
                 'finished_at': datetime.now(),
-                'actors': SortedMap(
+                'actors': Map(
                     [actor_json],
                     key=lambda a: a['user']['identifier']
                 ).to_json(),

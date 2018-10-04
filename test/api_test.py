@@ -850,7 +850,7 @@ def test_regression_patch_just_invalidate(client, mongo, config, mocker):
                 "state": "valid",
                 "user": {
                     "_type": "user",
-                    "identifier": "__system__",
+                    "identifier": "juan",
                     "fullname": "System"
                 },
             }], key=lambda a: a['user']['identifier']).to_json(),
@@ -880,7 +880,7 @@ def test_regression_patch_just_invalidate(client, mongo, config, mocker):
         'execution_id': exc.id,
         'comment': 'a comment',
         'inputs': [{
-            'ref': 'requester.exit_form.reason',
+            'ref': 'requester.juan.0.reason',
         }],
     }
 
@@ -925,7 +925,7 @@ def test_regression_patch_set_value(client, mongo, config, mocker):
                 "state": "valid",
                 "user": {
                     "_type": "user",
-                    "identifier": "__system__",
+                    "identifier": "juan",
                     "fullname": "System"
                 },
             }], key=lambda a: a['user']['identifier']).to_json(),
@@ -956,7 +956,7 @@ def test_regression_patch_set_value(client, mongo, config, mocker):
         'execution_id': exc.id,
         'comment': 'a comment',
         'inputs': [{
-            'ref': 'requester.exit_form.reason',
+            'ref': 'requester.juan.0.reason',
             'value': 'the reason',
         }],
     }

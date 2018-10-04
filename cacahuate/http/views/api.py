@@ -93,6 +93,8 @@ def execution_patch(id):
     if type(request.json['inputs']) != list:
         raise RequiredListError('inputs', 'request.body.inputs')
 
+    processed_inputs = []
+
     for i, field in enumerate(request.json['inputs']):
         if type(field) != dict:
             raise RequiredDictError(str(i), 'request.body.inputs.{}'.format(i))
@@ -106,6 +108,7 @@ def execution_patch(id):
                                    'request.body.inputs.{}.ref'.format(i))
 
         # check down the state tree for existence of the requested ref
+        processed_ref = []
         pieces = field['ref'].split('.')
 
         try:
@@ -128,6 +131,8 @@ def execution_patch(id):
                 'request.body.inputs.{}.ref'.format(i),
                 'validation.invalid')
 
+        processed_ref.append(node_id)
+
         # node xml element
         node = get_element_by(dom, 'action', 'id', node_id)
 
@@ -149,6 +154,8 @@ def execution_patch(id):
                     'request.body.inputs.{}.ref'.format(i),
                     'validation.invalid')
 
+        processed_ref.append(actor_state['user']['identifier'])
+
         try:
             form_ref = pieces.pop(0)
         except IndexError:
@@ -159,21 +166,23 @@ def execution_patch(id):
 
         if re.match(r'\d+', form_ref):
             try:
-                form_state = actor_state['forms'][int(form_ref)]
+                form_index = int(form_ref)
+                form_state = actor_state['forms'][form_index]
             except KeyError:
                 raise InputError(
                     'form index {} not found'.format(form_ref),
                     'request.body.inputs.{}.ref'.format(i),
                     'validation.invalid')
         else:
-            matching_forms = list(filter(
+            matching_forms = list(map(
                 lambda f: f['ref'] == form_ref,
                 actor_state['forms']
             ))
-            form_count = len(matching_forms)
+            form_count = len(list(filter(lambda x: x, matching_forms)))
 
             if form_count == 1:
-                form_state = matching_forms[0]
+                form_index = matching_forms.index(True)
+                form_state = actor_state['forms'][form_index]
             elif form_count == 0:
                 raise InputError(
                     'No forms with ref {} in node'.format(form_ref),
@@ -186,6 +195,8 @@ def execution_patch(id):
                     'request.body.inputs.{}.ref'.format(i),
                     'validation.invalid'
                 )
+
+        processed_ref.append(str(form_index))
 
         # form xml element
         form = get_element_by(node, 'form', 'id', form_state['ref'])
@@ -205,12 +216,20 @@ def execution_patch(id):
                 'validation.invalid'
             )
 
+        processed_ref.append(input_name)
+
+        processed_inputs.append({
+            'ref': '.'.join(processed_ref),
+        })
+
         # input xml element
         input_el = get_element_by(form, 'input', 'name', input_name)
 
         if 'value' in field:
             try:
-                make_input(input_el).validate(field['value'], 0)
+                processed_inputs[-1]['value'] = make_input(
+                    input_el
+                ).validate(field['value'], 0)
             except InputError as e:
                 raise InputError(
                     'value invalid: {}'.format(str(e)),
@@ -225,7 +244,7 @@ def execution_patch(id):
             'command': 'patch',
             'execution_id': execution.id,
             'comment': request.json['comment'],
-            'inputs': request.json['inputs'],
+            'inputs': processed_inputs,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,

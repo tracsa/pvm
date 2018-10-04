@@ -40,6 +40,9 @@
               <option value="yes">Ándale mijito, ve</option>
               <option value="no">Ni madres</option>
             </options>
+            <dependencies>
+              <dep>exit_form.reason</dep>
+            </dependencies>
           </input>
         </form>
       </form-array>

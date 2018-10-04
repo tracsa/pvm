@@ -379,6 +379,10 @@ class Handler:
             message['input'],
         )
 
+    def patch(self, message, channel):
+        for input_spec in message['inputs']:
+            from pprint import pprint; pprint(input_spec)
+
     def cancel_execution(self, message):
         execution = Execution.get_or_exception(message['execution_id'])
 

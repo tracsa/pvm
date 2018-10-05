@@ -118,3 +118,21 @@ Campos (Objeto)
 
 Punteros (Colección)
 --------------------
+
+.. code-block:: python
+
+   {
+      'id': pointer_id,
+      'started_at': datetime,
+      'finished_at': datetime or None,
+      'execution': execution.to_json(),
+      'node': {
+         'id': node_id,
+         'name': node_human_name,
+         'description': description,
+         'type': type(self).__name__.lower(),
+      },
+      'actors': Map([actors], key='identifier').to_json(),
+      'process_id': execution.process_name,
+      'notified_users': notified_users or [],
+   }

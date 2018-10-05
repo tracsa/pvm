@@ -17,6 +17,7 @@ from cacahuate.inputs import make_input
 from cacahuate.jsontypes import Map, SortedMap
 from cacahuate.utils import get_or_create, user_import
 from cacahuate.xml import get_text, NODES, Xml
+from cacahuate.cascade import cascade_invalidate
 
 LOGGER = logging.getLogger(__name__)
 
@@ -158,6 +159,7 @@ class Node:
             'actors': Map([], key='identifier').to_json(),
             'process_id': execution.process_name,
             'notified_users': notified_users or [],
+            'state': 'ongoing',
         }
 
     def get_state(self):
@@ -447,82 +449,14 @@ class Validation(UserAttachedNode):
         if state['values'][self.id]['response'] == 'accept':
             return super().next(xml, state, mongo, config)
 
-        # find the data backwards
-        first_node_found = False
-        first_invalid_node = None
-        invalidated = set(
-            i['ref']
-            for i in state['values'][self.id]['inputs']
+        first_invalid_node = cascade_invalidate(
+            xml,
+            state,
+            mongo,
+            config,
+            state['values'][self.id]['inputs'],
+            state['values'][self.id]['comment']
         )
-        xmliter = iter(xml)
-
-        for element in xmliter:
-            node = make_node(element, xmliter)
-
-            more_fields = node.get_invalidated_fields(invalidated, state)
-
-            invalidated.update(more_fields)
-
-            if more_fields and not first_node_found:
-                first_node_found = True
-                first_invalid_node = node
-
-        comment = state['values'][self.id]['comment']
-
-        def get_update_keys(invalidated):
-            ikeys = set()
-            fkeys = set()
-            akeys = set()
-            nkeys = set()
-            ckeys = set()
-
-            for key in invalidated:
-                node, actor, form, input = key.split('.')
-                index, ref = form.split(':')
-
-                ikeys.add(('state.items.{node}.actors.items.{actor}.'
-                           'forms.{index}.inputs.items.{input}.'
-                           'state'.format(
-                                node=node,
-                                actor=actor,
-                                index=index,
-                                input=input,
-                            ), 'invalid'))
-
-                fkeys.add(('state.items.{node}.actors.items.{actor}.'
-                           'forms.{index}.state'.format(
-                                node=node,
-                                actor=actor,
-                                index=index,
-                            ), 'invalid'))
-
-                akeys.add(('state.items.{node}.actors.items.{actor}.'
-                           'state'.format(
-                                node=node,
-                                actor=actor,
-                            ), 'invalid'))
-
-                nkeys.add(('state.items.{node}.state'.format(
-                    node=node,
-                ), 'invalid'))
-
-            for key, _ in nkeys:
-                key = '.'.join(key.split('.')[:-1]) + '.comment'
-                ckeys.add((key, comment))
-
-            return fkeys | akeys | nkeys | ikeys | ckeys
-
-        updates = dict(get_update_keys(invalidated))
-
-        # update state
-        collection = mongo[
-            config['EXECUTION_COLLECTION']
-        ]
-        collection.update_one({
-            'id': state['id'],
-        }, {
-            '$set': updates,
-        })
 
         return first_invalid_node
 

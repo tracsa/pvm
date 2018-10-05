@@ -123,8 +123,7 @@ def test_wakeup(config, mongo):
         'items': {},
     }
     assert reg['notified_users'] == [manager.to_json()]
-    with pytest.raises(KeyError):
-        reg['state']
+    assert reg['state'] == 'ongoing'
 
     # execution collection updated
     reg = next(mongo[config["EXECUTION_COLLECTION"]].find())
@@ -1129,8 +1128,8 @@ def test_patch_invalidate(config, mongo):
             },
         ])],
     }, channel)
-    ptr = execution.proxy.pointers.get()[0]
-    assert ptr.node_id == 'security'
+    security_ptr = execution.proxy.pointers.get()[0]
+    assert security_ptr.node_id == 'security'
     args = channel.basic_publish.call_args[1]
 
     # patch request happens
@@ -1140,16 +1139,30 @@ def test_patch_invalidate(config, mongo):
         'execution_id': execution.id,
         'comment': 'pee is not a valid reason',
         'inputs': [{
-            'ref': 'requester.juan.0.reason',
+            'ref': 'requester.juan.0:exit_form.reason',
         }],
     }, channel)
     ptr = execution.proxy.pointers.get()[0]
+
+    # pointer is in the first node
     assert ptr.node_id == 'requester'
 
-    assert False, 'pointer is in the first node'
-    assert False, 'reset info was saved to log?'
-    assert False, 'handler queued next step for immediate execution'
-    assert False, 'dependent information is invalidated'
+    # nodes with pointers are marked as unfilled or invalid in execution state
+    exc_state = mongo[config['EXECUTION_COLLECTION']].find_one({
+        'id': execution.id,
+    })
+
+    assert exc_state['state']['items']['security']['state'] == 'unfilled'
+
+    # dependent information is invalidated
+    assert exc_state['state']['items']['manager']['state'] == 'invalid'
+
+    # entries in pointer collection get a state of cancelled by patch request
+    security_pointer_state = mongo[config['POINTER_COLLECTION']].find_one({
+        'id': security_ptr.id,
+    })
+
+    assert security_pointer_state['state'] == 'cancelled'
 
 
 def test_patch_set_value(config, mongo):

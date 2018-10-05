@@ -880,7 +880,7 @@ def test_regression_patch_just_invalidate(client, mongo, config, mocker):
         'execution_id': exc.id,
         'comment': 'a comment',
         'inputs': [{
-            'ref': 'requester.juan.0.reason',
+            'ref': 'requester.juan.0:exit_form.reason',
         }],
     }
 
@@ -956,7 +956,7 @@ def test_regression_patch_set_value(client, mongo, config, mocker):
         'execution_id': exc.id,
         'comment': 'a comment',
         'inputs': [{
-            'ref': 'requester.juan.0.reason',
+            'ref': 'requester.juan.0:exit_form.reason',
             'value': 'the reason',
         }],
     }

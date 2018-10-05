@@ -11,6 +11,7 @@ from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
 from cacahuate.jsontypes import Map
+from cacahuate.cascade import cascade_invalidate
 
 LOGGER = logging.getLogger(__name__)
 
@@ -67,8 +68,13 @@ class Handler:
             # finish the execution
             return self.finish_execution(execution)
 
+        self.wakeup_and_notify(next_node, execution, channel, state)
+
+    def wakeup_and_notify(self, node, execution, channel, state):
+        ''' Calls wakeup on the given node and notifies if it is a sync node
+        '''
         # node's begining of life
-        qdata = self.wakeup(next_node, execution, channel, state)
+        qdata = self.wakeup(node, execution, channel, state)
 
         # Sync nodes are queued immediatly
         if qdata:
@@ -197,6 +203,7 @@ class Handler:
             'id': pointer.id,
         }, {
             '$set': {
+                'state': 'finished',
                 'finished_at': datetime.now(),
                 'actors': Map(
                     [actor_json],
@@ -380,8 +387,55 @@ class Handler:
         )
 
     def patch(self, message, channel):
-        for input_spec in message['inputs']:
-            from pprint import pprint; pprint(input_spec)
+        execution = Execution.get_or_exception(message['execution_id'])
+        xml = Xml.load(self.config, execution.process_name, direct=True)
+        mongo = self.get_mongo()
+        execution_collection = mongo[
+            self.config['EXECUTION_COLLECTION']
+        ]
+        pointer_collection = mongo[
+            self.config['POINTER_COLLECTION']
+        ]
+
+        # set nodes with pointers as unfilled, delete pointers
+        updates = {}
+
+        for pointer in execution.proxy.pointers.q():
+            updates['state.items.{node}.state'.format(
+                node=pointer.node_id,
+            )] = 'unfilled'
+            pointer.delete()
+            pointer_collection.update_one({
+                'id': pointer.id,
+            }, {
+                '$set': {
+                    'state': 'cancelled',
+                },
+            })
+
+        execution_collection.update_one({
+            'id': execution.id,
+        }, {
+            '$set': updates,
+        })
+
+        # retrieve updated state
+        state = next(execution_collection.find({'id': execution.id}))
+
+        first_invalid_node = cascade_invalidate(
+            xml,
+            state,
+            mongo,
+            self.config,
+            message['inputs'],
+            message['comment']
+        )
+
+        # retrieve updated state
+        state = next(execution_collection.find({'id': execution.id}))
+
+        # wakeup and start execution from the found invalid node
+        self.wakeup_and_notify(first_invalid_node, execution, channel, state)
 
     def cancel_execution(self, message):
         execution = Execution.get_or_exception(message['execution_id'])

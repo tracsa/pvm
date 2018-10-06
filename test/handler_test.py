@@ -1167,7 +1167,79 @@ def test_patch_invalidate(config, mongo):
 
 def test_patch_set_value(config, mongo):
     ''' patch and set new data '''
-    assert False
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    ptr = make_pointer('exit_request.2018-03-20.xml', 'requester')
+    execution = ptr.proxy.execution.get()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': execution.id,
+        'state': Xml.load(config, 'exit_request').get_state(),
+    })
+
+    # requester fills the form
+    channel = MagicMock()
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [Form.state_json('exit_form', [
+            {
+                '_type': 'field',
+                'state': 'valid',
+                'value': 'want to pee',
+                'name': 'reason',
+            },
+        ])],
+    }, channel)
+    ptr = execution.proxy.pointers.get()[0]
+    assert ptr.node_id == 'manager'
+    args = channel.basic_publish.call_args[1]
+
+    # manager says yes
+    channel = MagicMock()
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [Form.state_json('auth_form', [
+            {
+                '_type': 'field',
+                'state': 'valid',
+                'value': 'yes',
+                'name': 'auth',
+            },
+        ])],
+    }, channel)
+    security_ptr = execution.proxy.pointers.get()[0]
+    assert security_ptr.node_id == 'security'
+    args = channel.basic_publish.call_args[1]
+
+    # patch request happens
+    channel = MagicMock()
+    handler.patch({
+        'command': 'patch',
+        'execution_id': execution.id,
+        'comment': 'pee is not a valid reason',
+        'inputs': [{
+            'ref': 'requester.juan.0:exit_form.reason',
+            'value': 'am hungry',
+            'value_caption': 'am hungry',
+        }],
+    }, channel)
+    ptr = execution.proxy.pointers.get()[0]
+
+    # pointer is in the manager's node
+    assert ptr.node_id == 'manager'
+
+    # nodes with pointers are marked as unfilled or invalid in execution state
+    exc_state = mongo[config['EXECUTION_COLLECTION']].find_one({
+        'id': execution.id,
+    })
+
+    # values sent are set
+    assert exc_state['state']['items']['requester']['forms'][0]['fields']['items']['reason'] == 'am hungry'
 
 
 def test_resistance_unexisteng_hierarchy_backend(config, mongo):

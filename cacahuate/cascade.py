@@ -11,6 +11,14 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
     # find the data backwards
     first_node_found = False
     first_invalid_node = None
+    set_values = {
+        i['ref']: {
+            'value': i['value'],
+            'value_caption': i['value_caption'],
+        }
+        for i in invalidated
+        if 'value' in i
+    }
     invalidated = set(
         i['ref']
         for i in invalidated
@@ -28,52 +36,58 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
             first_node_found = True
             first_invalid_node = node
 
-    def get_update_keys(invalidated):
-        ''' computes the keys and values to be used in a mongodb update to
-        set the fields as invalid '''
-        ikeys = set()
-        fkeys = set()
-        akeys = set()
-        nkeys = set()
-        ckeys = set()
+    # computes the keys and values to be used in a mongodb update to set the fields as invalid
+    updates = dict()
 
-        for key in invalidated:
-            node, actor, form, input = key.split('.')
-            index, ref = form.split(':')
+    for key in invalidated:
+        node, actor, form, input = key.split('.')
+        index, ref = form.split(':')
 
-            ikeys.add(('state.items.{node}.actors.items.{actor}.'
-                       'forms.{index}.inputs.items.{input}.'
-                       'state'.format(
-                            node=node,
-                            actor=actor,
-                            index=index,
-                            input=input,
-                        ), 'invalid'))
+        node_path = 'state.items.{node}'.format(node=node)
+        comment_path = node_path + '.comment'
+        node_state_path = node_path + '.state'
+        actor_path = node_path + '.actors.items.{actor}'.format(actor=actor)
+        actor_state_path = actor_path + '.state'
+        form_path = actor_path + '.forms.{index}'.format(index=index)
+        form_state_path = form_path + '.state'
+        input_path = form_path + '.inputs.items.{input}'.format(input=input)
+        input_state_path = input_path + '.state'
+        input_value_path = input_path + '.value'
+        input_caption_path = input_path + '.value_caption'
 
-            fkeys.add(('state.items.{node}.actors.items.{actor}.'
-                       'forms.{index}.state'.format(
-                            node=node,
-                            actor=actor,
-                            index=index,
-                        ), 'invalid'))
+        # inputs
+        input_state = 'valid' if key in set_values else 'invalid'
 
-            akeys.add(('state.items.{node}.actors.items.{actor}.'
-                       'state'.format(
-                            node=node,
-                            actor=actor,
-                        ), 'invalid'))
+        updates[input_state_path] = input_state
 
-            nkeys.add(('state.items.{node}.state'.format(
-                node=node,
-            ), 'invalid'))
+        if key in set_values:
+            updates[input_value_path] = set_values[key]['value']
+            updates[input_caption_path] = set_values[key]['value_caption']
 
-        for key, _ in nkeys:
-            key = '.'.join(key.split('.')[:-1]) + '.comment'
-            ckeys.add((key, comment))
+        # forms
+        if input_state == 'valid' and (form_state_path not in updates or updates[form_state_path] == 'valid'):
+            form_state = 'valid'
+        else:
+            form_state = 'invalid'
 
-        return fkeys | akeys | nkeys | ikeys | ckeys
+        updates[form_state_path] = form_state
 
-    updates = dict(get_update_keys(invalidated))
+        # actors
+        if form_state == 'valid' and (actor_state_path not in updates or updates[actor_state_path] == 'valid'):
+            actor_state = 'valid'
+        else:
+            actor_state = 'invalid'
+
+        updates[actor_state_path] = actor_state
+
+        # nodes
+        if actor_state == 'valid' and (node_state_path not in updates or updates[node_state_path] == 'valid'):
+            node_state = 'valid'
+        else:
+            node_state = 'invalid'
+
+        updates[node_state_path] = node_state
+        updates[comment_path] = comment
 
     # update state
     collection = mongo[

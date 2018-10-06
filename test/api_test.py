@@ -814,8 +814,6 @@ def test_regression_patch_requirements(client, mongo, config):
         ],
     }
 
-    assert False, 'if value is present, value_caption is required and must be a string'
-
 
 def test_regression_patch_just_invalidate(client, mongo, config, mocker):
     mocker.patch(
@@ -960,6 +958,7 @@ def test_regression_patch_set_value(client, mongo, config, mocker):
         'inputs': [{
             'ref': 'requester.juan.0:exit_form.reason',
             'value': 'the reason',
+            'value_caption': 'the reason',
         }],
     }
 

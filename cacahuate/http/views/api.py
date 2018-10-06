@@ -196,7 +196,7 @@ def execution_patch(id):
                     'validation.invalid'
                 )
 
-        processed_ref.append(str(form_index))
+        processed_ref.append(str(form_index) + ':' + form_state['ref'])
 
         # form xml element
         form = get_element_by(node, 'form', 'id', form_state['ref'])
@@ -227,9 +227,12 @@ def execution_patch(id):
 
         if 'value' in field:
             try:
-                processed_inputs[-1]['value'] = make_input(
-                    input_el
-                ).validate(field['value'], 0)
+                input_obj = make_input(input_el)
+                value = input_obj.validate(field['value'], 0)
+                caption = input_obj.make_caption(value)
+
+                processed_inputs[-1]['value'] = value
+                processed_inputs[-1]['value_caption'] = caption
             except InputError as e:
                 raise InputError(
                     'value invalid: {}'.format(str(e)),

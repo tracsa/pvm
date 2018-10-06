@@ -1,0 +1,242 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Almacenamiento persistente (MongoDB) &#8212; documentación de Cacahuate - 2.7.0</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/translations.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" />
+    <link rel="next" title="Almacenamiento Volátil (Redis)" href="redis.html" />
+    <link rel="prev" title="Almacenamiento" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="almacenamiento-persistente-mongodb">
+<h1>Almacenamiento persistente (MongoDB)<a class="headerlink" href="#almacenamiento-persistente-mongodb" title="Enlazar permanentemente con este título">¶</a></h1>
+<p>A continuación se desrciben los documentos (tablas en mongodb) utilizados por cacahuate.</p>
+<div class="section" id="clases-utilitarias">
+<h2>Clases utilitarias<a class="headerlink" href="#clases-utilitarias" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Ayudan a definir objetos comunmente usados en el modelo de información del almacenamieto persistente.</p>
+<div class="section" id="sortedmap">
+<h3>SortedMap<a class="headerlink" href="#sortedmap" title="Enlazar permanentemente con este título">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obj1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="s2">&quot;llave1&quot;</span><span class="p">}</span>
+<span class="n">obj2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="s2">&quot;llave2&quot;</span><span class="p">}</span>
+
+<span class="n">SortedMap</span><span class="p">([</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;key&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span>
+   <span class="s2">&quot;_type&quot;</span><span class="p">:</span> <span class="s2">&quot;:sorted_map&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;item_order&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;llave1&quot;</span><span class="p">,</span> <span class="s2">&quot;llave2&quot;</span><span class="p">],</span>
+   <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;llave1&quot;</span><span class="p">:</span> <span class="n">obj1</span><span class="p">,</span>
+      <span class="s2">&quot;llave2&quot;</span><span class="p">:</span> <span class="n">obj2</span><span class="p">,</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="map">
+<h3>Map<a class="headerlink" href="#map" title="Enlazar permanentemente con este título">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obj1</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="s2">&quot;llave1&quot;</span><span class="p">}</span>
+<span class="n">obj2</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="s2">&quot;llave2&quot;</span><span class="p">}</span>
+
+<span class="n">Map</span><span class="p">([</span><span class="n">obj1</span><span class="p">,</span> <span class="n">obj2</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;key&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span> <span class="o">==</span> <span class="p">{</span>
+   <span class="s2">&quot;_type&quot;</span><span class="p">:</span> <span class="s2">&quot;:map&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;llave1&quot;</span><span class="p">:</span> <span class="n">obj1</span><span class="p">,</span>
+      <span class="s2">&quot;llave2&quot;</span><span class="p">:</span> <span class="n">obj2</span><span class="p">,</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="ejecuciones-coleccion">
+<h2>Ejecuciones (Colección)<a class="headerlink" href="#ejecuciones-coleccion" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Cada registro en esta colección corresponde a una ejecución iniciada en el sistema y tiene la siguiente estructura:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="s2">&quot;5bb2cb576e6c8e52e72b60cb&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;_type&quot;</span><span class="p">:</span> <span class="s2">&quot;execution&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;6bc19964c5e311e88609f8597182d24b&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="n">SortedMap</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">),</span>  <span class="c1"># Véase Nodos</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="nodos-objeto">
+<h3>Nodos (Objeto)<a class="headerlink" href="#nodos-objeto" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>Representa un elemento del archivo xml</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;_type&quot;</span><span class="p">:</span> <span class="s2">&quot;node&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;actors&quot;</span><span class="p">:</span> <span class="n">Map</span><span class="p">(</span><span class="n">actores</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;identifier&#39;</span><span class="p">),</span>  <span class="c1"># Véase Actores</span>
+   <span class="s2">&quot;comment&quot;</span><span class="p">:</span> <span class="s2">&quot;Comentario del nodo&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Descripción del nodo&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;node_id&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;milestone&quot;</span><span class="p">:</span> <span class="n">false</span><span class="p">,</span>
+   <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Nombre humano del nodo&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="s2">&quot;unfilled&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;validation&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="actores-objeto">
+<h3>Actores (Objeto)<a class="headerlink" href="#actores-objeto" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>Representa a un usuario o bot que intervino en el proceso</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s2">&quot;_type&quot;</span><span class="p">:</span> <span class="s2">&quot;actor&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;forms&quot;</span><span class="p">:</span> <span class="n">forms</span><span class="p">,</span>  <span class="c1"># lista de formularios, véase Formularios</span>
+   <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="s2">&quot;valid&quot;</span><span class="p">,</span>
+   <span class="s2">&quot;user&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s2">&quot;_type&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;identifier&quot;</span><span class="p">:</span> <span class="s2">&quot;__system__&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;fullname&quot;</span><span class="p">:</span> <span class="s2">&quot;System&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="formularios-objeto">
+<h3>Formularios (Objeto)<a class="headerlink" href="#formularios-objeto" title="Enlazar permanentemente con este título">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s1">&#39;_type&#39;</span><span class="p">:</span> <span class="s1">&#39;form&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;state&#39;</span><span class="p">:</span> <span class="s1">&#39;valid&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;ref&#39;</span><span class="p">:</span> <span class="s1">&#39;form_id&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;inputs&#39;</span><span class="p">:</span> <span class="n">SortedMap</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span>  <span class="c1"># Véase Campos</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="campos-objeto">
+<h3>Campos (Objeto)<a class="headerlink" href="#campos-objeto" title="Enlazar permanentemente con este título">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s1">&#39;_type&#39;</span><span class="p">:</span> <span class="s1">&#39;field&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;state&#39;</span><span class="p">:</span> <span class="s1">&#39;valid&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="s1">&#39;yes&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="punteros-coleccion">
+<h2>Punteros (Colección)<a class="headerlink" href="#punteros-coleccion" title="Enlazar permanentemente con este título">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">pointer_id</span><span class="p">,</span>
+   <span class="s1">&#39;started_at&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+   <span class="s1">&#39;finished_at&#39;</span><span class="p">:</span> <span class="n">datetime</span> <span class="ow">or</span> <span class="bp">None</span><span class="p">,</span>
+   <span class="s1">&#39;execution&#39;</span><span class="p">:</span> <span class="n">execution</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span>
+   <span class="s1">&#39;node&#39;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">node_id</span><span class="p">,</span>
+      <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">node_human_name</span><span class="p">,</span>
+      <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
+      <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+   <span class="p">},</span>
+   <span class="s1">&#39;actors&#39;</span><span class="p">:</span> <span class="n">Map</span><span class="p">([</span><span class="n">actors</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s1">&#39;identifier&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">to_json</span><span class="p">(),</span>
+   <span class="s1">&#39;process_id&#39;</span><span class="p">:</span> <span class="n">execution</span><span class="o">.</span><span class="n">process_name</span><span class="p">,</span>
+   <span class="s1">&#39;notified_users&#39;</span><span class="p">:</span> <span class="n">notified_users</span> <span class="ow">or</span> <span class="p">[],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Cacahuate</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegación</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Instalación</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Almacenamiento</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Almacenamiento persistente (MongoDB)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="redis.html">Almacenamiento Volátil (Redis)</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Almacenamiento</a><ul>
+      <li>Previous: <a href="index.html" title="capítulo anterior">Almacenamiento</a></li>
+      <li>Next: <a href="redis.html" title="próximo capítulo">Almacenamiento Volátil (Redis)</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Búsqueda rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Ir a" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Abraham Toriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/storage/mongodb.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

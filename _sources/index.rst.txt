@@ -10,6 +10,7 @@ Documentación
    :maxdepth: 2
 
    install
+   storage/index
 
 Índices y tablas
 ----------------

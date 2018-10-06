@@ -1239,7 +1239,11 @@ def test_patch_set_value(config, mongo):
     })
 
     # values sent are set
-    assert exc_state['state']['items']['requester']['forms'][0]['fields']['items']['reason'] == 'am hungry'
+    actor = exc_state['state']['items']['requester']['actors']['items']['juan']
+    _input = actor['forms'][0]['inputs']['items']['reason']
+
+    assert _input['value'] == 'am hungry'
+    assert _input['value_caption'] == 'am hungry'
 
 
 def test_resistance_unexisteng_hierarchy_backend(config, mongo):

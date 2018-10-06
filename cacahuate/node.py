@@ -17,7 +17,7 @@ from cacahuate.inputs import make_input
 from cacahuate.jsontypes import Map, SortedMap
 from cacahuate.utils import get_or_create, user_import
 from cacahuate.xml import get_text, NODES, Xml
-from cacahuate.cascade import cascade_invalidate
+from cacahuate.cascade import cascade_invalidate, track_next_node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class Node:
     def validate_input(self, json_data):
         raise NotImplementedError('Must be implemented in subclass')
 
-    def next(self, xml, state, mongo, config):
+    def next(self, xml, state, mongo, config, *, skip_reverse=False):
         # Return next node by simple adjacency
         xmliter = iter(xml)
         xmliter.find(lambda e: e.getAttribute('id') == self.id)
@@ -238,6 +238,7 @@ class UserAttachedNode(FullyContainedNode):
 
     def resolve_params(self, state=None):
         computed_params = {}
+
         for param in self.auth_params:
             if state is not None and param.type == 'ref':
                 element_ref, req = param.value.split('#')
@@ -445,11 +446,11 @@ class Validation(UserAttachedNode):
     def is_async(self):
         return True
 
-    def next(self, xml, state, mongo, config):
-        if state['values'][self.id]['response'] == 'accept':
+    def next(self, xml, state, mongo, config, *, skip_reverse=False):
+        if skip_reverse or state['values'][self.id]['response'] == 'accept':
             return super().next(xml, state, mongo, config)
 
-        first_invalid_node = cascade_invalidate(
+        cascade_invalidate(
             xml,
             state,
             mongo,
@@ -457,6 +458,14 @@ class Validation(UserAttachedNode):
             state['values'][self.id]['inputs'],
             state['values'][self.id]['comment']
         )
+
+        # reload state
+        collection = mongo[
+            config['EXECUTION_COLLECTION']
+        ]
+        state = next(collection.find({'id': state['id']}))
+
+        first_invalid_node = track_next_node(xml, state, mongo, config)
 
         return first_invalid_node
 
@@ -649,7 +658,7 @@ class Exit(FullyContainedNode):
     def is_async(self):
         return False
 
-    def next(self, xml, state, mongo, config):
+    def next(self, xml, state, mongo, config, *, skip_reverse=False):
         raise EndOfProcess
 
     def work(self, config, state, channel, mongo):
@@ -669,7 +678,7 @@ class Conditional(Node):
     def is_async(self):
         return False
 
-    def next(self, xml, state, mongo, config):
+    def next(self, xml, state, mongo, config, *, skip_reverse=False):
         xmliter = iter(xml)
 
         # consume up to this node

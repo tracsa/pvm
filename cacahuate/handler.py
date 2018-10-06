@@ -11,7 +11,7 @@ from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
 from cacahuate.jsontypes import Map
-from cacahuate.cascade import cascade_invalidate
+from cacahuate.cascade import cascade_invalidate, track_next_node
 
 LOGGER = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ class Handler:
                     xml,
                     state,
                     self.get_mongo(),
-                    self.config
+                    self.config,
                 )
 
                 # refresh state because previous call might have changed it
@@ -422,7 +422,7 @@ class Handler:
         # retrieve updated state
         state = next(execution_collection.find({'id': execution.id}))
 
-        first_invalid_node = cascade_invalidate(
+        cascade_invalidate(
             xml,
             state,
             mongo,
@@ -433,6 +433,10 @@ class Handler:
 
         # retrieve updated state
         state = next(execution_collection.find({'id': execution.id}))
+
+        first_invalid_node = track_next_node(
+            xml, state, self.get_mongo(), self.config
+        )
 
         # wakeup and start execution from the found invalid node
         self.wakeup_and_notify(first_invalid_node, execution, channel, state)

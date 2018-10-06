@@ -8,9 +8,7 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
     # because this could cause a recursive import
     from cacahuate.node import make_node
 
-    # find the data backwards
-    first_node_found = False
-    first_invalid_node = None
+    # find the first node that is invalid and select it
     set_values = {
         i['ref']: {
             'value': i['value'],
@@ -19,7 +17,7 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
         for i in invalidated
         if 'value' in i
     }
-    invalidated = set(
+    invalid_refs = set(
         i['ref']
         for i in invalidated
     )
@@ -27,19 +25,15 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
 
     for element in xmliter:
         node = make_node(element, xmliter)
+        more_fields = node.get_invalidated_fields(invalid_refs, state)
 
-        more_fields = node.get_invalidated_fields(invalidated, state)
+        invalid_refs.update(more_fields)
 
-        invalidated.update(more_fields)
-
-        if more_fields and not first_node_found:
-            first_node_found = True
-            first_invalid_node = node
-
-    # computes the keys and values to be used in a mongodb update to set the fields as invalid
+    # computes the keys and values to be used in a mongodb update to set the
+    # fields as invalid
     updates = dict()
 
-    for key in invalidated:
+    for key in invalid_refs:
         node, actor, form, input = key.split('.')
         index, ref = form.split(':')
 
@@ -65,7 +59,9 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
             updates[input_caption_path] = set_values[key]['value_caption']
 
         # forms
-        if input_state == 'valid' and (form_state_path not in updates or updates[form_state_path] == 'valid'):
+        if input_state == 'valid' and (
+                form_state_path not in updates or \
+                updates[form_state_path] == 'valid'):
             form_state = 'valid'
         else:
             form_state = 'invalid'
@@ -73,7 +69,9 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
         updates[form_state_path] = form_state
 
         # actors
-        if form_state == 'valid' and (actor_state_path not in updates or updates[actor_state_path] == 'valid'):
+        if form_state == 'valid' and (
+                actor_state_path not in updates or \
+                updates[actor_state_path] == 'valid'):
             actor_state = 'valid'
         else:
             actor_state = 'invalid'
@@ -81,7 +79,9 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
         updates[actor_state_path] = actor_state
 
         # nodes
-        if actor_state == 'valid' and (node_state_path not in updates or updates[node_state_path] == 'valid'):
+        if actor_state == 'valid' and (
+                node_state_path not in updates or \
+                updates[node_state_path] == 'valid'):
             node_state = 'valid'
         else:
             node_state = 'invalid'
@@ -99,4 +99,34 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
         '$set': updates,
     })
 
-    return first_invalid_node
+
+def track_next_node(xml, state, mongo, config):
+    ''' given an xml and the current state, returns the first invalid or
+    unfilled node following the xml's ruleset (conditionals) '''
+    from cacahuate.node import make_node
+
+    xmliter = iter(xml)
+    node = make_node(next(xmliter), xmliter)
+
+    if node.id in state['state']['items']:
+        if state['state']['items'][node.id]['state'] in ('invalid', 'unfilled'):
+            return node
+
+    try:
+        while True:
+            node = node.next(
+                xml,
+                state,
+                mongo,
+                config,
+                skip_reverse=True,
+            )
+
+            if node.id in state['state']['items']:
+                if state['state']['items'][node.id]['state'] == 'valid':
+                    continue
+
+            return node
+    except StopIteration:
+        # End of process
+        raise EndOfProcess

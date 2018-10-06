@@ -1,5 +1,6 @@
 ''' Logic on how information is invalidated in cascade. It is used by
 validation-type nodes and patch requests '''
+from cacahuate.errors import EndOfProcess
 
 
 def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
@@ -60,7 +61,7 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
 
         # forms
         if input_state == 'valid' and (
-                form_state_path not in updates or \
+                form_state_path not in updates or
                 updates[form_state_path] == 'valid'):
             form_state = 'valid'
         else:
@@ -70,7 +71,7 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
 
         # actors
         if form_state == 'valid' and (
-                actor_state_path not in updates or \
+                actor_state_path not in updates or
                 updates[actor_state_path] == 'valid'):
             actor_state = 'valid'
         else:
@@ -80,7 +81,7 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
 
         # nodes
         if actor_state == 'valid' and (
-                node_state_path not in updates or \
+                node_state_path not in updates or
                 updates[node_state_path] == 'valid'):
             node_state = 'valid'
         else:
@@ -109,7 +110,8 @@ def track_next_node(xml, state, mongo, config):
     node = make_node(next(xmliter), xmliter)
 
     if node.id in state['state']['items']:
-        if state['state']['items'][node.id]['state'] in ('invalid', 'unfilled'):
+        node_state = state['state']['items'][node.id]['state']
+        if node_state in ('invalid', 'unfilled'):
             return node
 
     try:

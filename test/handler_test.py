@@ -1,6 +1,5 @@
 from datetime import datetime
 from unittest.mock import MagicMock
-import pytest
 import simplejson as json
 import requests
 
@@ -1111,7 +1110,6 @@ def test_patch_invalidate(config, mongo):
     }, channel)
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'manager'
-    args = channel.basic_publish.call_args[1]
 
     # manager says yes
     channel = MagicMock()
@@ -1130,7 +1128,6 @@ def test_patch_invalidate(config, mongo):
     }, channel)
     security_ptr = execution.proxy.pointers.get()[0]
     assert security_ptr.node_id == 'security'
-    args = channel.basic_publish.call_args[1]
 
     # patch request happens
     channel = MagicMock()
@@ -1195,7 +1192,6 @@ def test_patch_set_value(config, mongo):
     }, channel)
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'manager'
-    args = channel.basic_publish.call_args[1]
 
     # manager says yes
     channel = MagicMock()
@@ -1214,7 +1210,6 @@ def test_patch_set_value(config, mongo):
     }, channel)
     security_ptr = execution.proxy.pointers.get()[0]
     assert security_ptr.node_id == 'security'
-    args = channel.basic_publish.call_args[1]
 
     # patch request happens
     channel = MagicMock()

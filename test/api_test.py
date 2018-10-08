@@ -461,7 +461,7 @@ def test_start_process(client, mocker, config, mongo):
     }
 
 
-def test_regression_requirements(client):
+def test_validation_requirements(client):
     juan = make_user('juan', 'Juan')
     ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
     exc = ptr.proxy.execution.get()
@@ -607,7 +607,7 @@ def test_regression_requirements(client):
     }
 
 
-def test_regression_approval(client, mocker, config):
+def test_validation_approval(client, mocker, config):
     ''' the api for an approval '''
     mocker.patch(
         'pika.adapters.blocking_connection.'
@@ -660,7 +660,7 @@ def test_regression_approval(client, mocker, config):
     }
 
 
-def test_regression_reject(client, mocker, config):
+def test_validation_reject(client, mocker, config):
     ''' the api for a reject '''
     mocker.patch(
         'pika.adapters.blocking_connection.'
@@ -718,7 +718,7 @@ def test_regression_reject(client, mocker, config):
     }
 
 
-def test_regression_patch_requirements(client, mongo, config):
+def test_patch_requirements(client, mongo, config):
     juan = make_user('juan', 'Juan')
     ptr = make_pointer('exit_request.2018-03-20.xml', 'requester')
     exc = ptr.proxy.execution.get()
@@ -815,7 +815,7 @@ def test_regression_patch_requirements(client, mongo, config):
     }
 
 
-def test_regression_patch_just_invalidate(client, mongo, config, mocker):
+def test_patch_just_invalidate(client, mongo, config, mocker):
     mocker.patch(
         'pika.adapters.blocking_connection.'
         'BlockingChannel.basic_publish'
@@ -890,7 +890,7 @@ def test_regression_patch_just_invalidate(client, mongo, config, mocker):
     assert body == json_message
 
 
-def test_regression_patch_set_value(client, mongo, config, mocker):
+def test_patch_set_value(client, mongo, config, mocker):
     mocker.patch(
         'pika.adapters.blocking_connection.'
         'BlockingChannel.basic_publish'

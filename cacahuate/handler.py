@@ -328,9 +328,10 @@ class Handler:
                     ),
                 )
 
-        LOGGER.debug('Waking up n:{} found users: {}'.format(
+        LOGGER.debug('Waking up n:{} found users: {} e:{}'.format(
             node.id,
             ', '.join(u.identifier for u in users),
+            pointer.proxy.execution.get().id,
         ))
 
         return notified_users

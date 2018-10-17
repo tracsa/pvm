@@ -12,6 +12,7 @@ TESTING_SETTINGS = {
     },
     'CUSTOM_HIERARCHY_PROVIDERS': {
         'hardcoded': 'test.hardcoded_hierarchy',
+        'noparam': 'test.noparam_hierarchy',
     },
 }
 

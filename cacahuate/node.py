@@ -261,9 +261,6 @@ class UserAttachedNode(FullyContainedNode):
         return computed_params
 
     def get_actors(self, config, state):
-        if not self.auth_params:
-            return []
-
         HiPro = user_import(
             self.auth_backend,
             'HierarchyProvider',

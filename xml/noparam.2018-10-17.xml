@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2018-10-17</date>
+    <name>Noparam</name>
+    <description>Proceso con un nodo cuyo hierarchy backend carece de params</description>
+    <public>false</public>
+  </process-info>
+  <process>
+    <action id="requester" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="exit_form">
+          <input type="text" name="reason" required="required" label="Label-less form"/>
+        </form>
+      </form-array>
+    </action>
+
+    <action id="manager" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
+      <auth-filter backend="noparam"></auth-filter>
+
+      <form-array>
+        <form id="auth_form">
+          <input type="radio" name="auth" required="required" label="Label-less form">
+            <options>
+              <option value="yes">Ándale mijito, ve</option>
+              <option value="no">Ni madres</option>
+            </options>
+            <dependencies>
+              <dep>exit_form.reason</dep>
+            </dependencies>
+          </input>
+        </form>
+      </form-array>
+    </action>
+  </process>
+</process-spec>

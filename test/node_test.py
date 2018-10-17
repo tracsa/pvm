@@ -29,6 +29,18 @@ def test_resolve_params(config):
     }
 
 
+def test_get_actors(config):
+    xml = Xml.load(config, 'noparam')
+    xmliter = iter(xml)
+    next(xmliter)
+    node = make_node(next(xmliter), xmliter)
+
+    found_users = node.get_actors(config, {})
+
+    assert len(found_users) == 1
+    assert found_users[0].identifier == 'foo'
+
+
 def test_request_node(config, mocker):
     class ResponseMock:
         status_code = 200

@@ -29,11 +29,11 @@ def user_import(module_key, class_sufix, import_maper, default_path, enabled):
     try:
         mod = import_module(import_path)
         cls = getattr(mod, cls_name)
-    except ModuleNotFoundError as e:
+    except ModuleNotFoundError:
         raise MisconfiguredProvider(
             'Could not import provider module {}'.format(import_path)
         )
-    except AttributeError as e:
+    except AttributeError:
         raise MisconfiguredProvider('Provider does not define class {}'.format(
             cls_name,
         ))

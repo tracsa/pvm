@@ -38,5 +38,5 @@ class Loop:
             channel.start_consuming()
         except KeyboardInterrupt:
             LOGGER.info('cacahuate stopped')
-        except Exception as e:
+        except Exception:
             LOGGER.error(traceback.format_exc())

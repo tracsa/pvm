@@ -290,7 +290,7 @@ def start_process():
 
     try:
         xml = Xml.load(app.config, request.json['process_name'])
-    except ProcessNotFound as e:
+    except ProcessNotFound:
         raise NotFound([{
             'detail': '{} process does not exist'
                       .format(request.json['process_name']),
@@ -347,7 +347,7 @@ def continue_process():
             xmliter.find(lambda e: e.getAttribute('id') == node_id),
             xmliter
         )
-    except ElementNotFound as e:
+    except ElementNotFound:
         raise BadRequest([{
             'detail': 'node_id is not a valid node',
             'code': 'validation.invalid_node',
@@ -432,7 +432,7 @@ def find_process(name):
 
     try:
         xml = Xml.load(app.config, process_name)
-    except ProcessNotFound as e:
+    except ProcessNotFound:
         raise NotFound([{
             'detail': '{} process does not exist'
                       .format(process_name),
@@ -455,7 +455,7 @@ def xml_process(name):
 
     try:
         xml = Xml.load(app.config, process_name)
-    except ProcessNotFound as e:
+    except ProcessNotFound:
         raise NotFound([{
             'detail': '{} process does not exist'
                       .format(process_name),

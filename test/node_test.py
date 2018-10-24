@@ -73,7 +73,7 @@ def test_request_node(config, mocker):
     data = args[1]['data']
     headers = args[1]['headers']
 
-    assert method == 'GET'
+    assert method == 'POST'
     assert url == 'http://localhost/mirror?data=123456'
     assert headers == {
         'content-type': 'application/json',
@@ -81,6 +81,8 @@ def test_request_node(config, mocker):
     }
     assert data == '{"data":"123456"}'
     assert response == {
+        'url': 'http://localhost/mirror?data=123456',
+        'body': '{"data":"123456"}',
         'status_code': 200,
         'response': 'request response',
     }

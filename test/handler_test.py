@@ -2168,7 +2168,7 @@ def test_handle_request_node(config, mocker, mongo):
     requests.request.assert_called_once()
     args, kwargs = requests.request.call_args
 
-    assert args[0] == 'GET'
+    assert args[0] == 'POST'
     assert args[1] == 'http://localhost/mirror?data=' + value
 
     assert kwargs['data'] == '{"data":"' + value + '"}'

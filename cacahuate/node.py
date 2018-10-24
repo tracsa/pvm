@@ -782,16 +782,22 @@ class Request(FullyContainedNode):
             )
 
             res_dict = {
+                'url': url,
+                'body': body,
                 'status_code': response.status_code,
                 'response': response.text,
             }
         except TemplateError:
             res_dict = {
+                'url': url,
+                'body': body,
                 'status_code': 0,
                 'response': 'Jinja error prevented this request',
             }
         except requests.exceptions.ConnectionError as e:
             res_dict = {
+                'url': url,
+                'body': body,
                 'status_code': 0,
                 'response': str(e),
             }

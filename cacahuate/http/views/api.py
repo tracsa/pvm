@@ -321,6 +321,19 @@ def start_process():
     }, 201
 
 
+@app.route('/v1/execution/filter/<key>/<value>', methods=['GET'])
+@pagination
+def execution_filter(key, value):
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
+
+    return jsonify({
+        "data": list(map(
+            json_prepare,
+            collection.find({key: value}).skip(g.offset).limit(g.limit)
+        )),
+    })
+
+
 @app.route('/v1/pointer', methods=['POST'])
 @requires_auth
 @requires_json

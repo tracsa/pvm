@@ -1514,23 +1514,23 @@ def test_execution_filter_key_valid(client, mongo, config):
     mongo[config["EXECUTION_COLLECTION"]].insert([
         {
             'id': 1,
-            'my_type': 'foo',
+            'status': 'foo',
         },
         {
             'id': 2,
-            'another_type': 'var',
+            'name': 'var',
         },
         {
             'id': 3,
-            'my_type': 'foo',
+            'status': 'foo',
         },
         {
             'id': 4,
-            'my_type': 'zas',
+            'status': 'zas',
         },
     ])
 
-    res = client.get('/v1/execution?my_type=foo')
+    res = client.get('/v1/execution?status=foo')
     data = json.loads(res.data)
 
     assert res.status_code == 200
@@ -1538,11 +1538,11 @@ def test_execution_filter_key_valid(client, mongo, config):
         'data': [
             {
                 'id': 1,
-                'my_type': 'foo',
+                'status': 'foo',
             },
             {
                 'id': 3,
-                'my_type': 'foo',
+                'status': 'foo',
             }
         ],
     }
@@ -1552,22 +1552,27 @@ def test_execution_filter_key_invalid(client, mongo, config):
     mongo[config["EXECUTION_COLLECTION"]].insert([
         {
             'id': 1,
-            'my_type': 'bar',
+            'not_a_filter_key': 'bar',
         },
     ])
 
-    res = client.get('/v1/execution?my_type=foo')
+    res = client.get('/v1/execution?not_a_filter_key=foo')
     data = json.loads(res.data)
 
     assert res.status_code == 200
     assert data == {
-        'data': [],
+        'data': [
+            {
+                'id': 1,
+                'not_a_filter_key': 'bar',
+            },
+        ],
     }
 
 
 def test_execution_filter_value_invalid(client, mongo, config):
 
-    res = client.get('/v1/execution?my_type=foo')
+    res = client.get('/v1/execution?status=foo')
     data = json.loads(res.data)
 
     assert res.status_code == 200

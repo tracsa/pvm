@@ -55,10 +55,14 @@ def index():
 def execution_list():
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
+    query = {
+        arg: request.args.get(arg) for arg in request.args
+    }
+
     return jsonify({
         "data": list(map(
             json_prepare,
-            collection.find().skip(g.offset).limit(g.limit)
+            collection.find(query).skip(g.offset).limit(g.limit)
         )),
     })
 
@@ -319,19 +323,6 @@ def start_process():
     return {
         'data': execution.to_json(),
     }, 201
-
-
-@app.route('/v1/execution/filter/<key>/<value>', methods=['GET'])
-@pagination
-def execution_filter(key, value):
-    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
-
-    return jsonify({
-        "data": list(map(
-            json_prepare,
-            collection.find({key: value}).skip(g.offset).limit(g.limit)
-        )),
-    })
 
 
 @app.route('/v1/pointer', methods=['POST'])

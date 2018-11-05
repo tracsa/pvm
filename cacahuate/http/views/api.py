@@ -55,9 +55,7 @@ def index():
 def execution_list():
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
-    query = {
-        arg: request.args.get(arg) for arg in request.args
-    }
+    query = request.args.to_dict()
 
     return jsonify({
         "data": list(map(

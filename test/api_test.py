@@ -1530,7 +1530,7 @@ def test_execution_filter_key_valid(client, mongo, config):
         },
     ])
 
-    res = client.get('/v1/execution/filter/my_type/foo')
+    res = client.get('/v1/execution?my_type=foo')
     data = json.loads(res.data)
 
     assert res.status_code == 200
@@ -1556,7 +1556,7 @@ def test_execution_filter_key_invalid(client, mongo, config):
         },
     ])
 
-    res = client.get('/v1/execution/filter/my_type/foo')
+    res = client.get('/v1/execution?my_type=foo')
     data = json.loads(res.data)
 
     assert res.status_code == 200
@@ -1567,7 +1567,7 @@ def test_execution_filter_key_invalid(client, mongo, config):
 
 def test_execution_filter_value_invalid(client, mongo, config):
 
-    res = client.get('/v1/execution/filter/my_type/foo')
+    res = client.get('/v1/execution?my_type=foo')
     data = json.loads(res.data)
 
     assert res.status_code == 200

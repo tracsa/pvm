@@ -1535,14 +1535,16 @@ def test_execution_filter_key_valid(client, mongo, config):
 
     assert res.status_code == 200
     assert data == {
-        'data': [{
-            'id': 1,
-            'my_type': 'foo',
-        },
-        {
-            'id': 3,
-            'my_type': 'foo',
-        }],
+        'data': [
+            {
+                'id': 1,
+                'my_type': 'foo',
+            },
+            {
+                'id': 3,
+                'my_type': 'foo',
+            }
+        ],
     }
 
 

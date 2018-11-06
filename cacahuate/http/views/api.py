@@ -56,13 +56,13 @@ def execution_list():
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
     dict_args = request.args.to_dict()
-    valid_filters = (
-        'status',
-        'name',
+    invalid_filters = (
+        'limit',
+        'offset',
     )
 
     query = dict(
-        (k, dict_args[k]) for k in valid_filters if k in dict_args
+        (k, dict_args[k]) for k in dict_args if k not in invalid_filters
     )
 
     return jsonify({

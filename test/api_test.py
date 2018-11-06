@@ -1514,23 +1514,23 @@ def test_execution_filter_key_valid(client, mongo, config):
     mongo[config["EXECUTION_COLLECTION"]].insert([
         {
             'id': 1,
-            'status': 'foo',
+            'one_key': 'foo',
         },
         {
             'id': 2,
-            'name': 'var',
+            'another_key': 'var',
         },
         {
             'id': 3,
-            'status': 'foo',
+            'one_key': 'foo',
         },
         {
             'id': 4,
-            'status': 'zas',
+            'one_key': 'zas',
         },
     ])
 
-    res = client.get('/v1/execution?status=foo')
+    res = client.get('/v1/execution?one_key=foo')
     data = json.loads(res.data)
 
     assert res.status_code == 200
@@ -1538,11 +1538,11 @@ def test_execution_filter_key_valid(client, mongo, config):
         'data': [
             {
                 'id': 1,
-                'status': 'foo',
+                'one_key': 'foo',
             },
             {
                 'id': 3,
-                'status': 'foo',
+                'one_key': 'foo',
             }
         ],
     }
@@ -1552,11 +1552,11 @@ def test_execution_filter_key_invalid(client, mongo, config):
     mongo[config["EXECUTION_COLLECTION"]].insert([
         {
             'id': 1,
-            'not_a_filter_key': 'bar',
+            'limit': 'bar',
         },
     ])
 
-    res = client.get('/v1/execution?not_a_filter_key=foo')
+    res = client.get('/v1/execution?limit=foo')
     data = json.loads(res.data)
 
     assert res.status_code == 200
@@ -1564,7 +1564,7 @@ def test_execution_filter_key_invalid(client, mongo, config):
         'data': [
             {
                 'id': 1,
-                'not_a_filter_key': 'bar',
+                'limit': 'bar',
             },
         ],
     }
@@ -1572,7 +1572,7 @@ def test_execution_filter_key_invalid(client, mongo, config):
 
 def test_execution_filter_value_invalid(client, mongo, config):
 
-    res = client.get('/v1/execution?status=foo')
+    res = client.get('/v1/execution?one_key=foo')
     data = json.loads(res.data)
 
     assert res.status_code == 200

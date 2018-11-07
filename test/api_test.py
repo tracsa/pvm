@@ -1510,6 +1510,77 @@ def test_execution_list(client, mongo, config):
     }
 
 
+def test_execution_filter_key_valid(client, mongo, config):
+    mongo[config["EXECUTION_COLLECTION"]].insert([
+        {
+            'id': 1,
+            'one_key': 'foo',
+        },
+        {
+            'id': 2,
+            'another_key': 'var',
+        },
+        {
+            'id': 3,
+            'one_key': 'foo',
+        },
+        {
+            'id': 4,
+            'one_key': 'zas',
+        },
+    ])
+
+    res = client.get('/v1/execution?one_key=foo')
+    data = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert data == {
+        'data': [
+            {
+                'id': 1,
+                'one_key': 'foo',
+            },
+            {
+                'id': 3,
+                'one_key': 'foo',
+            }
+        ],
+    }
+
+
+def test_execution_filter_key_invalid(client, mongo, config):
+    mongo[config["EXECUTION_COLLECTION"]].insert([
+        {
+            'id': 1,
+            'limit': 'bar',
+        },
+    ])
+
+    res = client.get('/v1/execution?limit=foo')
+    data = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert data == {
+        'data': [
+            {
+                'id': 1,
+                'limit': 'bar',
+            },
+        ],
+    }
+
+
+def test_execution_filter_value_invalid(client, mongo, config):
+
+    res = client.get('/v1/execution?one_key=foo')
+    data = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert data == {
+        'data': [],
+    }
+
+
 def test_start_process_error_405(client, mongo, config):
     juan = make_user('juan', 'Juan')
 

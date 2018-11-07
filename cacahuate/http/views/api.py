@@ -55,10 +55,20 @@ def index():
 def execution_list():
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
+    dict_args = request.args.to_dict()
+    invalid_filters = (
+        'limit',
+        'offset',
+    )
+
+    query = dict(
+        (k, dict_args[k]) for k in dict_args if k not in invalid_filters
+    )
+
     return jsonify({
         "data": list(map(
             json_prepare,
-            collection.find().skip(g.offset).limit(g.limit)
+            collection.find(query).skip(g.offset).limit(g.limit)
         )),
     })
 

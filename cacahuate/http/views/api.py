@@ -640,7 +640,7 @@ def all_logs():
                     },
                 },
                 {
-                    '$replaceRoot' : {
+                    '$replaceRoot': {
                         'newRoot': '$latest',
                     },
                 },

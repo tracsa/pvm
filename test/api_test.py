@@ -1096,6 +1096,184 @@ def test_list_activities(client):
     }
 
 
+def test_logs_all(mongo, client, config):
+    mongo[config["POINTER_COLLECTION"]].insert([
+        {
+            'started_at': datetime(2018, 4, 1, 21, 45),
+            'finished_at': None,
+            'execution': {
+                'id': EXECUTION_ID,
+            },
+            'node': {
+                'id': 'first_node',
+            },
+        },
+        {
+            'started_at': datetime(2018, 4, 1, 21, 46),
+            'finished_at': None,
+            'execution': {
+                'id': EXECUTION_ID,
+            },
+            'node': {
+                'id': 'mid_node',
+            },
+        },
+        {
+            'started_at': datetime(2018, 4, 1, 21, 45),
+            'finished_at': None,
+            'execution': {
+                'id': 'xxxxffff',
+            },
+            'node': {
+                'id': 'mid_node',
+            },
+        },
+        {
+            'started_at': datetime(2018, 4, 1, 21, 44),
+            'finished_at': None,
+            'execution': {
+                'id': EXECUTION_ID,
+            },
+            'node': {
+                'id': 'another_node',
+            },
+        },
+    ])
+
+    res = client.get('/v1/log')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            {
+                'started_at': '2018-04-01T21:46:00+00:00',
+                'finished_at': None,
+                'execution': {
+                    'id': EXECUTION_ID,
+                },
+                'node': {
+                    'id': 'mid_node',
+                },
+            },
+            {
+                'started_at': '2018-04-01T21:45:00+00:00',
+                'finished_at': None,
+                'execution': {
+                    'id': 'xxxxffff',
+                },
+                'node': {
+                    'id': 'mid_node',
+                },
+            },
+        ],
+    }
+
+
+def test_logs_filter_key_valid(mongo, client, config):
+    mongo[config["POINTER_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'execution': {
+            'id': EXECUTION_ID,
+        },
+        'node': {
+            'id': 'mid_node',
+        },
+        'one_key': 'foo',
+    })
+
+    mongo[config["POINTER_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 50),
+        'finished_at': None,
+        'execution': {
+            'id': EXECUTION_ID,
+        },
+        'node': {
+            'id': '4g9lOdPKmRUf2',
+        },
+        'one_key': 'bar',
+    })
+
+    res = client.get('/v1/log?one_key=foo')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            {
+                'started_at': '2018-04-01T21:45:00+00:00',
+                'finished_at': None,
+                'execution': {
+                    'id': EXECUTION_ID,
+                },
+                'node': {
+                    'id': 'mid_node',
+                },
+                'one_key': 'foo',
+            },
+        ],
+    }
+
+
+def test_logs_filter_key_invalid(mongo, client, config):
+    mongo[config["POINTER_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'execution': {
+            'id': EXECUTION_ID,
+        },
+        'node': {
+            'id': 'mid_node',
+        },
+    })
+
+    res = client.get('/v1/log?limit=foo')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            {
+                'started_at': '2018-04-01T21:45:00+00:00',
+                'finished_at': None,
+                'execution': {
+                    'id': EXECUTION_ID,
+                },
+                'node': {
+                    'id': 'mid_node',
+                },
+            },
+        ],
+    }
+
+
+def test_logs_filter_value_invalid(mongo, client, config):
+    mongo[config["POINTER_COLLECTION"]].insert_one({
+        'started_at': datetime(2018, 4, 1, 21, 45),
+        'finished_at': None,
+        'execution': {
+            'id': EXECUTION_ID,
+        },
+        'node': {
+            'id': 'mid_node',
+        },
+        'one_key': 'bar',
+    })
+
+    res = client.get('/v1/log?one_key=foo')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [],
+    }
+
+
 def test_logs_activity(mongo, client, config):
     mongo[config["POINTER_COLLECTION"]].insert_one({
         'started_at': datetime(2018, 4, 1, 21, 45),

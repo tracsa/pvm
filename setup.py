@@ -72,6 +72,7 @@ setup(
         'simplejson',
         'requests',
         'passlib',
+        'yuid',
     ],
 
     setup_requires=[

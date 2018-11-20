@@ -3,6 +3,7 @@ from flask.logging import default_handler
 from flask_coralillo import Coralillo
 from flask_cors import CORS
 from flask_pymongo import PyMongo
+from yuid import yuid
 
 import logging.config
 import os
@@ -28,7 +29,7 @@ os.environ['TZ'] = app.config.get('TIMEZONE', 'UTC')
 time.tzset()
 
 # Bind the database
-cora = Coralillo(app)
+cora = Coralillo(app, id_function=yuid)
 bind_models(cora._engine)
 
 # The database

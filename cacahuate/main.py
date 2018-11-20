@@ -5,6 +5,7 @@ from itacate import Config
 from lark.exceptions import GrammarError, ParseError, LexError
 from xml.dom import pulldom
 from xml.sax._exceptions import SAXParseException
+from yuid import yuid
 import argparse
 import logging
 import logging.config
@@ -39,6 +40,7 @@ def main():
         host=config['REDIS_HOST'],
         port=config['REDIS_PORT'],
         db=config['REDIS_DB'],
+        id_function=yuid,
     )
     bind_models(eng)
 

@@ -33,26 +33,24 @@ def config():
 
 
 @pytest.fixture(autouse=True)
-def clear_mongo():
-    con = config()
+def clear_mongo(config):
     client = MongoClient()
-    db = client[con['MONGO_DBNAME']]
+    db = client[config['MONGO_DBNAME']]
 
-    collection = db[con['POINTER_COLLECTION']]
+    collection = db[config['POINTER_COLLECTION']]
     collection.drop()
 
-    collection_execution = db[con['EXECUTION_COLLECTION']]
+    collection_execution = db[config['EXECUTION_COLLECTION']]
     collection_execution.drop()
 
 
 @pytest.fixture(autouse=True)
-def bind_models():
+def bind_models(config):
     ''' Binds the models to a coralillo engine, returns nothing '''
-    con = config()
     engine = Engine(
-        host=con['REDIS_HOST'],
-        port=con['REDIS_PORT'],
-        db=con['REDIS_DB'],
+        host=config['REDIS_HOST'],
+        port=config['REDIS_PORT'],
+        db=config['REDIS_DB'],
     )
     engine.lua.drop(args=['*'])
 
@@ -70,9 +68,8 @@ def client():
 
 
 @pytest.fixture
-def mongo():
-    con = config()
+def mongo(config):
     client = MongoClient()
-    db = client[con['MONGO_DBNAME']]
+    db = client[config['MONGO_DBNAME']]
 
     return db

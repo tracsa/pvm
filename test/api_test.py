@@ -313,7 +313,7 @@ def test_start_process_requirements(client, mongo, config):
     }
 
     # no registry should be created yet
-    assert mongo[config["POINTER_COLLECTION"]].count() == 0
+    assert mongo[config["POINTER_COLLECTION"]].count_documents({}) == 0
 
 
 def test_start_process(client, mocker, config, mongo):
@@ -1097,7 +1097,7 @@ def test_list_activities(client):
 
 
 def test_logs_all(mongo, client, config):
-    mongo[config["POINTER_COLLECTION"]].insert([
+    mongo[config["POINTER_COLLECTION"]].insert_many([
         {
             'started_at': datetime(2018, 4, 1, 21, 45),
             'finished_at': None,
@@ -1689,7 +1689,7 @@ def test_execution_list(client, mongo, config):
 
 
 def test_execution_filter_key_valid(client, mongo, config):
-    mongo[config["EXECUTION_COLLECTION"]].insert([
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
         {
             'id': 1,
             'one_key': 'foo',
@@ -1727,7 +1727,7 @@ def test_execution_filter_key_valid(client, mongo, config):
 
 
 def test_execution_filter_key_invalid(client, mongo, config):
-    mongo[config["EXECUTION_COLLECTION"]].insert([
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
         {
             'id': 1,
             'limit': 'bar',

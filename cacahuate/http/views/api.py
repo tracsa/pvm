@@ -15,7 +15,7 @@ from cacahuate.http.errors import Forbidden
 from cacahuate.http.middleware import requires_json, requires_auth, pagination
 from cacahuate.http.validation import validate_json, validate_auth
 from cacahuate.http.wsgi import app, mongo
-from cacahuate.models import Execution, Pointer
+from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import make_node
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict, get_text, get_element_by
@@ -262,6 +262,51 @@ def execution_patch(id):
         properties=pika.BasicProperties(
             delivery_mode=2,
         ),
+    )
+
+    return jsonify({
+        'data': 'accepted',
+    }), 202
+
+
+@app.route('/v1/execution/<id>/add_user', methods=['POST'])
+@requires_auth
+def execution_add_user(id):
+    # get execution
+    execution = Execution.get_or_exception(id)
+
+    # validate the members needed
+    validate_json(request.json, ['identifier', 'node_id'])
+
+    identifier = request.json['identifier']
+    node_id = request.json['node_id']
+
+    # get actual pointer
+    try:
+        pointer = next(execution.proxy.pointers.q().filter(node_id=node_id))
+    except StopIteration:
+        raise BadRequest([{
+            'detail': 'node_id does not have a live pointer',
+            'code': 'validation.no_live_pointer',
+            'where': 'request.body.node_id',
+        }])
+
+    # get user
+    user = User.get_by('identifier', identifier)
+    if user is None:
+        raise ModelNotFoundError('This object does not exist in database')
+
+    # update user
+    user.proxy.tasks.add(pointer)
+
+    # update pointer
+    notified_users = pointer.get('notified_users') or []
+    notified_users.append(user.to_json())
+
+    collection = mongo.db[app.config['POINTER_COLLECTION']]
+    collection.update_one(
+        {'id': pointer.id},
+        {'$set': {'notified_users': notified_users}},
     )
 
     return jsonify({

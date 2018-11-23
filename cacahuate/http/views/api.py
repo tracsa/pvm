@@ -147,7 +147,7 @@ def execution_patch(id):
         node = get_element_by(dom, 'action', 'id', node_id)
 
         if len(node_state['actors']['items']) == 1:
-            only_key = node_state['actors']['item_order'][0]
+            only_key = list(node_state['actors']['items'].keys())[0]
             actor_state = node_state['actors']['items'][only_key]
         else:
             try:

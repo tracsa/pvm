@@ -8,7 +8,7 @@ from cacahuate.handler import Handler
 from cacahuate.models import Pointer, Execution
 from cacahuate.xml import Xml
 from cacahuate.node import Form
-from cacahuate.jsontypes import SortedMap
+from cacahuate.jsontypes import SortedMap, Map
 
 from .utils import make_auth, make_pointer, make_user, make_date
 from .utils import assert_near_date
@@ -732,7 +732,7 @@ def test_patch_requirements(client, mongo, config):
         'id': exc.id,
     }, {
         '$set': {
-            'state.items.requester.actors': SortedMap([{
+            'state.items.requester.actors': Map([{
                 "_type": "actor",
                 "forms": [{
                     '_type': 'form',
@@ -834,7 +834,7 @@ def test_patch_just_invalidate(client, mongo, config, mocker):
         'id': exc.id,
     }, {
         '$set': {
-            'state.items.requester.actors': SortedMap([{
+            'state.items.requester.actors': Map([{
                 "_type": "actor",
                 "forms": [{
                     '_type': 'form',
@@ -909,7 +909,7 @@ def test_patch_set_value(client, mongo, config, mocker):
         'id': exc.id,
     }, {
         '$set': {
-            'state.items.requester.actors': SortedMap([{
+            'state.items.requester.actors': Map([{
                 "_type": "actor",
                 "forms": [{
                     '_type': 'form',

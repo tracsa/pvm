@@ -2,6 +2,7 @@ language: python
 cache: pip
 python:
 - '3.6'
+- '3.7'
 services:
 - redis-server
 - rabbitmq
@@ -22,6 +23,7 @@ deploy:
     on:
       tags: true
     distributions: "sdist bdist_wheel"
+    skip_existing: true
   - provider: pages
     skip-cleanup: true
     github-token: $GITHUB_TOKEN

@@ -300,8 +300,10 @@ def execution_add_user(id):
     user.proxy.tasks.add(pointer)
 
     # update pointer
+    user_json = user.to_json()
     notified_users = pointer.get('notified_users') or []
-    notified_users.append(user.to_json())
+    if user_json not in notified_users:
+        notified_users.append(user.to_json())
 
     collection = mongo.db[app.config['POINTER_COLLECTION']]
     collection.update_one(

@@ -1808,6 +1808,158 @@ def test_execution_add_user_success(client, mocker, config, mongo):
     assert notified_users == [luis.to_json()]
 
 
+def test_execution_add_user_new(client, mocker, config, mongo):
+    # variables: users
+    juan = make_user('juan', 'Juan')
+    luis = make_user('luis', 'Luis')
+    beto = make_user('beto', 'Beto')
+
+    # variables: pointer and execution
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
+    exc = ptr.proxy.execution.get()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': exc.id,
+        'state': Xml.load(config, exc.process_name, direct=True).get_state(),
+    })
+
+    pointer = ptr.to_json()
+    pointer['execution'] = exc.to_json()
+    mongo[config["POINTER_COLLECTION"]].insert_one(pointer)
+
+    # user has no task assigned
+    assert luis.proxy.tasks.count() == 0
+    assert beto.proxy.tasks.count() == 0
+
+    # add the user
+    res = client.post(
+        '/v1/execution/{}/add_user'.format(exc.id),
+        headers={
+            **{'Content-Type': 'application/json'},
+            **make_auth(juan)},
+        data=json.dumps({
+            'identifier': 'luis',
+            'node_id': 'approval_node',
+        })
+    )
+    # successful post
+    assert res.status_code == 202
+
+    # user has one task assigned
+    assert luis.proxy.tasks.count() == 1
+
+    # test notified_users (log)
+    res = client.get(
+        '/v1/log/{}'.format(exc.id),
+    )
+
+    notified_users = json.loads(res.data)['data'][0]['notified_users']
+    assert res.status_code == 200
+    assert notified_users == [luis.to_json()]
+
+    # add the second user
+    res = client.post(
+        '/v1/execution/{}/add_user'.format(exc.id),
+        headers={
+            **{'Content-Type': 'application/json'},
+            **make_auth(juan)},
+        data=json.dumps({
+            'identifier': 'beto',
+            'node_id': 'approval_node',
+        })
+    )
+    # successful post
+    assert res.status_code == 202
+
+    # user has one task assigned
+    assert beto.proxy.tasks.count() == 1
+
+    # test notified_users (log)
+    res = client.get(
+        '/v1/log/{}'.format(exc.id),
+    )
+
+    notified_users = json.loads(res.data)['data'][0]['notified_users']
+    assert res.status_code == 200
+    assert notified_users == [luis.to_json(), beto.to_json()]
+
+
+def test_execution_add_user_duplicate(client, mocker, config, mongo):
+    # variables: users
+    juan = make_user('juan', 'Juan')
+    luis = make_user('luis', 'Luis')
+
+    # variables: pointer and execution
+    ptr = make_pointer('validation.2018-05-09.xml', 'approval_node')
+    exc = ptr.proxy.execution.get()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': exc.id,
+        'state': Xml.load(config, exc.process_name, direct=True).get_state(),
+    })
+
+    pointer = ptr.to_json()
+    pointer['execution'] = exc.to_json()
+    mongo[config["POINTER_COLLECTION"]].insert_one(pointer)
+
+    # user has no task assigned
+    assert luis.proxy.tasks.count() == 0
+
+    # add the user
+    res = client.post(
+        '/v1/execution/{}/add_user'.format(exc.id),
+        headers={
+            **{'Content-Type': 'application/json'},
+            **make_auth(juan)},
+        data=json.dumps({
+            'identifier': 'luis',
+            'node_id': 'approval_node',
+        })
+    )
+    # successful post
+    assert res.status_code == 202
+
+    # user has one task assigned
+    assert luis.proxy.tasks.count() == 1
+
+    # test notified_users (log)
+    res = client.get(
+        '/v1/log/{}'.format(exc.id),
+    )
+
+    notified_users = json.loads(res.data)['data'][0]['notified_users']
+    assert res.status_code == 200
+    assert notified_users == [luis.to_json()]
+
+    # add the second user
+    res = client.post(
+        '/v1/execution/{}/add_user'.format(exc.id),
+        headers={
+            **{'Content-Type': 'application/json'},
+            **make_auth(juan)},
+        data=json.dumps({
+            'identifier': 'luis',
+            'node_id': 'approval_node',
+        })
+    )
+    # successful post
+    assert res.status_code == 202
+
+    # user has one task assigned
+    assert luis.proxy.tasks.count() == 1
+
+    # test notified_users (log)
+    res = client.get(
+        '/v1/log/{}'.format(exc.id),
+    )
+
+    notified_users = json.loads(res.data)['data'][0]['notified_users']
+    assert res.status_code == 200
+    assert notified_users == [luis.to_json()]
+
+
 def test_execution_add_user_requirements_id(client, mocker, config, mongo):
     juan = make_user('juan', 'Juan')
 

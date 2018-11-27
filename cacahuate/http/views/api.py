@@ -292,7 +292,7 @@ def execution_add_user(id):
         pointer = next(execution.proxy.pointers.q().filter(node_id=node_id))
     except StopIteration:
         raise BadRequest([{
-            'detail': 'node_id does not have a live pointer',
+            'detail': f'{node_id} does not have a live pointer',
             'code': 'validation.no_live_pointer',
             'where': 'request.body.node_id',
         }])

@@ -9,6 +9,7 @@ import re
 
 from cacahuate.errors import InputError, RequiredListError, RequiredDictError
 from cacahuate.errors import RequiredInputError, RequiredStrError
+from cacahuate.errors import InvalidInputError
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.http.errors import BadRequest, NotFound, UnprocessableEntity
 from cacahuate.http.errors import Forbidden
@@ -269,9 +270,14 @@ def execution_patch(id):
     }), 202
 
 
-@app.route('/v1/execution/<id>/add_user', methods=['POST'])
+@app.route('/v1/execution/<id>/user', methods=['PUT'])
 @requires_auth
 def execution_add_user(id):
+    ''' adds the user as a candidate for solving the given node, only if the
+    node has an active pointer. '''
+    # TODO possible race condition introduced here. How does this code work in
+    # case the handler is moving the pointer?
+
     # get execution
     execution = Execution.get_or_exception(id)
 
@@ -286,7 +292,7 @@ def execution_add_user(id):
         pointer = next(execution.proxy.pointers.q().filter(node_id=node_id))
     except StopIteration:
         raise BadRequest([{
-            'detail': 'node_id does not have a live pointer',
+            'detail': f'{node_id} does not have a live pointer',
             'code': 'validation.no_live_pointer',
             'where': 'request.body.node_id',
         }])
@@ -294,7 +300,7 @@ def execution_add_user(id):
     # get user
     user = User.get_by('identifier', identifier)
     if user is None:
-        raise ModelNotFoundError('This object does not exist in database')
+        raise InvalidInputError('user_id', 'request.body.identifier')
 
     # update user
     user.proxy.tasks.add(pointer)
@@ -302,9 +308,9 @@ def execution_add_user(id):
     # update pointer
     collection = mongo.db[app.config['POINTER_COLLECTION']]
     db_pointer = collection.find_one({'id': pointer.id})
-
     user_json = user.to_json()
-    notified_users = db_pointer.get('notified_users') or []
+    notified_users = db_pointer.get('notified_users', [])
+
     if user_json not in notified_users:
         notified_users.append(user.to_json())
 
@@ -313,9 +319,7 @@ def execution_add_user(id):
         {'$set': {'notified_users': notified_users}},
     )
 
-    return jsonify({
-        'data': 'accepted',
-    }), 202
+    return jsonify(user_json), 200
 
 
 @app.route('/v1/execution/<id>', methods=['DELETE'])

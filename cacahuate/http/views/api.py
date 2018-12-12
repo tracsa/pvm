@@ -674,43 +674,23 @@ def all_logs():
         (k, dict_args[k]) for k in dict_args if k not in invalid_filters
     )
 
+    pipeline = [
+        {'$match': query},
+        {'$sort': {'started_at': -1}},
+        {'$group': {
+            '_id': '$execution.id',
+            'latest': {'$first': '$$ROOT'},
+        }},
+        {'$replaceRoot': {'newRoot': '$latest'}},
+        {'$skip': g.offset},
+        {'$limit': g.limit},
+        {'$sort': {'started_at': -1}},
+    ]
+
     return jsonify({
         'data': list(map(
             json_prepare,
-            collection.aggregate([
-                {
-                    '$match': query,
-                },
-                {
-                    '$sort': {
-                        'started_at': -1,
-                    },
-                },
-                {
-                    '$group': {
-                        '_id': '$execution.id',
-                        'latest': {
-                            '$first': '$$ROOT',
-                        },
-                    },
-                },
-                {
-                    '$replaceRoot': {
-                        'newRoot': '$latest',
-                    },
-                },
-                {
-                    '$skip': g.offset,
-                },
-                {
-                    '$limit': g.limit,
-                },
-                {
-                    '$sort': {
-                        'started_at': -1,
-                    },
-                },
-            ]),
+            collection.aggregate(pipeline),
         )),
     })
 

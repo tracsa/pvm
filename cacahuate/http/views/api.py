@@ -544,10 +544,12 @@ def list_activities():
 @app.route('/v1/task', methods=['GET'])
 @requires_auth
 def task_list():
+    tasks = g.user.proxy.tasks.get()
+
     return jsonify({
         'data': list(map(
             lambda t: t.to_json(include=['*', 'execution']),
-            g.user.proxy.tasks.get()
+            tasks
         )),
     })
 

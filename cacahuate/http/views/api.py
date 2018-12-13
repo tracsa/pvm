@@ -28,6 +28,11 @@ DATE_FIELDS = [
     'finished_at',
 ]
 
+INVALID_FILTERS = (
+    'limit',
+    'offset',
+)
+
 
 def json_prepare(obj):
     if obj.get('_id'):
@@ -57,13 +62,9 @@ def execution_list():
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
     dict_args = request.args.to_dict()
-    invalid_filters = (
-        'limit',
-        'offset',
-    )
 
     query = dict(
-        (k, dict_args[k]) for k in dict_args if k not in invalid_filters
+        (k, dict_args[k]) for k in dict_args if k not in INVALID_FILTERS
     )
 
     return jsonify({
@@ -665,13 +666,9 @@ def all_logs():
     collection = mongo.db[app.config['POINTER_COLLECTION']]
 
     dict_args = request.args.to_dict()
-    invalid_filters = (
-        'limit',
-        'offset',
-    )
 
     query = dict(
-        (k, dict_args[k]) for k in dict_args if k not in invalid_filters
+        (k, dict_args[k]) for k in dict_args if k not in INVALID_FILTERS
     )
 
     pipeline = [

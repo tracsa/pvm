@@ -31,6 +31,7 @@ DATE_FIELDS = [
 INVALID_FILTERS = (
     'limit',
     'offset',
+    'current_user',
 )
 
 
@@ -661,6 +662,7 @@ def task_read(id):
 
 
 @app.route('/v1/log', methods=['GET'])
+@requires_auth
 @pagination
 def all_logs():
     collection = mongo.db[app.config['POINTER_COLLECTION']]
@@ -670,6 +672,13 @@ def all_logs():
     query = dict(
         (k, dict_args[k]) for k in dict_args if k not in INVALID_FILTERS
     )
+
+    # filter for current user
+    if request.args.get('current_user', 'false') == 'true':
+        pointer_list = [item.id for item in g.user.proxy.tasks.get()]
+        query['id'] = {
+            '$in': pointer_list,
+        }
 
     pipeline = [
         {'$match': query},

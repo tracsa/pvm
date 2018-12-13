@@ -1096,6 +1096,18 @@ def test_list_activities(client):
     }
 
 
+def test_logs_list_requires_auth(client):
+    res = client.get('/v1/log')
+
+    assert res.status_code == 401
+    assert json.loads(res.data) == {
+        'errors': [{
+            'detail': 'You must provide basic authorization headers',
+            'where': 'request.authorization',
+        }],
+    }
+
+
 def test_logs_all(mongo, client, config):
     mongo[config["POINTER_COLLECTION"]].insert_many([
         {
@@ -1140,7 +1152,9 @@ def test_logs_all(mongo, client, config):
         },
     ])
 
-    res = client.get('/v1/log')
+    juan = make_user('user', 'User')
+
+    res = client.get('/v1/log', headers=make_auth(juan))
 
     ans = json.loads(res.data)
 
@@ -1196,7 +1210,9 @@ def test_logs_filter_key_valid(mongo, client, config):
         'one_key': 'bar',
     })
 
-    res = client.get('/v1/log?one_key=foo')
+    juan = make_user('user', 'User')
+
+    res = client.get('/v1/log?one_key=foo', headers=make_auth(juan))
 
     ans = json.loads(res.data)
 
@@ -1230,7 +1246,8 @@ def test_logs_filter_key_invalid(mongo, client, config):
         },
     })
 
-    res = client.get('/v1/log?limit=foo')
+    juan = make_user('user', 'User')
+    res = client.get('/v1/log?limit=foo', headers=make_auth(juan))
 
     ans = json.loads(res.data)
 
@@ -1264,7 +1281,8 @@ def test_logs_filter_value_invalid(mongo, client, config):
         'one_key': 'bar',
     })
 
-    res = client.get('/v1/log?one_key=foo')
+    juan = make_user('user', 'User')
+    res = client.get('/v1/log?one_key=foo', headers=make_auth(juan))
 
     ans = json.loads(res.data)
 

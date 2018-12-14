@@ -1096,18 +1096,6 @@ def test_list_activities(client):
     }
 
 
-def test_logs_list_requires_auth(client):
-    res = client.get('/v1/log')
-
-    assert res.status_code == 401
-    assert json.loads(res.data) == {
-        'errors': [{
-            'detail': 'You must provide basic authorization headers',
-            'where': 'request.authorization',
-        }],
-    }
-
-
 def test_logs_all(mongo, client, config):
     mongo[config["POINTER_COLLECTION"]].insert_many([
         {
@@ -1152,9 +1140,7 @@ def test_logs_all(mongo, client, config):
         },
     ])
 
-    juan = make_user('user', 'User')
-
-    res = client.get('/v1/log', headers=make_auth(juan))
+    res = client.get('/v1/log')
 
     ans = json.loads(res.data)
 
@@ -1185,7 +1171,7 @@ def test_logs_all(mongo, client, config):
     }
 
 
-def test_logs_all_current_user(mongo, client, config):
+def test_logs_filter_user(mongo, client, config):
     juan = make_user('user', 'User')
 
     ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
@@ -1212,7 +1198,7 @@ def test_logs_all_current_user(mongo, client, config):
         ptr_04_json.copy(),
     ])
 
-    res = client.get('/v1/log?current_user=true', headers=make_auth(juan))
+    res = client.get('/v1/log?user_identifier={}'.format(juan.identifier))
 
     ans = json.loads(res.data)
 
@@ -1223,6 +1209,29 @@ def test_logs_all_current_user(mongo, client, config):
             ptr_02_json,
             ptr_01_json,
         ],
+    }
+
+
+def test_logs_filter_user_invalid(mongo, client, config):
+    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+    ptr_02 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+    ptr_03 = make_pointer('exit_request.2018-03-20.xml', 'requester')
+    ptr_04 = make_pointer('validation.2018-05-09.xml', 'approval_node')
+
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        ptr_01.to_json(include=['*', 'execution']),
+        ptr_02.to_json(include=['*', 'execution']),
+        ptr_03.to_json(include=['*', 'execution']),
+        ptr_04.to_json(include=['*', 'execution']),
+    ])
+
+    res = client.get('/v1/log?user_identifier=foo')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [],
     }
 
 
@@ -1251,9 +1260,7 @@ def test_logs_filter_key_valid(mongo, client, config):
         'one_key': 'bar',
     })
 
-    juan = make_user('user', 'User')
-
-    res = client.get('/v1/log?one_key=foo', headers=make_auth(juan))
+    res = client.get('/v1/log?one_key=foo')
 
     ans = json.loads(res.data)
 
@@ -1287,8 +1294,7 @@ def test_logs_filter_key_invalid(mongo, client, config):
         },
     })
 
-    juan = make_user('user', 'User')
-    res = client.get('/v1/log?limit=foo', headers=make_auth(juan))
+    res = client.get('/v1/log?limit=foo')
 
     ans = json.loads(res.data)
 
@@ -1322,8 +1328,7 @@ def test_logs_filter_value_invalid(mongo, client, config):
         'one_key': 'bar',
     })
 
-    juan = make_user('user', 'User')
-    res = client.get('/v1/log?one_key=foo', headers=make_auth(juan))
+    res = client.get('/v1/log?one_key=foo')
 
     ans = json.loads(res.data)
 

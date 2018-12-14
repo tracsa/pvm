@@ -28,6 +28,12 @@ DATE_FIELDS = [
     'finished_at',
 ]
 
+INVALID_FILTERS = (
+    'limit',
+    'offset',
+    'current_user',
+)
+
 
 def json_prepare(obj):
     if obj.get('_id'):
@@ -57,13 +63,9 @@ def execution_list():
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
     dict_args = request.args.to_dict()
-    invalid_filters = (
-        'limit',
-        'offset',
-    )
 
     query = dict(
-        (k, dict_args[k]) for k in dict_args if k not in invalid_filters
+        (k, dict_args[k]) for k in dict_args if k not in INVALID_FILTERS
     )
 
     return jsonify({
@@ -544,10 +546,12 @@ def list_activities():
 @app.route('/v1/task', methods=['GET'])
 @requires_auth
 def task_list():
+    tasks = g.user.proxy.tasks.get()
+
     return jsonify({
         'data': list(map(
             lambda t: t.to_json(include=['*', 'execution']),
-            g.user.proxy.tasks.get()
+            tasks
         )),
     })
 
@@ -658,57 +662,41 @@ def task_read(id):
 
 
 @app.route('/v1/log', methods=['GET'])
+@requires_auth
 @pagination
 def all_logs():
     collection = mongo.db[app.config['POINTER_COLLECTION']]
 
     dict_args = request.args.to_dict()
-    invalid_filters = (
-        'limit',
-        'offset',
-    )
 
     query = dict(
-        (k, dict_args[k]) for k in dict_args if k not in invalid_filters
+        (k, dict_args[k]) for k in dict_args if k not in INVALID_FILTERS
     )
+
+    # filter for current user
+    if request.args.get('current_user', 'false') == 'true':
+        pointer_list = [item.id for item in g.user.proxy.tasks.get()]
+        query['id'] = {
+            '$in': pointer_list,
+        }
+
+    pipeline = [
+        {'$match': query},
+        {'$sort': {'started_at': -1}},
+        {'$group': {
+            '_id': '$execution.id',
+            'latest': {'$first': '$$ROOT'},
+        }},
+        {'$replaceRoot': {'newRoot': '$latest'}},
+        {'$skip': g.offset},
+        {'$limit': g.limit},
+        {'$sort': {'started_at': -1}},
+    ]
 
     return jsonify({
         'data': list(map(
             json_prepare,
-            collection.aggregate([
-                {
-                    '$match': query,
-                },
-                {
-                    '$sort': {
-                        'started_at': -1,
-                    },
-                },
-                {
-                    '$group': {
-                        '_id': '$execution.id',
-                        'latest': {
-                            '$first': '$$ROOT',
-                        },
-                    },
-                },
-                {
-                    '$replaceRoot': {
-                        'newRoot': '$latest',
-                    },
-                },
-                {
-                    '$skip': g.offset,
-                },
-                {
-                    '$limit': g.limit,
-                },
-                {
-                    '$sort': {
-                        'started_at': -1,
-                    },
-                },
-            ]),
+            collection.aggregate(pipeline),
         )),
     })
 

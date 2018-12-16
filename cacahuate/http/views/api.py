@@ -19,6 +19,7 @@ from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import make_node
 from cacahuate.rabbit import get_channel
+from cacahuate.settings import INVALID_FILTERS
 from cacahuate.xml import Xml, form_to_dict, get_text, get_element_by
 from cacahuate.node import make_input
 
@@ -27,11 +28,6 @@ DATE_FIELDS = [
     'started_at',
     'finished_at',
 ]
-
-INVALID_FILTERS = (
-    'limit',
-    'offset',
-)
 
 
 def json_prepare(obj):

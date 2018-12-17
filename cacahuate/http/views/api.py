@@ -19,7 +19,6 @@ from cacahuate.http.wsgi import app, mongo
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import make_node
 from cacahuate.rabbit import get_channel
-from cacahuate.settings import INVALID_FILTERS
 from cacahuate.xml import Xml, form_to_dict, get_text, get_element_by
 from cacahuate.node import make_input
 
@@ -60,7 +59,8 @@ def execution_list():
     dict_args = request.args.to_dict()
 
     query = dict(
-        (k, dict_args[k]) for k in dict_args if k not in INVALID_FILTERS
+        (k, dict_args[k]) for k in dict_args
+        if k not in app.config['INVALID_FILTERS']
     )
 
     return jsonify({
@@ -664,7 +664,8 @@ def all_logs():
     dict_args = request.args.to_dict()
 
     query = dict(
-        (k, dict_args[k]) for k in dict_args if k not in INVALID_FILTERS
+        (k, dict_args[k]) for k in dict_args
+        if k not in app.config['INVALID_FILTERS']
     )
 
     # filter for user_identifier

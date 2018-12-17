@@ -106,3 +106,9 @@ GUI_URL = 'http://localhost:8080'
 
 # The 'impersonate' login module, when enabled, uses this to login
 IMPERSONATE_PASSWORD = 'set me to passlib.hash.pbkdf2_sha256.hash("something")'
+
+# Invalid filters for query string
+INVALID_FILTERS = (
+    'limit',
+    'offset',
+)

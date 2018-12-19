@@ -2336,9 +2336,9 @@ def test_pagination_v1_log_all(client, mongo, config):
     res = client.get(
         '/v1/log?offset=2&limit=2'
     )
-    assert json.loads(res.data)['data'][0]["finished_at"] == \
+    assert json.loads(res.data)['data'][0]["started_at"] == \
         '2018-05-22T07:07:07+00:00'
-    assert json.loads(res.data)['data'][1]["finished_at"] == \
+    assert json.loads(res.data)['data'][1]["started_at"] == \
         '2018-05-21T06:06:06+00:00'
     assert len(json.loads(res.data)['data']) == 2
 

@@ -688,9 +688,9 @@ def all_logs():
             'latest': {'$first': '$$ROOT'},
         }},
         {'$replaceRoot': {'newRoot': '$latest'}},
+        {'$sort': {'started_at': -1}},
         {'$skip': g.offset},
         {'$limit': g.limit},
-        {'$sort': {'started_at': -1}},
     ]
 
     return jsonify({

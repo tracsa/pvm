@@ -47,7 +47,10 @@ class LdapAuthProvider(BaseAuthProvider):
             attributes=['mail', 'givenName', 'sn']
         )
 
-        entry = conn.entries[0]
+        try:
+            entry = conn.entries[0]
+        except IndexError:
+            raise AuthFieldInvalid('username')
 
         identifier = '{}\\{}'.format(domain, username)
         email = str(entry.mail)

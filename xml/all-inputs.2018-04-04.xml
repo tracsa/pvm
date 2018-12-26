@@ -91,7 +91,7 @@
 
           <input
             type="link"
-            label="Give me the file"
+            label="Give me the link"
             name="link"
             required="required" />
         </form>

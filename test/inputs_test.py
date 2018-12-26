@@ -131,7 +131,7 @@ def test_all_inputs(client, config, mongo, mocker):
         'link': {
             'type': 'link',
             'name': 'link',
-            'label': 'Give me the file',
+            'label': 'Give me the link',
             'state': 'valid',
             'hidden': False,
             'value': {

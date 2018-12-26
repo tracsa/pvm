@@ -358,7 +358,10 @@ class LinkInput(Input):
             if 'label' not in value or 'href' not in value:
                 raise InvalidInputError(
                     self.name,
-                    'request.body.form_array.{}.{}'.format(form_index, self.name)
+                    'request.body.form_array.{}.{}'.format(
+                        form_index,
+                        self.name
+                    )
                 )
 
         label = value['label']

@@ -3,6 +3,7 @@ from datetime import datetime
 from functools import reduce
 from operator import and_
 import ast
+import re
 
 from cacahuate.errors import InvalidInputError, RequiredListError
 from cacahuate.errors import MisconfiguredProvider, RequiredIntError
@@ -21,6 +22,7 @@ INPUTS = [
     'select',
     'int',
     'float',
+    'link',
 ]
 
 
@@ -336,6 +338,47 @@ class DatetimeInput(Input):
 
 class DateInput(DatetimeInput):
     pass
+
+
+class LinkInput(Input):
+
+    def validate(self, value, form_index):
+        super().validate(value, form_index)
+
+        if not value:
+            value = None
+
+        if not value and self.required:
+            raise RequiredInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
+
+        if value is not None:
+            if 'label' not in value or 'href' not in value:
+                raise InvalidInputError(
+                    self.name,
+                    'request.body.form_array.{}.{}'.format(
+                        form_index,
+                        self.name
+                    )
+                )
+
+        label = value['label']
+        href = value['href']
+
+        link_valid = re.match('^(https?://)[a-z0-9.]+/?$', href)
+
+        if not link_valid:
+            raise InvalidInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
+
+        return {
+            'label': label,
+            'href': href,
+        }
 
 
 def make_input(element):

@@ -2331,6 +2331,64 @@ def test_pagination_v1_log(client, mongo, config):
     assert len(json.loads(res.data)['data']) == 2
 
 
+def test_pagination_v1_log_all(client, mongo, config):
+
+    def make_node_reg(exec_id, process_id, node_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'execution': {
+                'id': exec_id,
+            },
+            'node': {
+                'id': node_id,
+            },
+            'process_id': process_id
+        }
+
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        make_node_reg(
+            'aaaaaaaa',
+            'simple.2018-02-19', 'mid_node',
+            make_date(2018, 5, 20, 5, 5, 5),
+            make_date(2018, 5, 20, 5, 5, 5)
+        ),
+        make_node_reg(
+            'bbbbbbbb',
+            'simple.2018-02-19', 'mid_node',
+            make_date(2018, 5, 21, 6, 6, 6),
+            make_date(2018, 5, 21, 6, 6, 6)
+            ),
+        make_node_reg(
+            'cccccccc',
+            'simple.2018-02-19', 'mid_node',
+            make_date(2018, 5, 22, 7, 7, 7),
+            make_date(2018, 5, 22, 7, 7, 7)
+        ),
+        make_node_reg(
+            'dddddddd',
+            'simple.2018-02-19', 'mid_node',
+            make_date(2018, 5, 23, 8, 8, 8),
+            make_date(2018, 5, 23, 8, 8, 8)
+        ),
+        make_node_reg(
+            'eeeeeeee',
+            'simple.2018-02-19', 'mid_node',
+            make_date(2018, 5, 24, 9, 9, 9),
+            make_date(2018, 5, 24, 9, 9, 9)
+        ),
+    ])
+
+    res = client.get(
+        '/v1/log?offset=2&limit=2'
+    )
+    assert json.loads(res.data)['data'][0]["started_at"] == \
+        '2018-05-22T07:07:07+00:00'
+    assert json.loads(res.data)['data'][1]["started_at"] == \
+        '2018-05-21T06:06:06+00:00'
+    assert len(json.loads(res.data)['data']) == 2
+
+
 def test_name_with_if(client, mongo, config):
     xml = Xml.load(config, 'pollo')
     assert xml.name == 'pollo.2018-05-20.xml'

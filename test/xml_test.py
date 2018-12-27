@@ -189,6 +189,12 @@ def test_form_to_dict(config):
                 'required': True,
                 'name': 'float',
             },
+            {
+                'type': 'link',
+                'name': 'link',
+                'required': True,
+                'label': 'Give me the link',
+            },
         ]
     }
 

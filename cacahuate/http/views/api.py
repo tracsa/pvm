@@ -63,10 +63,24 @@ def execution_list():
         if k not in app.config['INVALID_FILTERS']
     )
 
+    # filter for user_identifier
+    user_identifier = query.pop('user_identifier', None)
+    if user_identifier is not None:
+        user = User.get_by('identifier', user_identifier)
+        if user is not None:
+            execution_list = [item.id for item in user.proxy.activities.get()]
+        else:
+            execution_list = []
+        query['id'] = {
+            '$in': execution_list,
+        }
+
     return jsonify({
         "data": list(map(
             json_prepare,
-            collection.find(query).skip(g.offset).limit(g.limit)
+            collection.find(query).sort([
+                ('started_at', pymongo.DESCENDING)
+            ]).skip(g.offset).limit(g.limit)
         )),
     })
 

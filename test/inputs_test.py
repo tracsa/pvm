@@ -33,6 +33,10 @@ def test_all_inputs(client, config, mongo, mocker):
                     'elections': 'amlo',
                     'int': 15,
                     'float': 3.14,
+                    'link': {
+                        'label': 'DuckDuckGo',
+                        'href': 'https://duckduckgo.com/',
+                    }
                 },
             },
         ],
@@ -122,6 +126,22 @@ def test_all_inputs(client, config, mongo, mocker):
             'value_caption': '3.14',
             'state': 'valid',
             'hidden': False,
+        },
+
+        'link': {
+            'type': 'link',
+            'name': 'link',
+            'label': 'Give me the link',
+            'state': 'valid',
+            'hidden': False,
+            'value': {
+                'label': 'DuckDuckGo',
+                'href': 'https://duckduckgo.com/',
+            },
+            'value_caption': {
+                'label': 'DuckDuckGo',
+                'href': 'https://duckduckgo.com/',
+            },
         },
     }
 

@@ -88,6 +88,12 @@
             label="Un flotante"
             name="float"
             required="required" />
+
+          <input
+            type="link"
+            label="Give me the link"
+            name="link"
+            required="required" />
         </form>
       </form-array>
     </action>

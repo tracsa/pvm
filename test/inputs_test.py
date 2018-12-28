@@ -798,3 +798,96 @@ def test_link_input_ok(client):
     }))
 
     assert res.status_code == 201
+
+
+def test_float_input_none(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': None,
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201
+
+
+def test_float_input_malformed(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': {
+                        'a': 'dict',
+                    },
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': ['an', 'array'],
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': 'this string',
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+
+def test_float_input_ok(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': 15.6,
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201

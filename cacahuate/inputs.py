@@ -4,6 +4,7 @@ from functools import reduce
 from operator import and_
 import ast
 import re
+import numbers
 
 from cacahuate.errors import InvalidInputError, RequiredListError
 from cacahuate.errors import MisconfiguredProvider, RequiredIntError
@@ -131,30 +132,44 @@ class IntInput(Input):
 class FloatInput(Input):
 
     def get_default(self):
+        if not self.default:
+            return 0
+
         try:
             return float(self.default)
         except ValueError:
             return 0
 
     def validate(self, value, form_index):
-        if self.required and type(value) != float and not value:
-            raise RequiredInputError(
-                self.name,
-                'request.body.form_array.{}.{}'.format(form_index, self.name)
-            )
+        # allowed types are None, String, and Numbers
+        curated = None
 
-        if type(value) != float and not value:
-            value = self.get_default()
-
-        try:
-            value = float(value)
-        except ValueError:
+        if not value:
+            curated = None
+        elif isinstance(value, numbers.Number) or type(value) == str:
+            try:
+                curated = float(value)
+            except ValueError:
+                raise RequiredFloatError(
+                    self.name,
+                    'request.body.form_array.{}.{}'.format(form_index, self.name)
+                )
+        else:
             raise RequiredFloatError(
                 self.name,
                 'request.body.form_array.{}.{}'.format(form_index, self.name)
             )
 
-        return value
+        if curated is None and self.required:
+            raise RequiredInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
+
+        if curated is None:
+            curated = self.get_default()
+
+        return curated
 
     def make_caption(self, value):
         return str(value)

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>OgAstorga</author>
+    <date>2018-12-28</date>
+    <name>Link input</name>
+    <description>Process to test the link input</description>
+    <public>false</public>
+  </process-info>
+  <process>
+    <action id="link_node" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="auth_form">
+          <input
+            type="link"
+            label="Give me the link"
+            name="link"/>
+        </form>
+      </form-array>
+    </action>
+  </process>
+</process-spec>

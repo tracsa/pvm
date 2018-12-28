@@ -345,16 +345,11 @@ class LinkInput(Input):
     def validate(self, value, form_index):
         super().validate(value, form_index)
 
+        curated = None
+
         if not value:
-            value = None
-
-        if not value and self.required:
-            raise RequiredInputError(
-                self.name,
-                'request.body.form_array.{}.{}'.format(form_index, self.name)
-            )
-
-        if value is not None:
+            curated = None
+        elif isinstance(value, dict):
             if 'label' not in value or 'href' not in value:
                 raise InvalidInputError(
                     self.name,
@@ -364,21 +359,41 @@ class LinkInput(Input):
                     )
                 )
 
-        label = value['label']
-        href = value['href']
+            label = value['label']
+            href = value['href']
 
-        link_valid = re.match('^(https?://)[a-z0-9.]+/?$', href)
+            link_valid = re.match('^(https?://)[a-z0-9.]+/?$', href)
 
-        if not link_valid:
+            if not link_valid:
+                raise InvalidInputError(
+                    self.name,
+                    'request.body.form_array.{}.{}'.format(
+                        form_index,
+                        self.name
+                    )
+                )
+
+            curated = {
+                'label': label,
+                'href': href,
+            }
+        else:
             raise InvalidInputError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(
+                    form_index,
+                    self.name
+                )
+            )
+
+        if not curated and self.required:
+            raise RequiredInputError(
                 self.name,
                 'request.body.form_array.{}.{}'.format(form_index, self.name)
             )
 
-        return {
-            'label': label,
-            'href': href,
-        }
+        return curated
+
 
 
 def make_input(element):

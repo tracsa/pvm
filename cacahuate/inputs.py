@@ -152,7 +152,10 @@ class FloatInput(Input):
             except ValueError:
                 raise RequiredFloatError(
                     self.name,
-                    'request.body.form_array.{}.{}'.format(form_index, self.name)
+                    'request.body.form_array.{}.{}'.format(
+                        form_index,
+                        self.name
+                    )
                 )
         else:
             raise RequiredFloatError(
@@ -408,7 +411,6 @@ class LinkInput(Input):
             )
 
         return curated
-
 
 
 def make_input(element):

@@ -777,6 +777,7 @@ def test_link_input_malformed(client):
 
     assert res.status_code == 400
 
+
 def test_link_input_ok(client):
     user = make_user('juan', 'Juan')
 
@@ -872,6 +873,7 @@ def test_float_input_malformed(client):
     }))
 
     assert res.status_code == 400
+
 
 def test_float_input_ok(client):
     user = make_user('juan', 'Juan')

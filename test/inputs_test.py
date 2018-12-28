@@ -701,3 +701,195 @@ def test_hidden_input(client, mocker, config, mongo):
     }
 
     assert json.loads(args['body']) == json_message
+
+
+def test_link_input_none(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'link-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'link': None,
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201
+
+
+def test_link_input_malformed(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'link-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'link': 'google.com',
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'link-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'link': {
+                        'name': 'google',
+                        'href': 'https://google.com/',
+                    },
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'link-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'link': 145,
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+
+
+def test_link_input_ok(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'link-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'link': {
+                        'label': 'google',
+                        'href': 'https://google.com/',
+                    },
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201
+
+
+def test_float_input_none(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': None,
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201
+
+
+def test_float_input_malformed(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': {
+                        'a': 'dict',
+                    },
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': ['an', 'array'],
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': 'this string',
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 400
+
+
+def test_float_input_ok(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': 15.6,
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201

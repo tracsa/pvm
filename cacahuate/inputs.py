@@ -329,7 +329,10 @@ class DatetimeInput(Input):
             if self.required:
                 raise RequiredInputError(
                     self.name,
-                    'request.body.form_array.{}.{}'.format(form_index, self.name)
+                    'request.body.form_array.{}.{}'.format(
+                        form_index,
+                        self.name
+                    )
                 )
 
             return None

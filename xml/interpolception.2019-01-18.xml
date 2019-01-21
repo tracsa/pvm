@@ -5,14 +5,14 @@
     <author>ogastorga</author>
     <date>2019-01-18</date>
     <name>Name {{ form.field }}</name>
-    <public>false</public>
-    <description>Description {{ form.field }}</description>
+    <public>true</public>
+    <description>Process name, task name &amp; task description should be interpolated</description>
   </process-info>
   <process>
     <action id="start_node" >
       <node-info>
-        <name>Task name {{ form.field }}</name>
-        <description>Task description {{ form.field }}</description>
+        <name>Task name</name>
+        <description>Task description</description>
       </node-info>
       <auth-filter backend="anyone"></auth-filter>
       <form-array>
@@ -21,6 +21,19 @@
         </form>
       </form-array>
     </action>
+
+    <validation id="approval_node" >
+      <dependencies>
+        <dep>form.field</dep>
+      </dependencies>
+      <node-info>
+        <name>Validation name {{ form.field }}</name>
+        <description>Validation description {{ form.field }}</description>
+      </node-info>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start_node</param>
+      </auth-filter>
+    </validation>
   </process>
 </process-spec>
 

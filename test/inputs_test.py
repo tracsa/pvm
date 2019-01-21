@@ -875,6 +875,88 @@ def test_float_input_malformed(client):
     assert res.status_code == 400
 
 
+def test_datetime_input_none(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'datetime-input',
+        'form_array': [{
+            'ref': 'auth_form',
+            'data': {
+                'datetime': None
+            }
+        }]
+    }))
+
+    print(res.data)
+
+    assert res.status_code == 201
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'datetime-input',
+        'form_array': [{
+            'ref': 'auth_form',
+            'data': {
+                'datetime': ''
+            }
+        }]
+    }))
+
+    assert res.status_code == 201
+
+
+def test_datetime_input_malformed(client):
+    user = make_user('juan', 'Juan')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'datetime-input',
+        'form_array': [{
+            'ref': 'auth_form',
+            'data': {
+                'datetime': {
+                    'a': 'dict',
+                },
+            },
+        }],
+    }))
+
+    assert res.status_code == 400
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'datetime-input',
+        'form_array': [{
+            'ref': 'auth_form',
+            'data': {
+                'datetime': ['an', 'array'],
+            },
+        }],
+    }))
+
+    assert res.status_code == 400
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'datetime-input',
+        'form_array': [{
+            'ref': 'auth_form',
+            'data': {
+                'datetime': 'this string',
+            },
+        }],
+    }))
+
+    assert res.status_code == 400
+
+
 def test_float_input_ok(client):
     user = make_user('juan', 'Juan')
 

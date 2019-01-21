@@ -325,14 +325,25 @@ class DatetimeInput(Input):
 
         value = value or self.get_default()
 
-        if not value and self.required:
-            raise RequiredInputError(
-                self.name,
-                'request.body.form_array.{}.{}'.format(form_index, self.name)
-            )
+        if not value:
+            if self.required:
+                raise RequiredInputError(
+                    self.name,
+                    'request.body.form_array.{}.{}'.format(
+                        form_index,
+                        self.name
+                    )
+                )
+
+            return None
 
         try:
             datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%fZ")
+        except TypeError:
+            raise InvalidDateError(
+                self.name,
+                'request.body.form_array.{}.{}'.format(form_index, self.name)
+            )
         except ValueError:
             raise InvalidDateError(
                 self.name,
@@ -345,7 +356,7 @@ class DatetimeInput(Input):
         if self.default == 'now':
             return datetime.now().isoformat() + 'Z'
 
-        return ''
+        return None
 
     def make_caption(self, value):
         if not value:

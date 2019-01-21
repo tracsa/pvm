@@ -72,6 +72,7 @@ class Xml:
     def get_dom(self):
         return minidom.parse(self.get_file_path())
 
+    # Interpolate name
     def get_name(self, collected_forms=[]):
         context = dict()
         for form in collected_forms:
@@ -91,6 +92,27 @@ class Xml:
         self._name = name
 
     name = property(get_name, set_name)
+
+    # Interpolate description
+    def get_description(self, collected_forms=[]):
+        context = dict()
+        for form in collected_forms:
+            form_dict = dict()
+
+            for name, input in form['inputs']['items'].items():
+                form_dict[name] = input['value_caption']
+
+            context[form['ref']] = form_dict
+
+        try:
+            return Template(self._description).render(**context)
+        except TemplateError:
+            return self._description
+
+    def set_description(self, description):
+        self._description = description
+
+    description = property(get_description, set_description)
 
     @classmethod
     def load(cls, config: dict, common_name: str, direct=False) -> TextIO:
@@ -134,7 +156,7 @@ class Xml:
         execution = Execution(
             process_name=self.filename,
             name=self.get_name(input),
-            description=self.description,
+            description=self.get_description(input),
         ).save()
         pointer = Pointer(
             node_id=node.id,

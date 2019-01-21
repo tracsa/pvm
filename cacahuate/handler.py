@@ -4,6 +4,7 @@ from pymongo import MongoClient
 import logging
 import pika
 import simplejson as json
+from jinja2 import Template, TemplateError
 
 from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState
 from cacahuate.errors import MisconfiguredProvider, EndOfProcess
@@ -134,6 +135,62 @@ class Handler:
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
 
+        exc_col = self.get_mongo()[self.config['EXECUTION_COLLECTION']]
+        ptr_col = self.get_mongo()[self.config['POINTER_COLLECTION']]
+
+        # get currect execution context
+        exc_doc = next(exc_col.find({'id': execution.id}))
+
+        try:
+            exc_state = exc_doc['state']
+            context = {}
+            for item in exc_state['items']:
+                item_state = exc_state['items'][item]
+
+                if item_state['state'] != 'valid':
+                    continue
+
+                for actor in item_state['actors']['items']:
+                    actor_state = item_state['actors']['items'][actor]
+
+                    if actor_state['state'] != 'valid':
+                        continue
+
+                    for form in actor_state['forms']:
+                        if form['state'] != 'valid':
+                            continue
+
+                        ref = form['ref']
+
+                        context[ref] = {}
+
+                        for input in form['inputs']['items']:
+                            input_state = form['inputs']['items'][input]
+
+                            if input_state['state'] != 'valid':
+                                continue
+
+                            name = input_state['name']
+                            value = input_state['value']
+
+                            context[ref][name] = value
+        except KeyError:
+            context = {}
+
+        # interpolate
+        try:
+            rendered_name = Template(node.name).render(**context)
+        except TemplateError:
+            rendered_name = node.name
+
+        try:
+            rendered_description = Template(node.description).render(**context)
+        except TemplateError:
+            rendered_description = node.description
+
+        node.name = rendered_name
+        node.description = rendered_description
+
         # create a pointer in this node
         pointer = self.create_pointer(node, execution)
         LOGGER.debug('Created pointer p:{} n:{} e:{}'.format(
@@ -143,7 +200,6 @@ class Handler:
         ))
 
         # mark this node as ongoing
-        exc_col = self.get_mongo()[self.config['EXECUTION_COLLECTION']]
         exc_col.update_one({
             'id': execution.id,
         }, {
@@ -153,7 +209,6 @@ class Handler:
         })
 
         # update registry about this pointer
-        ptr_col = self.get_mongo()[self.config['POINTER_COLLECTION']]
         ptr_col.insert_one(node.pointer_entry(execution, pointer))
 
         # notify someone (can raise an exception

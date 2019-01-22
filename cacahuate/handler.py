@@ -135,6 +135,9 @@ class Handler:
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
 
+        # TODO remove this code from here since it doesn't belong to the limits
+        # of the handler
+        # BEGIN ------------
         exc_col = self.get_mongo()[self.config['EXECUTION_COLLECTION']]
         ptr_col = self.get_mongo()[self.config['POINTER_COLLECTION']]
 
@@ -190,6 +193,8 @@ class Handler:
 
         node.name = rendered_name
         node.description = rendered_description
+        # END ------------
+        # TODO read note above, this code does not belong here
 
         # create a pointer in this node
         pointer = self.create_pointer(node, execution)

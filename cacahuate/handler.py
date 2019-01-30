@@ -145,38 +145,7 @@ class Handler:
         exc_doc = next(exc_col.find({'id': execution.id}))
 
         try:
-            exc_state = exc_doc['state']
-            context = {}
-            for item in exc_state['items']:
-                item_state = exc_state['items'][item]
-
-                if item_state['state'] != 'valid':
-                    continue
-
-                for actor in item_state['actors']['items']:
-                    actor_state = item_state['actors']['items'][actor]
-
-                    if actor_state['state'] != 'valid':
-                        continue
-
-                    for form in actor_state['forms']:
-                        if form['state'] != 'valid':
-                            continue
-
-                        ref = form['ref']
-
-                        context[ref] = {}
-
-                        for input in form['inputs']['items']:
-                            input_state = form['inputs']['items'][input]
-
-                            if input_state['state'] != 'valid':
-                                continue
-
-                            name = input_state['name']
-                            value = input_state['value']
-
-                            context[ref][name] = value
+            context = exc_doc['values']
         except KeyError:
             context = {}
 

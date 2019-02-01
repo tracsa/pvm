@@ -670,6 +670,66 @@ def task_read(id):
     })
 
 
+@app.route('/v1/inbox', methods=['GET'])
+@pagination
+def data_mix():
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
+
+    dict_args = request.args.to_dict()
+    query = dict(
+        (k, dict_args[k]) for k in dict_args
+        if k not in app.config['INVALID_FILTERS']
+    )
+
+    # filter for user_identifier
+    user_identifier = query.pop('user_identifier', None)
+    if user_identifier is not None:
+        user = User.get_by('identifier', user_identifier)
+        if user is not None:
+            execution_list = [item.id for item in user.proxy.activities.get()]
+        else:
+            execution_list = []
+        query['id'] = {
+            '$in': execution_list,
+        }
+
+    pipeline = [
+        {'$lookup': {
+            'from': app.config['POINTER_COLLECTION'],
+            'localField': 'id',
+            'foreignField': 'execution.id',
+            'as': 'pointer',
+        }},
+        {'$match': query},
+        {'$sort': {'started_at': -1}},
+        {'$skip': g.offset},
+        {'$limit': g.limit},
+    ]
+
+    # filter for field exclusion
+    exclude_fields = query.pop('exclude', None)
+    if exclude_fields is not None:
+        fields = [s.strip() for s in exclude_fields.split(',')]
+        exclusion_map = {
+            field: 0 for field in fields
+        }
+        pipeline.append({'$project': exclusion_map})
+
+    def mix_data_json_prepare(obj):
+        if obj.get('pointer'):
+            for item in obj.get('pointer'):
+                item.pop('execution')
+                item = json_prepare(item)
+        return json_prepare(obj)
+
+    return jsonify({
+        'data': list(map(
+            mix_data_json_prepare,
+            collection.aggregate(pipeline),
+        )),
+    })
+
+
 @app.route('/v1/log', methods=['GET'])
 @pagination
 def all_logs():

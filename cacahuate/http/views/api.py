@@ -706,6 +706,15 @@ def data_mix():
         {'$limit': g.limit},
     ]
 
+    # filter for field exclusion
+    exclude_fields = query.pop('exclude', None)
+    if exclude_fields is not None:
+        fields = [s.strip() for s in exclude_fields.split(',')]
+        exclusion_map = {
+            field: 0 for field in fields
+        }
+        pipeline.append({'$project': exclusion_map})
+
     def mix_data_json_prepare(obj):
         if obj.get('pointer'):
             for item in obj.get('pointer'):

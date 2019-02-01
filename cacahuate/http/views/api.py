@@ -673,61 +673,51 @@ def task_read(id):
 @app.route('/v1/inbox', methods=['GET'])
 @pagination
 def data_mix():
-    exe_collection = mongo.db[app.config['EXECUTION_COLLECTION']]
-    ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
     dict_args = request.args.to_dict()
-
-    dict_args = dict(
+    query = dict(
         (k, dict_args[k]) for k in dict_args
         if k not in app.config['INVALID_FILTERS']
     )
-    user_identifier = dict_args.pop('user_identifier', None)
-
-    exe_query = dict_args.copy()
-    ptr_query = dict_args.copy()
 
     # filter for user_identifier
+    user_identifier = query.pop('user_identifier', None)
     if user_identifier is not None:
         user = User.get_by('identifier', user_identifier)
         if user is not None:
-            exe_list = [item.id for item in user.proxy.activities.get()]
-            ptr_list = [item.id for item in user.proxy.tasks.get()]
+            execution_list = [item.id for item in user.proxy.activities.get()]
         else:
-            exe_list = []
-            pointer_list = []
-        exe_query['id'] = {
-            '$in': exe_list,
+            execution_list = []
+        query['id'] = {
+            '$in': execution_list,
         }
-        ptr_query['id'] = {
-            '$in': ptr_list,
-        }
-
-    execution_list = list(map(
-        json_prepare,
-        exe_collection.find(exe_query).sort([
-            ('started_at', pymongo.DESCENDING)
-        ])
-    ))
 
     pipeline = [
-        {'$match': ptr_query},
-        {'$sort': {'started_at': -1}},
-        {'$group': {
-            '_id': '$execution.id',
-            'latest': {'$first': '$$ROOT'},
+        {'$lookup': {
+            'from': app.config['POINTER_COLLECTION'],
+            'localField': 'id',
+            'foreignField': 'execution.id',
+            'as': 'pointer',
         }},
-        {'$replaceRoot': {'newRoot': '$latest'}},
+        {'$match': query},
         {'$sort': {'started_at': -1}},
+        {'$skip': g.offset},
+        {'$limit': g.limit},
     ]
 
-    pointer_list = list(map(
-        json_prepare,
-        ptr_collection.aggregate(pipeline),
-    ))
+    def mix_data_json_prepare(obj):
+        if obj.get('pointer'):
+            for item in obj.get('pointer'):
+                item.pop('execution')
+                item = json_prepare(item)
+        return json_prepare(obj)
 
     return jsonify({
-        'data': pointer_list + execution_list,
+        'data': list(map(
+            mix_data_json_prepare,
+            collection.aggregate(pipeline),
+        )),
     })
 
 

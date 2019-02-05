@@ -696,8 +696,18 @@ def data_mix():
     pipeline = [
         {'$lookup': {
             'from': app.config['POINTER_COLLECTION'],
-            'localField': 'id',
-            'foreignField': 'execution.id',
+            'let': { 'execution_id':'$id' },
+            'pipeline': [
+                {'$match': {'$expr': {'$eq':
+                    ['$execution.id', '$$execution_id']
+                }}},
+                {'$sort': {'started_at': -1}},
+                {'$group': {
+                    '_id': '$execution.id',
+                    'latest': {'$first': '$$ROOT'},
+                }},
+                {'$replaceRoot': {'newRoot': '$latest'}},
+            ],
             'as': 'pointer',
         }},
         {'$match': query},
@@ -719,16 +729,16 @@ def data_mix():
     if project:
         pipeline.append({'$project': project})
 
-    def mix_data_json_prepare(obj):
+    def data_mix_json_prepare(obj):
         if obj.get('pointer'):
-            for item in obj.get('pointer'):
-                item.pop('execution')
-                item = json_prepare(item)
+            obj['pointer'] = obj['pointer'][0]
+            obj['pointer'].pop('execution')
+            obj['pointer'] = json_prepare(obj['pointer'])
         return json_prepare(obj)
 
     return jsonify({
         'data': list(map(
-            mix_data_json_prepare,
+            data_mix_json_prepare,
             collection.aggregate(pipeline),
         )),
     })

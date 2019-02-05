@@ -696,8 +696,18 @@ def data_mix():
     pipeline = [
         {'$lookup': {
             'from': app.config['POINTER_COLLECTION'],
-            'localField': 'id',
-            'foreignField': 'execution.id',
+            'let': {'execution_id': '$id'},
+            'pipeline': [
+                {'$match': {'$expr': {
+                    '$eq': ['$execution.id', '$$execution_id']
+                }}},
+                {'$sort': {'started_at': -1}},
+                {'$group': {
+                    '_id': '$execution.id',
+                    'latest': {'$first': '$$ROOT'},
+                }},
+                {'$replaceRoot': {'newRoot': '$latest'}},
+            ],
             'as': 'pointer',
         }},
         {'$match': query},
@@ -706,25 +716,29 @@ def data_mix():
         {'$limit': g.limit},
     ]
 
-    # filter for field exclusion
-    exclude_fields = query.pop('exclude', None)
-    if exclude_fields is not None:
-        fields = [s.strip() for s in exclude_fields.split(',')]
-        exclusion_map = {
-            field: 0 for field in fields
-        }
-        pipeline.append({'$project': exclusion_map})
+    # filter for field exclusion/inclusion
+    exclude_fields = query.pop('exclude', '')
+    exclude_list = [s.strip() for s in exclude_fields.split(',') if s]
+    exclude_map = {item: 0 for item in exclude_list}
+    # filter for field exclusion/inclusion
+    include_fields = query.pop('include', '')
+    include_list = [s.strip() for s in include_fields.split(',') if s]
+    include_map = {item: 1 for item in include_list}
 
-    def mix_data_json_prepare(obj):
+    project = {**exclude_map, **include_map}
+    if project:
+        pipeline.append({'$project': project})
+
+    def data_mix_json_prepare(obj):
         if obj.get('pointer'):
-            for item in obj.get('pointer'):
-                item.pop('execution')
-                item = json_prepare(item)
+            obj['pointer'] = obj['pointer'][0]
+            obj['pointer'].pop('execution')
+            obj['pointer'] = json_prepare(obj['pointer'])
         return json_prepare(obj)
 
     return jsonify({
         'data': list(map(
-            mix_data_json_prepare,
+            data_mix_json_prepare,
             collection.aggregate(pipeline),
         )),
     })

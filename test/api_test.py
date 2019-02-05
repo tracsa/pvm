@@ -3,6 +3,7 @@ from flask import json
 from random import choice
 from string import ascii_letters
 import pika
+import pytest
 
 from cacahuate.handler import Handler
 from cacahuate.models import Pointer, Execution
@@ -1096,6 +1097,8 @@ def test_list_activities(client):
     }
 
 
+# TODO: travis should use mongo<3.6
+@pytest.mark.skip
 def test_mix_data(mongo, client, config):
     juan = make_user('user', 'User')
 
@@ -1162,10 +1165,10 @@ def test_mix_data(mongo, client, config):
     ptr_04_json.pop('execution')
 
     # set pointers in executions
-    exec_01_json['pointer'] = [ptr_01_json]
-    exec_02_json['pointer'] = [ptr_02_json]
-    exec_03_json['pointer'] = [ptr_03_json]
-    exec_04_json['pointer'] = [ptr_04_json]
+    exec_01_json['pointer'] = ptr_01_json
+    exec_02_json['pointer'] = ptr_02_json
+    exec_03_json['pointer'] = ptr_03_json
+    exec_04_json['pointer'] = ptr_04_json
 
     res = client.get('/v1/inbox')
 
@@ -1182,6 +1185,73 @@ def test_mix_data(mongo, client, config):
     }
 
 
+# TODO: travis should use mongo<3.6
+@pytest.mark.skip
+def test_mix_data_pointer_unique(mongo, client, config):
+    juan = make_user('user', 'User')
+
+    # Create pointers
+
+    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+
+    juan.proxy.tasks.set([ptr_01])
+
+    ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
+
+    # set started_at to ptrs
+    ptr_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+
+    # Pointer collection
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        ptr_01_json.copy(),
+        {
+            'started_at': '2010-08-21-01T21:45:00+00:00',
+            'execution': {
+                'id': ptr_01_json['execution']['id'],
+            },
+            'node': {
+                'id': 'final_node',
+            },
+            'process_id': 'simple.2018-02-19.xml',
+        },
+    ])
+
+    # Create executions
+
+    exec_01 = ptr_01.proxy.execution.get()
+
+    juan.proxy.activities.set([exec_01])
+
+    exec_01_json = exec_01.to_json()
+
+    # set started_at to ptrs
+    exec_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+
+    # Execution collection
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        exec_01_json.copy(),
+    ])
+
+    # clean pointers
+    ptr_01_json.pop('execution')
+
+    # set pointers in executions
+    exec_01_json['pointer'] = ptr_01_json
+
+    res = client.get(f'/v1/inbox')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_01_json,
+        ],
+    }
+
+
+# TODO: travis should use mongo<3.6
+@pytest.mark.skip
 def test_mix_data_filter_user(mongo, client, config):
     juan = make_user('user', 'User')
 
@@ -1248,10 +1318,10 @@ def test_mix_data_filter_user(mongo, client, config):
     ptr_04_json.pop('execution')
 
     # set pointers in executions
-    exec_01_json['pointer'] = [ptr_01_json]
-    exec_02_json['pointer'] = [ptr_02_json]
-    exec_03_json['pointer'] = [ptr_03_json]
-    exec_04_json['pointer'] = [ptr_04_json]
+    exec_01_json['pointer'] = ptr_01_json
+    exec_02_json['pointer'] = ptr_02_json
+    exec_03_json['pointer'] = ptr_03_json
+    exec_04_json['pointer'] = ptr_04_json
 
     res = client.get(f'/v1/inbox?user_identifier={juan.identifier}')
 
@@ -1267,6 +1337,68 @@ def test_mix_data_filter_user(mongo, client, config):
     }
 
 
+# TODO: travis should use mongo<3.6
+@pytest.mark.skip
+def test_mix_data_filter_include(mongo, client, config):
+    juan = make_user('user', 'User')
+
+    # Create pointers
+
+    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+
+    juan.proxy.tasks.set([ptr_01])
+
+    ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
+
+    # set started_at to ptrs
+    ptr_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+
+    # Pointer collection
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        ptr_01_json.copy(),
+    ])
+
+    # Create executions
+
+    exec_01 = ptr_01.proxy.execution.get()
+
+    juan.proxy.activities.set([exec_01])
+
+    exec_01_json = exec_01.to_json()
+
+    # set started_at to ptrs
+    exec_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+
+    # Execution collection
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        exec_01_json.copy(),
+    ])
+
+    # clean pointers
+    ptr_01_json.pop('execution')
+
+    # set pointers in executions
+    exec_01_json['pointer'] = ptr_01_json
+
+    # include keys
+    exec_01_json = {
+        item: exec_01_json[item] for item in ['name', 'process_name']
+    }
+
+    res = client.get(f'/v1/inbox?include=name,process_name')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_01_json,
+        ],
+    }
+
+
+# TODO: travis should use mongo<3.6
+@pytest.mark.skip
 def test_mix_data_filter_exclude(mongo, client, config):
     juan = make_user('user', 'User')
 
@@ -1306,7 +1438,7 @@ def test_mix_data_filter_exclude(mongo, client, config):
     ptr_01_json.pop('execution')
 
     # set pointers in executions
-    exec_01_json['pointer'] = [ptr_01_json]
+    exec_01_json['pointer'] = ptr_01_json
 
     # exclude keys
     exec_01_json.pop('name')

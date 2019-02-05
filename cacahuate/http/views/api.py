@@ -696,10 +696,10 @@ def data_mix():
     pipeline = [
         {'$lookup': {
             'from': app.config['POINTER_COLLECTION'],
-            'let': { 'execution_id':'$id' },
+            'let': {'execution_id': '$id'},
             'pipeline': [
-                {'$match': {'$expr': {'$eq':
-                    ['$execution.id', '$$execution_id']
+                {'$match': {'$expr': {
+                    '$eq': ['$execution.id', '$$execution_id']
                 }}},
                 {'$sort': {'started_at': -1}},
                 {'$group': {

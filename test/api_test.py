@@ -1162,10 +1162,10 @@ def test_mix_data(mongo, client, config):
     ptr_04_json.pop('execution')
 
     # set pointers in executions
-    exec_01_json['pointer'] = [ptr_01_json]
-    exec_02_json['pointer'] = [ptr_02_json]
-    exec_03_json['pointer'] = [ptr_03_json]
-    exec_04_json['pointer'] = [ptr_04_json]
+    exec_01_json['pointer'] = ptr_01_json
+    exec_02_json['pointer'] = ptr_02_json
+    exec_03_json['pointer'] = ptr_03_json
+    exec_04_json['pointer'] = ptr_04_json
 
     res = client.get('/v1/inbox')
 
@@ -1231,7 +1231,7 @@ def test_mix_data_pointer_unique(mongo, client, config):
     ptr_01_json.pop('execution')
 
     # set pointers in executions
-    exec_01_json['pointer'] = [ptr_01_json]
+    exec_01_json['pointer'] = ptr_01_json
 
     res = client.get(f'/v1/inbox')
 
@@ -1311,10 +1311,10 @@ def test_mix_data_filter_user(mongo, client, config):
     ptr_04_json.pop('execution')
 
     # set pointers in executions
-    exec_01_json['pointer'] = [ptr_01_json]
-    exec_02_json['pointer'] = [ptr_02_json]
-    exec_03_json['pointer'] = [ptr_03_json]
-    exec_04_json['pointer'] = [ptr_04_json]
+    exec_01_json['pointer'] = ptr_01_json
+    exec_02_json['pointer'] = ptr_02_json
+    exec_03_json['pointer'] = ptr_03_json
+    exec_04_json['pointer'] = ptr_04_json
 
     res = client.get(f'/v1/inbox?user_identifier={juan.identifier}')
 
@@ -1369,7 +1369,7 @@ def test_mix_data_filter_include(mongo, client, config):
     ptr_01_json.pop('execution')
 
     # set pointers in executions
-    exec_01_json['pointer'] = [ptr_01_json]
+    exec_01_json['pointer'] = ptr_01_json
 
     # include keys
     exec_01_json = {
@@ -1427,7 +1427,7 @@ def test_mix_data_filter_exclude(mongo, client, config):
     ptr_01_json.pop('execution')
 
     # set pointers in executions
-    exec_01_json['pointer'] = [ptr_01_json]
+    exec_01_json['pointer'] = ptr_01_json
 
     # exclude keys
     exec_01_json.pop('name')

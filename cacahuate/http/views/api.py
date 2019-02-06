@@ -673,61 +673,163 @@ def task_read(id):
 @app.route('/v1/inbox', methods=['GET'])
 @pagination
 def data_mix():
-    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
-
     dict_args = request.args.to_dict()
-    query = dict(
+
+    #############################
+    ## get queries
+    #############################
+
+    # execution's query
+    exe_query = dict(
         (k, dict_args[k]) for k in dict_args
         if k not in app.config['INVALID_FILTERS']
     )
 
-    # filter for user_identifier
-    user_identifier = query.pop('user_identifier', None)
+    # get pointer's query
+    ptr_query = {}
+    for item in exe_query.copy():
+        if item.startswith('pointer.'):
+            group, value = item.split('.', 1)
+            ptr_query[value] = exe_query.pop(item)
+
+    #############################
+    ## filter for user_identifier
+    #############################
+
+    # execution's case
+    user_identifier = exe_query.pop('user_identifier', None)
     if user_identifier is not None:
         user = User.get_by('identifier', user_identifier)
         if user is not None:
             execution_list = [item.id for item in user.proxy.activities.get()]
         else:
             execution_list = []
-        query['id'] = {
+        exe_query['id'] = {
             '$in': execution_list,
         }
 
-    pipeline = [
-        {'$lookup': {
-            'from': app.config['POINTER_COLLECTION'],
-            'let': {'execution_id': '$id'},
-            'pipeline': [
-                {'$match': {'$expr': {
-                    '$eq': ['$execution.id', '$$execution_id']
-                }}},
-                {'$sort': {'started_at': -1}},
-                {'$group': {
-                    '_id': '$execution.id',
-                    'latest': {'$first': '$$ROOT'},
-                }},
-                {'$replaceRoot': {'newRoot': '$latest'}},
-            ],
-            'as': 'pointer',
-        }},
-        {'$match': query},
-        {'$sort': {'started_at': -1}},
-        {'$skip': g.offset},
-        {'$limit': g.limit},
+    # pointer's case
+    user_identifier = ptr_query.pop('user_identifier', None)
+    if user_identifier is not None:
+        user = User.get_by('identifier', user_identifier)
+        if user is not None:
+            pointer_list = [item.id for item in user.proxy.tasks.get()]
+        else:
+            pointer_list = []
+        ptr_query['id'] = {
+            '$in': pointer_list,
+        }
+
+    ###########
+    ## pipeline
+    ###########
+
+    # execution's case
+    exe_pipeline = [
+        {'$match': exe_query},
     ]
 
-    # filter for field exclusion/inclusion
-    exclude_fields = query.pop('exclude', '')
+    exe_collection = mongo.db[app.config['EXECUTION_COLLECTION']]
+    exe_cursor = exe_collection.aggregate(exe_pipeline)
+
+    exe_ids = list(map(
+        lambda item: item['id'],
+        exe_cursor,
+    ))
+
+    # pointer's case
+    ptr_pipeline = [
+        {'$match': ptr_query},
+        {'$group': {
+            '_id': None,
+            'executions': {'$push': '$execution.id'},
+        }},
+    ]
+
+    ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
+    ptr_cursor = ptr_collection.aggregate(ptr_pipeline)
+
+    ptr_ids = []
+    for item in ptr_cursor:
+        ptr_ids += item['executions']
+
+    #################
+    ## mix both lists
+    #################
+
+    def intersection(lst1, lst2):
+        temp = set(lst2)
+        lst3 = [value for value in lst1 if value in temp]
+        return lst3
+
+    if exe_ids and ptr_ids:
+        execution_ids = intersection(exe_ids, ptr_ids)
+    else:
+        execution_ids = exe_ids or ptr_ids
+
+    #############################
+    ## filter for exclude/include
+    #############################
+
+    # execution's case
+    exclude_fields = exe_query.pop('exclude', '')
     exclude_list = [s.strip() for s in exclude_fields.split(',') if s]
     exclude_map = {item: 0 for item in exclude_list}
-    # filter for field exclusion/inclusion
-    include_fields = query.pop('include', '')
+
+    include_fields = exe_query.pop('include', '')
     include_list = [s.strip() for s in include_fields.split(',') if s]
     include_map = {item: 1 for item in include_list}
 
-    project = {**exclude_map, **include_map}
-    if project:
-        pipeline.append({'$project': project})
+    exe_prjct = {**exclude_map, **include_map}
+
+    # pointer's case
+    exclude_fields = ptr_query.pop('exclude', '')
+    exclude_list = [s.strip() for s in exclude_fields.split(',') if s]
+    exclude_map = {item: 0 for item in exclude_list}
+
+    include_fields = exe_query.pop('include', '')
+    include_list = [s.strip() for s in include_fields.split(',') if s]
+    include_map = {item: 1 for item in include_list}
+
+    ptr_prjct = {**exclude_map, **include_map}
+
+    ################
+    ## build results
+    ################
+
+    ptr_pipeline = [
+        {'$match': {'execution.id': {'$in': execution_ids}}},
+        {'$sort': {'started_at': -1}},
+        {'$group': {
+            '_id': '$execution.id',
+            'latest': {'$first': '$$ROOT'},
+        }},
+        {'$replaceRoot': {'newRoot': '$latest'}},
+    ]
+
+    if ptr_prjct:
+        ptr_pipeline.append({'$project': ptr_prjct})
+
+    ptr_pipeline += [
+        {'$sort': {'started_at': -1}},
+        {'$out': 'ptr_aux_collection'},
+    ]
+
+    ptr_collection.aggregate(ptr_pipeline)
+
+    exe_pipeline = [
+        {'$match': {'id': {'$in': execution_ids}}},
+        {'$lookup': {
+            'from': 'ptr_aux_collection',
+            'localField': 'id',
+            'foreignField': 'execution.id',
+            'as': 'pointer',
+        }},
+        {'$sort': {'started_at': -1}},
+    ]
+
+    if exe_prjct:
+        exe_pipeline.append({'$project': exe_prjct})
 
     def data_mix_json_prepare(obj):
         if obj.get('pointer'):
@@ -739,8 +841,8 @@ def data_mix():
     return jsonify({
         'data': list(map(
             data_mix_json_prepare,
-            collection.aggregate(pipeline),
-        )),
+            exe_collection.aggregate(exe_pipeline),
+        ))
     })
 
 

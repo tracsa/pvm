@@ -675,9 +675,7 @@ def task_read(id):
 def data_mix():
     dict_args = request.args.to_dict()
 
-    #############################
-    ## get queries
-    #############################
+    # get queries
 
     # execution's query
     exe_query = dict(
@@ -692,9 +690,7 @@ def data_mix():
             group, value = item.split('.', 1)
             ptr_query[value] = exe_query.pop(item)
 
-    #############################
-    ## filter for user_identifier
-    #############################
+    # filter for user_identifier
 
     # execution's case
     user_identifier = exe_query.pop('user_identifier', None)
@@ -720,9 +716,7 @@ def data_mix():
             '$in': pointer_list,
         }
 
-    ###########
-    ## pipeline
-    ###########
+    # pipeline
 
     # execution's case
     exe_pipeline = [
@@ -753,9 +747,7 @@ def data_mix():
     for item in ptr_cursor:
         ptr_ids += item['executions']
 
-    #################
-    ## mix both lists
-    #################
+    # mix both lists
 
     def intersection(lst1, lst2):
         temp = set(lst2)
@@ -767,9 +759,7 @@ def data_mix():
     else:
         execution_ids = exe_ids or ptr_ids
 
-    #############################
-    ## filter for exclude/include
-    #############################
+    # filter for exclude/include
 
     # execution's case
     exclude_fields = exe_query.pop('exclude', '')
@@ -793,9 +783,7 @@ def data_mix():
 
     ptr_prjct = {**exclude_map, **include_map}
 
-    ################
-    ## build results
-    ################
+    # build results
 
     ptr_pipeline = [
         {'$match': {'execution.id': {'$in': execution_ids}}},

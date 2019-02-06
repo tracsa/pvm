@@ -3,7 +3,6 @@ from flask import json
 from random import choice
 from string import ascii_letters
 import pika
-import pytest
 
 from cacahuate.handler import Handler
 from cacahuate.models import Pointer, Execution
@@ -1097,8 +1096,6 @@ def test_list_activities(client):
     }
 
 
-# TODO: travis should use mongo<3.6
-@pytest.mark.skip
 def test_mix_data(mongo, client, config):
     juan = make_user('user', 'User')
 
@@ -1185,8 +1182,6 @@ def test_mix_data(mongo, client, config):
     }
 
 
-# TODO: travis should use mongo<3.6
-@pytest.mark.skip
 def test_mix_data_pointer_unique(mongo, client, config):
     juan = make_user('user', 'User')
 
@@ -1250,8 +1245,6 @@ def test_mix_data_pointer_unique(mongo, client, config):
     }
 
 
-# TODO: travis should use mongo<3.6
-@pytest.mark.skip
 def test_mix_data_filter_user(mongo, client, config):
     juan = make_user('user', 'User')
 
@@ -1337,8 +1330,6 @@ def test_mix_data_filter_user(mongo, client, config):
     }
 
 
-# TODO: travis should use mongo<3.6
-@pytest.mark.skip
 def test_mix_data_filter_include(mongo, client, config):
     juan = make_user('user', 'User')
 
@@ -1397,8 +1388,6 @@ def test_mix_data_filter_include(mongo, client, config):
     }
 
 
-# TODO: travis should use mongo<3.6
-@pytest.mark.skip
 def test_mix_data_filter_exclude(mongo, client, config):
     juan = make_user('user', 'User')
 

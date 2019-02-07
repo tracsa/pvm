@@ -774,13 +774,13 @@ def data_mix():
 
     # build results
     ptr_pipeline = [
-        {'$match': {'execution.id': {'$in': execution_ids}}},
         {'$sort': {'started_at': -1}},
         {'$group': {
             '_id': '$execution.id',
             'latest': {'$first': '$$ROOT'},
         }},
         {'$replaceRoot': {'newRoot': '$latest'}},
+        {'$match': {'execution.id': {'$in': execution_ids}}},
         {'$out': 'ptr_aux_collection'},
     ]
 

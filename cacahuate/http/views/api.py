@@ -686,7 +686,18 @@ def data_mix():
     if user_identifier is not None:
         user = User.get_by('identifier', user_identifier)
         if user is not None:
-            execution_list = [item.id for item in user.proxy.activities.get()]
+            from bson.code import Code
+            map_ = Code(
+                'function () {'
+                '  emit(this.execution.id, this.actors.items);'
+                '}'
+            )
+            reduce_ = Code(
+                'function (key, values) {'
+                '  return values;'
+                '},'
+            )
+            # execution_list = 
         else:
             execution_list = []
         query['id'] = {

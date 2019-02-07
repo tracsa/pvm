@@ -690,6 +690,18 @@ def data_mix():
             group, value = item.split('.', 1)
             ptr_query[value] = exe_query.pop(item)
 
+    # filter for exclude/include
+
+    exclude_fields = exe_query.pop('exclude', '')
+    exclude_list = [s.strip() for s in exclude_fields.split(',') if s]
+    exclude_map = {item: 0 for item in exclude_list}
+
+    include_fields = exe_query.pop('include', '')
+    include_list = [s.strip() for s in include_fields.split(',') if s]
+    include_map = {item: 1 for item in include_list}
+
+    prjct = {**include_map} or {**exclude_map}
+
     # filter for user_identifier
 
     # execution's case
@@ -717,6 +729,7 @@ def data_mix():
         }
 
     # pipeline
+    # all special cases should be handled before this
 
     # execution's case
     exe_pipeline = [
@@ -759,32 +772,7 @@ def data_mix():
     else:
         execution_ids = exe_ids or ptr_ids
 
-    # filter for exclude/include
-
-    # execution's case
-    exclude_fields = exe_query.pop('exclude', '')
-    exclude_list = [s.strip() for s in exclude_fields.split(',') if s]
-    exclude_map = {item: 0 for item in exclude_list}
-
-    include_fields = exe_query.pop('include', '')
-    include_list = [s.strip() for s in include_fields.split(',') if s]
-    include_map = {item: 1 for item in include_list}
-
-    exe_prjct = {**exclude_map, **include_map}
-
-    # pointer's case
-    exclude_fields = ptr_query.pop('exclude', '')
-    exclude_list = [s.strip() for s in exclude_fields.split(',') if s]
-    exclude_map = {item: 0 for item in exclude_list}
-
-    include_fields = exe_query.pop('include', '')
-    include_list = [s.strip() for s in include_fields.split(',') if s]
-    include_map = {item: 1 for item in include_list}
-
-    ptr_prjct = {**exclude_map, **include_map}
-
     # build results
-
     ptr_pipeline = [
         {'$match': {'execution.id': {'$in': execution_ids}}},
         {'$sort': {'started_at': -1}},
@@ -793,12 +781,6 @@ def data_mix():
             'latest': {'$first': '$$ROOT'},
         }},
         {'$replaceRoot': {'newRoot': '$latest'}},
-    ]
-
-    if ptr_prjct:
-        ptr_pipeline.append({'$project': ptr_prjct})
-
-    ptr_pipeline += [
         {'$sort': {'started_at': -1}},
         {'$out': 'ptr_aux_collection'},
     ]
@@ -816,13 +798,13 @@ def data_mix():
         {'$sort': {'started_at': -1}},
     ]
 
-    if exe_prjct:
-        exe_pipeline.append({'$project': exe_prjct})
+    if prjct:
+        exe_pipeline.append({'$project': prjct})
 
     def data_mix_json_prepare(obj):
         if obj.get('pointer'):
             obj['pointer'] = obj['pointer'][0]
-            obj['pointer'].pop('execution')
+            obj['pointer'].pop('execution', None)
             obj['pointer'] = json_prepare(obj['pointer'])
         return json_prepare(obj)
 

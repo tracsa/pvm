@@ -781,7 +781,6 @@ def data_mix():
             'latest': {'$first': '$$ROOT'},
         }},
         {'$replaceRoot': {'newRoot': '$latest'}},
-        {'$sort': {'started_at': -1}},
         {'$out': 'ptr_aux_collection'},
     ]
 

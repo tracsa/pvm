@@ -802,10 +802,13 @@ def data_mix():
         exe_pipeline.append({'$project': prjct})
 
     def data_mix_json_prepare(obj):
-        if obj.get('pointer'):
-            obj['pointer'] = obj['pointer'][0]
-            obj['pointer'].pop('execution', None)
-            obj['pointer'] = json_prepare(obj['pointer'])
+        if obj.get('pointer') is not None:
+            try:
+                obj['pointer'] = obj['pointer'][0]
+                obj['pointer'].pop('execution', {})
+                obj['pointer'] = json_prepare(obj['pointer'])
+            except IndexError:
+                obj['pointer'] = None
         return json_prepare(obj)
 
     return jsonify({

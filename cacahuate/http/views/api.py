@@ -786,6 +786,8 @@ def data_mix():
             'as': 'pointer',
         }},
         {'$sort': {'started_at': -1}},
+        {'$skip': g.offset},
+        {'$limit': g.limit},
     ]
 
     if prjct:

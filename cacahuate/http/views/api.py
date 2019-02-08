@@ -781,6 +781,7 @@ def data_mix():
             'latest': {'$first': '$$ROOT'},
         }},
         {'$replaceRoot': {'newRoot': '$latest'}},
+        # TODO: DO NOT CREATE COLLECTION
         {'$out': 'ptr_aux_collection'},
     ]
 
@@ -788,6 +789,7 @@ def data_mix():
 
     exe_pipeline = [
         {'$match': {'id': {'$in': execution_ids}}},
+        # TODO: FIND ANOTHER WAY TO ADD POINTER
         {'$lookup': {
             'from': 'ptr_aux_collection',
             'localField': 'id',
@@ -798,6 +800,7 @@ def data_mix():
     ]
 
     if prjct:
+        # TODO: THE ABOVE LOOKUP IS REQUIRED TO USE include/exclude=pointer.foo
         exe_pipeline.append({'$project': prjct})
 
     def data_mix_json_prepare(obj):

@@ -683,7 +683,7 @@ def data_mix():
     )
 
     # filter for user_identifier
-    user_identifier = query.pop('user_identifier', None)
+    user_identifier = query.pop('actor', None)
     if user_identifier is not None:
         user = User.get_by('identifier', user_identifier)
         if user is not None:

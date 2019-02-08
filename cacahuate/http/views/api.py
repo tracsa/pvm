@@ -700,12 +700,13 @@ def data_mix():
                 'actors.items': 1,
                 "execution.id": 1
             })
-            execution_list = []
+            execution_list = set()
             for item in cursor:
                 for attr in item['actors']['items']:
                     if user_identifier == item['actors']['items'][attr][
                                           'user']['identifier']:
-                        execution_list.append(item['execution']['id'])
+                        execution_list.add(item['execution']['id'])
+            execution_list = list(execution_list)
         else:
             execution_list = []
         query['id'] = {

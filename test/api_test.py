@@ -1246,6 +1246,7 @@ def test_mix_data_pointer_unique(mongo, client, config):
     }
 
 
+@pytest.mark.skip()
 def test_mix_data_filter_user(mongo, client, config):
     juan = make_user('user', 'User')
 

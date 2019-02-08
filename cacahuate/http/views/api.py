@@ -685,30 +685,26 @@ def data_mix():
     # filter for user_identifier
     user_identifier = query.pop('actor', None)
     if user_identifier is not None:
-        user = User.get_by('identifier', user_identifier)
-        if user is not None:
-            cursor = pointers_collection.find({
-                'actors.items': {
-                    '$exists': True,
-                    '$nin': [None, {}]
-                },
-                'execution': {
-                    '$exists': True
-                },
-            }, {
-                '_id': 0,
-                'actors.items': 1,
-                "execution.id": 1
-            })
-            execution_list = set()
-            for item in cursor:
-                for attr in item['actors']['items']:
-                    if user_identifier == item['actors']['items'][attr][
-                                          'user']['identifier']:
-                        execution_list.add(item['execution']['id'])
-            execution_list = list(execution_list)
-        else:
-            execution_list = []
+        cursor = pointers_collection.find({
+            'actors.items': {
+                '$exists': True,
+                '$nin': [None, {}]
+            },
+            'execution': {
+                '$exists': True
+            },
+        }, {
+            '_id': 0,
+            'actors.items': 1,
+            "execution.id": 1
+        })
+        execution_list = set()
+        for item in cursor:
+            for attr in item['actors']['items']:
+                if user_identifier == item['actors']['items'][attr][
+                                        'user']['identifier']:
+                    execution_list.add(item['execution']['id'])
+        execution_list = list(execution_list)
         query['id'] = {
             '$in': execution_list,
         }

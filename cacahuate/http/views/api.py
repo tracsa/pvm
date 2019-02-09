@@ -691,7 +691,6 @@ def data_mix():
             ptr_query[value] = exe_query.pop(item)
 
     # filter for exclude/include
-
     exclude_fields = exe_query.pop('exclude', '')
     exclude_list = [s.strip() for s in exclude_fields.split(',') if s]
     exclude_map = {item: 0 for item in exclude_list}
@@ -703,29 +702,19 @@ def data_mix():
     prjct = {**include_map} or {**exclude_map}
 
     # filter for user_identifier
-
-    # execution's case
     user_identifier = exe_query.pop('user_identifier', None)
     if user_identifier is not None:
         user = User.get_by('identifier', user_identifier)
         if user is not None:
             execution_list = [item.id for item in user.proxy.activities.get()]
+
+            for item in user.proxy.tasks.get():
+                execution_list.append(item.execution)
         else:
             execution_list = []
+
         exe_query['id'] = {
             '$in': execution_list,
-        }
-
-    # pointer's case
-    user_identifier = ptr_query.pop('user_identifier', None)
-    if user_identifier is not None:
-        user = User.get_by('identifier', user_identifier)
-        if user is not None:
-            pointer_list = [item.id for item in user.proxy.tasks.get()]
-        else:
-            pointer_list = []
-        ptr_query['id'] = {
-            '$in': pointer_list,
         }
 
     # pipeline
@@ -797,6 +786,8 @@ def data_mix():
             'as': 'pointer',
         }},
         {'$sort': {'started_at': -1}},
+        {'$skip': g.offset},
+        {'$limit': g.limit},
     ]
 
     if prjct:

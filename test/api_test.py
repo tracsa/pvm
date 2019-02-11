@@ -1602,7 +1602,7 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
     exec_03_json['pointer'] = ptr_03_json
     exec_04_json['pointer'] = ptr_04_json
 
-    res = client.get(f'/v1/inbox?user_identifier={juan.identifier}')
+    res = client.get(f'/v1/inbox?actor={juan.identifier}')
 
     ans = json.loads(res.data)
 

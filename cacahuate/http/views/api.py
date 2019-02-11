@@ -468,6 +468,18 @@ def continue_process():
     }, 202
 
 
+@app.route('/v1/pointer/<id>', methods=['GET'])
+def read_pointer(id):
+    collection = mongo.db[app.config['POINTER_COLLECTION']]
+    query = {'id': id}
+
+    return jsonify({
+        "data": json_prepare(
+            collection.find_one(query)
+        ),
+    })
+
+
 @app.route('/v1/process', methods=['GET'])
 def list_process():
     def add_form(xml):

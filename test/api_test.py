@@ -1616,6 +1616,17 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
         ],
     }
 
+    # user not found
+    res = client.get(f'/v1/inbox?user_identifier=not_an_user')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+        ],
+    }
+
 
 def test_data_mix_filter_include(mongo, client, config):
     juan = make_user('user', 'User')

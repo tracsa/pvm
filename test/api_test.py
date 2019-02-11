@@ -1852,29 +1852,29 @@ def test_data_mix_filter_actor_identifier(mongo, client, config):
         'mid_node': 'bar',
         'first_node': 'zas',
     }
-    exec_01_json['state'] = {'item_order': {
-            '0': 'first_node',
-            '1': 'mid_node',
-            '2': 'last_node',
-    }}
+    exec_01_json['state'] = {'item_order': [
+        'first_node',
+        'mid_node',
+        'last_node',
+    ]}
 
     exec_02_json['actors'] = {
         'first_node': 'mine',
     }
-    exec_02_json['state'] = {'item_order': {
-            '0': 'first_node',
-            '1': 'mid_node',
-            '2': 'last_node',
-    }}
+    exec_02_json['state'] = {'item_order': [
+        'first_node',
+        'mid_node',
+        'last_node',
+    ]}
 
     exec_03_json['actors'] = {
         'mid_node': 'foo',
     }
-    exec_03_json['state'] = {'item_order': {
-            '0': 'first_node',
-            '1': 'mid_node',
-            '2': 'last_node',
-    }}
+    exec_03_json['state'] = {'item_order': [
+        'first_node',
+        'mid_node',
+        'last_node',
+    ]}
 
     # Execution collection
     mongo[config["EXECUTION_COLLECTION"]].insert_many([

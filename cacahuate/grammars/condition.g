@@ -19,8 +19,10 @@ ref: variable "." variable
 // common operators
 
 op_or: "||" -> op_or
+     | "OR" -> op_or
 
 op_and: "&&" -> op_and
+      | "AND" -> op_and
 
 op_not: "!" -> op_not
 

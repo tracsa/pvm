@@ -3,7 +3,6 @@ from flask import json
 from random import choice
 from string import ascii_letters
 import pika
-import pytest
 
 from cacahuate.handler import Handler
 from cacahuate.models import Pointer, Execution
@@ -1097,17 +1096,13 @@ def test_list_activities(client):
     }
 
 
-def test_mix_data(mongo, client, config):
-    juan = make_user('user', 'User')
-
+def test_data_mix(mongo, client, config):
     # Create pointers
 
     ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
     ptr_02 = make_pointer('simple.2018-02-19.xml', 'mid_node')
     ptr_03 = make_pointer('exit_request.2018-03-20.xml', 'requester')
     ptr_04 = make_pointer('validation.2018-05-09.xml', 'approval_node')
-
-    juan.proxy.tasks.set([ptr_01, ptr_02, ptr_04])
 
     ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
     ptr_02_json = ptr_02.to_json(include=['*', 'execution'])
@@ -1134,8 +1129,6 @@ def test_mix_data(mongo, client, config):
     exec_02 = ptr_02.proxy.execution.get()
     exec_03 = ptr_03.proxy.execution.get()
     exec_04 = ptr_04.proxy.execution.get()
-
-    juan.proxy.activities.set([exec_01, exec_02, exec_04])
 
     exec_01_json = exec_01.to_json()
     exec_02_json = exec_02.to_json()
@@ -1183,14 +1176,87 @@ def test_mix_data(mongo, client, config):
     }
 
 
-def test_mix_data_pointer_unique(mongo, client, config):
-    juan = make_user('user', 'User')
-
+def test_data_mix_pagination(mongo, client, config):
     # Create pointers
 
     ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+    ptr_02 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+    ptr_03 = make_pointer('exit_request.2018-03-20.xml', 'requester')
+    ptr_04 = make_pointer('validation.2018-05-09.xml', 'approval_node')
 
-    juan.proxy.tasks.set([ptr_01])
+    ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
+    ptr_02_json = ptr_02.to_json(include=['*', 'execution'])
+    ptr_03_json = ptr_03.to_json(include=['*', 'execution'])
+    ptr_04_json = ptr_04.to_json(include=['*', 'execution'])
+
+    # set started_at to ptrs
+    ptr_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+    ptr_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
+    ptr_03_json['started_at'] = '2018-04-01T21:47:00+00:00'
+    ptr_04_json['started_at'] = '2018-04-01T21:48:00+00:00'
+
+    # Pointer collection
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        ptr_01_json.copy(),
+        ptr_02_json.copy(),
+        ptr_03_json.copy(),
+        ptr_04_json.copy(),
+    ])
+
+    # Create executions
+
+    exec_01 = ptr_01.proxy.execution.get()
+    exec_02 = ptr_02.proxy.execution.get()
+    exec_03 = ptr_03.proxy.execution.get()
+    exec_04 = ptr_04.proxy.execution.get()
+
+    exec_01_json = exec_01.to_json()
+    exec_02_json = exec_02.to_json()
+    exec_03_json = exec_03.to_json()
+    exec_04_json = exec_04.to_json()
+
+    # set started_at to ptrs
+    exec_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+    exec_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
+    exec_03_json['started_at'] = '2018-04-01T21:47:00+00:00'
+    exec_04_json['started_at'] = '2018-04-01T21:48:00+00:00'
+
+    # Execution collection
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        exec_01_json.copy(),
+        exec_02_json.copy(),
+        exec_03_json.copy(),
+        exec_04_json.copy(),
+    ])
+
+    # clean pointers
+    ptr_01_json.pop('execution')
+    ptr_02_json.pop('execution')
+    ptr_03_json.pop('execution')
+    ptr_04_json.pop('execution')
+
+    # set pointers in executions
+    exec_01_json['pointer'] = ptr_01_json
+    exec_02_json['pointer'] = ptr_02_json
+    exec_03_json['pointer'] = ptr_03_json
+    exec_04_json['pointer'] = ptr_04_json
+
+    res = client.get('/v1/inbox?offset=1&limit=1')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_03_json,
+        ],
+    }
+
+
+def test_data_mix_pointer_unique(mongo, client, config):
+    # Create pointers
+
+    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
 
     ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
 
@@ -1215,8 +1281,6 @@ def test_mix_data_pointer_unique(mongo, client, config):
     # Create executions
 
     exec_01 = ptr_01.proxy.execution.get()
-
-    juan.proxy.activities.set([exec_01])
 
     exec_01_json = exec_01.to_json()
 
@@ -1246,8 +1310,227 @@ def test_mix_data_pointer_unique(mongo, client, config):
     }
 
 
-@pytest.mark.skip()
-def test_mix_data_filter_user(mongo, client, config):
+# @pytest.mark.skip()
+def test_data_mix_pointerless(mongo, client, config):
+    # Create pointers
+
+    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+
+    ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
+
+    # set started_at to ptrs
+    ptr_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+
+    # No pointers in collection
+
+    # Create executions
+
+    exec_01 = ptr_01.proxy.execution.get()
+
+    exec_01_json = exec_01.to_json()
+
+    # set started_at to ptrs
+    exec_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+
+    # Execution collection
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        exec_01_json.copy(),
+    ])
+
+    # clean pointers
+    ptr_01_json.pop('execution')
+
+    # set pointers in executions
+    exec_01_json['pointer'] = None
+
+    res = client.get(f'/v1/inbox')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_01_json,
+        ],
+    }
+
+
+def test_data_mix_filter_pointer_key(mongo, client, config):
+    # Create pointers
+
+    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+    ptr_02 = make_pointer('exit_request.2018-03-20.xml', 'requester')
+
+    ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
+    ptr_02_json = ptr_02.to_json(include=['*', 'execution'])
+
+    # set started_at to ptrs
+    ptr_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+    ptr_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
+
+    # Pointer collection
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        ptr_01_json.copy(),
+        ptr_02_json.copy(),
+    ])
+
+    # Create executions
+
+    exec_01 = ptr_01.proxy.execution.get()
+    exec_02 = ptr_02.proxy.execution.get()
+
+    exec_01_json = exec_01.to_json()
+    exec_02_json = exec_02.to_json()
+
+    # set started_at to ptrs
+    exec_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+    exec_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
+
+    # Execution collection
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        exec_01_json.copy(),
+        exec_02_json.copy(),
+    ])
+
+    # clean pointers
+    ptr_01_json.pop('execution')
+    ptr_02_json.pop('execution')
+
+    # set pointers in executions
+    exec_01_json['pointer'] = ptr_01_json
+    exec_02_json['pointer'] = ptr_02_json
+
+    res = client.get(f'/v1/inbox?pointer.node_id=mid_node')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_01_json,
+        ],
+    }
+
+
+def test_data_mix_filter_exclude_pointer_key(mongo, client, config):
+    # Create pointers
+
+    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+    ptr_02 = make_pointer('exit_request.2018-03-20.xml', 'requester')
+
+    ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
+    ptr_02_json = ptr_02.to_json(include=['*', 'execution'])
+
+    # set started_at to ptrs
+    ptr_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+    ptr_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
+
+    # Pointer collection
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        ptr_01_json.copy(),
+        ptr_02_json.copy(),
+    ])
+
+    # Create executions
+
+    exec_01 = ptr_01.proxy.execution.get()
+    exec_02 = ptr_02.proxy.execution.get()
+
+    exec_01_json = exec_01.to_json()
+    exec_02_json = exec_02.to_json()
+
+    # set started_at to ptrs
+    exec_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+    exec_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
+
+    # Execution collection
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        exec_01_json.copy(),
+        exec_02_json.copy(),
+    ])
+
+    # clean pointers
+    ptr_01_json.pop('execution')
+    ptr_01_json.pop('node_id')
+    ptr_02_json.pop('execution')
+    ptr_02_json.pop('node_id')
+
+    # set pointers in executions
+    exec_01_json['pointer'] = ptr_01_json
+    exec_02_json['pointer'] = ptr_02_json
+
+    res = client.get(f'/v1/inbox?exclude=pointer.node_id')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_02_json,
+            exec_01_json,
+        ],
+    }
+
+
+def test_data_mix_filter_include_pointer_key(mongo, client, config):
+    # Create pointers
+
+    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+    ptr_02 = make_pointer('exit_request.2018-03-20.xml', 'requester')
+
+    ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
+    ptr_02_json = ptr_02.to_json(include=['*', 'execution'])
+
+    # set started_at to ptrs
+    ptr_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+    ptr_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
+
+    # Pointer collection
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        ptr_01_json.copy(),
+        ptr_02_json.copy(),
+    ])
+
+    # Create executions
+
+    exec_01 = ptr_01.proxy.execution.get()
+    exec_02 = ptr_02.proxy.execution.get()
+
+    exec_01_json = exec_01.to_json()
+    exec_02_json = exec_02.to_json()
+
+    # set started_at to ptrs
+    exec_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+    exec_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
+
+    # Execution collection
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        exec_01_json.copy(),
+        exec_02_json.copy(),
+    ])
+
+    # clean pointers
+    ptr_01_json = {'node_id': ptr_01_json.get('node_id')}
+    ptr_02_json = {'node_id': ptr_02_json.get('node_id')}
+
+    # set pointers in executions
+    exec_01_json = {'pointer': ptr_01_json}
+    exec_02_json = {'pointer': ptr_02_json}
+
+    res = client.get(f'/v1/inbox?include=pointer.node_id')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_02_json,
+            exec_01_json,
+        ],
+    }
+
+
+def test_data_mix_filter_user_identifier(mongo, client, config):
     juan = make_user('user', 'User')
 
     # Create pointers
@@ -1257,7 +1540,8 @@ def test_mix_data_filter_user(mongo, client, config):
     ptr_03 = make_pointer('exit_request.2018-03-20.xml', 'requester')
     ptr_04 = make_pointer('validation.2018-05-09.xml', 'approval_node')
 
-    juan.proxy.tasks.set([ptr_01, ptr_02, ptr_04])
+    # set some tasks to user
+    juan.proxy.tasks.set([ptr_02, ptr_03])
 
     ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
     ptr_02_json = ptr_02.to_json(include=['*', 'execution'])
@@ -1285,7 +1569,8 @@ def test_mix_data_filter_user(mongo, client, config):
     exec_03 = ptr_03.proxy.execution.get()
     exec_04 = ptr_04.proxy.execution.get()
 
-    juan.proxy.activities.set([exec_01, exec_02, exec_04])
+    # set some activities to user
+    juan.proxy.activities.set([exec_01, exec_04])
 
     exec_01_json = exec_01.to_json()
     exec_02_json = exec_02.to_json()
@@ -1326,113 +1611,14 @@ def test_mix_data_filter_user(mongo, client, config):
     assert ans == {
         "data": [
             exec_04_json,
+            exec_03_json,
             exec_02_json,
             exec_01_json,
         ],
     }
 
 
-def test_mix_data_filter_actor(mongo, client, config):
-    juan = make_user('user', 'User')
-
-    # Create pointers
-
-    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
-    ptr_02 = make_pointer('simple.2018-02-19.xml', 'mid_node')
-    ptr_03 = make_pointer('exit_request.2018-03-20.xml', 'requester')
-    ptr_04 = make_pointer('validation.2018-05-09.xml', 'approval_node')
-
-    juan.proxy.tasks.set([ptr_01, ptr_02, ptr_04])
-
-    ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
-    ptr_02_json = ptr_02.to_json(include=['*', 'execution'])
-    ptr_03_json = ptr_03.to_json(include=['*', 'execution'])
-    ptr_04_json = ptr_04.to_json(include=['*', 'execution'])
-
-    # set started_at to ptrs
-    ptr_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
-    ptr_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
-    ptr_03_json['started_at'] = '2018-04-01T21:47:00+00:00'
-    ptr_04_json['started_at'] = '2018-04-01T21:48:00+00:00'
-
-    # set actors to ptrs
-    ptr_02_json['actors'] = {
-        'items': {
-            f'{juan.identifier}': {
-                'user': {'identifier': f'{juan.identifier}'}
-            }
-        }
-    }
-    ptr_03_json['actors'] = {
-        'items': {
-            f'{juan.identifier}': {
-                'user': {'identifier': f'{juan.identifier}'}
-            }
-        }
-    }
-
-    # Pointer collection
-    mongo[config["POINTER_COLLECTION"]].insert_many([
-        ptr_01_json.copy(),
-        ptr_02_json.copy(),
-        ptr_03_json.copy(),
-        ptr_04_json.copy(),
-    ])
-
-    # Create executions
-
-    exec_01 = ptr_01.proxy.execution.get()
-    exec_02 = ptr_02.proxy.execution.get()
-    exec_03 = ptr_03.proxy.execution.get()
-    exec_04 = ptr_04.proxy.execution.get()
-
-    juan.proxy.activities.set([exec_01, exec_02, exec_04])
-
-    exec_01_json = exec_01.to_json()
-    exec_02_json = exec_02.to_json()
-    exec_03_json = exec_03.to_json()
-    exec_04_json = exec_04.to_json()
-
-    # set started_at to ptrs
-    exec_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
-    exec_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
-    exec_03_json['started_at'] = '2018-04-01T21:47:00+00:00'
-    exec_04_json['started_at'] = '2018-04-01T21:48:00+00:00'
-
-    # Execution collection
-    mongo[config["EXECUTION_COLLECTION"]].insert_many([
-        exec_01_json.copy(),
-        exec_02_json.copy(),
-        exec_03_json.copy(),
-        exec_04_json.copy(),
-    ])
-
-    # clean pointers
-    ptr_01_json.pop('execution')
-    ptr_02_json.pop('execution')
-    ptr_03_json.pop('execution')
-    ptr_04_json.pop('execution')
-
-    # set pointers in executions
-    exec_01_json['pointer'] = ptr_01_json
-    exec_02_json['pointer'] = ptr_02_json
-    exec_03_json['pointer'] = ptr_03_json
-    exec_04_json['pointer'] = ptr_04_json
-
-    res = client.get(f'/v1/inbox?actor={juan.identifier}')
-
-    ans = json.loads(res.data)
-
-    assert res.status_code == 200
-    assert ans == {
-        "data": [
-            exec_03_json,
-            exec_02_json,
-        ],
-    }
-
-
-def test_mix_data_filter_include(mongo, client, config):
+def test_data_mix_filter_include(mongo, client, config):
     juan = make_user('user', 'User')
 
     # Create pointers
@@ -1490,7 +1676,7 @@ def test_mix_data_filter_include(mongo, client, config):
     }
 
 
-def test_mix_data_filter_exclude(mongo, client, config):
+def test_data_mix_filter_exclude(mongo, client, config):
     juan = make_user('user', 'User')
 
     # Create pointers
@@ -1536,6 +1722,64 @@ def test_mix_data_filter_exclude(mongo, client, config):
     exec_01_json.pop('process_name')
 
     res = client.get(f'/v1/inbox?exclude=name,process_name')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_01_json,
+        ],
+    }
+
+
+def test_data_mix_filter_include_exlcude(mongo, client, config):
+    juan = make_user('user', 'User')
+
+    # Create pointers
+
+    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+
+    juan.proxy.tasks.set([ptr_01])
+
+    ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
+
+    # set started_at to ptrs
+    ptr_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+
+    # Pointer collection
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        ptr_01_json.copy(),
+    ])
+
+    # Create executions
+
+    exec_01 = ptr_01.proxy.execution.get()
+
+    juan.proxy.activities.set([exec_01])
+
+    exec_01_json = exec_01.to_json()
+
+    # set started_at to ptrs
+    exec_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+
+    # Execution collection
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        exec_01_json.copy(),
+    ])
+
+    # clean pointers
+    ptr_01_json.pop('execution')
+
+    # set pointers in executions
+    exec_01_json['pointer'] = ptr_01_json
+
+    # include keys
+    exec_01_json = {
+        item: exec_01_json[item] for item in ['name', 'process_name']
+    }
+
+    res = client.get(f'/v1/inbox?include=name,process_name&exclude=name')
 
     ans = json.loads(res.data)
 

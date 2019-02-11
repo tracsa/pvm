@@ -707,25 +707,30 @@ def data_mix():
     user_identifier = exe_query.pop('actor', None)
     if user_identifier is not None:
         cursor = collection.find({
-            'actors.items': {
+            'state.item_order': {
                 '$exists': True,
                 '$nin': [None, {}]
             },
-            'execution': {
+            'actor': {
                 '$exists': True
             },
         }, {
             '_id': 0,
-            'actors.items': 1,
-            "execution.id": 1
+            'id': 1,
+            'state.item_order': 1,
+            'actors': 1,
         })
         execution_list = set()
         for item in cursor:
-            for attr in item['actors']['items']:
-                if user_identifier == item['actors']['items'][attr][
-                                        'user']['identifier']:
-                    execution_list.add(item['execution']['id'])
-        execution_list = list(execution_list)
+            for key in item['state']['item_order']:
+                if hasattr(item['actor'], key):
+                    if getattr(item['actor'], key) == user_identifier:
+                        execution_list.add(item['id'])
+        #     for attr in item['actors']['items']:
+        #         if user_identifier == item['actors']['items'][attr][
+        #                                 'user']['identifier']:
+        #             execution_list.add(item['execution']['id'])
+        # execution_list = list(execution_list)
         exe_query['id'] = {
             '$in': execution_list,
         }

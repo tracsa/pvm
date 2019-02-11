@@ -720,6 +720,22 @@ def data_mix():
             '$in': execution_list,
         }
 
+    # filter for sorting
+    sort_query = exe_query.pop('sort', None)
+    if sort_query and sort_query.split(',', 1)[0]:
+        try:
+            key, order = sort_query.split(',', 1)
+        except ValueError:
+            key, order = sort_query, 'ASCENDING'
+
+        if order not in ['ASCENDING', 'DESCENDING']:
+            order = 'ASCENDING'
+
+        order = getattr(pymongo, order)
+        srt = {'$sort': {key: order}}
+    else:
+        srt = {'$sort': {'started_at': -1}}
+
     # pipeline
     # all special cases should be handled before this
 
@@ -788,7 +804,7 @@ def data_mix():
             'foreignField': 'execution.id',
             'as': 'pointer',
         }},
-        {'$sort': {'started_at': -1}},
+        srt,
         {'$skip': g.offset},
         {'$limit': g.limit},
     ]

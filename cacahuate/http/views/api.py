@@ -673,7 +673,7 @@ def task_read(id):
 @app.route('/v1/inbox', methods=['GET'])
 @pagination
 def data_mix():
-    pointers_collection = mongo.db[app.config['POINTER_COLLECTION']]
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
     dict_args = request.args.to_dict()
 
@@ -706,7 +706,7 @@ def data_mix():
     # filter for user_identifier
     user_identifier = exe_query.pop('actor', None)
     if user_identifier is not None:
-        cursor = pointers_collection.find({
+        cursor = collection.find({
             'actors.items': {
                 '$exists': True,
                 '$nin': [None, {}]
@@ -738,8 +738,7 @@ def data_mix():
         {'$match': exe_query},
     ]
 
-    exe_collection = mongo.db[app.config['EXECUTION_COLLECTION']]
-    exe_cursor = exe_collection.aggregate(exe_pipeline)
+    exe_cursor = collection.aggregate(exe_pipeline)
 
     exe_ids = list(map(
         lambda item: item['id'],
@@ -820,7 +819,7 @@ def data_mix():
     return jsonify({
         'data': list(map(
             data_mix_json_prepare,
-            exe_collection.aggregate(exe_pipeline),
+            collection.aggregate(exe_pipeline),
         ))
     })
 

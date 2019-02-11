@@ -744,7 +744,7 @@ def data_mix():
 
         execution_list = set()
         for doc in cursor:
-            key_list = list(doc['state']['item_order'].values())
+            key_list = doc['state']['item_order']
             for key in key_list:
                 an_actor = doc['actors'].get(key)
                 if an_actor and an_actor == actor_identifier:

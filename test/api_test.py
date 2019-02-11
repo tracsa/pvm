@@ -1310,7 +1310,6 @@ def test_data_mix_pointer_unique(mongo, client, config):
     }
 
 
-# @pytest.mark.skip()
 def test_data_mix_pointerless(mongo, client, config):
     # Create pointers
 

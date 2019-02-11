@@ -726,11 +726,6 @@ def data_mix():
                 if hasattr(item['actor'], key):
                     if getattr(item['actor'], key) == user_identifier:
                         execution_list.add(item['id'])
-        #     for attr in item['actors']['items']:
-        #         if user_identifier == item['actors']['items'][attr][
-        #                                 'user']['identifier']:
-        #             execution_list.add(item['execution']['id'])
-        # execution_list = list(execution_list)
         exe_query['id'] = {
             '$in': execution_list,
         }

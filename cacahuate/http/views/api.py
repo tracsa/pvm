@@ -720,6 +720,46 @@ def data_mix():
             '$in': execution_list,
         }
 
+    # filter for actor_identifier
+    actor_identifier = exe_query.pop('actor_identifier', None)
+    if actor_identifier is not None:
+        collection = mongo.db[app.config['EXECUTION_COLLECTION']]
+        cursor = collection.aggregate([
+            {'$match': {
+                    'state.item_order': {
+                        '$exists': True,
+                        '$nin': [None, {}],
+                    },
+                    'actors': {
+                        '$exists': True,
+                    },
+            }},
+            {'$project': {
+                '_id': 0,
+                'id': 1,
+                'state.item_order': 1,
+                'actors': 1,
+            }},
+        ])
+
+        execution_list = set()
+        for doc in cursor:
+            key_list = list(doc['state']['item_order'].values())
+            for key in key_list:
+                an_actor = doc['actors'].get(key)
+                if an_actor and an_actor == actor_identifier:
+                    execution_list.add(doc['id'])
+        execution_list = list(execution_list)
+        # early return
+        if not execution_list:
+            return jsonify({
+                'data': []
+            })
+
+        exe_query['id'] = {
+            '$in': execution_list,
+        }
+
     # filter for sorting
     sort_query = exe_query.pop('sort', None)
     if sort_query and sort_query.split(',', 1)[0]:

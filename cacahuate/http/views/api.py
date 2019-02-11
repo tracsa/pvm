@@ -705,13 +705,16 @@ def data_mix():
     user_identifier = exe_query.pop('user_identifier', None)
     if user_identifier is not None:
         user = User.get_by('identifier', user_identifier)
-        if user is not None:
-            execution_list = [item.id for item in user.proxy.activities.get()]
+        # early return
+        if user is None:
+            return jsonify({
+                'data': []
+            })
 
-            for item in user.proxy.tasks.get():
-                execution_list.append(item.execution)
-        else:
-            execution_list = []
+        execution_list = [item.id for item in user.proxy.activities.get()]
+
+        for item in user.proxy.tasks.get():
+            execution_list.append(item.execution)
 
         exe_query['id'] = {
             '$in': execution_list,

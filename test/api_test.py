@@ -1540,7 +1540,7 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
     ptr_04 = make_pointer('validation.2018-05-09.xml', 'approval_node')
 
     # set some tasks to user
-    juan.proxy.tasks.set([ptr_02, ptr_03])
+    juan.proxy.tasks.set([ptr_02])
 
     ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
     ptr_02_json = ptr_02.to_json(include=['*', 'execution'])
@@ -1569,7 +1569,7 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
     exec_04 = ptr_04.proxy.execution.get()
 
     # set some activities to user
-    juan.proxy.activities.set([exec_01, exec_04])
+    juan.proxy.activities.set([exec_01])
 
     exec_01_json = exec_01.to_json()
     exec_02_json = exec_02.to_json()
@@ -1609,8 +1609,6 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
     assert res.status_code == 200
     assert ans == {
         "data": [
-            exec_04_json,
-            exec_03_json,
             exec_02_json,
             exec_01_json,
         ],

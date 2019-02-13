@@ -1945,7 +1945,6 @@ def test_data_mix_filter_actor_identifier(mongo, client, config):
     }
 
 
-
 def test_data_mix_filter_include(mongo, client, config):
     juan = make_user('user', 'User')
 

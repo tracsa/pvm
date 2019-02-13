@@ -713,6 +713,12 @@ def data_mix():
 
     prjct = {**include_map} or {**exclude_map}
 
+    # filter for exe_id
+    if exe_query.get('id'):
+        exe_id = {exe_query.get('id')}
+    else:
+        exe_id = None
+
     # filter for user_identifier
     user_identifier = exe_query.pop('user_identifier', None)
     if user_identifier is not None:
@@ -723,14 +729,16 @@ def data_mix():
                 'data': []
             })
 
-        execution_list = [item.id for item in user.proxy.activities.get()]
-
-        for item in user.proxy.tasks.get():
-            execution_list.append(item.execution)
-
-        exe_query['id'] = {
-            '$in': execution_list,
+        uid_exe_set = {
+            item.id for item in user.proxy.activities.get()
+        } | {
+            item.execution for item in user.proxy.tasks.get()
         }
+
+        if exe_id is not None:
+            exe_id &= uid_exe_set
+        else:
+            exe_id = uid_exe_set or None
 
     # filter for actor_identifier
     actor_identifier = exe_query.pop('actor_identifier', None)
@@ -754,23 +762,24 @@ def data_mix():
             }},
         ])
 
-        execution_list = set()
+        aid_exe_set = set()
         for doc in cursor:
             key_list = doc['state']['item_order']
             for key in key_list:
                 an_actor = doc['actors'].get(key)
                 if an_actor and an_actor == actor_identifier:
-                    execution_list.add(doc['id'])
-        execution_list = list(execution_list)
+                    aid_exe_set.add(doc['id'])
+
         # early return
-        if not execution_list:
+        if not aid_exe_set:
             return jsonify({
                 'data': []
             })
 
-        exe_query['id'] = {
-            '$in': execution_list,
-        }
+        if exe_id is not None:
+            exe_id &= aid_exe_set
+        else:
+            exe_id = aid_exe_set
 
     # filter for sorting
     sort_query = exe_query.pop('sort', None)
@@ -791,46 +800,49 @@ def data_mix():
     # pipeline
     # all special cases should be handled before this
 
+    # pointer's case
+    if ptr_query:
+        ptr_pipeline = [
+            {'$match': ptr_query},
+            {'$group': {
+                '_id': None,
+                'executions': {'$push': '$execution.id'},
+            }},
+        ]
+
+        ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
+        ptr_cursor = ptr_collection.aggregate(ptr_pipeline)
+
+        ptr_exe_ids = set()
+        for item in ptr_cursor:
+            ptr_exe_ids |= set(item['executions'])
+
+        if exe_id is not None:
+            exe_id &= ptr_exe_ids
+        else:
+            exe_id = ptr_exe_ids or None
+
+    if type(exe_id) == set:
+        exe_query['id'] = {
+            '$in': list(exe_id),
+        }
+
     # execution's case
     exe_pipeline = [
         {'$match': exe_query},
+        {'$project': {
+            '_id': 0,
+            'id': 1,
+        }},
     ]
 
     exe_collection = mongo.db[app.config['EXECUTION_COLLECTION']]
     exe_cursor = exe_collection.aggregate(exe_pipeline)
 
-    exe_ids = list(map(
+    execution_ids = list(map(
         lambda item: item['id'],
         exe_cursor,
     ))
-
-    # pointer's case
-    ptr_pipeline = [
-        {'$match': ptr_query},
-        {'$group': {
-            '_id': None,
-            'executions': {'$push': '$execution.id'},
-        }},
-    ]
-
-    ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
-    ptr_cursor = ptr_collection.aggregate(ptr_pipeline)
-
-    ptr_ids = []
-    for item in ptr_cursor:
-        ptr_ids += item['executions']
-
-    # mix both lists
-
-    def intersection(lst1, lst2):
-        temp = set(lst2)
-        lst3 = [value for value in lst1 if value in temp]
-        return lst3
-
-    if exe_ids and ptr_ids:
-        execution_ids = intersection(exe_ids, ptr_ids)
-    else:
-        execution_ids = exe_ids or ptr_ids
 
     # build results
     ptr_pipeline = [
@@ -845,6 +857,7 @@ def data_mix():
         {'$out': 'ptr_aux_collection'},
     ]
 
+    ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
     ptr_collection.aggregate(ptr_pipeline)
 
     exe_pipeline = [

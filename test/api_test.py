@@ -1744,7 +1744,7 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
     exec_04 = ptr_04.proxy.execution.get()
 
     # set some activities to user
-    juan.proxy.activities.set([exec_01])
+    juan.proxy.activities.set([exec_03])
 
     exec_01_json = exec_01.to_json()
     exec_02_json = exec_02.to_json()
@@ -1784,13 +1784,42 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
     assert res.status_code == 200
     assert ans == {
         "data": [
+            exec_03_json,
             exec_02_json,
-            exec_01_json,
         ],
     }
 
     # user not found
     res = client.get(f'/v1/inbox?user_identifier=not_an_user')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+        ],
+    }
+
+    # aditional query
+    res = client.get('/v1/inbox?user_identifier={}&process_name={}'.format(
+            juan.identifier,
+            'simple.2018-02-19.xml',
+    ))
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_02_json,
+        ],
+    }
+
+    # aditional query fails
+    res = client.get('/v1/inbox?user_identifier={}&process_name={}'.format(
+            juan.identifier,
+            'not_a_process',
+    ))
 
     ans = json.loads(res.data)
 
@@ -1910,6 +1939,31 @@ def test_data_mix_filter_actor_identifier(mongo, client, config):
 
     # user not found
     res = client.get(f'/v1/inbox?actor_identifier=not_an_user')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+        ],
+    }
+
+    # aditional query
+    res = client.get(
+        f'/v1/inbox?actor_identifier=foo&process_name=simple.2018-02-19.xml')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_01_json,
+        ],
+    }
+
+    # aditional query fails
+    res = client.get(
+        f'/v1/inbox?actor_identifier=zas&process_name=not_a_process')
 
     ans = json.loads(res.data)
 

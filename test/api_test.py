@@ -1919,6 +1919,32 @@ def test_data_mix_filter_actor_identifier(mongo, client, config):
         ],
     }
 
+    # aditional query
+    res = client.get(
+        f'/v1/inbox?actor_identifier=foo&process_name=simple.2018-02-19.xml')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+            exec_01_json,
+        ],
+    }
+
+    # aditional query fails
+    res = client.get(
+        f'/v1/inbox?actor_identifier=zas&process_name=not_a_process')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [
+        ],
+    }
+
+
 
 def test_data_mix_filter_include(mongo, client, config):
     juan = make_user('user', 'User')

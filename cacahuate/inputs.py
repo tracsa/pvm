@@ -104,6 +104,8 @@ class IntInput(Input):
             return int(self.default)
         except ValueError:
             return 0
+        except TypeError:
+            return 0
 
     def validate(self, value, form_index):
         if self.required and type(value) != int and not value:
@@ -211,8 +213,13 @@ class CheckboxInput(FiniteOptionInput):
 
         if value is None:
             value = []
+
         if type(value) == str:
-            value = ast.literal_eval(value)
+            try:
+                value = ast.literal_eval(value)
+            except SyntaxError:
+                value = []
+
         if type(value) is not list:
             raise RequiredListError(
                 self.name,
@@ -245,20 +252,21 @@ class RadioInput(FiniteOptionInput):
     def validate(self, value, form_index):
         super().validate(value, form_index)
 
-        if type(value) is not str and value is not None:
+        curated = None
+
+        if type(value) is str:
+            curated = value
+
+        if curated not in self:
+            curated = None
+
+        if self.required and not curated:
             raise RequiredStrError(
                 self.name,
                 'request.body.form_array.{}.{}'.format(form_index, self.name)
             )
 
-        if value not in self:
-
-            raise InvalidInputError(
-                self.name,
-                'request.body.form_array.{}.{}'.format(form_index, self.name)
-            )
-
-        return value
+        return curated
 
 
 class SelectInput(RadioInput):

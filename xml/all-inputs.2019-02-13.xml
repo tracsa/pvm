@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>OgAstorga</author>
+    <date>2019-02-19</date>
+    <name>Todos los inputs</name>
+    <description>Proceso que pide todos los tipos de entrada y después no hace nada</description>
+    <public>true</public>
+  </process-info>
+  <process>
+    <action id="inputs_node" >
+      <node-info>
+        <name>Tous les entrées</name>
+        <description>Remplissez le formulaire š'il vous plaît</description>
+      </node-info>
+
+      <auth-filter backend="anyone"></auth-filter>
+
+      <form-array>
+        <form id="auth_form">
+          <input
+            type="text"
+            label="Nombre"
+            name="name"
+            placeholder="Jon Snow"
+          />
+
+          <input
+            label="Fecha de nacimiento"
+            type="datetime"
+            name="datetime"
+          />
+
+          <input
+            label="Un secreto"
+            type="password"
+            name="secret"
+          />
+
+          <input
+            label="Género?"
+            type="radio"
+            name="gender">
+            <options>
+              <option value="male">Masculino</option>
+              <option value="female">Femenino</option>
+            </options>
+          </input>
+
+          <input
+            label="Marque sus intereses"
+            type="checkbox"
+            name="interests">
+            <options>
+              <option value="science">Ciencia</option>
+              <option value="sports">Deportes</option>
+              <option value="music">Música</option>
+              <option value="nature">Naturaleza</option>
+              <option value="thecnology">Tecnología</option>
+            </options>
+          </input>
+
+          <input
+            type="select"
+            label="Emita su voto"
+            name="elections">
+            <options>
+              <option value="amlo">Andrés Manuel López Obrador</option>
+              <option value="meade">José Antonio Meade Kuribreña</option>
+              <option value="marguarita">Margarita Ester Zavala Gómez del Campo</option>
+              <option value="anaya">Ricardo Anaya Cortés</option>
+            </options>
+          </input>
+
+          <input
+            type="int"
+            label="Un entero"
+            name="int"
+          />
+
+          <input
+            type="float"
+            label="Un flotante"
+            name="float"
+          />
+
+          <input
+            type="link"
+            label="Give me the link"
+            name="link"
+          />
+        </form>
+      </form-array>
+    </action>
+  </process>
+</process-spec>

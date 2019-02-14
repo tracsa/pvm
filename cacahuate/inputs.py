@@ -104,6 +104,8 @@ class IntInput(Input):
             return int(self.default)
         except ValueError:
             return 0
+        except TypeError:
+            return 0
 
     def validate(self, value, form_index):
         if self.required and type(value) != int and not value:
@@ -211,8 +213,13 @@ class CheckboxInput(FiniteOptionInput):
 
         if value is None:
             value = []
+
         if type(value) == str:
-            value = ast.literal_eval(value)
+            try:
+                value = ast.literal_eval(value)
+            except SyntaxError:
+                value = []
+
         if type(value) is not list:
             raise RequiredListError(
                 self.name,

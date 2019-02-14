@@ -203,12 +203,10 @@ def test_all_empty(client, mocker, config):
         'form_array': objeto,
     }))
 
-    body = json.loads(res.data)
-    print(body)
-    assert res.status_code == 200
+    assert res.status_code == 201
 
     objeto = [{
-        'ref': 'auth-form',
+        'ref': 'auth_form',
         'data': {
             'name': '',
             'datetime': '',
@@ -229,7 +227,7 @@ def test_all_empty(client, mocker, config):
         'form_array': objeto,
     }))
 
-    assert res.status_code == 200
+    assert res.status_code == 201
 
 
 def test_visible_document_provider(client, mocker, config):

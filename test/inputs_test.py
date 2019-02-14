@@ -178,6 +178,60 @@ def test_datetime_error(client, mocker, config):
     assert res.status_code == 400
 
 
+def test_all_empty(client, mocker, config):
+    juan = make_user('juan', 'Juan')
+
+    objeto = [{
+        'ref': 'auth_form',
+        'data': {
+            'name': '',
+            'datetime': '',
+            'secret': '',
+            'gender': '',
+            'interests': '',
+            'elections': '',
+            'int': '',
+            'float': '',
+            'link': '',
+        },
+    }]
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'all-inputs',
+        'form_array': objeto,
+    }))
+
+    body = json.loads(res.data)
+    print(body)
+    assert res.status_code == 200
+
+    objeto = [{
+        'ref': 'auth-form',
+        'data': {
+            'name': '',
+            'datetime': '',
+            'secret': '',
+            'gender': '',
+            'interests': '',
+            'elections': '',
+            'int': '',
+            'float': '',
+            'link': '',
+        },
+    }]
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'process_name': 'all-inputs',
+        'form_array': objeto,
+    }))
+
+    assert res.status_code == 200
+
+
 def test_visible_document_provider(client, mocker, config):
     res = client.get('/v1/process')
 

@@ -440,6 +440,10 @@ class Handler:
             }, {
                 '$set': {
                     'state': 'cancelled',
+                    'patch': {
+                        'comment': message['comment'],
+                        'inputs': message['inputs'],
+                    },
                 },
             })
 

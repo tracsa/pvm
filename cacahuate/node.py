@@ -765,6 +765,15 @@ class Request(FullyContainedNode):
                 (header.getAttribute('name'), get_text(header))
             )
 
+        # Dependency resolving
+        self.dependencies = []
+
+        deps_node = element.getElementsByTagName('dependencies')
+
+        if len(deps_node) > 0:
+            for dep_node in deps_node[0].getElementsByTagName('dep'):
+                self.dependencies.append(get_text(dep_node))
+
     def make_request(self, context):
         try:
             url = Template(self.url).render(**context)
@@ -825,8 +834,30 @@ class Request(FullyContainedNode):
     def is_async(self):
         return False
 
+    def in_dependencies(self, ref):
+        node, user, form, field = ref.split('.')
+        index, ref = form.split(':')
+        fref = ref + '.' + field
+
+        for dep in self.dependencies:
+            if dep == fref:
+                return True
+
+        return False
+
     def dependent_refs(self, invalidated, node_state):
-        return set()
+        ''' finds dependencies of the invalidated set in this node '''
+        refs = set()
+        actor = next(iter(node_state['actors']['items'].keys()))
+
+        for inref in invalidated:
+            if self.in_dependencies(inref):
+                refs.add('{node}.{actor}.0:{node}.status_code'.format(
+                    node=self.id,
+                    actor=actor,
+                ))
+
+        return refs
 
 
 def make_node(element, xmliter) -> Node:

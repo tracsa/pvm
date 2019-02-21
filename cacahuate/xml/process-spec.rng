@@ -120,6 +120,9 @@
           <text/>
         </element>
       </optional>
+      <optional>
+        <ref name="dependencies"/>
+      </optional>
     </element>
   </define>
 

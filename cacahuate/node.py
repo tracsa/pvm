@@ -127,6 +127,8 @@ class Node:
             forms[int(i)]['inputs']['items'][field]
 
             return True
+        except IndexError:
+            return False
         except KeyError:
             return False
 

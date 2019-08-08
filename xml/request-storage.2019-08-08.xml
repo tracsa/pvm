@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>Abraham</author>
+    <date>2019-08-08</date>
+    <name>Test storing data from request</name>
+    <public>true</public>
+    <description>Makes an HTTP request and stores info back</description>
+  </process-info>
+  <process>
+    <action id="start_node" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="request">
+          <input type="text" name="data" label="Label-less form"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <request id="request_node" method="GET">
+      <url>http://localhost/mirror?data={{ request.data }}</url>
+      <headers>
+        <header name="content-type">application/json</header>
+        <header name="x-url-data">{{ request.data }}</header>
+      </headers>
+      <body>{"data":"{{ request.data }}"}</body>
+      <captures type="json">
+        <capture ref="capture1" path="">
+          <value path="" name="name" label="Nombre" type="text"></value>
+        </capture>
+
+        <capture ref="capture2" multiple="multiple" path="features.0.geometry.coordinates">
+          <value path="" name="latitude" label="Latitud" type="float" />
+          <value path="" name="longitude" label="Longitud" type="float" />
+        </capture>
+      </captures>
+    </request>
+  </process>
+</process-spec>

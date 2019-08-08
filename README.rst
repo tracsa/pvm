@@ -61,7 +61,7 @@ You can use any wsgi-compliant server, like gunicorn, to run this:
 The docs
 --------
 
-Docs are built using `sphinx <http://www.sphinx-doc.org/en/master/`_ and published in
+Docs are built using `sphinx <http://www.sphinx-doc.org/en/master/>`_ and published in
 https://tracsa.github.io/cacahuate/index.html. To build a local copy of the docs
 navigate to the `docs/` directory and run:
 

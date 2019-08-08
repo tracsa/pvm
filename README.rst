@@ -57,3 +57,16 @@ You can use any wsgi-compliant server, like gunicorn, to run this:
 .. code-block:: bash
 
    gunicorn cacahuate.http.wsgi:app
+
+The docs
+--------
+
+Docs are built using `sphinx <http://www.sphinx-doc.org/en/master/`_ and published in
+https://tracsa.github.io/cacahuate/index.html. To build a local copy of the docs
+navigate to the `docs/` directory and run:
+
+.. code-block:: bash
+
+   make html
+
+For more options just run `make` by itself.

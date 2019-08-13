@@ -136,7 +136,7 @@
 
           <oneOrMore>
             <element name="capture">
-              <attribute name="ref"><text /></attribute>
+              <attribute name="id"><text /></attribute>
               <attribute name="path"><text /></attribute>
               <optional>
                 <attribute name="multiple"></attribute>

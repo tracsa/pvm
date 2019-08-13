@@ -30,11 +30,11 @@
       </headers>
       <body>{"data":"{{ request.data }}"}</body>
       <captures type="json">
-        <capture ref="capture1" path="">
+        <capture id="capture1" path="">
           <value path="" name="name" label="Nombre" type="text"></value>
         </capture>
 
-        <capture ref="capture2" multiple="multiple" path="features.0.geometry.coordinates">
+        <capture id="capture2" multiple="multiple" path="features.0.geometry.coordinates">
           <value path="" name="latitude" label="Latitud" type="float" />
           <value path="" name="longitude" label="Longitud" type="float" />
         </capture>

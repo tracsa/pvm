@@ -1,19 +1,30 @@
 language: python
 cache: pip
+
 python:
 - '3.6'
+
 services:
 - redis-server
 - rabbitmq
 - mongodb
+
+addons:
+  apt:
+    packages:
+    - rabbitmq-server 
+
 before_install:
 - sudo apt-get -qq update
 - sudo apt-get install -y libxml2-utils
+
 install:
 - pip install -r requirements.txt
+
 script:
 - make test
 - cd docs && make html && cd ..
+
 deploy:
   - provider: pypi
     user: categulario

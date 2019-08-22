@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Extendiendo el lenguaje XML de cacahuate &#8212; documentación de Cacahuate - 2.7.0</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" />
+    <link rel="prev" title="Desarrollo" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="extendiendo-el-lenguaje-xml-de-cacahuate">
+<h1>Extendiendo el lenguaje XML de cacahuate<a class="headerlink" href="#extendiendo-el-lenguaje-xml-de-cacahuate" title="Enlazar permanentemente con este título">¶</a></h1>
+<p>Todas las cosas de las que cacahuate es capaz tienen una representación en el
+formato XML que se utiliza para definir procesos. Para definir nuevas acciones
+que no estén comprendidas en el esquema actual es necesario crear nuevos nodos,
+subnodos o propiedades en los ya existentes.</p>
+<div class="section" id="validacion-de-procesos-en-xml">
+<h2>Validación de procesos en XML<a class="headerlink" href="#validacion-de-procesos-en-xml" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Los archivos XML de procesos son validados usando
+<a class="reference external" href="https://relaxng.org/">Relax NG</a>, así que es necesario modificar el esquema
+contenido en el archivo <code class="docutils literal notranslate"><span class="pre">cacahuate/xml/process-spec.rng</span></code> si se pretenden usar
+nuevas características como nodos o atributos no definidos previamente.</p>
+<p>Para validar un archivo XML de proceso puedes el programa <code class="docutils literal notranslate"><span class="pre">xmlllint</span></code> incluído
+generalmente en el paquete <code class="docutils literal notranslate"><span class="pre">libxml2</span></code> como sigue:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>xmllint --noout --relaxng cacahuate/xml/process-spec.rng tu_proceso.xml
+</pre></div>
+</div>
+<p>Si no estás segur&#64; de dónde se encuentra el archivo <code class="docutils literal notranslate"><span class="pre">.rng</span></code> puedes usar el
+programa <code class="docutils literal notranslate"><span class="pre">rng_path</span></code> incluído con cacahuate para encontrarlo:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ rng_path
+/home/juan/src/cacahuate/cacahuate/xml/process-spec.rng
+</pre></div>
+</div>
+<p>Una alternativa a <code class="docutils literal notranslate"><span class="pre">xmllint</span></code> es <a class="reference external" href="https://github.com/relaxng/jing-trang">Jing</a>,
+un software hecho en java que ofrece mejores mensajes de error en general.</p>
+<p>Adicional a eso y dado que existen limitaciones en el lenguaje <strong>RNG</strong> se usa
+un sistema de validación interno que verifica algunas condiciones anómalas
+comunes. Para correr estas validaciones contra un xml usa el comando
+<cite>xml_validate</cite> como sigue:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>xml_validate tu_proceso,xml
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Cacahuate</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegación</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Instalación</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage/index.html">Almacenamiento</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Desarrollo</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Extendiendo el lenguaje XML de cacahuate</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Desarrollo</a><ul>
+      <li>Previous: <a href="index.html" title="capítulo anterior">Desarrollo</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Búsqueda rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Ir a" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Abraham Toriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/develop/xml.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

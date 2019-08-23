@@ -23,12 +23,10 @@
     </action>
 
     <request id="request_node" method="GET">
-      <url>http://localhost/mirror?data={{ request.data }}</url>
+      <url>http://localhost/</url>
       <headers>
         <header name="content-type">application/json</header>
-        <header name="x-url-data">{{ request.data }}</header>
       </headers>
-      <body>{"data":"{{ request.data }}"}</body>
       <captures type="json">
         <capture id="capture1" path="">
           <value path="" name="name" label="Nombre" type="text"></value>

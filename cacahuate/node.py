@@ -745,6 +745,30 @@ class Else(Node):
         ])]
 
 
+class CaptureValue:
+
+    def __init__(self, element):
+        self.path = element.getAttribute('path')
+        self.name = element.getAttribute('name')
+        self.label = element.getAttribute('label')
+        self.type = element.getAttribute('type')
+
+
+class Capture:
+
+    def __init__(self, element):
+        self.id = element.getAttribute('id')
+        self.multiple = element.getAttribute('multiple')
+        self.path = element.getAttribute('path')
+
+        self.values = [
+            CaptureValue(value) for value in element.getElementsByTagName('value')
+        ]
+
+    def __str__(self):
+        return '<Capture id="{}" path="{}">'.format(self.id, self.path)
+
+
 class Request(FullyContainedNode):
     ''' A node that makes a TCP Request '''
 
@@ -755,6 +779,7 @@ class Request(FullyContainedNode):
         self.description = 'Request ' + self.id
         self.url = get_text(element.getElementsByTagName('url')[0])
 
+        # Body and headers
         try:
             self.body = get_text(element.getElementsByTagName('body')[0])
         except IndexError:
@@ -767,6 +792,16 @@ class Request(FullyContainedNode):
                 (header.getAttribute('name'), get_text(header))
             )
 
+        # Captures
+        try:
+            self.capture_type = element.getElementsByTagName('captures')[0].getAttribute('type')
+        except IndexError:
+            self.capture_type = None  # Indicates no capture
+
+        self.captures = [
+            Capture(capture) for capture in element.getElementsByTagName('capture')
+        ]
+
         # Dependency resolving
         self.dependencies = []
 
@@ -777,6 +812,8 @@ class Request(FullyContainedNode):
                 self.dependencies.append(get_text(dep_node))
 
     def make_request(self, context):
+        data_forms = []
+
         try:
             url = Template(self.url).render(**context)
             body = Template(self.body).render(**context)
@@ -792,46 +829,86 @@ class Request(FullyContainedNode):
                 data=body
             )
 
-            res_dict = {
-                'status_code': response.status_code,
-                'response': response.text,
-            }
+            data_forms.append({
+                'id': self.id,
+                'items': [
+                    {
+                        'name': 'status_code',
+                        'value': response.status_code,
+                        'type': 'int',
+                        'label': 'Status Code',
+                        'value_caption': str(response.status_code),
+                    },
+                    {
+                        'name': 'raw_response',
+                        'value': response.text,
+                        'type': 'text',
+                        'label': 'Response',
+                        'value_caption': response.text,
+                    }
+                ],
+            })
         except TemplateError:
-            res_dict = {
-                'status_code': 0,
-                'response': 'Jinja error prevented this request',
-            }
+            data_forms.append({
+                'id': self.id,
+                'items': [
+                    {
+                        'name': 'status_code',
+                        'value': 0,
+                        'type': 'int',
+                        'label': 'Status Code',
+                        'value_caption': '0',
+                    },
+                    {
+                        'name': 'raw_response',
+                        'value': 'Jinja error prevented this request',
+                        'type': 'text',
+                        'label': 'Response',
+                        'value_caption': 'Jinja error prevented this request',
+                    }
+                ],
+            })
         except requests.exceptions.ConnectionError as e:
-            res_dict = {
-                'status_code': 0,
-                'response': str(e),
-            }
+            data_forms.append({
+                'id': self.id,
+                'items': [
+                    {
+                        'name': 'status_code',
+                        'value': 0,
+                        'type': 'int',
+                        'label': 'Status Code',
+                        'value_caption': '0',
+                    },
+                    {
+                        'name': 'raw_response',
+                        'value': str(e),
+                        'type': 'text',
+                        'label': 'Response',
+                        'value_caption': str(e),
+                    }
+                ],
+            })
 
-        return res_dict
+        return data_forms
 
     def work(self, config, state, channel, mongo):
-        response = self.make_request(state['values'])
+        data_forms = self.make_request(state['values'])
 
-        return [Form.state_json(self.id, [
-            {
-                'name': 'status_code',
-                'state': 'valid',
-                'type': 'int',
-                'value': response['status_code'],
-                'label': 'Status Code',
-                'value_caption': str(response['status_code']),
-                'hidden': False,
-            },
-            {
-                'name': 'raw_response',
-                'state': 'valid',
-                'type': 'text',
-                'value': response['response'],
-                'label': 'Response',
-                'value_caption': response['response'],
-                'hidden': False,
-            },
-        ])]
+        return [
+            Form.state_json(data_form['id'], [
+                {
+                    'name': item['name'],
+                    'state': 'valid',
+                    'type': item['type'],
+                    'value': item['value'],
+                    'label': item['label'],
+                    'value_caption': item['value_caption'],
+                    'hidden': False,
+                }
+                for item in data_form['items']
+            ])
+            for data_form in data_forms
+        ]
 
     def is_async(self):
         return False

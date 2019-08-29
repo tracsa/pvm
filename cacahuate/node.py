@@ -6,7 +6,7 @@ from jinja2 import Template, TemplateError
 import logging
 import re
 import requests
-from jsonpath_rw import jsonpath, parse as jsonpathparse
+from jsonpath_rw import parse as jsonpathparse
 
 from cacahuate.errors import InconsistentState, MisconfiguredProvider
 from cacahuate.errors import InvalidInputError, InputError, RequiredListError
@@ -782,7 +782,8 @@ class Capture:
         self.path = element.getAttribute('path')
 
         self.values = [
-            CaptureValue(value) for value in element.getElementsByTagName('value')
+            CaptureValue(value)
+            for value in element.getElementsByTagName('value')
         ]
 
     def capture(self, data):
@@ -841,7 +842,9 @@ class Request(FullyContainedNode):
 
         # Captures
         try:
-            self.capture_type = element.getElementsByTagName('captures')[0].getAttribute('type')
+            self.capture_type = element.getElementsByTagName(
+                'captures'
+            )[0].getAttribute('type')
         except IndexError:
             self.capture_type = None  # Indicates no capture
 
@@ -898,7 +901,7 @@ class Request(FullyContainedNode):
             })
 
             # Capture request data if specified
-            if self.capture_type != None:
+            if self.capture_type is not None:
                 if self.capture_type == 'json':
                     data = response.json()
                 else:

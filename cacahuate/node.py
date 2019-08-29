@@ -760,7 +760,10 @@ class CaptureValue:
         else:
             path = self.path
 
-        value = jsonpathparse(path).find(data)[0].value
+        try:
+            value = jsonpathparse(path).find(data)[0].value
+        except IndexError:
+            raise ValueError('Could not match value')
 
         return {
             'name': self.name,
@@ -773,20 +776,16 @@ class CaptureValue:
 
 class Capture:
 
-    def __init__(self, element, type):
+    def __init__(self, element):
         self.id = element.getAttribute('id')
         self.multiple = bool(element.getAttribute('multiple'))
         self.path = element.getAttribute('path')
-        self.type = type
 
         self.values = [
             CaptureValue(value) for value in element.getElementsByTagName('value')
         ]
 
     def capture(self, data):
-        if self.type != 'json':
-            raise NotImplementedError('Only json captures, joven')
-
         if self.multiple:
             return self.capture_multiple(data)
 
@@ -847,7 +846,7 @@ class Request(FullyContainedNode):
             self.capture_type = None  # Indicates no capture
 
         self.captures = [
-            Capture(capture, self.capture_type)
+            Capture(capture)
             for capture in element.getElementsByTagName('capture')
         ]
 
@@ -899,9 +898,15 @@ class Request(FullyContainedNode):
             })
 
             # Capture request data if specified
-            for capture in self.captures:
-                for form in capture.capture(response):
-                    data_forms.append(form)
+            if self.capture_type != None:
+                if self.capture_type == 'json':
+                    data = response.json()
+                else:
+                    raise NotImplementedError('Only json captures joven')
+
+                for capture in self.captures:
+                    for form in capture.capture(data):
+                        data_forms.append(form)
         except TemplateError:
             data_forms.append({
                 'id': self.id,

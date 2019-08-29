@@ -29,7 +29,7 @@
       </headers>
       <captures type="json">
         <capture id="capture1">
-          <value path="name" name="name" label="Nombre" type="text"></value>
+          <value path="params.name" name="name" label="Nombre" type="text"></value>
         </capture>
 
         <capture id="capture2" multiple="multiple" path="items[*]">

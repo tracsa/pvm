@@ -160,7 +160,7 @@ def test_capture():
     dom = parseString('''<capture id="capture1">
       <value path="name" name="{}" label="{}" type="text"></value>
     </capture>'''.format(field_name, label)).documentElement
-    capture = Capture(dom, 'json')
+    capture = Capture(dom)
 
     assert capture.capture({
         'name': name,
@@ -184,7 +184,7 @@ def test_capture_parent_path():
     dom = parseString('''<capture id="capture1" path="props">
       <value path="name" name="{}" label="{}" type="text"></value>
     </capture>'''.format(field_name, label)).documentElement
-    capture = Capture(dom, 'json')
+    capture = Capture(dom)
 
     assert capture.capture({
         'props': {
@@ -211,7 +211,7 @@ def test_capture_multiple():
     dom = parseString('''<capture id="capture1" path="items" multiple="multiple">
       <value path="name" name="{}" label="{}" type="text"></value>
     </capture>'''.format(field_name, label)).documentElement
-    capture = Capture(dom, 'json')
+    capture = Capture(dom)
 
     assert capture.capture({
         'items': [
@@ -343,35 +343,35 @@ def test_store_data_from_response(config, mocker, mongo):
         ]),
         Form.state_json('capture1', [
             {
-                'name': 'status_code',
+                'name': 'name',
                 'state': 'valid',
-                'type': 'int',
-                'value': 200,
-                'value_caption': '200',
+                'type': 'text',
+                'value': expected_name,
+                'value_caption': expected_name,
                 'hidden': False,
-                'label': 'Status Code',
+                'label': 'Nombre',
             },
         ]),
         Form.state_json('capture2', [
             {
-                'name': 'status_code',
+                'name': 'age',
                 'state': 'valid',
                 'type': 'int',
-                'value': 200,
-                'value_caption': '200',
+                'value': expected_age_1,
+                'value_caption': str(expected_age_1),
                 'hidden': False,
-                'label': 'Status Code',
+                'label': 'Edad',
             },
         ]),
         Form.state_json('capture2', [
             {
-                'name': 'status_code',
+                'name': 'age',
                 'state': 'valid',
                 'type': 'int',
-                'value': 200,
-                'value_caption': '200',
+                'value': expected_age_2,
+                'value_caption': str(expected_age_2),
                 'hidden': False,
-                'label': 'Status Code',
+                'label': 'Edad',
             },
         ]),
     ]

@@ -73,6 +73,7 @@ setup(
         'requests',
         'passlib',
         'yuid',
+        'jsonpath-rw',
     ],
 
     setup_requires=[

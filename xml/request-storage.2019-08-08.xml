@@ -28,13 +28,12 @@
         <header name="content-type">application/json</header>
       </headers>
       <captures type="json">
-        <capture id="capture1" path="">
-          <value path="" name="name" label="Nombre" type="text"></value>
+        <capture id="capture1">
+          <value path="name" name="name" label="Nombre" type="text"></value>
         </capture>
 
-        <capture id="capture2" multiple="multiple" path="features.0.geometry.coordinates">
-          <value path="" name="latitude" label="Latitud" type="float" />
-          <value path="" name="longitude" label="Longitud" type="float" />
+        <capture id="capture2" multiple="multiple" path="items[*]">
+          <value path="$.age" name="age" label="Edad" type="int" />
         </capture>
       </captures>
     </request>

@@ -6,6 +6,7 @@ from jinja2 import Template, TemplateError
 import logging
 import re
 import requests
+from jsonpath_rw import jsonpath, parse as jsonpathparse
 
 from cacahuate.errors import InconsistentState, MisconfiguredProvider
 from cacahuate.errors import InvalidInputError, InputError, RequiredListError
@@ -753,16 +754,63 @@ class CaptureValue:
         self.label = element.getAttribute('label')
         self.type = element.getAttribute('type')
 
+    def capture(self, data, parentpath):
+        if parentpath:
+            path = '{}.{}'.format(parentpath, self.path)
+        else:
+            path = self.path
+
+        value = jsonpathparse(path).find(data)[0].value
+
+        return {
+            'name': self.name,
+            'value': value,
+            'type': self.type,
+            'label': self.label,
+            'value_caption': str(value),
+        }
+
 
 class Capture:
 
-    def __init__(self, element):
+    def __init__(self, element, type):
         self.id = element.getAttribute('id')
-        self.multiple = element.getAttribute('multiple')
+        self.multiple = bool(element.getAttribute('multiple'))
         self.path = element.getAttribute('path')
+        self.type = type
 
         self.values = [
             CaptureValue(value) for value in element.getElementsByTagName('value')
+        ]
+
+    def capture(self, data):
+        if self.type != 'json':
+            raise NotImplementedError('Only json captures, joven')
+
+        if self.multiple:
+            return self.capture_multiple(data)
+
+        return [{
+            'id': self.id,
+            'items': [
+                value.capture(data, self.path) for value in self.values
+            ],
+        }]
+
+    def capture_multiple(self, data):
+        try:
+            match = jsonpathparse(self.path).find(data)[0]
+        except IndexError:
+            raise ValueError('Did not find a match with that path')
+
+        return [
+            {
+                'id': self.id,
+                'items': [
+                    value.capture(localdata, None) for value in self.values
+                ],
+            }
+            for localdata in match.value
         ]
 
     def __str__(self):
@@ -799,7 +847,8 @@ class Request(FullyContainedNode):
             self.capture_type = None  # Indicates no capture
 
         self.captures = [
-            Capture(capture) for capture in element.getElementsByTagName('capture')
+            Capture(capture, self.capture_type)
+            for capture in element.getElementsByTagName('capture')
         ]
 
         # Dependency resolving
@@ -848,6 +897,11 @@ class Request(FullyContainedNode):
                     }
                 ],
             })
+
+            # Capture request data if specified
+            for capture in self.captures:
+                for form in capture.capture(response):
+                    data_forms.append(form)
         except TemplateError:
             data_forms.append({
                 'id': self.id,

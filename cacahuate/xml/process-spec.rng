@@ -129,15 +129,15 @@
           <attribute name="type">
             <choice>
               <value>json</value>
-              <value>xml</value>
-              <value>html</value>
             </choice>
           </attribute>
 
           <oneOrMore>
             <element name="capture">
               <attribute name="id"><text /></attribute>
-              <attribute name="path"><text /></attribute>
+              <optional>
+                <attribute name="path"><text /></attribute>
+              </optional>
               <optional>
                 <attribute name="multiple"></attribute>
               </optional>

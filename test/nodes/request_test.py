@@ -1,10 +1,13 @@
 from unittest.mock import MagicMock
 import simplejson as json
 import requests
+import pytest
+from random import randint
+from xml.dom.minidom import parseString
 
 from cacahuate.handler import Handler
 from cacahuate.models import Pointer
-from cacahuate.node import Form
+from cacahuate.node import Form, Capture
 from cacahuate.xml import Xml
 
 from ..utils import make_pointer, make_user, random_string
@@ -135,10 +138,99 @@ def test_handle_request_node(config, mocker, mongo):
     }
 
 
+@pytest.mark.skip
+def test_store_failed_decoding(config, mocker, mongo):
+    # TODO set it up like test_store_data_from_response but make the json
+    # decoding fail and test that the machine stays in a reasonably safe state
+    assert False
+
+
+@pytest.mark.skip
+def test_store_failed_path(config, mocker, mongo):
+    # TODO set it up like test_store_data_from_response but make the path not
+    # match anything and test that the machine stays in a reasonably safe state
+    assert False
+
+
+def test_capture():
+    name = random_string()
+    label = random_string()
+    field_name = random_string()
+
+    dom = parseString('''<capture id="capture1">
+      <value path="name" name="{}" label="{}" type="text"></value>
+    </capture>'''.format(field_name, label)).documentElement
+    capture = Capture(dom, 'json')
+
+    assert capture.capture({
+        'name': name,
+    }) == [{
+        'id': 'capture1',
+        'items': [{
+            'label': label,
+            'name': field_name,
+            'type': 'text',
+            'value': name,
+            'value_caption': name,
+        }],
+    }]
+
+
+def test_capture_parent_path():
+    name = random_string()
+    label = random_string()
+    field_name = random_string()
+
+    dom = parseString('''<capture id="capture1" path="props">
+      <value path="name" name="{}" label="{}" type="text"></value>
+    </capture>'''.format(field_name, label)).documentElement
+    capture = Capture(dom, 'json')
+
+    assert capture.capture({
+        'props': {
+            'name': name,
+        },
+    }) == [{
+        'id': 'capture1',
+        'items': [{
+            'label': label,
+            'name': field_name,
+            'type': 'text',
+            'value': name,
+            'value_caption': name,
+        }],
+    }]
+
+
+def test_capture_multiple():
+    assert False
+
+
 def test_store_data_from_response(config, mocker, mongo):
+    expected_name = random_string()
+    expected_age_1 = randint(0, 100)
+    expected_age_2 = randint(0, 100)
+
     class ResponseMock:
         status_code = 200
         text = 'request response'
+
+        def json(self):
+            return {
+                'params': {
+                    'name': expected_name,
+                },
+                'items': [
+                    [
+                        {
+                            'age': expected_age_1,
+                        },
+                        {
+                            'age': expected_age_2,
+                        },
+                    ],
+                ],
+            }
 
     mock = MagicMock(return_value=ResponseMock())
 

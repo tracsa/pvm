@@ -203,7 +203,44 @@ def test_capture_parent_path():
 
 
 def test_capture_multiple():
-    assert False
+    name1 = random_string()
+    name2 = random_string()
+    label = random_string()
+    field_name = random_string()
+
+    dom = parseString('''<capture id="capture1" path="items" multiple="multiple">
+      <value path="name" name="{}" label="{}" type="text"></value>
+    </capture>'''.format(field_name, label)).documentElement
+    capture = Capture(dom, 'json')
+
+    assert capture.capture({
+        'items': [
+            {
+                'name': name1,
+            },
+            {
+                'name': name2,
+            },
+        ],
+    }) == [{
+        'id': 'capture1',
+        'items': [{
+            'label': label,
+            'name': field_name,
+            'type': 'text',
+            'value': name1,
+            'value_caption': name1,
+        }],
+    }, {
+        'id': 'capture1',
+        'items': [{
+            'label': label,
+            'name': field_name,
+            'type': 'text',
+            'value': name2,
+            'value_caption': name2,
+        }],
+    }]
 
 
 def test_store_data_from_response(config, mocker, mongo):

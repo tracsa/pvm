@@ -12,6 +12,7 @@ Documentación
    install
    storage/index
    develop/index
+   xml/index
 
 Índices y tablas
 ----------------

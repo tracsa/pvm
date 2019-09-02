@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Escribiendo XMLs &#8212; documentación de Cacahuate - 2.7.0</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" />
+    <link rel="prev" title="Escribiendo documentación" href="../develop/docs.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="escribiendo-xmls">
+<h1>Escribiendo XMLs<a class="headerlink" href="#escribiendo-xmls" title="Enlazar permanentemente con este título">¶</a></h1>
+<p>Detalles sobre la estructura y el significado de los archivos XML</p>
+<div class="section" id="nodo-request">
+<h2>Nodo request<a class="headerlink" href="#nodo-request" title="Enlazar permanentemente con este título">¶</a></h2>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;request</span> <span class="na">id=</span><span class="s">&quot;request_node&quot;</span> <span class="na">method=</span><span class="s">&quot;GET&quot;</span><span class="nt">&gt;</span>
+   <span class="nt">&lt;url&gt;</span>http://localhost/<span class="nt">&lt;/url&gt;</span>
+   <span class="nt">&lt;headers&gt;</span>
+      <span class="nt">&lt;header</span> <span class="na">name=</span><span class="s">&quot;content-type&quot;</span><span class="nt">&gt;</span>application/json<span class="nt">&lt;/header&gt;</span>
+   <span class="nt">&lt;/headers&gt;</span>
+   <span class="nt">&lt;body&gt;&lt;/body&gt;</span>
+   <span class="nt">&lt;captures</span> <span class="na">type=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;capture</span> <span class="na">id=</span><span class="s">&quot;capture1&quot;</span><span class="nt">&gt;</span>
+         <span class="nt">&lt;value</span> <span class="na">path=</span><span class="s">&quot;name&quot;</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span> <span class="na">label=</span><span class="s">&quot;Nombre&quot;</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span><span class="nt">&gt;&lt;/value&gt;</span>
+      <span class="nt">&lt;/capture&gt;</span>
+
+      <span class="nt">&lt;capture</span> <span class="na">id=</span><span class="s">&quot;capture2&quot;</span> <span class="na">multiple=</span><span class="s">&quot;multiple&quot;</span> <span class="na">path=</span><span class="s">&quot;params.items.*&quot;</span><span class="nt">&gt;</span>
+         <span class="nt">&lt;value</span> <span class="na">path=</span><span class="s">&quot;age&quot;</span> <span class="na">name=</span><span class="s">&quot;latitude&quot;</span> <span class="na">label=</span><span class="s">&quot;Latitud&quot;</span> <span class="na">type=</span><span class="s">&quot;float&quot;</span> <span class="nt">/&gt;</span>
+      <span class="nt">&lt;/capture&gt;</span>
+   <span class="nt">&lt;/captures&gt;</span>
+<span class="nt">&lt;/request&gt;</span>
+</pre></div>
+</div>
+<div class="section" id="captures">
+<h3>Captures<a class="headerlink" href="#captures" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>La etiqueta captures dentro de un nodo <code class="docutils literal notranslate"><span class="pre">&lt;request&gt;</span></code> permite capturar información del cuerpo de la respuesta cuando este está en formato JSON.</p>
+<p>Debe tener como descencientes etiquetas <code class="docutils literal notranslate"><span class="pre">&lt;capture&gt;</span></code>, cada una de las cuales generará uno o más formularios análogos a los de un nodo <code class="docutils literal notranslate"><span class="pre">&lt;action&gt;</span></code> de interacción con el usuario. El <code class="docutils literal notranslate"><span class="pre">id</span></code> de cada <code class="docutils literal notranslate"><span class="pre">capture</span></code> es el id del formulario a generar.</p>
+<p>Los descendientes de la etiqueta <code class="docutils literal notranslate"><span class="pre">&lt;capture&gt;</span></code> son etiquetas <code class="docutils literal notranslate"><span class="pre">&lt;value&gt;</span></code> que se comportan como inputs en un nodo <code class="docutils literal notranslate"><span class="pre">&lt;action&gt;</span></code>. El atributo <code class="docutils literal notranslate"><span class="pre">path</span></code> de una etiqueta <code class="docutils literal notranslate"><span class="pre">&lt;value&gt;</span></code> establece la ruta <a class="reference external" href="https://jsonpath.com/">jsonpath</a> para llegar al valor a capturar, que deberá ser un valor escalar (cadena, entero, flotante, booleano).</p>
+<div class="section" id="atributo-path-de-capture">
+<h4>Atributo path de &lt;capture&gt;<a class="headerlink" href="#atributo-path-de-capture" title="Enlazar permanentemente con este título">¶</a></h4>
+<p>Hay dos posibles significados del atributo <code class="docutils literal notranslate"><span class="pre">path</span></code> de un <code class="docutils literal notranslate"><span class="pre">&lt;capture&gt;</span></code>. El primero es que los <code class="docutils literal notranslate"><span class="pre">path</span></code> de todos sus <code class="docutils literal notranslate"><span class="pre">&lt;value&gt;</span></code> serán relativos al elemento señalado por <code class="docutils literal notranslate"><span class="pre">path</span></code> del <code class="docutils literal notranslate"><span class="pre">&lt;capture&gt;</span></code>. En el siguiente ejemplo se usa esto para evitar escribir las rutas absolutas en cada <code class="docutils literal notranslate"><span class="pre">&lt;value&gt;</span></code>.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;FeatureCollection&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;features&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Feature&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Foo&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;Rébsamen 40&quot;</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Point&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">[</span>
+          <span class="mf">-89.60174560546875</span><span class="p">,</span>
+          <span class="mf">20.97426314957793</span>
+        <span class="p">]</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;captures</span> <span class="na">type=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
+   <span class="nt">&lt;capture</span> <span class="na">id=</span><span class="s">&quot;info&quot;</span> <span class="na">path=</span><span class="s">&quot;features.0.properties&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;value</span> <span class="na">path=</span><span class="s">&quot;name&quot;</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span> <span class="na">label=</span><span class="s">&quot;Nombre&quot;</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span><span class="nt">&gt;&lt;/value&gt;</span>
+      <span class="nt">&lt;value</span> <span class="na">path=</span><span class="s">&quot;address&quot;</span> <span class="na">name=</span><span class="s">&quot;address&quot;</span> <span class="na">label=</span><span class="s">&quot;Dirección&quot;</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span><span class="nt">&gt;&lt;/value&gt;</span>
+   <span class="nt">&lt;/capture&gt;</span>
+<span class="nt">&lt;/captures&gt;</span>
+</pre></div>
+</div>
+<p>El segundo es explica a continuación.</p>
+</div>
+<div class="section" id="capturas-multiples">
+<h4>Capturas múltiples<a class="headerlink" href="#capturas-multiples" title="Enlazar permanentemente con este título">¶</a></h4>
+<p>Es posible capturar un formulario múltiples veces estableciendo el atributo <code class="docutils literal notranslate"><span class="pre">multiple=&quot;multiple&quot;</span></code> y usando el atributo <code class="docutils literal notranslate"><span class="pre">path</span></code> de la etiqueta <code class="docutils literal notranslate"><span class="pre">&lt;capture&gt;</span></code>. Esta ruta en formato <a class="reference external" href="https://jsonpath.com/">jsonpath</a> debe ser capaz de encontrar una lista de elementos. En este caso el atributo <code class="docutils literal notranslate"><span class="pre">path</span></code> de los <code class="docutils literal notranslate"><span class="pre">&lt;value&gt;</span></code> descendientes tendrá como raíz cada elemento de la lista.</p>
+<p>Por ejemplo para el siguiente JSON:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="mi">231</span><span class="p">,</span>
+   <span class="nt">&quot;attrs&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Xochitl&quot;</span>
+   <span class="p">},</span>
+   <span class="nt">&quot;jobs&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="p">{</span>
+         <span class="nt">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;Manager&quot;</span>
+      <span class="p">},</span>
+      <span class="p">{</span>
+         <span class="nt">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;Developer&quot;</span>
+      <span class="p">}</span>
+   <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>se pueden capturar los roles de María en un formulario múltiple como sigue:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;captures</span> <span class="na">type=</span><span class="s">&quot;json&quot;</span><span class="nt">&gt;</span>
+   <span class="nt">&lt;capture</span> <span class="na">id=</span><span class="s">&quot;basicinfo&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;value</span> <span class="na">path=</span><span class="s">&quot;attrs.name&quot;</span> <span class="na">name=</span><span class="s">&quot;name&quot;</span> <span class="na">label=</span><span class="s">&quot;Nombre&quot;</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span><span class="nt">&gt;&lt;/value&gt;</span>
+   <span class="nt">&lt;/capture&gt;</span>
+
+   <span class="nt">&lt;capture</span> <span class="na">id=</span><span class="s">&quot;role&quot;</span> <span class="na">multiple=</span><span class="s">&quot;multiple&quot;</span> <span class="na">path=</span><span class="s">&quot;jobs&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;value</span> <span class="na">path=</span><span class="s">&quot;role&quot;</span> <span class="na">name=</span><span class="s">&quot;role&quot;</span> <span class="na">label=</span><span class="s">&quot;Rol&quot;</span> <span class="na">type=</span><span class="s">&quot;text&quot;</span> <span class="nt">/&gt;</span>
+   <span class="nt">&lt;/capture&gt;</span>
+<span class="nt">&lt;/captures&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Cacahuate</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegación</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Instalación</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage/index.html">Almacenamiento</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/index.html">Desarrollo</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Escribiendo XMLs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#nodo-request">Nodo request</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../develop/docs.html" title="capítulo anterior">Escribiendo documentación</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Búsqueda rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Ir a" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Abraham Toriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/xml/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

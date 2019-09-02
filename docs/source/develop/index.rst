@@ -8,3 +8,4 @@ distintos componentes de cacahuate.
    :maxdepth: 3
 
    xml
+   docs

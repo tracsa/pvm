@@ -104,7 +104,9 @@
           <value>PATCH</value>
         </choice>
       </attribute>
+
       <element name="url"><text/></element>
+
       <optional>
         <element name="headers">
           <oneOrMore>
@@ -115,11 +117,46 @@
           </oneOrMore>
         </element>
       </optional>
+
       <optional>
         <element name="body">
           <text/>
         </element>
       </optional>
+
+      <optional>
+        <element name="captures">
+          <attribute name="type">
+            <choice>
+              <value>json</value>
+            </choice>
+          </attribute>
+
+          <oneOrMore>
+            <element name="capture">
+              <attribute name="id"><text /></attribute>
+              <optional>
+                <attribute name="path"><text /></attribute>
+              </optional>
+              <optional>
+                <attribute name="multiple"></attribute>
+              </optional>
+
+              <oneOrMore>
+                <element name="value">
+                  <attribute name="name"><text /></attribute>
+                  <attribute name="path"><text /></attribute>
+                  <attribute name="label"><text /></attribute>
+                  <attribute name="type">
+                    <ref name="datatypes" />
+                  </attribute>
+                </element>
+              </oneOrMore>
+            </element>
+          </oneOrMore>
+        </element>
+      </optional>
+
       <optional>
         <ref name="dependencies"/>
       </optional>
@@ -316,5 +353,31 @@
       <attribute name="value"><text/></attribute>
       <text/>
     </element>
+  </define>
+
+  <define name="datatypes">
+    <choice>
+      <value>text</value>
+      <value>datetime</value>
+      <value>file</value>
+      <value>date</value>
+      <value>int</value>
+      <value>float</value>
+    </choice>
+  </define>
+
+  <define name="widgets">
+    <choice>
+      <value>checkbox</value>
+      <value>datepicker</value>
+      <value>datetimepicker</value>
+      <value>filechooser</value>
+      <value>longtext</value>
+      <value>number</value>
+      <value>password</value>
+      <value>radio</value>
+      <value>select</value>
+      <value>shorttext</value>
+    </choice>
   </define>
 </grammar>

@@ -80,10 +80,25 @@ def test_request_node(config, mocker):
         'x-url-data': '123456',
     }
     assert data == '{"data":"123456"}'
-    assert response == {
-        'status_code': 200,
-        'response': 'request response',
-    }
+    assert response == [{
+        'id': 'request_node',
+        'items': [
+            {
+                'name': 'status_code',
+                'value': 200,
+                'type': 'int',
+                'label': 'Status Code',
+                'value_caption': '200',
+            },
+            {
+                'name': 'raw_response',
+                'value': 'request response',
+                'type': 'text',
+                'label': 'Response',
+                'value_caption': 'request response',
+            }
+        ],
+    }]
 
 
 def test_form_state_json():

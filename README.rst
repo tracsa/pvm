@@ -70,3 +70,10 @@ navigate to the `docs/` directory and run:
    make html
 
 For more options just run `make` by itself.
+
+Release
+-------
+
+```bash
+./release.sh cacahuate/version.txt [major|minor|patch]
+```

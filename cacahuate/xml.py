@@ -174,6 +174,7 @@ class Xml:
             '_type': 'execution',
             'id': execution.id,
             'name': execution.name,
+            'process_name': execution.process_name,
             'description': execution.description,
             'status': 'ongoing',
             'started_at': datetime.now(),

@@ -74,6 +74,7 @@ setup(
         'passlib',
         'yuid',
         'jsonpath-rw',
+        'jinja2',
     ],
 
     setup_requires=[

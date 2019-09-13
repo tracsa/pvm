@@ -28,10 +28,7 @@ def json_prepare(obj):
 
 @app.route('/v1/execution/<id>/summary', methods=['GET'])
 def execution_template(id):
-    # load template
-    template_str = "{{ values }}"
-
-    # load state
+    # load values
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
     try:
@@ -41,9 +38,14 @@ def execution_template(id):
             'Specified execution never existed, and never will'
         )
 
-    # interpolate template with state
+    values = json_prepare(exc)['values']
 
-    # return html
-    return {
-        'data': json_prepare(exc),
-    }
+    # load template
+    default = []
+    for key in values:
+        default.append('<div><h2>{}</h2><pre>{{{{ {} | pretty }}}}</pre></div>'.format(key, key))
+
+    template = Template(''.join(default))
+
+    # return template interpolation
+    return template.render(**values)

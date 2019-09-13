@@ -1,5 +1,13 @@
 from cacahuate.http.wsgi import app, mongo
 from datetime import datetime
+from jinja2 import Template, environment
+import json
+
+
+def to_pretty_json(value):
+    return json.dumps(value, sort_keys=True, indent=4, separators=(',', ': '))
+
+environment.DEFAULT_FILTERS['pretty'] = to_pretty_json
 
 
 DATE_FIELDS = [

@@ -42,6 +42,7 @@ import cacahuate.http.converters  # noqa
 # Views
 import cacahuate.http.views.api  # noqa
 import cacahuate.http.views.auth  # noqa
+import cacahuate.http.views.templates  # noqa
 
 # Error handlers
 import cacahuate.http.error_handlers  # noqa

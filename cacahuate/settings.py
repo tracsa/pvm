@@ -50,6 +50,9 @@ LOGGING = {
 # Where to store xml files
 XML_PATH = os.path.join(base_dir, 'xml')
 
+# Where to store template files
+TEMPLATE_PATH = os.path.join(base_dir, 'template')
+
 # Mongodb
 MONGO_URI = os.getenv('CACAHUATE_MONGO_URI', 'mongodb://localhost/cacahuate')
 MONGO_DBNAME = 'cacahuate'

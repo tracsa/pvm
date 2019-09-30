@@ -1,9 +1,9 @@
-if [[ -z $1 || -z $2 || -z $3 ]]; then
-    echo "Usage: vbump <file> (major|minor|patch) <msg>"
+if [[ -z $1 || -z $2 ]]; then
+    echo "Usage: vbump (major|minor|patch) <msg>"
     return 1
 fi
 
-file=$1
+file=cacahuate/version.txt
 segment=$2
 msg=$3
 

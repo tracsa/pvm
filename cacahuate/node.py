@@ -450,19 +450,22 @@ class Validation(UserAttachedNode):
         if skip_reverse or state['values'][self.id]['response'] == 'accept':
             return super().next(xml, state, mongo, config)
 
-        cascade_invalidate(
+        state_updates = cascade_invalidate(
             xml,
             state,
-            mongo,
-            config,
             state['values'][self.id]['inputs'],
             state['values'][self.id]['comment']
         )
 
+        # update state
+        collection = mongo[config['EXECUTION_COLLECTION']]
+        collection.update_one({
+            'id': state['id'],
+        }, {
+            '$set': state_updates,
+        })
+
         # reload state
-        collection = mongo[
-            config['EXECUTION_COLLECTION']
-        ]
         state = next(collection.find({'id': state['id']}))
 
         first_invalid_node = track_next_node(xml, state, mongo, config)

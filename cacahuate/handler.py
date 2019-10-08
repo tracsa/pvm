@@ -456,14 +456,22 @@ class Handler:
         # retrieve updated state
         state = next(execution_collection.find({'id': execution.id}))
 
-        cascade_invalidate(
+        state_updates = cascade_invalidate(
             xml,
             state,
-            mongo,
-            self.config,
             message['inputs'],
             message['comment']
         )
+
+        # update state
+        collection = mongo[
+            self.config['EXECUTION_COLLECTION']
+        ]
+        collection.update_one({
+            'id': state['id'],
+        }, {
+            '$set': state_updates,
+        })
 
         # retrieve updated state
         state = next(execution_collection.find({'id': execution.id}))

@@ -578,7 +578,9 @@ def test_invalidated_conditional(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, ptr.proxy.execution.get().process_name).get_state(),
+        'state': Xml.load(
+            config, ptr.proxy.execution.get().process_name
+        ).get_state(),
     })
 
     handler.call({

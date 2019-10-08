@@ -593,16 +593,10 @@ def test_invalidated_conditional(config, mongo):
             },
         ])],
     }, channel)
-
-    # pointer moved
-    assert Pointer.get(ptr.id) is None
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'if_node'
 
-    # rabbit called
-    channel.basic_publish.assert_called_once()
-    args = channel.basic_publish.call_args[1]
-    rabbit_call = {
+    handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
         'input': [Form.state_json('if_node', [
@@ -615,13 +609,31 @@ def test_invalidated_conditional(config, mongo):
             },
         ])],
         'user_identifier': '__system__',
-    }
-    assert json.loads(args['body']) == rabbit_call
-
-    channel = MagicMock()
-    handler.call(rabbit_call, channel)
-
-    # pointer moved
-    assert Pointer.get(ptr.id) is None
+    }, channel)
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'validation_node'
+
+    # first call to validation
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [Form.state_json('validation_node', [
+            {
+                'name': 'response',
+                'value': 'reject',
+            },
+            {
+                'name': 'comment',
+                'value': 'I do not like it',
+            },
+            {
+                'name': 'inputs',
+                'value': [{
+                    'ref': 'start_node.juan.0:form1.value',
+                }],
+            },
+        ])],
+    }, channel)
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'start_node'

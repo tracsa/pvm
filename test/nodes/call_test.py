@@ -20,7 +20,7 @@ def test_call_node(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
-        'state': Xml.load(config, 'call').get_state(),
+        'state': Xml.load(config, execution.process_name).get_state(),
     })
 
     # teardown of first node and wakeup of call node

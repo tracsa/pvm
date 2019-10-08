@@ -15,12 +15,13 @@ def test_true_condition_node(config, mongo):
     handler = Handler(config)
     user = make_user('juan', 'Juan')
     ptr = make_pointer('condition.2018-05-17.xml', 'start_node')
+    execution = ptr.proxy.execution.get()
     channel = MagicMock()
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
-        'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'condition').get_state(),
+        'id': execution.id,
+        'state': Xml.load(config, execution.process_name).get_state(),
     })
 
     handler.call({
@@ -74,12 +75,13 @@ def test_false_condition_node(config, mongo):
     handler = Handler(config)
     user = make_user('juan', 'Juan')
     ptr = make_pointer('condition.2018-05-17.xml', 'start_node')
+    execution = ptr.proxy.execution.get()
     channel = MagicMock()
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
-        'id': ptr.proxy.execution.get().id,
-        'state': Xml.load(config, 'condition').get_state(),
+        'id': execution.id,
+        'state': Xml.load(config, execution.process_name).get_state(),
     })
 
     handler.call({

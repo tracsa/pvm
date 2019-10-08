@@ -70,7 +70,7 @@ def test_wakeup(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
-        'state': Xml.load(config, 'simple').get_state(),
+        'state': Xml.load(config, execution.process_name).get_state(),
         'actors': {'start_node': 'juan'},
     })
 
@@ -156,7 +156,7 @@ def test_teardown(config, mongo):
     manager.proxy.tasks.set([p_0])
     manager2.proxy.tasks.set([p_0])
 
-    state = Xml.load(config, 'simple').get_state()
+    state = Xml.load(config, execution.process_name).get_state()
     state['items']['start_node']['state'] = 'valid'
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
@@ -395,7 +395,7 @@ def test_resistance_unexisteng_hierarchy_backend(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'wrong').get_state(),
+        'state': Xml.load(config, exc.process_name).get_state(),
     })
 
     # this is what we test
@@ -417,7 +417,7 @@ def test_resistance_hierarchy_return(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'wrong').get_state(),
+        'state': Xml.load(config, exc.process_name).get_state(),
     })
 
     # this is what we test
@@ -439,7 +439,7 @@ def test_resistance_hierarchy_item(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'wrong').get_state(),
+        'state': Xml.load(config, exc.process_name).get_state(),
     })
 
     # this is what we test
@@ -461,7 +461,7 @@ def test_resistance_node_not_found(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': exc.id,
-        'state': Xml.load(config, 'wrong').get_state(),
+        'state': Xml.load(config, exc.process_name).get_state(),
     })
 
     # this is what we test

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2019-10-08</date>
+    <name>Invalidate a value used in a conditional</name>
+    <public>false</public>
+    <description>This process tests that an If node respects the updated value of an invalidated node used in its conditional expression</description>
+  </process-info>
+  <process>
+    <action id="start_node">
+      <node-info>
+        <name>Node 1</name>
+        <description>the value subject to inspection</description>
+      </node-info>
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="form1">
+          <input type="int" name="value" label="The value"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <if id="if_node">
+      <condition>form1.value > 0</condition>
+      <block>
+
+        <validation id="validation_node" >
+          <dependencies>
+            <dep>form1.value</dep>
+          </dependencies>
+          <node-info>
+            <name>The validation</name>
+            <description>This node invalidates the original value</description>
+          </node-info>
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#start_node</param>
+          </auth-filter>
+        </validation>
+
+      </block>
+    </if>
+  </process>
+</process-spec>

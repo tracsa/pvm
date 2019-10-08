@@ -563,3 +563,65 @@ def test_ifelifelse_else(config, mongo):
     # execution finished
     assert len(Pointer.get_all()) == 0
     assert len(Execution.get_all()) == 0
+
+
+def test_invalidated_conditional(config, mongo):
+    ''' a condiitonal depends on an invalidated field, if it changes during
+    the second response it must take the second value '''
+    # test setup
+    handler = Handler(config)
+    user = make_user('juan', 'Juan')
+    process_filename = 'condition_invalidated.2019-10-08.xml'
+    ptr = make_pointer(process_filename, 'start_node')
+    channel = MagicMock()
+
+    mongo[config["EXECUTION_COLLECTION"]].insert_one({
+        '_type': 'execution',
+        'id': ptr.proxy.execution.get().id,
+        'state': Xml.load(config, ptr.proxy.execution.get().process_name).get_state(),
+    })
+
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [Form.state_json('form1', [
+            {
+                'name': 'value',
+                'type': 'int',
+                'value': 3,
+            },
+        ])],
+    }, channel)
+
+    # pointer moved
+    assert Pointer.get(ptr.id) is None
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'if_node'
+
+    # rabbit called
+    channel.basic_publish.assert_called_once()
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'input': [Form.state_json('if_node', [
+            {
+                'name': 'condition',
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': True,
+            },
+        ])],
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
+
+    channel = MagicMock()
+    handler.call(rabbit_call, channel)
+
+    # pointer moved
+    assert Pointer.get(ptr.id) is None
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'validation_node'

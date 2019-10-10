@@ -18,7 +18,7 @@ def test_exit_interaction(config, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
-        'state': Xml.load(config, 'exit').get_state(),
+        'state': Xml.load(config, execution.process_name).get_state(),
     })
 
     # first node

@@ -127,17 +127,23 @@ class Xml:
             # skip looking for the most recent version
             return Xml(config, common_name)
 
+        pieces = common_name.split('.')
+
         try:
-            name, version = common_name.split('.')
-        except ValueError:
+            name = pieces[0]
+            version = pieces[1]
+        except IndexError:
             name, version = common_name, None
 
         files = reversed(sorted(os.listdir(config['XML_PATH'])))
 
         for filename in files:
+            fpieces = filename.split('.')
+
             try:
-                fname, fversion, _ = filename.split('.')
-            except ValueError:
+                fname = fpieces[0]
+                fversion = fpieces[1]
+            except IndexError:
                 # Process with malformed name, sorry
                 continue
 

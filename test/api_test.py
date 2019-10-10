@@ -2486,7 +2486,7 @@ def test_task_read(client, config, mongo):
     juan.proxy.tasks.set([ptr])
     execution = ptr.proxy.execution.get()
 
-    state = Xml.load(config, 'simple.2018-02-19').get_state()
+    state = Xml.load(config, execution.process_name).get_state()
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
@@ -2535,7 +2535,7 @@ def test_task_validation(client, mongo, config):
     juan.proxy.tasks.add(ptr)
     execution = ptr.proxy.execution.get()
 
-    state = Xml.load(config, 'validation.2018-05-09').get_state()
+    state = Xml.load(config, execution.process_name).get_state()
     node = state['items']['start_node']
 
     node['state'] = 'valid'
@@ -2601,7 +2601,7 @@ def test_task_with_prev_work(client, config, mongo):
     juan.proxy.tasks.add(ptr)
     execution = ptr.proxy.execution.get()
 
-    state = Xml.load(config, 'validation-multiform.2018-05-22').get_state()
+    state = Xml.load(config, execution.process_name).get_state()
     node = state['items']['start_node']
 
     prev_work = [Form.state_json('set', [

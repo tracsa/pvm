@@ -401,6 +401,7 @@ def test_start_process(client, mocker, config, mongo):
         'description': exc.description,
         'status': 'ongoing',
         'finished_at': None,
+        'process_name': 'simple.2018-02-19.xml',
         'status': 'ongoing',
         'state': {
             '_type': ':sorted_map',

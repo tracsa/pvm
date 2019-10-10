@@ -1,6 +1,5 @@
+from coralillo.errors import ModelNotFoundError
 from cacahuate.http.wsgi import app, mongo
-from cacahuate.models import Execution
-from cacahuate.xml import Xml
 from datetime import datetime
 from jinja2 import Template, environment
 import json
@@ -10,6 +9,7 @@ import os
 def to_pretty_json(value):
     return json.dumps(value, sort_keys=True, indent=4, separators=(',', ': '))
 
+
 environment.DEFAULT_FILTERS['pretty'] = to_pretty_json
 
 
@@ -17,6 +17,7 @@ DATE_FIELDS = [
     'started_at',
     'finished_at',
 ]
+
 
 def json_prepare(obj):
     if obj.get('_id'):
@@ -46,21 +47,12 @@ def execution_template(id):
     if 'process_name' not in exc:
         return 'Not supported for old processes', 409
 
-    # find if this execution is allowed to print a summary
-    xml = Xml.load(
-        app.config,
-        exc['process_name'],
-        direct=True
-    )
-    xmliter = iter(xml)
-    node = xmliter.find(lambda e: True)
-    nodes = node.getElementsByTagName('has-summary')
-
     # prepare default template
     default = []
     values = execution['values']
     for key in values:
-        default.append('<div><h2>{}</h2><pre>{{{{ {} | pretty }}}}</pre></div>'.format(key, key))
+        token = '<div><h2>{}</h2><pre>{{{{ {} | pretty }}}}</pre></div>'
+        default.append(token.format(key, key))
 
     template = Template(''.join(default))
 

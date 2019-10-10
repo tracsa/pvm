@@ -43,6 +43,9 @@ def execution_template(id):
 
     execution = json_prepare(exc)
 
+    if 'process_name' not in exc:
+        return 'Not supported for old processes', 409
+
     # find if this execution is allowed to print a summary
     xml = Xml.load(
         app.config,

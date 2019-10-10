@@ -3,7 +3,7 @@ validation-type nodes and patch requests '''
 from cacahuate.errors import EndOfProcess
 
 
-def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
+def cascade_invalidate(xml, state, invalidated, comment):
     ''' computes a set of fields to be marked as invalid given the
     original `invalidated` set of fields. '''
     # because this could cause a recursive import
@@ -90,15 +90,7 @@ def cascade_invalidate(xml, state, mongo, config, invalidated, comment):
         updates[node_state_path] = node_state
         updates[comment_path] = comment
 
-    # update state
-    collection = mongo[
-        config['EXECUTION_COLLECTION']
-    ]
-    collection.update_one({
-        'id': state['id'],
-    }, {
-        '$set': updates,
-    })
+    return updates
 
 
 def track_next_node(xml, state, mongo, config):

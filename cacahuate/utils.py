@@ -3,6 +3,7 @@ from importlib import import_module
 from coralillo.errors import ModelNotFoundError
 import os
 import sys
+from jinja2 import Template, TemplateError
 
 from cacahuate.errors import MisconfiguredProvider
 from cacahuate.models import User
@@ -64,3 +65,28 @@ def get_or_create(identifier, data):
         return User.get_by_or_exception('identifier', identifier)
     except ModelNotFoundError:
         return User(**data).save()
+
+
+def render_or(template, default, context={}):
+    ''' Renders the given template in case it is a valid jinja template or
+    returns the default value '''
+    try:
+        return Template(template).render(**context)
+    except TemplateError:
+        return default
+
+
+def compact_values(collected_forms):
+    ''' Takes the input from the first form in a process and compacts it into
+    the first set of values for _the state_ that will be used in conditionals
+    or jinja templates'''
+    context = dict()
+    for form in collected_forms:
+        form_dict = dict()
+
+        for name, input in form['inputs']['items'].items():
+            form_dict[name] = input['value_caption']
+
+        context[form['ref']] = form_dict
+
+    return context

@@ -1,6 +1,5 @@
 from collections import deque
 from datetime import datetime
-from jinja2 import Template, TemplateError
 from typing import TextIO, Callable
 from xml.dom import pulldom
 from xml.dom.minidom import Element
@@ -13,6 +12,7 @@ import pika
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.jsontypes import SortedMap
 from cacahuate.models import Execution, Pointer
+from cacahuate.utils import render_or, compact_values
 
 XML_ATTRIBUTES = {
     'public': lambda a: a == 'true',
@@ -73,20 +73,8 @@ class Xml:
         return minidom.parse(self.get_file_path())
 
     # Interpolate name
-    def get_name(self, collected_forms=[]):
-        context = dict()
-        for form in collected_forms:
-            form_dict = dict()
-
-            for name, input in form['inputs']['items'].items():
-                form_dict[name] = input['value_caption']
-
-            context[form['ref']] = form_dict
-
-        try:
-            return Template(self._name).render(**context)
-        except TemplateError:
-            return self.filename
+    def get_name(self, context={}):
+        return render_or(self._name, self.filename, context)
 
     def set_name(self, name):
         self._name = name
@@ -94,20 +82,8 @@ class Xml:
     name = property(get_name, set_name)
 
     # Interpolate description
-    def get_description(self, collected_forms=[]):
-        context = dict()
-        for form in collected_forms:
-            form_dict = dict()
-
-            for name, input in form['inputs']['items'].items():
-                form_dict[name] = input['value_caption']
-
-            context[form['ref']] = form_dict
-
-        try:
-            return Template(self._description).render(**context)
-        except TemplateError:
-            return self._description
+    def get_description(self, context={}):
+        return render_or(self._description, self._description, context)
 
     def set_description(self, description):
         self._description = description
@@ -158,11 +134,14 @@ class Xml:
             raise ProcessNotFound(common_name)
 
     def start(self, node, input, mongo, channel, user_identifier):
+        # the first set of values
+        values = compact_values(input)
+
         # save the data
         execution = Execution(
             process_name=self.filename,
-            name=self.get_name(input),
-            description=self.get_description(input),
+            name=self.get_name(values),
+            description=self.get_description(values),
         ).save()
         pointer = Pointer(
             node_id=node.id,

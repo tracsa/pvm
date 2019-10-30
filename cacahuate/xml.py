@@ -165,7 +165,14 @@ class Xml:
             'started_at': datetime.now(),
             'finished_at': None,
             'state': self.get_state(),
-            'values': {},
+            'values': {
+                '_execution': {
+                    'id': execution.id,
+                    'name': execution.name,
+                    'process_name': execution.process_name,
+                    'description': execution.description,
+                },
+            },
             'actors': {},
         })
 

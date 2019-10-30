@@ -143,11 +143,7 @@ class Handler:
 
         # get currect execution context
         exc_doc = next(exc_col.find({'id': execution.id}))
-
-        try:
-            context = exc_doc['values']
-        except KeyError:
-            context = {}
+        context = exc_doc.get('values', {})
 
         # interpolate
         rendered_name = render_or(node.name, node.name, context)

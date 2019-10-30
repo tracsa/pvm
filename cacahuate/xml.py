@@ -1,5 +1,5 @@
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TextIO, Callable
 from xml.dom import pulldom
 from xml.dom.minidom import Element
@@ -171,6 +171,7 @@ class Xml:
                     'name': execution.name,
                     'process_name': execution.process_name,
                     'description': execution.description,
+                    'started_at': datetime.now(timezone.utc).isoformat(),
                 },
             },
             'actors': {},

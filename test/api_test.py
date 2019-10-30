@@ -395,7 +395,9 @@ def test_start_process(client, mocker, config, mongo):
     del reg['_id']
 
     assert len(reg['values']['_execution']['id']) == 11
+    assert len(reg['values']['_execution']['started_at']) == 32
     del reg['values']['_execution']['id']
+    del reg['values']['_execution']['started_at']
 
     assert reg == {
         '_type': 'execution',

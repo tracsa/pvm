@@ -147,7 +147,9 @@ class Handler:
 
         # interpolate
         rendered_name = render_or(node.name, node.name, context)
-        rendered_description = render_or(node.description, node.description, context)
+        rendered_description = render_or(
+            node.description, node.description, context
+        )
 
         node.name = rendered_name
         node.description = rendered_description

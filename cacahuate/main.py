@@ -59,7 +59,7 @@ def rng_path():
     )))
 
 
-def _validate_file(filename):
+def _validate_file(filename, verbose=False):
     ids = []
     data_form = ChainMap()
     passed_nodes = []
@@ -264,26 +264,29 @@ def _validate_file(filename):
         if has_auth_filter:
             passed_nodes.append(node.getAttribute('id'))
 
-    print('{} seems correct'.format(filename))
+    if verbose:
+        print('{} seems correct'.format(filename))
 
 
-def xml_validate(filenames=None):
+def xml_validate(filenames=None, verbose=False):
     if not filenames:
         parser = argparse.ArgumentParser(description='Validate xmls')
 
         parser.add_argument('files', metavar='FILE', nargs='+',
                             help='the files to be validated')
+        parser.add_argument('--verbose', '-v', action='store_true')
 
         args = parser.parse_args()
 
         filenames = args.files
+        verbose = args.verbose
 
     found_errors = False
 
     for filename in filenames:
         try:
             try:
-                _validate_file(filename)
+                _validate_file(filename, verbose)
             except SAXParseException:
                 raise MalformedProcess('{}:{} Is not valid xml'.format(
                     filename, 0

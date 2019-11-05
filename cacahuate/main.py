@@ -152,7 +152,7 @@ def _validate_file(filename, verbose=False):
                     data_form[reference_form][field_form]
                 except KeyError:
                     raise MalformedProcess(
-                        "{}:{} variable used in if is not defined '{}'".format(
+                        "{}:{} variable used in condition is not defined '{}'".format(
                             filename, sw.lineno,
                             reference_form+'.'+field_form,
                         )

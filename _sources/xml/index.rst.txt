@@ -109,3 +109,51 @@ se pueden capturar los roles de María en un formulario múltiple como sigue:
          <value path="role" name="role" label="Rol" type="text" />
       </capture>
    </captures>
+
+Interpolación de variables
+--------------------------
+
+Existen varios puntos en la definición de un XML donde se puede usar interpolación de variables escribiendo los valores como si fueran templates de `jinja <https://palletsprojects.com/p/jinja/>`_.
+
+Específicamente los lugares son los siguientes:
+
+* la URL y el cuerpo de un nodo `request`.
+* el nombre y la descripción de cualquier nodo
+* el nombre y la descripción de un proceso
+
+Los valores que se pueden usar en estos lugares son todos aquellos que hayan aparecido antes en el proceso, por ejemplo inputs de formularios de nodos previos. Para esta interpolación se utiliza un diccionario como este:
+
+.. code-block:: json
+
+   {
+      "formulario1": {
+         "input1": "valor1",
+         "input2": "valor2"
+      },
+      "formulario2": {
+         "input3": "valor3"
+      }
+   }
+
+De manera que para usar uno de estos valores en la interpolación lo puedes encontrar como notación de objeto:
+
+.. code-block:: xml
+
+   <name>Name {{ formulario1.input1 }}</name>
+
+Valores siempre presentes
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Por conveniencia se añade además información sobre la ejecución actual a este contexto. Los datos agregados tienen la estructura siguiente:
+
+.. code-block:: json
+
+   {
+      "_execution": {
+         "id": "nf384d34",
+         "name": "Nombre del proceso",
+         "process_name": "archivo.2019-10-30.xml",
+         "description": "Descripción del proceso",
+         "started_at": "2019-10-30T21:57:51.927624+00:00"
+      }
+   }

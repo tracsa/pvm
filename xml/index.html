@@ -129,6 +129,47 @@
 </div>
 </div>
 </div>
+<div class="section" id="interpolacion-de-variables">
+<h2>Interpolación de variables<a class="headerlink" href="#interpolacion-de-variables" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Existen varios puntos en la definición de un XML donde se puede usar interpolación de variables escribiendo los valores como si fueran templates de <a class="reference external" href="https://palletsprojects.com/p/jinja/">jinja</a>.</p>
+<p>Específicamente los lugares son los siguientes:</p>
+<ul class="simple">
+<li><p>la URL y el cuerpo de un nodo <cite>request</cite>.</p></li>
+<li><p>el nombre y la descripción de cualquier nodo</p></li>
+<li><p>el nombre y la descripción de un proceso</p></li>
+</ul>
+<p>Los valores que se pueden usar en estos lugares son todos aquellos que hayan aparecido antes en el proceso, por ejemplo inputs de formularios de nodos previos. Para esta interpolación se utiliza un diccionario como este:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="nt">&quot;formulario1&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;input1&quot;</span><span class="p">:</span> <span class="s2">&quot;valor1&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;input2&quot;</span><span class="p">:</span> <span class="s2">&quot;valor2&quot;</span>
+   <span class="p">},</span>
+   <span class="nt">&quot;formulario2&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;input3&quot;</span><span class="p">:</span> <span class="s2">&quot;valor3&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>De manera que para usar uno de estos valores en la interpolación lo puedes encontrar como notación de objeto:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;name&gt;</span>Name {{ formulario1.input1 }}<span class="nt">&lt;/name&gt;</span>
+</pre></div>
+</div>
+<div class="section" id="valores-siempre-presentes">
+<h3>Valores siempre presentes<a class="headerlink" href="#valores-siempre-presentes" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>Por conveniencia se añade además información sobre la ejecución actual a este contexto. Los datos agregados tienen la estructura siguiente:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+   <span class="nt">&quot;_execution&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;nf384d34&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Nombre del proceso&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;process_name&quot;</span><span class="p">:</span> <span class="s2">&quot;archivo.2019-10-30.xml&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Descripción del proceso&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;started_at&quot;</span><span class="p">:</span> <span class="s2">&quot;2019-10-30T21:57:51.927624+00:00&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 
 
@@ -154,6 +195,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../develop/index.html">Desarrollo</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Escribiendo XMLs</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#nodo-request">Nodo request</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interpolacion-de-variables">Interpolación de variables</a></li>
 </ul>
 </li>
 </ul>
@@ -192,7 +234,7 @@
       &copy;2018, Abraham Toriz.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

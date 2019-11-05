@@ -281,7 +281,7 @@ def test_store_data_from_response(config, mocker, mongo):
 
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('request-storage.2019-08-08.xml', 'start_node')
+    ptr = make_pointer('request-captures.2019-08-08.xml', 'start_node')
     channel = MagicMock()
     execution = ptr.proxy.execution.get()
     value = random_string()
@@ -289,7 +289,7 @@ def test_store_data_from_response(config, mocker, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
-        'state': Xml.load(config, 'request-storage').get_state(),
+        'state': Xml.load(config, 'request-captures').get_state(),
     })
 
     # teardown of first node and wakeup of request node

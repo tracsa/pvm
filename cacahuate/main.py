@@ -258,6 +258,37 @@ def _validate_file(filename, verbose=False):
 
             data_form.maps[-1][form_id] = array_input
 
+        # In case of a request node, add its captured values to `data_form`
+        # so they can be recognized as valid values
+        captures = node.getElementsByTagName('capture')
+
+        for capture in captures:
+            capture_id = capture.getAttribute('id')
+
+            if capture_id and not variable_re.match(capture_id):
+                raise MalformedProcess(
+                    '{}:{} Capture ids must be valid variable names'.format(
+                        filename, sw.lineno,
+                    )
+                )
+
+            capture_inputs = capture.getElementsByTagName("value")
+            array_input = {}
+
+            for inpt in capture_inputs:
+                inpt_name = inpt.getAttribute('name')
+
+                if not variable_re.match(inpt_name):
+                    raise MalformedProcess(
+                        '{}:{} names must be valid variable names'.format(
+                            filename, sw.lineno,
+                        )
+                    )
+
+                array_input[inpt_name] = '1'
+
+            data_form.maps[-1][capture_id] = array_input
+
         # add this node to the list of revised nodes
         has_auth_filter = len(node.getElementsByTagName('auth-filter')) > 0
 

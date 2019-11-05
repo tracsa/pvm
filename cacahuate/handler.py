@@ -4,7 +4,6 @@ from pymongo import MongoClient
 import logging
 import pika
 import simplejson as json
-from jinja2 import Template, TemplateError
 
 from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState
 from cacahuate.errors import MisconfiguredProvider, EndOfProcess
@@ -13,6 +12,7 @@ from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
 from cacahuate.jsontypes import Map
 from cacahuate.cascade import cascade_invalidate, track_next_node
+from cacahuate.utils import render_or
 
 LOGGER = logging.getLogger(__name__)
 
@@ -143,22 +143,13 @@ class Handler:
 
         # get currect execution context
         exc_doc = next(exc_col.find({'id': execution.id}))
-
-        try:
-            context = exc_doc['values']
-        except KeyError:
-            context = {}
+        context = exc_doc.get('values', {})
 
         # interpolate
-        try:
-            rendered_name = Template(node.name).render(**context)
-        except TemplateError:
-            rendered_name = node.name
-
-        try:
-            rendered_description = Template(node.description).render(**context)
-        except TemplateError:
-            rendered_description = node.description
+        rendered_name = render_or(node.name, node.name, context)
+        rendered_description = render_or(
+            node.description, node.description, context
+        )
 
         node.name = rendered_name
         node.description = rendered_description

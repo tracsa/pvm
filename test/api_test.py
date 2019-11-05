@@ -394,6 +394,11 @@ def test_start_process(client, mocker, config, mongo):
     del reg['started_at']
     del reg['_id']
 
+    assert len(reg['values']['_execution']['id']) > 0
+    assert len(reg['values']['_execution']['started_at']) > 0
+    del reg['values']['_execution']['id']
+    del reg['values']['_execution']['started_at']
+
     assert reg == {
         '_type': 'execution',
         'id': exc.id,
@@ -457,7 +462,13 @@ def test_start_process(client, mocker, config, mongo):
                 'final_node',
             ],
         },
-        'values': {},
+        'values': {
+            '_execution': {
+                'description': 'A simple process that does nothing',
+                'name': 'Simplest process ever started with: yes',
+                'process_name': 'simple.2018-02-19.xml',
+            },
+        },
         'actors': {},
     }
 

@@ -59,7 +59,7 @@ def rng_path():
     )))
 
 
-def _validate_file(filename):
+def _validate_file(filename, verbose=False):
     ids = []
     data_form = ChainMap()
     passed_nodes = []
@@ -152,7 +152,8 @@ def _validate_file(filename):
                     data_form[reference_form][field_form]
                 except KeyError:
                     raise MalformedProcess(
-                        "{}:{} variable used in if is not defined '{}'".format(
+                        "{}:{} variable used in condition "
+                        "is not defined '{}'".format(
                             filename, sw.lineno,
                             reference_form+'.'+field_form,
                         )
@@ -258,32 +259,66 @@ def _validate_file(filename):
 
             data_form.maps[-1][form_id] = array_input
 
+        # In case of a request node, add its captured values to `data_form`
+        # so they can be recognized as valid values
+        captures = node.getElementsByTagName('capture')
+
+        for capture in captures:
+            capture_id = capture.getAttribute('id')
+
+            if capture_id and not variable_re.match(capture_id):
+                raise MalformedProcess(
+                    '{}:{} Capture ids must be valid variable names'.format(
+                        filename, sw.lineno,
+                    )
+                )
+
+            capture_inputs = capture.getElementsByTagName("value")
+            array_input = {}
+
+            for inpt in capture_inputs:
+                inpt_name = inpt.getAttribute('name')
+
+                if not variable_re.match(inpt_name):
+                    raise MalformedProcess(
+                        '{}:{} names must be valid variable names'.format(
+                            filename, sw.lineno,
+                        )
+                    )
+
+                array_input[inpt_name] = '1'
+
+            data_form.maps[-1][capture_id] = array_input
+
         # add this node to the list of revised nodes
         has_auth_filter = len(node.getElementsByTagName('auth-filter')) > 0
 
         if has_auth_filter:
             passed_nodes.append(node.getAttribute('id'))
 
-    print('{} seems correct'.format(filename))
+    if verbose:
+        print('{} seems correct'.format(filename))
 
 
-def xml_validate(filenames=None):
+def xml_validate(filenames=None, verbose=False):
     if not filenames:
         parser = argparse.ArgumentParser(description='Validate xmls')
 
         parser.add_argument('files', metavar='FILE', nargs='+',
                             help='the files to be validated')
+        parser.add_argument('--verbose', '-v', action='store_true')
 
         args = parser.parse_args()
 
         filenames = args.files
+        verbose = args.verbose
 
     found_errors = False
 
     for filename in filenames:
         try:
             try:
-                _validate_file(filename)
+                _validate_file(filename, verbose)
             except SAXParseException:
                 raise MalformedProcess('{}:{} Is not valid xml'.format(
                     filename, 0

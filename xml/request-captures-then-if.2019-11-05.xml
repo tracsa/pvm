@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>Abraham</author>
+    <date>2019-08-08</date>
+    <name>Test storing data from request</name>
+    <public>true</public>
+    <description>Makes an HTTP request and stores info back</description>
+  </process-info>
+  <process>
+    <action id="start_node" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="request">
+          <input type="text" name="data" label="Label-less form"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <request id="request_node" method="GET">
+      <url>http://localhost/</url>
+      <headers>
+        <header name="content-type">application/json</header>
+      </headers>
+      <captures type="json">
+        <capture id="capture1">
+          <value path="params.name" name="name" label="Nombre" type="text"></value>
+        </capture>
+
+        <capture id="capture2" multiple="multiple" path="items[*]">
+          <value path="$.age" name="age" label="Edad" type="int" />
+        </capture>
+      </captures>
+    </request>
+
+    <if id="condition1">
+      <condition>capture2.age > 18</condition>
+      <block>
+        <action id="protected_node">
+          <node-info>
+            <name>Only for ages 18+</name>
+            <description>This node can only be reached if the api from the requested node said that you are 18+</description>
+          </node-info>
+          <auth-filter backend="hardcoded"></auth-filter>
+          <form-array>
+            <form id="mistery">
+              <input type="text" name="answer" default="abrete sesamo" label="Label-less form">
+              </input>
+            </form>
+          </form-array>
+        </action>
+      </block>
+    </if>
+  </process>
+</process-spec>

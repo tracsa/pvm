@@ -248,26 +248,29 @@ def test_store_data_from_response(config, mocker, mongo):
     expected_age_1 = randint(0, 100)
     expected_age_2 = randint(0, 100)
 
+    request_response = {
+        'params': {
+            'name': expected_name,
+        },
+        'items': [
+            [
+                {
+                    'age': expected_age_1,
+                },
+                {
+                    'age': expected_age_2,
+                },
+            ],
+        ],
+    }
+    request_response_s = json.dumps(request_response)
+
     class ResponseMock:
         status_code = 200
-        text = 'request response'
+        text = request_response_s
 
         def json(self):
-            return {
-                'params': {
-                    'name': expected_name,
-                },
-                'items': [
-                    [
-                        {
-                            'age': expected_age_1,
-                        },
-                        {
-                            'age': expected_age_2,
-                        },
-                    ],
-                ],
-            }
+            return request_response
 
     mock = MagicMock(return_value=ResponseMock())
 
@@ -278,7 +281,7 @@ def test_store_data_from_response(config, mocker, mongo):
 
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('request-storage.2019-08-08.xml', 'start_node')
+    ptr = make_pointer('request-captures.2019-08-08.xml', 'start_node')
     channel = MagicMock()
     execution = ptr.proxy.execution.get()
     value = random_string()
@@ -286,7 +289,7 @@ def test_store_data_from_response(config, mocker, mongo):
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
         'id': execution.id,
-        'state': Xml.load(config, 'request-storage').get_state(),
+        'state': Xml.load(config, 'request-captures').get_state(),
     })
 
     # teardown of first node and wakeup of request node
@@ -335,8 +338,8 @@ def test_store_data_from_response(config, mocker, mongo):
                 'name': 'raw_response',
                 'state': 'valid',
                 'type': 'text',
-                'value': 'request response',
-                'value_caption': 'request response',
+                'value': request_response_s,
+                'value_caption': request_response_s,
                 'hidden': False,
                 'label': 'Response',
             },
@@ -420,4 +423,19 @@ def test_store_data_from_response(config, mocker, mongo):
         'milestone': False,
         'name': 'Request request_node',
         'description': 'Request request_node',
+    }
+    assert state['values'] == {
+        'capture1': {
+            'name': expected_name,
+        },
+        'capture2': {
+            'age': expected_age_2,
+        },
+        'request': {
+            'data': value,
+        },
+        'request_node': {
+            'raw_response': request_response_s,
+            'status_code': 200,
+        },
     }

@@ -45,7 +45,7 @@
     <if id="condition2">
       <condition>mistery.password == "123456"</condition>
       <block>
-        <action id="123456_node">
+        <action id="middle_node">
           <node-info>
             <name>Unnamed action</name>
             <description>Undescribed action</description>
@@ -54,7 +54,7 @@
             <param name="identifier" type="ref">user#start_node</param>
           </auth-filter>
           <form-array>
-            <form id="123456_form">
+            <form id="middle_form">
               <input type="text" name="answer" default="oh boy, please don't" label="Label-less form"/>
             </form>
           </form-array>

@@ -68,7 +68,7 @@ setup(
         'itacate',
         'lark-parser >= 0.6',
         'ldap3',
-        'pika',
+        'pika >= 1.0',
         'simplejson',
         'requests',
         'passlib',

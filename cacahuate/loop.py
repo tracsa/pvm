@@ -26,10 +26,10 @@ class Loop:
         LOGGER.info('Declared queue {}'.format(self.config['RABBIT_QUEUE']))
 
         channel.basic_consume(
+            self.config['RABBIT_QUEUE'],
             self.handler,
-            queue=self.config['RABBIT_QUEUE'],
+            auto_ack=self.config['RABBIT_NO_ACK'],
             consumer_tag=self.config['RABBIT_CONSUMER_TAG'],
-            no_ack=self.config['RABBIT_NO_ACK'],
         )
 
         LOGGER.info('cacahuate started')

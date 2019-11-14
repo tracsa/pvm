@@ -1,9 +1,11 @@
-.PHONY: publish pytest clean lint xmllint clear-objects build test
+.PHONY: publish pytest clean lint xmllint xml_validate clear-objects build test xml
 
 build:
 	./setup.py sdist && ./setup.py bdist_wheel
 
 test: pytest lint xmllint xml_validate
+
+xml: xmllint xml_validate
 
 publish:
 	twine upload dist/* && git push && git push --tags

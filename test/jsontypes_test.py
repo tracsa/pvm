@@ -1,4 +1,6 @@
-from cacahuate.jsontypes import SortedMap, Map, MultiValueMap
+import pytest
+
+from cacahuate.jsontypes import SortedMap, Map, MultiFormDict
 
 
 def test_sorted_map():
@@ -127,16 +129,40 @@ def test_map():
 
 
 def test_multivalued_map():
-    mv = MultiValueMap({
-        'a': [1, 2, 3],
-        'b': [4],
-    })
+    ulist = [
+        {
+            'a': 'a',
+            'b': 1,
+        },
+        {
+            'b': 2,
+        },
+        {
+            'a': 'b',
+            'b': 3,
+        },
+    ]
+    mv = MultiFormDict(ulist)
 
     # by default last value is used
-    assert mv['a'] == 3
-    assert mv['b'] == 4
+    assert mv['b'] == 3
 
-    # values can be iterated
-    values = [1, 2, 3]
-    for i, v  in enumerate(mv.getlist('a')):
-        assert v == values[i]
+    with pytest.raises(KeyError):
+        mv['da']
+
+    assert mv.get('b') == 3
+    assert mv.get('c', 40) == 40
+
+    assert mv.getlist('b') == [1, 2, 3]
+    assert mv.getlist('a', 'c') == ['a', 'c', 'b']
+
+    assert mv.list() == ulist
+
+    assert list(mv.items()) == [('a', 'b'), ('b', 3)]
+    assert list(mv.values()) == ['b', 3]
+    assert list(mv.keys()) == ['a', 'b']
+
+    assert mv.dict() == {
+        'a': 'b',
+        'b': 3,
+    }

@@ -1,4 +1,4 @@
-from cacahuate.jsontypes import SortedMap, Map
+from cacahuate.jsontypes import SortedMap, Map, MultiValueMap
 
 
 def test_sorted_map():
@@ -124,3 +124,19 @@ def test_map():
         'id': '2',
         'name': 'le',
     }
+
+
+def test_multivalued_map():
+    mv = MultiValueMap({
+        'a': [1, 2, 3],
+        'b': [4],
+    })
+
+    # by default last value is used
+    assert mv['a'] == 3
+    assert mv['b'] == 4
+
+    # values can be iterated
+    values = [1, 2, 3]
+    for i, v  in enumerate(mv.getlist('a')):
+        assert v == values[i]

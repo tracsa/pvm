@@ -156,8 +156,7 @@ def test_multivalued_map():
     assert mv.getlist('b') == [1, 2, 3]
     assert mv.getlist('a', 'c') == ['a', 'c', 'b']
 
-    assert mv.list() == ulist
-
+    assert list(mv.all()) == ulist
     assert list(mv.items()) == [('a', 'b'), ('b', 3)]
     assert list(mv.values()) == ['b', 3]
     assert list(mv.keys()) == ['a', 'b']

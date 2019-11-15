@@ -27,7 +27,7 @@ def test_get_values():
     context = get_values(execution)
 
     assert context['form1']['input1'] == 'B'
-    assert context['form1'].list()[0]['input1'] == 'A'
+    assert list(context['form1'].all())[0]['input1'] == 'A'
 
 
 def test_send_request_multiple(config, mongo, mocker):

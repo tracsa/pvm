@@ -27,7 +27,7 @@
       <headers>
         <header name="content-type">application/json</header>
       </headers>
-      <body>{"names": [{% for resp in form1.list() %}"{{ resp.name }}"{% if not loop.last %},{% endif %}{% endfor %}]}</body>
+      <body>{"names": [{% for resp in form1.all() %}"{{ resp.name }}"{% if not loop.last %},{% endif %}{% endfor %}]}</body>
     </request>
   </process>
 </process-spec>

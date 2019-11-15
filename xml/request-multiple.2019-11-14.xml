@@ -23,7 +23,6 @@
     </action>
 
     <request id="request_node" method="POST">
-      <method>POST</method>
       <url>http://localhost/</url>
       <headers>
         <header name="content-type">application/json</header>

@@ -7,6 +7,7 @@ from jinja2 import Template, TemplateError
 
 from cacahuate.errors import MisconfiguredProvider
 from cacahuate.models import User
+from cacahuate.jsontypes import MultiFormDict
 
 
 def user_import(module_key, class_sufix, import_maper, default_path, enabled):
@@ -90,3 +91,10 @@ def compact_values(collected_forms):
         context[form['ref']] = form_dict
 
     return context
+
+
+def get_values(execution_data):
+    ''' the proper and only way that should be used to get the values out of
+    an execution document from mongo. It takes care of the transformations
+    needed for it to work in jinja templates and other contexts '''
+    return {k: MultiFormDict(v) for k, v in execution_data['values'].items()}

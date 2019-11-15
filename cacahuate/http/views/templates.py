@@ -1,9 +1,11 @@
 from coralillo.errors import ModelNotFoundError
-from cacahuate.http.wsgi import app, mongo
 from datetime import datetime
 from jinja2 import Template, environment
 import json
 import os
+
+from cacahuate.http.wsgi import app, mongo
+from cacahuate.utils import get_values
 
 
 def to_pretty_json(value):
@@ -49,8 +51,9 @@ def execution_template(id):
 
     # prepare default template
     default = []
-    values = execution['values']
-    for key in values:
+    context = get_values(execution)
+
+    for key in context:
         token = '<div><h2>{}</h2><pre>{{{{ {} | pretty }}}}</pre></div>'
         default.append(token.format(key, key))
 
@@ -79,4 +82,4 @@ def execution_template(id):
             template = Template(contents.read())
 
     # return template interpolation
-    return template.render(**values)
+    return template.render(**context)

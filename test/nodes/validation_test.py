@@ -303,11 +303,11 @@ def test_reject(config, mongo):
             'item_order': ['start_node', 'approval_node', 'final_node'],
         },
         'values': {
-            'approval_node': {
+            'approval_node': [{
                 'comment': 'I do not like it',
                 'response': 'reject',
                 'inputs': [{'ref': 'start_node.juan.0:work.task'}],
-            },
+            }],
         },
         'actors': {
             'approval_node': 'juan',
@@ -684,15 +684,15 @@ def test_reject_with_dependencies(config, mongo):
         },
         'status': 'finished',
         'values': {
-            'node4': {
+            'node4': [{
                 'comment': 'I like it',
                 'inputs': None,
                 'response': 'accept',
-            },
-            'form1': {'task': '2'},
-            'form2': {'task': '2'},
-            'form3': {'task': '1'},
-            'form5': {'task': '1'},
+            }],
+            'form1': [{'task': '2'}],
+            'form2': [{'task': '2'}],
+            'form3': [{'task': '1'}],
+            'form5': [{'task': '1'}],
         },
         'actors': {
             'node1': 'juan',

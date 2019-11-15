@@ -425,17 +425,22 @@ def test_store_data_from_response(config, mocker, mongo):
         'description': 'Request request_node',
     }
     assert state['values'] == {
-        'capture1': {
+        'capture1': [{
             'name': expected_name,
-        },
-        'capture2': {
-            'age': expected_age_2,
-        },
-        'request': {
+        }],
+        'capture2': [
+            {
+                'age': expected_age_1,
+            },
+            {
+                'age': expected_age_2,
+            },
+        ],
+        'request': [{
             'data': value,
-        },
-        'request_node': {
+        }],
+        'request_node': [{
             'raw_response': request_response_s,
             'status_code': 200,
-        },
+        }],
     }

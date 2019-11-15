@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>Abraham</author>
+    <date>2019-11-14</date>
+    <name>Request multiple test</name>
+    <public>false</public>
+    <description>This test proves that is possible to iterate and send all the values captured in a multiple form.</description>
+  </process-info>
+  <process>
+    <action id="start_node" >
+      <node-info>
+        <name>Capture data</name>
+        <description>Capture a multiple form</description>
+      </node-info>
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="form1" multiple="multiple">
+          <input type="text" name="name" label="The name"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <request id="request_node" method="POST">
+      <url>http://localhost/</url>
+      <headers>
+        <header name="content-type">application/json</header>
+      </headers>
+      <body>{"names": [{% for resp in form1.all() %}"{{ resp.name }}"{% if not loop.last %},{% endif %}{% endfor %}]}</body>
+    </request>
+  </process>
+</process-spec>

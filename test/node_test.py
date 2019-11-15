@@ -13,9 +13,9 @@ def test_resolve_params(config):
 
     state = {
         'values': {
-            'exit_form': {
+            'exit_form': [{
                 'reason': 'nones',
-            },
+            }],
         },
         'actors': {
             'requester': 'juan',

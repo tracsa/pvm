@@ -809,13 +809,13 @@ def test_invalidated_conditional(config, mongo):
         },
         'status': 'finished',
         'values': {
-            'form1': {'value': -3},
-            'if_node': {'condition': False},
-            'validation_node': {
+            'form1': [{'value': -3}],
+            'if_node': [{'condition': False}],
+            'validation_node': [{
                 'comment': 'I do not like it',
                 'inputs': [{'ref': 'start_node.juan.0:form1.value'}],
                 'response': 'reject',
-            },
+            }],
         },
         'actors': {
             'start_node': 'juan',

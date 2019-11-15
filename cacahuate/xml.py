@@ -166,13 +166,13 @@ class Xml:
             'finished_at': None,
             'state': self.get_state(),
             'values': {
-                '_execution': {
+                '_execution': [{
                     'id': execution.id,
                     'name': execution.name,
                     'process_name': execution.process_name,
                     'description': execution.description,
                     'started_at': datetime.now(timezone.utc).isoformat(),
-                },
+                }],
             },
             'actors': {},
         })

@@ -7,7 +7,7 @@ from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import Action, Form
 from cacahuate.xml import Xml
 
-from .utils import make_pointer, make_user, assert_near_date
+from .utils import make_pointer, make_user, assert_near_date, random_string
 
 
 def test_recover_step(config):
@@ -319,9 +319,9 @@ def test_teardown(config, mongo):
     }
 
     assert reg['values'] == {
-        'mid_form': {
+        'mid_form': [{
             'data': 'yes',
-        },
+        }],
     }
 
     assert reg['actors'] == {
@@ -481,3 +481,45 @@ def test_resistance_dead_pointer(config):
         'command': 'step',
         'pointer_id': 'nones',
     }))
+
+
+def test_compact_values(config):
+    handler = Handler(config)
+    names = [random_string() for _ in '123']
+
+    values = handler.compact_values([
+        Form.state_json('form1', [
+            {
+                'name': 'name',
+                'type': 'text',
+                'value': names[0],
+            },
+        ]),
+        Form.state_json('form1', [
+            {
+                'name': 'name',
+                'type': 'text',
+                'value': names[1],
+            },
+        ]),
+        Form.state_json('form2', [
+            {
+                'name': 'name',
+                'type': 'text',
+                'value': names[2],
+            },
+        ]),
+    ])
+
+    assert values == {
+        'values.form1': [
+            {
+                'name': name,
+            } for name in names[:2]
+        ],
+        'values.form2': [
+            {
+                'name': names[2],
+            },
+        ],
+    }

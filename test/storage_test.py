@@ -1,9 +1,8 @@
 from unittest.mock import MagicMock
-import simplejson as json
 import requests
 
 from cacahuate.handler import Handler
-from cacahuate.models import Execution, Pointer
+from cacahuate.models import Pointer
 from cacahuate.node import Form
 from cacahuate.xml import Xml
 from cacahuate.utils import get_values

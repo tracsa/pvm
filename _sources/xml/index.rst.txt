@@ -141,6 +141,34 @@ De manera que para usar uno de estos valores en la interpolación lo puedes enco
 
    <name>Name {{ formulario1.input1 }}</name>
 
+Formularios múltiples durante la interpolación
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Debido a que cacahuate soporta formularios múltiples estos también pueden ser usados durante la interpolación. Por defecto si ``formulario1`` tiene múltiples respuestas al hacer:
+
+.. code-block:: xml
+
+   <name>Name {{ formulario1.input1 }}</name>
+
+se utilizará la última respuesta del formulario, sin embargo es posible iterar todas las respuestas usando la función ``.all()`` del objeto :py:class:`cacahuate.jsontypes.MultiFormDict` como sigue:
+
+.. code-block:: jinja
+
+   {% for ans in formulario1.all() %}
+      {{ ans.input1 }}
+   {% endfor %}
+
+También es posible iterar los distintos valores de una llave en específico usando ``.getlist(key)`` como se detalla a continuación:
+
+.. code-block:: jinja
+
+   {% for ans in formulario1.getlist('input1') %}
+      {{ ans }}
+   {% endfor %}
+
+Este último ejemplo y el que le precede producen el mismo resultado. Para mayor información consultar la documentación de la clase.
+
+
 Valores siempre presentes
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 

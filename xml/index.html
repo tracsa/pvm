@@ -15,7 +15,7 @@
     <script type="text/javascript" src="../_static/translations.js"></script>
     <link rel="index" title="Índice" href="../genindex.html" />
     <link rel="search" title="Búsqueda" href="../search.html" />
-    <link rel="prev" title="Escribiendo documentación" href="../develop/docs.html" />
+    <link rel="prev" title="Utilidades internas" href="../develop/utils.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
@@ -154,6 +154,26 @@
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;name&gt;</span>Name {{ formulario1.input1 }}<span class="nt">&lt;/name&gt;</span>
 </pre></div>
 </div>
+<div class="section" id="formularios-multiples-durante-la-interpolacion">
+<h3>Formularios múltiples durante la interpolación<a class="headerlink" href="#formularios-multiples-durante-la-interpolacion" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>Debido a que cacahuate soporta formularios múltiples estos también pueden ser usados durante la interpolación. Por defecto si <code class="docutils literal notranslate"><span class="pre">formulario1</span></code> tiene múltiples respuestas al hacer:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;name&gt;</span>Name {{ formulario1.input1 }}<span class="nt">&lt;/name&gt;</span>
+</pre></div>
+</div>
+<p>se utilizará la última respuesta del formulario, sin embargo es posible iterar todas las respuestas usando la función <code class="docutils literal notranslate"><span class="pre">.all()</span></code> del objeto <a class="reference internal" href="../develop/utils.html#cacahuate.jsontypes.MultiFormDict" title="cacahuate.jsontypes.MultiFormDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">cacahuate.jsontypes.MultiFormDict</span></code></a> como sigue:</p>
+<div class="highlight-jinja notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">ans</span> <span class="k">in</span> <span class="nv">formulario1.all</span><span class="o">()</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">   </span><span class="cp">{{</span> <span class="nv">ans.input1</span> <span class="cp">}}</span><span class="x"></span>
+<span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>También es posible iterar los distintos valores de una llave en específico usando <code class="docutils literal notranslate"><span class="pre">.getlist(key)</span></code> como se detalla a continuación:</p>
+<div class="highlight-jinja notranslate"><div class="highlight"><pre><span></span><span class="cp">{%</span> <span class="k">for</span> <span class="nv">ans</span> <span class="k">in</span> <span class="nv">formulario1.getlist</span><span class="o">(</span><span class="s1">&#39;input1&#39;</span><span class="o">)</span> <span class="cp">%}</span><span class="x"></span>
+<span class="x">   </span><span class="cp">{{</span> <span class="nv">ans</span> <span class="cp">}}</span><span class="x"></span>
+<span class="cp">{%</span> <span class="k">endfor</span> <span class="cp">%}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>Este último ejemplo y el que le precede producen el mismo resultado. Para mayor información consultar la documentación de la clase.</p>
+</div>
 <div class="section" id="valores-siempre-presentes">
 <h3>Valores siempre presentes<a class="headerlink" href="#valores-siempre-presentes" title="Enlazar permanentemente con este título">¶</a></h3>
 <p>Por conveniencia se añade además información sobre la ejecución actual a este contexto. Los datos agregados tienen la estructura siguiente:</p>
@@ -204,7 +224,7 @@
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="../develop/docs.html" title="capítulo anterior">Escribiendo documentación</a></li>
+      <li>Previous: <a href="../develop/utils.html" title="capítulo anterior">Utilidades internas</a></li>
   </ul></li>
 </ul>
 </div>

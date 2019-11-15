@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>cacahuate.utils &#8212; documentación de Cacahuate - 2.7.0</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Código fuente para cacahuate.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">case_conversion</span> <span class="k">import</span> <span class="n">pascalcase</span>
+<span class="kn">from</span> <span class="nn">importlib</span> <span class="k">import</span> <span class="n">import_module</span>
+<span class="kn">from</span> <span class="nn">coralillo.errors</span> <span class="k">import</span> <span class="n">ModelNotFoundError</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="k">import</span> <span class="n">Template</span><span class="p">,</span> <span class="n">TemplateError</span>
+
+<span class="kn">from</span> <span class="nn">cacahuate.errors</span> <span class="k">import</span> <span class="n">MisconfiguredProvider</span>
+<span class="kn">from</span> <span class="nn">cacahuate.models</span> <span class="k">import</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">cacahuate.jsontypes</span> <span class="k">import</span> <span class="n">MultiFormDict</span>
+
+
+<span class="k">def</span> <span class="nf">user_import</span><span class="p">(</span><span class="n">module_key</span><span class="p">,</span> <span class="n">class_sufix</span><span class="p">,</span> <span class="n">import_maper</span><span class="p">,</span> <span class="n">default_path</span><span class="p">,</span> <span class="n">enabled</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; import a provider defined by the user &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">module_key</span> <span class="ow">in</span> <span class="n">import_maper</span><span class="p">:</span>
+        <span class="n">import_path</span> <span class="o">=</span> <span class="n">import_maper</span><span class="p">[</span><span class="n">module_key</span><span class="p">]</span>
+
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">cwd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cwd</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">module_key</span> <span class="ow">in</span> <span class="n">enabled</span><span class="p">:</span>
+        <span class="n">import_path</span> <span class="o">=</span> <span class="n">default_path</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">module_key</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MisconfiguredProvider</span><span class="p">(</span>
+            <span class="s1">&#39;Provider </span><span class="si">{}</span><span class="s1"> not enabled&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module_key</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">cls_name</span> <span class="o">=</span> <span class="n">pascalcase</span><span class="p">(</span><span class="n">module_key</span><span class="p">)</span> <span class="o">+</span> <span class="n">class_sufix</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mod</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="n">import_path</span><span class="p">)</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">cls_name</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ModuleNotFoundError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MisconfiguredProvider</span><span class="p">(</span>
+            <span class="s1">&#39;Could not import provider module </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">import_path</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">MisconfiguredProvider</span><span class="p">(</span><span class="s1">&#39;Provider does not define class </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">cls_name</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="bp">cls</span>
+
+
+<span class="k">def</span> <span class="nf">clear_username</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; because mongo usernames have special requirements &#39;&#39;&#39;</span>
+    <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">string</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;$&#39;</span><span class="p">):</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="p">[:</span><span class="n">string</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">)]</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="n">identifier</span> <span class="o">=</span> <span class="n">clear_username</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;identifier&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">identifier</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">User</span><span class="o">.</span><span class="n">get_by_or_exception</span><span class="p">(</span><span class="s1">&#39;identifier&#39;</span><span class="p">,</span> <span class="n">identifier</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ModelNotFoundError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">User</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">render_or</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="sd">&#39;&#39;&#39; Renders the given template in case it is a valid jinja template or</span>
+<span class="sd">    returns the default value &#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Template</span><span class="p">(</span><span class="n">template</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">context</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">TemplateError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default</span>
+
+
+<span class="k">def</span> <span class="nf">compact_values</span><span class="p">(</span><span class="n">collected_forms</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; Takes the input from the first form in a process and compacts it into</span>
+<span class="sd">    the first set of values for _the state_ that will be used in conditionals</span>
+<span class="sd">    or jinja templates&#39;&#39;&#39;</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">collected_forms</span><span class="p">:</span>
+        <span class="n">form_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">form</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">][</span><span class="s1">&#39;items&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">form_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s1">&#39;value_caption&#39;</span><span class="p">]</span>
+
+        <span class="n">context</span><span class="p">[</span><span class="n">form</span><span class="p">[</span><span class="s1">&#39;ref&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">form_dict</span>
+
+    <span class="k">return</span> <span class="n">context</span>
+
+
+<div class="viewcode-block" id="get_values"><a class="viewcode-back" href="../../develop/utils.html#cacahuate.utils.get_values">[documentos]</a><span class="k">def</span> <span class="nf">get_values</span><span class="p">(</span><span class="n">execution_data</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39; the proper and only way to get the ``&#39;values&#39;`` key out of</span>
+<span class="sd">    an execution document from mongo. It takes care of the transformations</span>
+<span class="sd">    needed for it to work in jinja templates and other contexts where the</span>
+<span class="sd">    multiplicity of answers (multiforms) is relevant. &#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">MultiFormDict</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">execution_data</span><span class="p">[</span><span class="s1">&#39;values&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">()</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Cacahuate</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegación</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Instalación</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../storage/index.html">Almacenamiento</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../develop/index.html">Desarrollo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../xml/index.html">Escribiendo XMLs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Código de módulo</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Búsqueda rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Ir a" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Abraham Toriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

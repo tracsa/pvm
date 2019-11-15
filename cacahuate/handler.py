@@ -12,7 +12,7 @@ from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
 from cacahuate.jsontypes import Map
 from cacahuate.cascade import cascade_invalidate, track_next_node
-from cacahuate.utils import render_or
+from cacahuate.utils import render_or, get_values
 
 LOGGER = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ class Handler:
 
         # get currect execution context
         exc_doc = next(exc_col.find({'id': execution.id}))
-        context = exc_doc.get('values', {})
+        context = get_values(exc_doc)
 
         # interpolate
         rendered_name = render_or(node.name, node.name, context)
@@ -277,13 +277,22 @@ class Handler:
         execution.delete()
 
     def compact_values(self, input):
+        ''' Given an imput from a node create a representation that will be
+        used to store the data in the 'values' key of the execution collection
+        in mongodb. '''
         compact = {}
 
         for form in input:
-            for key, value in form['inputs']['items'].items():
-                compact[
-                    'values.{}.{}'.format(form['ref'], key)
-                ] = value['value']
+            key = 'values.{}'.format(form['ref'])
+
+            if key in compact:
+                compact[key].append({
+                    k: v['value'] for k, v in form['inputs']['items'].items()
+                })
+            else:
+                compact[key] = [{
+                    k: v['value'] for k, v in form['inputs']['items'].items()
+                }]
 
         return compact
 

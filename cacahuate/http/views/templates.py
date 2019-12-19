@@ -1,6 +1,7 @@
 from coralillo.errors import ModelNotFoundError
+from flask import render_template_string
 from datetime import datetime
-from jinja2 import Template, environment
+from jinja2 import environment
 import json
 import os
 
@@ -50,14 +51,14 @@ def execution_template(id):
         return 'Not supported for old processes', 409
 
     # prepare default template
-    default = []
+    default = ['<div><b>Available keys</b></div>']
     context = get_values(execution)
 
     for key in context:
-        token = '<div><h2>{}</h2><pre>{{{{ {} | pretty }}}}</pre></div>'
+        token = '<div>{}</div>'
         default.append(token.format(key, key))
 
-    template = Template(''.join(default))
+    template_string = ''.join(default)
 
     # load template
     template_dir = app.config['TEMPLATE_PATH']
@@ -79,7 +80,7 @@ def execution_template(id):
 
     if template_name:
         with open(os.path.join(template_dir, template_name), 'r') as contents:
-            template = Template(contents.read())
+            template_string = contents.read()
 
     # return template interpolation
-    return template.render(**context)
+    return render_template_string(template_string, **context)

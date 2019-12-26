@@ -1,3 +1,4 @@
+import copy
 from coralillo.errors import ModelNotFoundError
 from datetime import datetime
 from flask import g
@@ -21,6 +22,8 @@ from cacahuate.node import make_node
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict, get_text, get_element_by
 from cacahuate.node import make_input
+
+from simplejson.errors import JSONDecodeError
 
 
 DATE_FIELDS = [
@@ -688,19 +691,26 @@ def data_mix():
     dict_args = request.args.to_dict()
 
     # get queries
+    def format_query(q):
+        try:
+            formated_q = json.loads(q)
+        except JSONDecodeError:
+            formated_q = q
+        return formated_q
 
     # execution's query
     exe_query = dict(
-        (k, dict_args[k]) for k in dict_args
+        (k, format_query(v)) for k, v in dict_args.items()
         if k not in app.config['INVALID_FILTERS']
     )
 
     # get pointer's query
     ptr_query = {}
-    for item in exe_query.copy():
+    for item in copy.deepcopy(exe_query):
         if item.startswith('pointer.'):
-            group, value = item.split('.', 1)
-            ptr_query[value] = exe_query.pop(item)
+            ptr_key = item.split('.', 1)[1]
+
+            ptr_query[ptr_key] = exe_query.pop(item)
 
     # filter for exclude/include
     exclude_fields = exe_query.pop('exclude', '')

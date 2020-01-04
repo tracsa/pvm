@@ -855,37 +855,32 @@ def data_mix():
     ))
 
     # build results
-    ptr_pipeline = [
-        {'$match': {'execution.id': {'$in': execution_ids}}},
-        {'$sort': {'started_at': -1}},
-        {'$group': {
-            '_id': '$execution.id',
-            'latest': {'$first': '$$ROOT'},
-        }},
-        {'$replaceRoot': {'newRoot': '$latest'}},
-        # TODO: DO NOT CREATE COLLECTION
-        {'$out': 'ptr_aux_collection'},
-    ]
-
-    ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
-    ptr_collection.aggregate(ptr_pipeline)
+    ptr_lookup = {
+        'from': app.config['POINTER_COLLECTION'],
+        'let': {'main_exec': '$id'},
+        'pipeline': [
+            {'$match': {'$expr': {
+                '$eq': ['$execution.id', '$$main_exec'],
+            }}},
+            {'$sort': {'started_at': -1}},
+            {'$group': {
+                '_id': '$execution.id',
+                'latest': {'$first': '$$ROOT'},
+            }},
+            {'$replaceRoot': {'newRoot': '$latest'}},
+        ],
+        'as': 'pointer',
+    }
 
     exe_pipeline = [
         {'$match': {'id': {'$in': execution_ids}}},
-        # TODO: FIND ANOTHER WAY TO ADD POINTER
-        {'$lookup': {
-            'from': 'ptr_aux_collection',
-            'localField': 'id',
-            'foreignField': 'execution.id',
-            'as': 'pointer',
-        }},
+        {'$lookup': ptr_lookup},
         srt,
         {'$skip': g.offset},
         {'$limit': g.limit},
     ]
 
     if prjct:
-        # TODO: THE ABOVE LOOKUP IS REQUIRED TO USE include/exclude=pointer.foo
         exe_pipeline.append({'$project': prjct})
 
     def data_mix_json_prepare(obj):

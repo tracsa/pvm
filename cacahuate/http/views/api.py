@@ -857,24 +857,25 @@ def data_mix():
     # build results
     ptr_lookup = {
         'from': app.config['POINTER_COLLECTION'],
-        'let': {'main_exec': '$id'},
-        'pipeline': [
-            {'$match': {'$expr': {
-                '$eq': ['$execution.id', '$$main_exec'],
-            }}},
-            {'$sort': {'started_at': -1}},
-            {'$group': {
-                '_id': '$execution.id',
-                'latest': {'$first': '$$ROOT'},
-            }},
-            {'$replaceRoot': {'newRoot': '$latest'}},
-        ],
+        'localField': 'id',
+        'foreignField': 'execution.id',
         'as': 'pointer',
     }
 
     exe_pipeline = [
         {'$match': {'id': {'$in': execution_ids}}},
         {'$lookup': ptr_lookup},
+        {'$unwind': {
+            'path': '$pointer',
+            'preserveNullAndEmptyArrays': True,
+        }},
+        {'$sort': {'pointer.started_at': -1}},
+        {'$group': {
+            '_id': '$id',
+            'latest': {'$first': '$$ROOT'},
+        }},
+        {'$replaceRoot': {'newRoot': '$latest'}},
+        {'$project': {'pointer.execution': 0}},
         srt,
         {'$skip': g.offset},
         {'$limit': g.limit},
@@ -884,13 +885,8 @@ def data_mix():
         exe_pipeline.append({'$project': prjct})
 
     def data_mix_json_prepare(obj):
-        if obj.get('pointer') is not None:
-            try:
-                obj['pointer'] = obj['pointer'][0]
-                obj['pointer'].pop('execution', {})
-                obj['pointer'] = json_prepare(obj['pointer'])
-            except IndexError:
-                obj['pointer'] = None
+        if 'pointer' in obj:
+            obj['pointer'] = json_prepare(obj['pointer'])
         return json_prepare(obj)
 
     return jsonify({

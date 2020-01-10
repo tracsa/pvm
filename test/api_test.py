@@ -1352,9 +1352,6 @@ def test_data_mix_pointerless(mongo, client, config):
     # clean pointers
     ptr_01_json.pop('execution')
 
-    # set pointers in executions
-    exec_01_json['pointer'] = None
-
     res = client.get(f'/v1/inbox')
 
     ans = json.loads(res.data)

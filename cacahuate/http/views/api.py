@@ -892,7 +892,7 @@ def data_mix():
     return jsonify({
         'data': list(map(
             data_mix_json_prepare,
-            exe_collection.aggregate(exe_pipeline),
+            exe_collection.aggregate(exe_pipeline, allowDiskUse=True),
         ))
     })
 

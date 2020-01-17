@@ -4,9 +4,9 @@
   <process-info>
     <author>categulario</author>
     <date>2020-01-17</date>
-    <name>Variable name process in step {% if form03.data03 %}3{% else %}{% if form02.data02 %}2{% else %}{% if form01.data01 %}1{% else %}0{% endif %}{% endif %}{% endif %}</name>
+    <name>Variable name process in step {% if form03 %}3{% else %}{% if form02 %}2{% else %}{% if form01 %}1{% else %}0{% endif %}{% endif %}{% endif %}</name>
     <public>false</public>
-    <description>A process that varies in name at each step</description>
+    <description>Description is also variable: {% if form01 %}{{ form01.data01 }}{% endif %}, {% if form02 %}{{ form02.data02 }}{% endif %}, {% if form03 %}{{ form03.data03 }}{% endif %}</description>
   </process-info>
   <process>
     <action id="start_node">

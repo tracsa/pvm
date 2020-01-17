@@ -8,7 +8,9 @@ class Execution(Model):
     execution '''
     process_name = fields.Text()
     name = fields.Text()
+    name_template = fields.Text()
     description = fields.Text()
+    description_template = fields.Text()
     pointers = fields.SetRelation(
         'cacahuate.models.Pointer',
         inverse='execution'

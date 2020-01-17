@@ -17,7 +17,7 @@ pytest:
 	pytest -xvv
 
 lint:
-	flake8 --exclude=.env,.tox,dist,docs,build,*.egg .
+	flake8 --exclude=.env,.tox,dist,docs,build,*.egg,.venv .
 
 xmllint:
 	xmllint --noout --relaxng cacahuate/xml/process-spec.rng xml/*.xml

@@ -5,7 +5,7 @@ from cacahuate.models import Pointer
 from cacahuate.xml import Xml
 from cacahuate.node import Form, make_node
 
-from .utils import make_pointer, make_user
+from .utils import make_user
 
 
 def test_variable_proc_name(config, mongo):
@@ -38,11 +38,6 @@ def test_variable_proc_name(config, mongo):
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'node02'
 
-    # name changed
-    state = next(mongo[config["EXECUTION_COLLECTION"]].find({
-        'id': execution.id,
-    }))
-
     execution.reload()
     assert execution.name == 'Variable name process in step 1'
     assert execution.description == 'Description is also variable: 1, , '
@@ -65,11 +60,6 @@ def test_variable_proc_name(config, mongo):
     assert Pointer.get(ptr.id) is None
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'node03'
-
-    # name changed
-    state = next(mongo[config["EXECUTION_COLLECTION"]].find({
-        'id': execution.id,
-    }))
 
     execution.reload()
     assert execution.name == 'Variable name process in step 2'

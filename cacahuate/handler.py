@@ -236,8 +236,16 @@ class Handler:
         context = compact_values(input)
 
         # update execution name
-        execution.name = render_or(execution.name_template, execution.name, context)
-        execution.description = render_or(execution.description_template, execution.description, context)
+        execution.name = render_or(
+            execution.name_template,
+            execution.name,
+            context,
+        )
+        execution.description = render_or(
+            execution.description_template,
+            execution.description,
+            context
+        )
         execution.save()
 
         # update state

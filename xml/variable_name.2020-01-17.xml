@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>categulario</author>
+    <date>2020-01-17</date>
+    <name>Variable name process in step {% if form03.data03 %}3{% else %}{% if form02.data02 %}2{% else %}{% if form01.data01 %}1{% else %}0{% endif %}{% endif %}{% endif %}</name>
+    <public>false</public>
+    <description>A process that varies in name at each step</description>
+  </process-info>
+  <process>
+    <action id="start_node">
+      <node-info>
+        <name>Action 01</name>
+        <description>Action 01</description>
+      </node-info>
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="form01">
+          <input type="text" name="data01" label="Data 01"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <action id="node02">
+      <node-info>
+        <name>Action 02</name>
+        <description>Action 02</description>
+      </node-info>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start_node</param>
+      </auth-filter>
+      <form-array>
+        <form id="form02">
+          <input type="text" name="data02" label="Data 02"></input>
+        </form>
+      </form-array>
+    </action>
+
+    <action id="node03">
+      <node-info>
+        <name>Action 03</name>
+        <description>Action 03</description>
+      </node-info>
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#start_node</param>
+      </auth-filter>
+      <form-array>
+        <form id="form03">
+          <input type="text" name="data03" label="Data 03"></input>
+        </form>
+      </form-array>
+    </action>
+  </process>
+</process-spec>

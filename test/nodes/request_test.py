@@ -46,7 +46,8 @@ def test_handle_request_node(config, mocker, mongo):
         'input': [Form.state_json('request', [
             {
                 'name': 'data',
-                'value': value
+                'value': value,
+                'value_caption': value,
             },
         ])],
     }, channel)
@@ -300,7 +301,8 @@ def test_store_data_from_response(config, mocker, mongo):
         'input': [Form.state_json('request', [
             {
                 'name': 'data',
-                'value': value
+                'value': value,
+                'value_caption': value,
             },
         ])],
     }, channel)

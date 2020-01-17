@@ -33,6 +33,7 @@ def test_call_node(config, mongo):
                 'name': 'data',
                 'name': 'data',
                 'value': value,
+                'value_caption': value,
             },
         ])],
     }, channel)

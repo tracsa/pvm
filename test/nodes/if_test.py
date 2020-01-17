@@ -33,6 +33,7 @@ def test_true_condition_node(config, mongo):
                 'name': 'password',
                 'type': 'text',
                 'value': 'abrete sésamo',
+                'value_caption': 'abrete sésamo',
             },
         ])],
     }, channel)
@@ -51,10 +52,10 @@ def test_true_condition_node(config, mongo):
         'input': [Form.state_json('condition1', [
             {
                 'name': 'condition',
-                'name': 'condition',
                 'state': 'valid',
                 'type': 'bool',
                 'value': True,
+                'value_caption': 'True',
             },
         ])],
         'user_identifier': '__system__',
@@ -93,6 +94,7 @@ def test_false_condition_node(config, mongo):
                 'name': 'password',
                 'type': 'text',
                 'value': '123456',
+                'value_caption': '123456',
             },
         ])],
     }, channel)
@@ -114,6 +116,7 @@ def test_false_condition_node(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': False,
+                'value_caption': 'False',
             },
         ])],
         'user_identifier': '__system__',
@@ -150,6 +153,7 @@ def test_anidated_conditions(config, mongo):
             {
                 'name': 'a',
                 'value': '1',
+                'value_caption': '1',
             },
         ])],
     }, channel)
@@ -170,6 +174,7 @@ def test_anidated_conditions(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': True,
+                'value_caption': 'True',
             },
         ])],
         'user_identifier': '__system__',
@@ -191,6 +196,7 @@ def test_anidated_conditions(config, mongo):
             {
                 'name': 'b',
                 'value': '-1',
+                'value_caption': '-1',
             },
         ])],
     }, channel)
@@ -212,6 +218,7 @@ def test_anidated_conditions(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': False,
+                'value_caption': 'False',
             },
         ])],
         'user_identifier': '__system__',
@@ -233,6 +240,7 @@ def test_anidated_conditions(config, mongo):
             {
                 'name': 'f',
                 'value': '-1',
+                'value_caption': '-1',
             },
         ])],
     }, channel)
@@ -264,6 +272,7 @@ def test_ifelifelse_if(config, mongo):
                 'name': 'password',
                 'type': 'text',
                 'value': 'incorrect!',
+                'value_caption': 'incorrect!',
             },
         ])],
     }, channel)
@@ -285,6 +294,7 @@ def test_ifelifelse_if(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': True,
+                'value_caption': 'True',
             },
         ])],
         'user_identifier': '__system__',
@@ -313,6 +323,7 @@ def test_ifelifelse_if(config, mongo):
             {
                 'name': 'answer',
                 'value': 'answer',
+                'value_caption': 'answer',
             },
         ])],
     }, channel)
@@ -345,6 +356,7 @@ def test_ifelifelse_elif(config, mongo):
                 'name': 'password',
                 'type': 'text',
                 'value': 'hocus pocus',
+                'value_caption': 'hocus pocus',
             },
         ])],
     }, channel)
@@ -367,6 +379,7 @@ def test_ifelifelse_elif(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': False,
+                'value_caption': 'False',
             },
         ])],
         'user_identifier': '__system__',
@@ -394,6 +407,7 @@ def test_ifelifelse_elif(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': True,
+                'value_caption': 'True',
             },
         ])],
         'user_identifier': '__system__',
@@ -422,6 +436,7 @@ def test_ifelifelse_elif(config, mongo):
             {
                 'name': 'answer',
                 'value': 'answer',
+                'value_caption': 'answer',
             },
         ])],
     }, channel)
@@ -454,6 +469,7 @@ def test_ifelifelse_else(config, mongo):
                 'name': 'password',
                 'type': 'text',
                 'value': 'cuca',
+                'value_caption': 'cuca',
             },
         ])],
     }, channel)
@@ -476,6 +492,7 @@ def test_ifelifelse_else(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': False,
+                'value_caption': 'False',
             },
         ])],
         'user_identifier': '__system__',
@@ -502,6 +519,7 @@ def test_ifelifelse_else(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': False,
+                'value_caption': 'False',
             },
         ])],
         'user_identifier': '__system__',
@@ -528,6 +546,7 @@ def test_ifelifelse_else(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': True,
+                'value_caption': 'True',
             },
         ])],
         'user_identifier': '__system__',
@@ -556,6 +575,7 @@ def test_ifelifelse_else(config, mongo):
             {
                 'name': 'answer',
                 'value': 'answer',
+                'value_caption': 'answer',
             },
         ])],
     }, channel)
@@ -593,6 +613,7 @@ def test_invalidated_conditional(config, mongo):
                 'name': 'value',
                 'type': 'int',
                 'value': 3,
+                'value_caption': '3',
             },
         ])],
     }, channel)
@@ -609,6 +630,7 @@ def test_invalidated_conditional(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': True,
+                'value_caption': 'True',
             },
         ])],
         'user_identifier': '__system__',
@@ -625,16 +647,19 @@ def test_invalidated_conditional(config, mongo):
             {
                 'name': 'response',
                 'value': 'reject',
+                'value_caption': 'reject',
             },
             {
                 'name': 'comment',
                 'value': 'I do not like it',
+                'value_caption': 'I do not like it',
             },
             {
                 'name': 'inputs',
                 'value': [{
                     'ref': 'start_node.juan.0:form1.value',
                 }],
+                'value_caption': '',
             },
         ])],
     }, channel)
@@ -651,6 +676,7 @@ def test_invalidated_conditional(config, mongo):
                 'name': 'value',
                 'type': 'int',
                 'value': -3,
+                'value_caption': '-3',
             },
         ])],
     }, channel)
@@ -670,6 +696,7 @@ def test_invalidated_conditional(config, mongo):
                 'state': 'valid',
                 'type': 'bool',
                 'value': False,
+                'value_caption': 'False',
             },
         ])],
         'user_identifier': '__system__',
@@ -713,6 +740,7 @@ def test_invalidated_conditional(config, mongo):
                                         'name': 'value',
                                         'type': 'int',
                                         'value': -3,
+                                        'value_caption': '-3',
                                     },
                                 ])],
                                 'state': 'valid',
@@ -744,6 +772,7 @@ def test_invalidated_conditional(config, mongo):
                                     {
                                         'name': 'condition',
                                         'value': False,
+                                        'value_caption': 'False',
                                         'type': 'bool',
                                         'state': 'valid',
                                     },
@@ -777,11 +806,13 @@ def test_invalidated_conditional(config, mongo):
                                     {
                                         'name': 'response',
                                         'value': 'reject',
+                                        'value_caption': 'reject',
                                         'state': 'invalid',
                                     },
                                     {
                                         'name': 'comment',
                                         'value': 'I do not like it',
+                                        'value_caption': 'I do not like it',
                                     },
                                     {
                                         'name': 'inputs',
@@ -789,6 +820,7 @@ def test_invalidated_conditional(config, mongo):
                                             'ref': 'start_node.juan.0:form1'
                                                    '.value',
                                         }],
+                                        'value_caption': '',
                                     },
                                 ], state='invalid')],
                                 'state': 'invalid',

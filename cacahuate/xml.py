@@ -81,6 +81,9 @@ class Xml:
 
     name = property(get_name, set_name)
 
+    def name_template(self):
+        return self._name
+
     # Interpolate description
     def get_description(self, context={}):
         return render_or(self._description, self._description, context)
@@ -89,6 +92,9 @@ class Xml:
         self._description = description
 
     description = property(get_description, set_description)
+
+    def description_template(self):
+        return self._description
 
     @classmethod
     def load(cls, config: dict, common_name: str, direct=False) -> TextIO:
@@ -141,7 +147,9 @@ class Xml:
         execution = Execution(
             process_name=self.filename,
             name=self.get_name(values),
+            name_template=self.name_template(),
             description=self.get_description(values),
+            description_template=self.description_template(),
         ).save()
         pointer = Pointer(
             node_id=node.id,

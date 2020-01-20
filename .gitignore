@@ -10,3 +10,4 @@ dist/
 *.json
 Pipfile.lock
 Pipfile
+.venv/

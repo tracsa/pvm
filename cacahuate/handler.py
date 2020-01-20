@@ -12,7 +12,7 @@ from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
 from cacahuate.jsontypes import Map
 from cacahuate.cascade import cascade_invalidate, track_next_node
-from cacahuate.utils import render_or, get_values
+from cacahuate.utils import render_or, get_values, compact_values
 
 LOGGER = logging.getLogger(__name__)
 
@@ -233,6 +233,20 @@ class Handler:
         })
 
         values = self.compact_values(input)
+        context = compact_values(input)
+
+        # update execution name
+        execution.name = render_or(
+            execution.name_template,
+            execution.name,
+            context,
+        )
+        execution.description = render_or(
+            execution.description_template,
+            execution.description,
+            context
+        )
+        execution.save()
 
         # update state
         collection = self.get_mongo()[

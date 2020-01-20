@@ -52,16 +52,19 @@ def test_approve(config, mongo):
             {
                 'name': 'response',
                 'value': 'accept',
+                'value_caption': 'accept',
             },
             {
                 'name': 'comment',
                 'value': 'I like it',
+                'value_caption': 'I like it',
             },
             {
                 'name': 'inputs',
                 'value': [{
                     'ref': 'start_node.juan.0.task',
                 }],
+                'value_caption': '',
             },
         ])],
     }, channel)
@@ -94,11 +97,13 @@ def test_approve(config, mongo):
                         'name': 'response',
                         'name': 'response',
                         'value': 'accept',
+                        'value_caption': 'accept',
                     },
                     {
                         'name': 'comment',
                         'name': 'comment',
                         'value': 'I like it',
+                        'value_caption': 'I like it',
                     },
                     {
                         'name': 'inputs',
@@ -106,6 +111,7 @@ def test_approve(config, mongo):
                         'value': [{
                             'ref': 'start_node.juan.0.task',
                         }],
+                        'value_caption': '',
                     },
                 ])],
             },
@@ -174,16 +180,19 @@ def test_reject(config, mongo):
             {
                 'name': 'response',
                 'value': 'reject',
+                'value_caption': 'reject',
             },
             {
                 'name': 'comment',
                 'value': 'I do not like it',
+                'value_caption': 'I do not like it',
             },
             {
                 'name': 'inputs',
                 'value': [{
                     'ref': 'start_node.juan.0:work.task',
                 }],
+                'value_caption': '',
             },
         ])],
     }, channel)
@@ -258,10 +267,12 @@ def test_reject(config, mongo):
                                         'name': 'response',
                                         'state': 'invalid',
                                         'value': 'reject',
+                                        'value_caption': 'reject',
                                     },
                                     {
                                         'name': 'comment',
                                         'value': 'I do not like it',
+                                        'value_caption': 'I do not like it',
                                     },
                                     {
                                         'name': 'inputs',
@@ -269,6 +280,7 @@ def test_reject(config, mongo):
                                             'ref': 'start_node.'
                                                    'juan.0:work.task',
                                         }],
+                                        'value_caption': '',
                                     },
                                 ], state='invalid')],
                                 'state': 'invalid',
@@ -330,16 +342,19 @@ def test_reject(config, mongo):
                     {
                         'name': 'response',
                         'value': 'reject',
+                        'value_caption': 'reject',
                     },
                     {
                         'name': 'comment',
                         'value': 'I do not like it',
+                        'value_caption': 'I do not like it',
                     },
                     {
                         'name': 'inputs',
                         'value': [{
                             'ref': 'start_node.juan.0:work.task',
                         }],
+                        'value_caption': '',
                     },
                 ])],
                 'state': 'valid',
@@ -375,6 +390,7 @@ def test_reject_with_dependencies(config, mongo):
             {
                 'name': 'task',
                 'value': '1',
+                'value_caption': '1',
             },
         ])],
     }, channel)
@@ -390,6 +406,7 @@ def test_reject_with_dependencies(config, mongo):
             {
                 'name': 'task',
                 'value': '1',
+                'value_caption': '1',
             },
         ])],
     }, channel)
@@ -405,6 +422,7 @@ def test_reject_with_dependencies(config, mongo):
             {
                 'name': 'task',
                 'value': '1',
+                'value_caption': '1',
             },
         ])],
     }, channel)
@@ -420,16 +438,19 @@ def test_reject_with_dependencies(config, mongo):
             {
                 'name': 'response',
                 'value': 'reject',
+                'value_caption': 'reject',
             },
             {
                 'name': 'comment',
                 'value': 'I do not like it',
+                'value_caption': 'I do not like it',
             },
             {
                 'name': 'inputs',
                 'value': [{
                     'ref': 'node1.juan.0:form1.task',
                 }],
+                'value_caption': '',
             },
         ])],
     }, channel)
@@ -445,6 +466,7 @@ def test_reject_with_dependencies(config, mongo):
             {
                 'name': 'task',
                 'value': '2',
+                'value_caption': '2',
             },
         ])],
     }, channel)
@@ -460,6 +482,7 @@ def test_reject_with_dependencies(config, mongo):
             {
                 'name': 'task',
                 'value': '2',
+                'value_caption': '2',
             },
         ])],
     }, channel)
@@ -475,14 +498,17 @@ def test_reject_with_dependencies(config, mongo):
             {
                 'name': 'response',
                 'value': 'accept',
+                'value_caption': 'accept',
             },
             {
                 'name': 'comment',
                 'value': 'I like it',
+                'value_caption': 'I like it',
             },
             {
                 'name': 'inputs',
                 'value': None,
+                'value_caption': 'None',
             },
         ])],
     }, channel)
@@ -498,6 +524,7 @@ def test_reject_with_dependencies(config, mongo):
             {
                 'name': 'task',
                 'value': '1',
+                'value_caption': '1',
             },
         ])],
     }, channel)
@@ -532,6 +559,7 @@ def test_reject_with_dependencies(config, mongo):
                                     {
                                         'name': 'task',
                                         'value': '2',
+                                        'value_caption': '2',
                                     },
                                 ])],
                                 'state': 'valid',
@@ -563,6 +591,7 @@ def test_reject_with_dependencies(config, mongo):
                                     {
                                         'name': 'task',
                                         'value': '2',
+                                        'value_caption': '2',
                                     },
                                 ])],
                                 'state': 'valid',
@@ -594,6 +623,7 @@ def test_reject_with_dependencies(config, mongo):
                                     {
                                         'name': 'task',
                                         'value': '1',
+                                        'value_caption': '1',
                                     },
                                 ])],
                                 'state': 'valid',
@@ -625,14 +655,17 @@ def test_reject_with_dependencies(config, mongo):
                                     {
                                         'name': 'response',
                                         'value': 'accept',
+                                        'value_caption': 'accept',
                                     },
                                     {
                                         'name': 'comment',
                                         'value': 'I like it',
+                                        'value_caption': 'I like it',
                                     },
                                     {
                                         'name': 'inputs',
                                         'value': None,
+                                        'value_caption': 'None',
                                     },
                                 ])],
                                 'state': 'valid',
@@ -664,6 +697,7 @@ def test_reject_with_dependencies(config, mongo):
                                     {
                                         'name': 'task',
                                         'value': '1',
+                                        'value_caption': '1',
                                     },
                                 ])],
                                 'state': 'valid',
@@ -725,6 +759,7 @@ def test_invalidate_all_nodes(config, mongo):
             {
                 'name': 'task',
                 'value': '2',
+                'value_caption': '2',
             },
         ])],
     }, channel)
@@ -758,16 +793,19 @@ def test_invalidate_all_nodes(config, mongo):
             {
                 'name': 'response',
                 'value': 'reject',
+                'value_caption': 'reject',
             },
             {
                 'name': 'inputs',
                 'value': [{
                     'ref': 'start_node.juan.0:work.task',
                 }],
+                'value_caption': '',
             },
             {
                 'name': 'comment',
                 'value': '',
+                'value_caption': '',
             },
         ])],
     }, channel)

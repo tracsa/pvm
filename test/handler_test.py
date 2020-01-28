@@ -43,7 +43,9 @@ def test_create_pointer(config):
     exc = Execution.validate(
         process_name='simple.2018-02-19.xml',
         name='nombre',
-        description='description'
+        name_template='nombre',
+        description='description',
+        description_template='description',
     ).save()
     pointer = handler.create_pointer(node, exc)
     execution = pointer.proxy.execution.get()
@@ -197,6 +199,7 @@ def test_teardown(config, mongo):
                 '_type': 'field',
                 'state': 'valid',
                 'value': 'yes',
+                'value_caption': 'yes',
                 'name': 'data',
             },
         ])],
@@ -231,6 +234,7 @@ def test_teardown(config, mongo):
                         '_type': 'field',
                         'state': 'valid',
                         'value': 'yes',
+                        'value_caption': 'yes',
                         'name': 'data',
                     },
                 ])],
@@ -285,6 +289,7 @@ def test_teardown(config, mongo):
                                     '_type': 'field',
                                     'state': 'valid',
                                     'value': 'yes',
+                                    'value_caption': 'yes',
                                     'name': 'data',
                                 },
                             ])],

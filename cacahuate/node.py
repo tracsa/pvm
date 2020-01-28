@@ -7,6 +7,7 @@ import logging
 import re
 import requests
 from jsonpath_rw import parse as jsonpathparse
+import json
 
 from cacahuate.errors import InconsistentState, MisconfiguredProvider
 from cacahuate.errors import InvalidInputError, InputError, RequiredListError
@@ -541,14 +542,17 @@ class Validation(UserAttachedNode):
             {
                 'name': 'response',
                 'value': json_data['response'],
+                'value_caption': json_data['response'],
             },
             {
                 'name': 'comment',
                 'value': json_data['comment'],
+                'value_caption': json_data['comment'],
             },
             {
                 'name': 'inputs',
                 'value': json_data.get('inputs'),
+                'value_caption': json.dumps(json_data.get('inputs')),
             },
         ])]
 
@@ -711,6 +715,7 @@ class Conditional(Node):
                 'state': 'valid',
                 'type': 'bool',
                 'value': value,
+                'value_caption': str(value),
             }
         ])]
 
@@ -755,6 +760,7 @@ class Else(Node):
                 'state': 'valid',
                 'type': 'bool',
                 'value': True,
+                'value_caption': 'True',
             },
         ])]
 

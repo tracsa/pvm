@@ -69,6 +69,7 @@ def test_send_request_multiple(config, mongo, mocker):
                     'name': 'name',
                     'type': 'text',
                     'value': names[0],
+                    'value_caption': names[0],
                 },
             ]),
             Form.state_json('form1', [
@@ -76,6 +77,7 @@ def test_send_request_multiple(config, mongo, mocker):
                     'name': 'name',
                     'type': 'text',
                     'value': names[1],
+                    'value_caption': names[1],
                 },
             ]),
             Form.state_json('form1', [
@@ -83,6 +85,7 @@ def test_send_request_multiple(config, mongo, mocker):
                     'name': 'name',
                     'type': 'text',
                     'value': names[2],
+                    'value_caption': names[2],
                 },
             ]),
         ],

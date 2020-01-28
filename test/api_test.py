@@ -660,14 +660,17 @@ def test_validation_approval(client, mocker, config):
             {
                 'name': 'response',
                 'value': 'accept',
+                'value_caption': 'accept',
             },
             {
                 'name': 'comment',
                 'value': 'I like the previous work',
+                'value_caption': 'I like the previous work',
             },
             {
                 'name': 'inputs',
                 'value': None,
+                'value_caption': 'null',
             },
         ])],
     }
@@ -716,16 +719,19 @@ def test_validation_reject(client, mocker, config):
             {
                 'name': 'response',
                 'value': 'reject',
+                'value_caption': 'reject',
             },
             {
                 'name': 'comment',
                 'value': 'I dont like it',
+                'value_caption': 'I dont like it',
             },
             {
                 'name': 'inputs',
                 'value': [{
                     'ref': 'start_node.juan.0:work.task',
                 }],
+                'value_caption': '[{"ref": "start_node.juan.0:work.task"}]',
             },
         ])],
     }
@@ -2606,7 +2612,9 @@ def test_task_read(client, config, mongo):
                 'id': execution.id,
                 'process_name': execution.process_name,
                 'name': None,
+                'name_template': '',
                 'description': None,
+                'description_template': '',
             },
             'form_array': [
                 {
@@ -2670,8 +2678,10 @@ def test_task_validation(client, mongo, config):
         'execution': {
             '_type': 'execution',
             'description': None,
+            'description_template': '',
             'id': execution.id,
             'name': None,
+            'name_template': '',
             'process_name': execution.process_name,
         },
         'fields': [
@@ -2740,8 +2750,10 @@ def test_task_with_prev_work(client, config, mongo):
         'execution': {
             '_type': 'execution',
             'description': None,
+            'description_template': '',
             'id': execution.id,
             'name': None,
+            'name_template': '',
             'process_name': execution.process_name,
         },
         'form_array': [{

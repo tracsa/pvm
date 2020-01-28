@@ -232,6 +232,7 @@
           <value>int</value>
           <value>float</value>
           <value>link</value>
+          <value>currency</value>
         </choice>
       </attribute>
       <optional>

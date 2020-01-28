@@ -24,6 +24,7 @@ INPUTS = [
     'int',
     'float',
     'link',
+    'currency',
 ]
 
 
@@ -178,6 +179,10 @@ class FloatInput(Input):
 
     def make_caption(self, value):
         return str(value)
+
+
+class CurrencyInput(FloatInput):
+    pass
 
 
 class FiniteOptionInput(Input):

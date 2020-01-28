@@ -36,7 +36,8 @@ def test_all_inputs(client, config, mongo, mocker):
                     'link': {
                         'label': 'DuckDuckGo',
                         'href': 'https://duckduckgo.com/',
-                    }
+                    },
+                    'currency': 1200300.99,
                 },
             },
         ],
@@ -142,6 +143,16 @@ def test_all_inputs(client, config, mongo, mocker):
                 'label': 'DuckDuckGo',
                 'href': 'https://duckduckgo.com/',
             },
+        },
+
+        'currency': {
+            "name": "currency",
+            "type": "currency",
+            "value": 1200300.99,
+            'label': 'Insert a float to format as currency',
+            'value_caption': '1200300.99',
+            'state': 'valid',
+            'hidden': False,
         },
     }
 

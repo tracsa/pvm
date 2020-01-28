@@ -721,6 +721,8 @@ def test_invalidated_conditional(config, mongo):
     assert state == {
         '_type': 'execution',
         'id': execution.id,
+        'name': '',
+        'description': '',
         'state': {
             '_type': ':sorted_map',
             'items': {

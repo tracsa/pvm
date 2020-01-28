@@ -215,6 +215,8 @@ def test_reject(config, mongo):
     assert state == {
         '_type': 'execution',
         'id': execution.id,
+        'name': '',
+        'description': '',
         'state': {
             '_type': ':sorted_map',
             'items': {
@@ -541,6 +543,8 @@ def test_reject_with_dependencies(config, mongo):
     assert state == {
         '_type': 'execution',
         'id': execution.id,
+        'name': '',
+        'description': '',
         'state': {
             '_type': ':sorted_map',
             'items': {

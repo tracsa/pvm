@@ -63,6 +63,7 @@ def test_variable_proc_name(config, mongo):
 
     execution.reload()
     assert execution.name == 'Variable name process in step 2'
+    assert execution.description == 'Description is also variable: 1, 2, '
 
     handler.call({
         'command': 'step',

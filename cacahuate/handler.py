@@ -1,6 +1,7 @@
 from coralillo.errors import ModelNotFoundError
 from datetime import datetime
 from pymongo import MongoClient
+import pymongo
 import logging
 import pika
 import simplejson as json
@@ -12,7 +13,7 @@ from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
 from cacahuate.jsontypes import Map
 from cacahuate.cascade import cascade_invalidate, track_next_node
-from cacahuate.utils import render_or, get_values, compact_values
+from cacahuate.utils import render_or, get_values
 
 LOGGER = logging.getLogger(__name__)
 
@@ -233,7 +234,25 @@ class Handler:
         })
 
         values = self.compact_values(input)
-        context = compact_values(input)
+
+        # update state
+        collection = self.get_mongo()[
+            self.config['EXECUTION_COLLECTION']
+        ]
+        mongo_exe = collection.find_one_and_update(
+            {'id': execution.id},
+            {'$set': {**{
+                'state.items.{node}.state'.format(node=node.id): 'valid',
+                'state.items.{node}.actors.items.{identifier}'.format(
+                    node=node.id,
+                    identifier=user.identifier,
+                ): actor_json,
+                'actors.{}'.format(node.id): user.identifier,
+            }, **values}},
+            return_document=pymongo.collection.ReturnDocument.AFTER,
+        )
+
+        context = get_values(mongo_exe)
 
         # update execution name
         execution.name = render_or(
@@ -248,24 +267,13 @@ class Handler:
         )
         execution.save()
 
-        # update state
-        collection = self.get_mongo()[
-            self.config['EXECUTION_COLLECTION']
-        ]
-        collection.update_one({
-            'id': execution.id,
-        }, {
-            '$set': {**{
+        collection.update_one(
+            {'id': execution.id},
+            {'$set': {
                 'name': execution.name,
                 'description': execution.description,
-                'state.items.{node}.state'.format(node=node.id): 'valid',
-                'state.items.{node}.actors.items.{identifier}'.format(
-                    node=node.id,
-                    identifier=user.identifier,
-                ): actor_json,
-                'actors.{}'.format(node.id): user.identifier,
-            }, **values},
-        })
+            }},
+        )
 
         LOGGER.debug('Deleted pointer p:{} n:{} e:{}'.format(
             pointer.id,

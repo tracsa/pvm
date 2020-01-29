@@ -64,6 +64,8 @@ def test_exit_interaction(config, mongo):
     assert state == {
         '_type': 'execution',
         'id': execution.id,
+        'name': '',
+        'description': '',
         'state': {
             '_type': ':sorted_map',
             'items': {

@@ -256,6 +256,8 @@ class Handler:
             'id': execution.id,
         }, {
             '$set': {**{
+                'name': execution.name,
+                'description': execution.description,
                 'state.items.{node}.state'.format(node=node.id): 'valid',
                 'state.items.{node}.actors.items.{identifier}'.format(
                     node=node.id,

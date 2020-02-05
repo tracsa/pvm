@@ -747,7 +747,7 @@ def data_mix():
 
         if exe_id is not None:
             exe_id &= uid_exe_set
-        elif uid_exe_set is not None:
+        else:
             exe_id = uid_exe_set
 
     # filter for actor_identifier
@@ -829,7 +829,7 @@ def data_mix():
 
         if exe_id is not None:
             exe_id &= ptr_exe_ids
-        elif ptr_exe_ids is not None:
+        else:
             exe_id = ptr_exe_ids
 
     if type(exe_id) == set:

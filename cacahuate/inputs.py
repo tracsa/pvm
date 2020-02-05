@@ -147,7 +147,7 @@ class FloatInput(Input):
         # allowed types are None, String, and Numbers
         curated = None
 
-        if not value:
+        if value is None or value == '':
             curated = None
         elif isinstance(value, numbers.Number) or type(value) == str:
             try:

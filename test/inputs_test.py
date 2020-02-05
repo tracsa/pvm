@@ -1038,3 +1038,23 @@ def test_float_input_ok(client):
     }))
 
     assert res.status_code == 201
+
+
+def test_float_input_required(client):
+    user = make_user('jorge', 'Jorge')
+
+    res = client.post('/v1/execution', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(user)}, data=json.dumps({
+        'process_name': 'float-input-required',
+        'form_array': [
+            {
+                'ref': 'auth_form',
+                'data': {
+                    'float': 0.0,
+                },
+            },
+        ],
+    }))
+
+    assert res.status_code == 201

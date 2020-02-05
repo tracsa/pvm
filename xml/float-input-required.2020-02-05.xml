@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>KYSXD</author>
+    <date>2020-02-05</date>
+    <name>Float Input Required</name>
+    <description>Process to test the float input as required</description>
+    <public>false</public>
+  </process-info>
+  <process>
+    <action id="initial_node" >
+      <node-info>
+        <name>Unnamed action</name>
+        <description>Undescribed action</description>
+      </node-info>
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="auth_form">
+          <input
+            type="float"
+            label="Give me the float"
+            name="float"
+            required="required"
+          />
+        </form>
+      </form-array>
+    </action>
+  </process>
+</process-spec>

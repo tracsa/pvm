@@ -748,7 +748,7 @@ def data_mix():
         if exe_id is not None:
             exe_id &= uid_exe_set
         else:
-            exe_id = uid_exe_set or None
+            exe_id = uid_exe_set
 
     # filter for actor_identifier
     actor_identifier = exe_query.pop('actor_identifier', None)
@@ -830,7 +830,7 @@ def data_mix():
         if exe_id is not None:
             exe_id &= ptr_exe_ids
         else:
-            exe_id = ptr_exe_ids or None
+            exe_id = ptr_exe_ids
 
     if type(exe_id) == set:
         exe_query['id'] = {

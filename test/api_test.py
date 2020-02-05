@@ -1846,6 +1846,91 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
     }
 
 
+def test_data_mix_filter_user_identifier_executionless(mongo, client, config):
+    juan = make_user('juan', 'Juan')
+    jorge = make_user('jorge', 'Jorge')
+
+    # Create pointers
+
+    ptr_01 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+    ptr_02 = make_pointer('simple.2018-02-19.xml', 'mid_node')
+    ptr_03 = make_pointer('exit_request.2018-03-20.xml', 'requester')
+    ptr_04 = make_pointer('validation.2018-05-09.xml', 'approval_node')
+
+    # set some tasks to user
+    juan.proxy.tasks.set([ptr_02])
+
+    ptr_01_json = ptr_01.to_json(include=['*', 'execution'])
+    ptr_02_json = ptr_02.to_json(include=['*', 'execution'])
+    ptr_03_json = ptr_03.to_json(include=['*', 'execution'])
+    ptr_04_json = ptr_04.to_json(include=['*', 'execution'])
+
+    # set started_at to ptrs
+    ptr_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+    ptr_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
+    ptr_03_json['started_at'] = '2018-04-01T21:47:00+00:00'
+    ptr_04_json['started_at'] = '2018-04-01T21:48:00+00:00'
+
+    # Pointer collection
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        ptr_01_json.copy(),
+        ptr_02_json.copy(),
+        ptr_03_json.copy(),
+        ptr_04_json.copy(),
+    ])
+
+    # Create executions
+
+    exec_01 = ptr_01.proxy.execution.get()
+    exec_02 = ptr_02.proxy.execution.get()
+    exec_03 = ptr_03.proxy.execution.get()
+    exec_04 = ptr_04.proxy.execution.get()
+
+    # set some activities to user
+    juan.proxy.activities.set([exec_03])
+
+    exec_01_json = exec_01.to_json()
+    exec_02_json = exec_02.to_json()
+    exec_03_json = exec_03.to_json()
+    exec_04_json = exec_04.to_json()
+
+    # set started_at to ptrs
+    exec_01_json['started_at'] = '2018-04-01T21:45:00+00:00'
+    exec_02_json['started_at'] = '2018-04-01T21:46:00+00:00'
+    exec_03_json['started_at'] = '2018-04-01T21:47:00+00:00'
+    exec_04_json['started_at'] = '2018-04-01T21:48:00+00:00'
+
+    # Execution collection
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        exec_01_json.copy(),
+        exec_02_json.copy(),
+        exec_03_json.copy(),
+        exec_04_json.copy(),
+    ])
+
+    # clean pointers
+    ptr_01_json.pop('execution')
+    ptr_02_json.pop('execution')
+    ptr_03_json.pop('execution')
+    ptr_04_json.pop('execution')
+
+    # set pointers in executions
+    exec_01_json['pointer'] = ptr_01_json
+    exec_02_json['pointer'] = ptr_02_json
+    exec_03_json['pointer'] = ptr_03_json
+    exec_04_json['pointer'] = ptr_04_json
+
+    # check if valid user user doesn't have inbox items
+    res = client.get(f'/v1/inbox?user_identifier={jorge.identifier}')
+
+    ans = json.loads(res.data)
+
+    assert res.status_code == 200
+    assert ans == {
+        "data": [],
+    }
+
+
 def test_data_mix_filter_actor_identifier(mongo, client, config):
     # Create pointers
 

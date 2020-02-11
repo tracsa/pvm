@@ -68,32 +68,29 @@ def execution_template(id):
     process_name = execution['process_name']
     name, version, _ = process_name.split('.')
 
-    files = os.listdir(template_dir)
+    # file or folder
+    ff_name = '.'.join([name, version])
 
     template_name = None
-    for filename in files:
-        try:
-            fname, fversion = filename.split('.')[:2]
-        except ValueError:
-            # Templates with malformed name, sorry
-            continue
+    # If template file exists...
+    if os.path.isfile(
+        os.path.join(template_dir, ff_name + '.html')
+    ):
+        template_name = ff_name + '.html'
+    # Else check for any folder...
+    elif os.path.isfile(
+        os.path.join(template_dir, ff_name + '/', 'template.html')
+    ):
+        # set loader for "includes"
+        custom_loader = jinja2.ChoiceLoader([
+            jinja2.FileSystemLoader([
+                app.config['TEMPLATE_PATH'] + '/' + ff_name,
+            ]),
+        ])
+        bp.jinja_loader = custom_loader
 
-        if fname == name and fversion == version:
-            if os.path.isfile(
-                template_dir + '/' + filename
-            ):
-                template_name = filename
-            elif os.path.isfile(
-                template_dir + '/' + filename + '/template.html'
-            ):
-                my_loader = jinja2.ChoiceLoader([
-                    jinja2.FileSystemLoader([
-                        app.config['TEMPLATE_PATH'] + '/' + filename,
-                    ]),
-                ])
-                bp.jinja_loader = my_loader
-
-                template_name = filename + '/template.html'
+        # ... and return the "main template"
+        template_name = ff_name + '/template.html'
 
     if template_name:
         with open(os.path.join(template_dir, template_name), 'r') as contents:

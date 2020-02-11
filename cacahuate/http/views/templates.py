@@ -79,9 +79,13 @@ def execution_template(id):
             continue
 
         if fname == name and fversion == version:
-            if os.path.isfile(template_dir + '/' + filename):
+            if os.path.isfile(
+                template_dir + '/' + filename
+            ):
                 template_name = filename
-            elif os.path.isfile(template_dir + '/' + filename + '/template.html'):
+            elif os.path.isfile(
+                template_dir + '/' + filename + '/template.html'
+            ):
                 my_loader = jinja2.ChoiceLoader([
                     jinja2.FileSystemLoader([
                         app.config['TEMPLATE_PATH'] + '/' + filename,

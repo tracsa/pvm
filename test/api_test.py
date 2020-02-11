@@ -3670,7 +3670,7 @@ def test_execution_summary(client, mongo, config):
         '<p>He/She is voting for <b>amlo</b></p>'
     ])
 
-    assert expected == res.data
+    assert expected == res.data.decode("utf-8")
 
 
 def test_execution_summary_nested(client, mongo, config):

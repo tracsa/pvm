@@ -3673,32 +3673,6 @@ def test_execution_summary(client, mongo, config):
     assert expected == res.data
 
 
-def test_execution_summary(client, mongo, config):
-    mongo[config["EXECUTION_COLLECTION"]].insert_many([
-        {
-            'id': EXECUTION_ID,
-            'process_name': 'not-default-required-input.2018-04-04.html',
-            'values': {
-                'auth_form': [
-                    {
-                        'name': 'Jorge Juan',
-                        'elections': 'amlo',
-                    },
-                ],
-            },
-        },
-    ])
-
-    res = client.get(f'/v1/execution/{EXECUTION_ID}/summary')
-
-    expected = '\n'.join([
-        '<p>The form was filled by <b>Jorge Juan</b></p>',
-        '<p>He/She is voting for <b>amlo</b></p>'
-    ])
-
-    assert expected == res.data.decode("utf-8")
-
-
 def test_execution_summary_nested(client, mongo, config):
     mongo[config["EXECUTION_COLLECTION"]].insert_many([
         {

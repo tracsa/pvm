@@ -1,19 +1,22 @@
 from coralillo.errors import ModelNotFoundError
-from flask import render_template_string
+from flask import render_template_string, make_response, current_app as app
 from datetime import datetime
-from jinja2 import environment
+import jinja2
 import json
 import os
+from flask import Blueprint
 
-from cacahuate.http.wsgi import app, mongo
+from cacahuate.mongo import mongo
 from cacahuate.utils import get_values
+
+bp = Blueprint('summary', __name__)
 
 
 def to_pretty_json(value):
     return json.dumps(value, sort_keys=True, indent=4, separators=(',', ': '))
 
 
-environment.DEFAULT_FILTERS['pretty'] = to_pretty_json
+jinja2.environment.DEFAULT_FILTERS['pretty'] = to_pretty_json
 
 
 DATE_FIELDS = [
@@ -33,7 +36,7 @@ def json_prepare(obj):
     return obj
 
 
-@app.route('/v1/execution/<id>/summary', methods=['GET'])
+@bp.route('/v1/execution/<id>/summary', methods=['GET'])
 def execution_template(id):
     # load values
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
@@ -70,17 +73,30 @@ def execution_template(id):
     template_name = None
     for filename in files:
         try:
-            fname, fversion, _ = filename.split('.')
+            fname, fversion = filename.split('.')[:2]
         except ValueError:
             # Templates with malformed name, sorry
             continue
 
         if fname == name and fversion == version:
-            template_name = filename
+            if os.path.isfile(template_dir + '/' + filename):
+                template_name = filename
+            elif os.path.isfile(template_dir + '/' + filename + '/template.html'):
+                my_loader = jinja2.ChoiceLoader([
+                    jinja2.FileSystemLoader([
+                        app.config['TEMPLATE_PATH'] + '/' + filename,
+                    ]),
+                ])
+                bp.jinja_loader = my_loader
+
+                template_name = filename + '/template.html'
 
     if template_name:
         with open(os.path.join(template_dir, template_name), 'r') as contents:
             template_string = contents.read()
 
     # return template interpolation
-    return render_template_string(template_string, **context)
+    return make_response(
+        render_template_string(template_string, **context),
+        200,
+    )

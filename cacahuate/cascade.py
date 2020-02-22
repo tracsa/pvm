@@ -59,6 +59,8 @@ def cascade_invalidate(xml, state, invalidated, comment):
             updates[input_value_path] = set_values[key]['value']
             updates[input_caption_path] = set_values[key]['value_caption']
 
+            updates[f'values.{ref}.{index}.{input}'] = set_values[key]['value']
+
         # forms
         if input_state == 'valid' and (
                 form_state_path not in updates or

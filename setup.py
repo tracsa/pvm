@@ -75,6 +75,7 @@ setup(
         'yuid',
         'jsonpath-rw',
         'jinja2',
+        'werzkeug < 1.0',
     ],
 
     setup_requires=[

@@ -90,6 +90,16 @@ def test_patch_invalidate(config, mongo):
 
     assert security_pointer_state['state'] == 'cancelled'
 
+    execution = mongo[config["EXECUTION_COLLECTION"]].find_one({
+        'id': execution.id,
+    })
+
+    expected_values = {
+        'auth_form': [{'auth': 'yes'}],
+        'exit_form': [{'reason': 'want to pee'}],
+    }
+    assert execution['values'] == expected_values
+
 
 def test_patch_set_value(config, mongo):
     ''' patch and set new data '''
@@ -170,3 +180,13 @@ def test_patch_set_value(config, mongo):
 
     assert _input['value'] == 'am hungry'
     assert _input['value_caption'] == 'am hungry'
+
+    execution = mongo[config["EXECUTION_COLLECTION"]].find_one({
+        'id': execution.id,
+    })
+
+    expected_values = {
+        'auth_form': [{'auth': 'yes'}],
+        'exit_form': [{'reason': 'am hungry'}],
+    }
+    assert execution['values'] == expected_values

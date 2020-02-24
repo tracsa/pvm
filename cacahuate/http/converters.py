@@ -23,8 +23,7 @@ class AuthProviderConverter(BaseConverter):
         return cls(app.config)
 
     def to_url(self, values):
-        # TODO: KYSXD: Is this the correct way?
-        return str(values)
+        raise NotImplementedError('this converter does not work backwards')
 
 
 app.url_map.converters['AuthProvider'] = AuthProviderConverter

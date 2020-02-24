@@ -23,7 +23,7 @@ class AuthProviderConverter(BaseConverter):
         return cls(app.config)
 
     def to_url(self, values):
-        raise NotImplementedError('this converter does not work backwards')
+        return str(values)
 
 
 app.url_map.converters['AuthProvider'] = AuthProviderConverter

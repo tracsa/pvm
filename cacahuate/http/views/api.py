@@ -512,6 +512,20 @@ def list_process():
 
 @app.route('/v1/process/<name>', methods=['GET'])
 def find_process(name):
+    def add_form(xml):
+        json_xml = xml.to_json()
+        forms = []
+        xmliter = iter(xml)
+        first_node = next(xmliter)
+        xmliter.parser.expandNode(first_node)
+
+        for form in first_node.getElementsByTagName('form'):
+            forms.append(form_to_dict(form))
+
+        json_xml['form_array'] = forms
+
+        return json_xml
+
     version = request.args.get('version', '')
 
     if version:
@@ -529,7 +543,7 @@ def find_process(name):
         }])
 
     return jsonify({
-        'data': xml.to_json()
+        'data': add_form(xml),
     })
 
 

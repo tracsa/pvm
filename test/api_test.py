@@ -1284,7 +1284,6 @@ def test_data_mix_pointer_unique(mongo, client, config):
 
     # Pointer collection
     mongo[config["POINTER_COLLECTION"]].insert_many([
-        ptr_01_json.copy(),
         {
             'started_at': '2010-08-21-01T21:45:00+00:00',
             'execution': {
@@ -1295,6 +1294,7 @@ def test_data_mix_pointer_unique(mongo, client, config):
             },
             'process_id': 'simple.2018-02-19.xml',
         },
+        ptr_01_json.copy(),
     ])
 
     # Create executions

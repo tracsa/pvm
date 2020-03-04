@@ -890,7 +890,7 @@ def data_mix():
 
     def data_mix_json_prepare(obj):
         if 'pointer' in obj and obj['pointer']:
-            obj['pointer'] = json_prepare(obj['pointer'][0])
+            obj['pointer'] = json_prepare(obj['pointer'][-1])
             obj['pointer'].pop('execution', None)
         else:
             obj.pop('pointer', None)

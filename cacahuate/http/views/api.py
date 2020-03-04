@@ -879,16 +879,6 @@ def data_mix():
     exe_pipeline = [
         {'$match': {'id': {'$in': execution_ids}}},
         {'$lookup': ptr_lookup},
-        {'$unwind': {
-            'path': '$pointer',
-            'preserveNullAndEmptyArrays': True,
-        }},
-        {'$sort': {'pointer.started_at': -1}},
-        {'$group': {
-            '_id': '$id',
-            'latest': {'$first': '$$ROOT'},
-        }},
-        {'$replaceRoot': {'newRoot': '$latest'}},
         {'$project': {'pointer.execution': 0}},
         srt,
         {'$skip': g.offset},
@@ -899,8 +889,11 @@ def data_mix():
         exe_pipeline.append({'$project': prjct})
 
     def data_mix_json_prepare(obj):
-        if 'pointer' in obj:
-            obj['pointer'] = json_prepare(obj['pointer'])
+        if 'pointer' in obj and obj['pointer']:
+            obj['pointer'] = json_prepare(obj['pointer'][0])
+            obj['pointer'].pop('execution', None)
+        else:
+            obj.pop('pointer', None)
         return json_prepare(obj)
 
     return jsonify({

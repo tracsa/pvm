@@ -241,14 +241,22 @@ class Handler:
         ]
         mongo_exe = collection.find_one_and_update(
             {'id': execution.id},
-            {'$set': {**{
-                'state.items.{node}.state'.format(node=node.id): 'valid',
-                'state.items.{node}.actors.items.{identifier}'.format(
-                    node=node.id,
-                    identifier=user.identifier,
-                ): actor_json,
-                'actors.{}'.format(node.id): user.identifier,
-            }, **values}},
+            {
+                '$addToSet': {
+                    'actor_list': {
+                        'node': node.id,
+                        'identifier': user.identifier,
+                    },
+                },
+                '$set': {**{
+                    'state.items.{node}.state'.format(node=node.id): 'valid',
+                    'state.items.{node}.actors.items.{identifier}'.format(
+                        node=node.id,
+                        identifier=user.identifier,
+                    ): actor_json,
+                    'actors.{}'.format(node.id): user.identifier,
+                }, **values},
+            },
             return_document=pymongo.collection.ReturnDocument.AFTER,
         )
 

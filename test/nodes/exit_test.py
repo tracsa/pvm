@@ -143,4 +143,14 @@ def test_exit_interaction(config, mongo):
             'exit': '__system__',
             'start_node': 'juan',
         },
+        'actor_list': [
+            {
+                'node': 'start_node',
+                'identifier': 'juan',
+            },
+            {
+                'node': 'exit',
+                'identifier': '__system__',
+            },
+        ],
     }

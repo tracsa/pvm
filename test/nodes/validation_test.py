@@ -326,6 +326,10 @@ def test_reject(config, mongo):
         'actors': {
             'approval_node': 'juan',
         },
+        'actor_list': [{
+            'node': 'approval_node',
+            'identifier': 'juan',
+        }],
     }
 
     # mongo has the data
@@ -739,6 +743,28 @@ def test_reject_with_dependencies(config, mongo):
             'node4': 'juan',
             'node5': 'juan',
         },
+        'actor_list': [
+            {
+                'node': 'node1',
+                'identifier': 'juan',
+            },
+            {
+                'node': 'node2',
+                'identifier': 'juan',
+            },
+            {
+                'node': 'node3',
+                'identifier': 'juan',
+            },
+            {
+                'node': 'node4',
+                'identifier': 'juan',
+            },
+            {
+                'node': 'node5',
+                'identifier': 'juan',
+            },
+        ],
     }
 
 

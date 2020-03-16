@@ -856,4 +856,18 @@ def test_invalidated_conditional(config, mongo):
             'if_node': '__system__',
             'validation_node': 'juan',
         },
+        'actor_list': [
+            {
+                'node': 'start_node',
+                'identifier': 'juan',
+            },
+            {
+                'node': 'if_node',
+                'identifier': '__system__',
+            },
+            {
+                'node': 'validation_node',
+                'identifier': 'juan',
+            },
+        ],
     }

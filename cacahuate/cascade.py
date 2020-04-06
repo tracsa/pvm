@@ -49,9 +49,8 @@ def cascade_invalidate(xml, state, invalidated, comment):
         input_state_path = input_path + '.state'
         input_value_path = input_path + '.value'
         input_caption_path = input_path + '.value_caption'
-        values_input_path = 'values.{ref}.{index}.{input}'.format(
+        values_input_path = 'values.{ref}.0.{input}'.format(
             ref=ref,
-            index=index,
             input=input,
         )
 

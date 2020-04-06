@@ -19,6 +19,9 @@
         <form id="exit_form">
           <input type="text" name="reason" required="required" label="Label-less form"/>
         </form>
+        <form id="code_form">
+          <input type="text" name="code" required="required" label="Label-less form"/>
+        </form>
       </form-array>
     </action>
 

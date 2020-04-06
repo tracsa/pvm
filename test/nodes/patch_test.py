@@ -26,15 +26,26 @@ def test_patch_invalidate(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [Form.state_json('exit_form', [
-            {
-                '_type': 'field',
-                'state': 'valid',
-                'value': 'want to pee',
-                'value_caption': 'want to pee',
-                'name': 'reason',
-            },
-        ])],
+        'input': [
+            Form.state_json('exit_form', [
+                {
+                    '_type': 'field',
+                    'state': 'valid',
+                    'value': 'want to pee',
+                    'value_caption': 'want to pee',
+                    'name': 'reason',
+                },
+            ]),
+            Form.state_json('code_form', [
+                {
+                    '_type': 'field',
+                    'state': 'valid',
+                    'value': 'kadabra',
+                    'value_caption': 'kadabra',
+                    'name': 'code',
+                },
+            ]),
+        ],
     }, channel)
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'manager'
@@ -63,6 +74,7 @@ def test_patch_invalidate(config, mongo):
     handler.patch({
         'command': 'patch',
         'execution_id': execution.id,
+        'user_identifier': user.identifier,
         'comment': 'pee is not a valid reason',
         'inputs': [{
             'ref': 'requester.juan.0:exit_form.reason',
@@ -96,6 +108,7 @@ def test_patch_invalidate(config, mongo):
 
     expected_values = {
         'auth_form': [{'auth': 'yes'}],
+        'code_form': [{'code': 'kadabra'}],
         'exit_form': [{'reason': 'want to pee'}],
     }
     assert execution['values'] == expected_values
@@ -120,15 +133,26 @@ def test_patch_set_value(config, mongo):
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [Form.state_json('exit_form', [
-            {
-                '_type': 'field',
-                'state': 'valid',
-                'value': 'want to pee',
-                'value_caption': 'want to pee',
-                'name': 'reason',
-            },
-        ])],
+        'input': [
+            Form.state_json('code_form', [
+                {
+                    '_type': 'field',
+                    'state': 'valid',
+                    'value': 'kadabra',
+                    'value_caption': 'kadabra',
+                    'name': 'code',
+                },
+            ]),
+            Form.state_json('exit_form', [
+                {
+                    '_type': 'field',
+                    'state': 'valid',
+                    'value': 'want to pee',
+                    'value_caption': 'want to pee',
+                    'name': 'reason',
+                },
+            ]),
+        ],
     }, channel)
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'manager'
@@ -157,12 +181,20 @@ def test_patch_set_value(config, mongo):
     handler.patch({
         'command': 'patch',
         'execution_id': execution.id,
+        'user_identifier': user.identifier,
         'comment': 'pee is not a valid reason',
-        'inputs': [{
-            'ref': 'requester.juan.0:exit_form.reason',
-            'value': 'am hungry',
-            'value_caption': 'am hungry',
-        }],
+        'inputs': [
+            {
+                'ref': 'requester.juan.0:exit_form.reason',
+                'value': 'am hungry',
+                'value_caption': 'am hungry',
+            },
+            {
+                'ref': 'requester.juan.1:code_form.code',
+                'value': 'alakazam',
+                'value_caption': 'alakazam',
+            },
+        ],
     }, channel)
     ptr = execution.proxy.pointers.get()[0]
 
@@ -187,6 +219,7 @@ def test_patch_set_value(config, mongo):
 
     expected_values = {
         'auth_form': [{'auth': 'yes'}],
+        'code_form': [{'code': 'alakazam'}],
         'exit_form': [{'reason': 'am hungry'}],
     }
     assert execution['values'] == expected_values

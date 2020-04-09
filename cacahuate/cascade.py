@@ -3,6 +3,20 @@ validation-type nodes and patch requests '''
 from cacahuate.errors import EndOfProcess
 
 
+def get_ref_index(state, node, actor, ref, index):
+    forms = state['state']['items'][node]['actors']['items'][actor]['forms']
+
+    ref_forms = [
+        i for (i, form) in enumerate(forms) if form['ref'] == ref
+    ]
+
+    if int(index) in ref_forms:
+        return ref_forms.index(int(index))
+
+    # TODO: analize how this affects execution's value key
+    return 0
+
+
 def cascade_invalidate(xml, state, invalidated, comment):
     ''' computes a set of fields to be marked as invalid given the
     original `invalidated` set of fields. '''
@@ -38,6 +52,14 @@ def cascade_invalidate(xml, state, invalidated, comment):
         node, actor, form, input = key.split('.')
         index, ref = form.split(':')
 
+        ref_index = get_ref_index(
+            state=state,
+            node=node,
+            actor=actor,
+            ref=ref,
+            index=index,
+        )
+
         node_path = 'state.items.{node}'.format(node=node)
         comment_path = node_path + '.comment'
         node_state_path = node_path + '.state'
@@ -49,8 +71,9 @@ def cascade_invalidate(xml, state, invalidated, comment):
         input_state_path = input_path + '.state'
         input_value_path = input_path + '.value'
         input_caption_path = input_path + '.value_caption'
-        values_input_path = 'values.{ref}.0.{input}'.format(
+        values_input_path = 'values.{ref}.{ref_index}.{input}'.format(
             ref=ref,
+            ref_index=ref_index,
             input=input,
         )
 

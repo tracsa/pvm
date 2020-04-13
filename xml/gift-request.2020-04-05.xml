@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>KYSXD</author>
+    <date>2020-04-05</date>
+    <name>Petición de regalo</name>
+    <description>Prueba de edicion de campos</description>
+    <public>true</public>
+  </process-info>
+
+  <process>
+    <action id="solicitud">
+      <node-info>
+        <name>Solicitud de regalos</name>
+        <description>Sin descripción</description>
+      </node-info>
+      <auth-filter backend="anyone"></auth-filter>
+      <form-array>
+        <form id="viaticos">
+          <input
+            type="select"
+            label="¿Dejé galletas en la cocina?"
+            name="galletas"
+            required="required"
+          >
+            <options>
+              <option value="yes">Si</option>
+              <option value="no">No</option>
+            </options>
+          </input>
+        </form>
+        <form id="condicionales">
+          <input
+            type="select"
+            label="¿Me porté bien?"
+            name="comportamiento"
+            required="required"
+          >
+            <options>
+              <option value="bueno">Si</option>
+              <option value="malo">No</option>
+            </options>
+          </input>
+        </form>
+        <form id="regalos" multiple="multiple">
+          <input
+            type="text"
+            name="regalo"
+            label="Regalo solicitado"
+            required="required"
+          />
+          <input
+            type="currency"
+            label="Costo Aproximado"
+            name="costo"
+          />
+        </form>
+      </form-array>
+    </action>
+
+    <if id="if_malo">
+      <condition>viaticos.galletas == "no" OR condicionales.comportamiento == "malo"</condition>
+      <block>
+        <action id="autorizacion" milestone="true">
+          <node-info>
+            <name>Corrección de regalo por mal comportamiento</name>
+            <description>Sin descripción</description>
+          </node-info>
+
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#solicitud</param>
+          </auth-filter>
+
+          <form-array>
+            <form id="oferta">
+              <input
+                type="select"
+                label="Regalo autorizado"
+                name="regalo"
+                required="required"
+              >
+                <options>
+                  <option value="calcetas">Calcetas</option>
+                  <option value="zapatos">Zapatos</option>
+                </options>
+                <dependencies>
+                  <dep>viaticos.galletas</dep>
+                  <dep>condicionales.comportamiento</dep>
+                </dependencies>
+              </input>
+            </form>
+          </form-array>
+        </action>
+      </block>
+    </if>
+
+    <action id="preparacion" milestone="true">
+      <node-info>
+        <name>Arreglos finales</name>
+        <description>Sin descripción</description>
+      </node-info>
+
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#solicitud</param>
+      </auth-filter>
+
+      <form-array>
+        <form id="arreglos">
+          <input
+            type="select"
+            label="¿Agregar envoltura?"
+            name="envoltura"
+            required="required"
+          >
+            <options>
+              <option value="yes">Si</option>
+              <option value="no">No</option>
+            </options>
+            <dependencies>
+              <dep>viaticos.galletas</dep>
+              <dep>condicionales.comportamiento</dep>
+            </dependencies>
+          </input>
+        </form>
+      </form-array>
+    </action>
+
+    <action id="envio" milestone="true">
+      <node-info>
+        <name>Salida</name>
+        <description>Sin descripción</description>
+      </node-info>
+
+      <auth-filter backend="backref">
+        <param name="identifier" type="ref">user#solicitud</param>
+      </auth-filter>
+
+      <form-array>
+        <form id="datos">
+          <input
+            type="text"
+            label="¿A donde se envia?"
+            name="direccion"
+            required="required"
+          >
+            <dependencies>
+              <dep>viaticos.galletas</dep>
+              <dep>condicionales.comportamiento</dep>
+            </dependencies>
+          </input>
+        </form>
+      </form-array>
+    </action>
+  </process>
+</process-spec>

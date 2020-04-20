@@ -483,6 +483,70 @@ def read_pointer(id):
     })
 
 
+@app.route('/v1/pointer', methods=['GET'])
+@pagination
+def fetch_pointers():
+    dict_args = request.args.to_dict()
+
+    # get queries
+    def format_query(q):
+        try:
+            formated_q = json.loads(q)
+        except JSONDecodeError:
+            formated_q = q
+        return formated_q
+
+    # format query
+    ptr_query = dict(
+        (k, format_query(v)) for k, v in dict_args.items()
+        if k not in app.config['INVALID_FILTERS']
+    )
+
+    srt = {'$sort': {'started_at': -1}}
+    sort_query = ptr_query.pop('sort', None)
+    if sort_query and sort_query.split(',', 1)[0]:
+        try:
+            key, order = sort_query.split(',', 1)
+        except ValueError:
+            key, order = sort_query, 'ASCENDING'
+
+        if order not in ['ASCENDING', 'DESCENDING']:
+            order = 'ASCENDING'
+
+        order = getattr(pymongo, order)
+        srt = {'$sort': {key: order}}
+
+    # filter for exclude/include
+    exclude_fields = ptr_query.pop('exclude', '')
+    exclude_list = [s.strip() for s in exclude_fields.split(',') if s]
+    exclude_map = {item: 0 for item in exclude_list}
+
+    include_fields = ptr_query.pop('include', '')
+    include_list = [s.strip() for s in include_fields.split(',') if s]
+    include_map = {item: 1 for item in include_list}
+
+    # store project for future use
+    prjct = {**include_map} or {**exclude_map}
+
+    ptr_pipeline = [
+        {'$match': ptr_query},
+        srt,
+        {'$skip': g.offset},
+        {'$limit': g.limit},
+    ]
+
+    if prjct:
+        ptr_pipeline.append({'$project': prjct})
+
+    ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
+    return jsonify({
+        'pointers': list(map(
+            json_prepare,
+            ptr_collection.aggregate(ptr_pipeline, allowDiskUse=True),
+        ))
+    })
+
+
 @app.route('/v1/process', methods=['GET'])
 def list_process():
     def add_form(xml):

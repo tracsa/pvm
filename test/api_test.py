@@ -3634,6 +3634,76 @@ def test_pagination_v1_log_all(client, mongo, config):
     assert len(json.loads(res.data)['data']) == 2
 
 
+def test_name_with_if(client, mongo, config):
+    xml = Xml.load(config, 'pollo')
+    assert xml.name == 'pollo.2018-05-20.xml'
+
+
+def test_get_xml(client):
+
+    res = client.get('/v1/process/validation-multiform.xml')
+    assert res.status_code == 200
+    assert res.headers['Content-Type'] == 'text/xml; charset=utf-8'
+    assert res.data.startswith(b'<?xml version="1.0" encoding="UTF-8"?>')
+
+
+def test_execution_summary(client, mongo, config):
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        {
+            'id': EXECUTION_ID,
+            'process_name': 'not-default-required-input.2018-04-04.html',
+            'values': {
+                'auth_form': [
+                    {
+                        'name': 'Jorge Juan',
+                        'elections': 'amlo',
+                    },
+                ],
+            },
+        },
+    ])
+
+    res = client.get(f'/v1/execution/{EXECUTION_ID}/summary')
+
+    expected = '\n'.join([
+        '<p>The form was filled by <b>Jorge Juan</b></p>',
+        '<p>He/She is voting for <b>amlo</b></p>'
+    ])
+
+    assert expected == res.data.decode("utf-8")
+
+
+def test_execution_summary_nested(client, mongo, config):
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        {
+            'id': EXECUTION_ID,
+            'process_name': 'simple.2018-02-19.html',
+            'values': {
+                'start_form': [
+                    {
+                        'data': 'Foo',
+                    },
+                ],
+                'mid_form': [
+                    {
+                        'data': 'Bar',
+                    },
+                ],
+            },
+        },
+    ])
+
+    res = client.get(f'/v1/execution/{EXECUTION_ID}/summary')
+
+    expected = '\n'.join([
+        '<p>start_form: Foo</p>',
+        '<p>mid_node: Bar</p>',
+        '<p>start_form and mid_form: "Foo" and "Bar"</p>',
+    ])
+
+    assert expected == res.data.decode("utf-8")
+
+
 def test_fetch_pointers(client, mongo, config):
     def make_node_reg(exec_id, process_id, node_id, started_at, finished_at):
         return {
@@ -3775,73 +3845,3 @@ def test_fetch_pointers(client, mongo, config):
     assert data_offset == {
         'pointers': expected_pointers_offset,
     }
-
-
-def test_name_with_if(client, mongo, config):
-    xml = Xml.load(config, 'pollo')
-    assert xml.name == 'pollo.2018-05-20.xml'
-
-
-def test_get_xml(client):
-
-    res = client.get('/v1/process/validation-multiform.xml')
-    assert res.status_code == 200
-    assert res.headers['Content-Type'] == 'text/xml; charset=utf-8'
-    assert res.data.startswith(b'<?xml version="1.0" encoding="UTF-8"?>')
-
-
-def test_execution_summary(client, mongo, config):
-    mongo[config["EXECUTION_COLLECTION"]].insert_many([
-        {
-            'id': EXECUTION_ID,
-            'process_name': 'not-default-required-input.2018-04-04.html',
-            'values': {
-                'auth_form': [
-                    {
-                        'name': 'Jorge Juan',
-                        'elections': 'amlo',
-                    },
-                ],
-            },
-        },
-    ])
-
-    res = client.get(f'/v1/execution/{EXECUTION_ID}/summary')
-
-    expected = '\n'.join([
-        '<p>The form was filled by <b>Jorge Juan</b></p>',
-        '<p>He/She is voting for <b>amlo</b></p>'
-    ])
-
-    assert expected == res.data.decode("utf-8")
-
-
-def test_execution_summary_nested(client, mongo, config):
-    mongo[config["EXECUTION_COLLECTION"]].insert_many([
-        {
-            'id': EXECUTION_ID,
-            'process_name': 'simple.2018-02-19.html',
-            'values': {
-                'start_form': [
-                    {
-                        'data': 'Foo',
-                    },
-                ],
-                'mid_form': [
-                    {
-                        'data': 'Bar',
-                    },
-                ],
-            },
-        },
-    ])
-
-    res = client.get(f'/v1/execution/{EXECUTION_ID}/summary')
-
-    expected = '\n'.join([
-        '<p>start_form: Foo</p>',
-        '<p>mid_node: Bar</p>',
-        '<p>start_form and mid_form: "Foo" and "Bar"</p>',
-    ])
-
-    assert expected == res.data.decode("utf-8")

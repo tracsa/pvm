@@ -3634,6 +3634,149 @@ def test_pagination_v1_log_all(client, mongo, config):
     assert len(json.loads(res.data)['data']) == 2
 
 
+def test_fetch_pointers(client, mongo, config):
+    def make_node_reg(exec_id, process_id, node_id, started_at, finished_at):
+        return {
+            'started_at': started_at,
+            'finished_at': finished_at,
+            'execution': {
+                'id': exec_id,
+            },
+            'node': {
+                'id': node_id,
+            },
+            'process_id': process_id
+        }
+
+    ptr_01 = make_node_reg(
+        'aaaaaaaa',
+        'simple.2018-02-19', 'mid_node',
+        make_date(2018, 5, 20, 5, 5, 5),
+        make_date(2018, 5, 20, 5, 5, 5)
+    )
+    ptr_02 = make_node_reg(
+        'aaaaaaaa',
+        'simple.2018-02-19', 'mid_node',
+        make_date(2018, 5, 20, 5, 5, 5),
+        make_date(2018, 5, 20, 5, 5, 5)
+    )
+    ptr_03 = make_node_reg(
+        'cccccccc',
+        'simple.2018-02-19', 'mid_node',
+        make_date(2018, 5, 22, 7, 7, 7),
+        make_date(2018, 5, 22, 7, 7, 7)
+    )
+    ptr_04 = make_node_reg(
+        'dddddddd',
+        'simple.2018-02-19', 'mid_node',
+        make_date(2018, 5, 23, 8, 8, 8),
+        make_date(2018, 5, 23, 8, 8, 8)
+    )
+    ptr_05 = make_node_reg(
+        'eeeeeeee',
+        'simple.2018-02-19', 'mid_node',
+        make_date(2018, 5, 24, 9, 9, 9),
+        make_date(2018, 5, 24, 9, 9, 9)
+    )
+
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        ptr_01.copy(),
+        ptr_02.copy(),
+        ptr_03.copy(),
+        ptr_04.copy(),
+        ptr_05.copy(),
+    ])
+
+    # test simple request
+    res_simple = client.get('/v1/pointer')
+    data_simple = json.loads(res_simple.data)
+
+    expected_pointers_simple = [
+        ptr_05.copy(),
+        ptr_04.copy(),
+        ptr_03.copy(),
+        ptr_02.copy(),
+        ptr_01.copy(),
+    ]
+    for item in expected_pointers_simple:
+        item['started_at'] = item['started_at'].isoformat() + '+00:00'
+        item['finished_at'] = item['finished_at'].isoformat() + '+00:00'
+
+    assert data_simple == {
+        'pointers': expected_pointers_simple,
+    }
+
+    # test sorted
+    res_sorted = client.get('/v1/pointer?sort=execution.id,ASCENDING')
+    data_sorted = json.loads(res_sorted.data)
+
+    expected_pointers_sorted = [
+        ptr_01.copy(),
+        ptr_02.copy(),
+        ptr_03.copy(),
+        ptr_04.copy(),
+        ptr_05.copy(),
+    ]
+    for item in expected_pointers_sorted:
+        item['started_at'] = item['started_at'].isoformat() + '+00:00'
+        item['finished_at'] = item['finished_at'].isoformat() + '+00:00'
+
+    assert data_sorted == {
+        'pointers': expected_pointers_sorted,
+    }
+
+    # test include
+    res_include = client.get('/v1/pointer?include=execution.id')
+    data_include = json.loads(res_include.data)
+
+    temp_list = [
+        ptr_05.copy(),
+        ptr_04.copy(),
+        ptr_03.copy(),
+        ptr_02.copy(),
+        ptr_01.copy(),
+    ]
+    expected_pointers_include = [
+        {'execution': {'id': p['execution']['id']}} for p in temp_list
+    ]
+
+    assert data_include == {
+        'pointers': expected_pointers_include,
+    }
+
+    # test limit
+    res_limit = client.get('/v1/pointer?limit=1')
+    data_limit = json.loads(res_limit.data)
+
+    expected_pointers_limit = [
+        ptr_05.copy(),
+    ]
+    for item in expected_pointers_limit:
+        item['started_at'] = item['started_at'].isoformat() + '+00:00'
+        item['finished_at'] = item['finished_at'].isoformat() + '+00:00'
+
+    assert data_limit == {
+        'pointers': expected_pointers_limit,
+    }
+
+    # test skip
+    res_offset = client.get('/v1/pointer?offset=2')
+    data_offset = json.loads(res_offset.data)
+
+    expected_pointers_offset = [
+        ptr_03.copy(),
+        ptr_02.copy(),
+        ptr_01.copy(),
+    ]
+    for item in expected_pointers_offset:
+        item['started_at'] = item['started_at'].isoformat() + '+00:00'
+        item['finished_at'] = item['finished_at'].isoformat() + '+00:00'
+
+    assert data_offset == {
+        'pointers': expected_pointers_offset,
+    }
+
+
 def test_name_with_if(client, mongo, config):
     xml = Xml.load(config, 'pollo')
     assert xml.name == 'pollo.2018-05-20.xml'

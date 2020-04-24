@@ -107,7 +107,7 @@ def test_call_node(config, mongo):
 def test_call_node(config, mongo):
     handler = Handler(config)
     user = make_user('juan', 'Juan')
-    ptr = make_pointer('call.2020-04-24.xml', 'start_node')
+    ptr = make_pointer('call-render.2020-04-24.xml', 'start_node')
     channel = MagicMock()
     execution = ptr.proxy.execution.get()
     value = random_string()

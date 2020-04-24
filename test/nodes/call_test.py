@@ -104,7 +104,7 @@ def test_call_node(config, mongo):
     assert execution.process_name == 'simple.2018-02-19.xml'
 
 
-def test_call_node(config, mongo):
+def test_call_node_render(config, mongo):
     handler = Handler(config)
     user = make_user('juan', 'Juan')
     ptr = make_pointer('call-render.2020-04-24.xml', 'start_node')

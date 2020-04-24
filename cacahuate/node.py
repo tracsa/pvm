@@ -18,6 +18,7 @@ from cacahuate.http.errors import BadRequest
 from cacahuate.inputs import make_input
 from cacahuate.jsontypes import Map, SortedMap
 from cacahuate.utils import get_or_create, user_import, get_values
+from cacahuate.utils import render_or
 from cacahuate.xml import get_text, NODES, Xml
 from cacahuate.cascade import cascade_invalidate, track_next_node
 
@@ -588,7 +589,7 @@ class CallFormInput(Node):
             except ValueError:
                 return None
         else:
-            return self.value
+            return render_or(self.value, self.value, context)
 
 
 class CallForm(Node):

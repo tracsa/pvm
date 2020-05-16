@@ -3845,3 +3845,21 @@ def test_fetch_pointers(client, mongo, config):
     assert data_offset == {
         'pointers': expected_pointers_offset,
     }
+
+
+def test_fetch_user_info(client):
+    make_user('juan', 'Juan', 'juan@mail.com')
+
+    res = client.get('/v1/user/_identifier/juan/info')
+
+    assert res.json == {
+        'identifier': 'juan',
+        'fullname': 'Juan',
+        'email': 'juan@mail.com',
+    }
+
+
+def test_fetch_user_info_not_found(client):
+    res = client.get('/v1/user/_identifier/juan/info')
+
+    assert res.status_code == 404

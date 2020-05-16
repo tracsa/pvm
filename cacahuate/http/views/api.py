@@ -1,6 +1,8 @@
+import http
 import copy
 from coralillo.errors import ModelNotFoundError
 from datetime import datetime
+import flask
 from flask import g
 from flask import request, jsonify, json
 import os
@@ -52,6 +54,23 @@ def index():
         }
     elif request.method == 'POST':
         return request.json
+
+
+@app.route('/v1/user/_identifier/<user_identifier>/info', methods=['GET'])
+def fetch_user_info(user_identifier):
+    user = User.get_by('identifier', user_identifier)
+
+    if user is None:
+        flask.abort(404)
+
+    return flask.make_response(
+        flask.jsonify({
+            'identifier': user.get_contact_info('identifier'),
+            'fullname': user.get_contact_info('fullname'),
+            'email': user.get_contact_info('email'),
+        }),
+        http.HTTPStatus.OK,  # 200
+    )
 
 
 @app.route('/v1/execution', methods=['GET'])

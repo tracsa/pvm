@@ -9,8 +9,8 @@ def random_string(length=6):
     return ''.join(choice(ascii_letters) for _ in range(6))
 
 
-def make_user(identifier, name):
-    u = User(identifier=identifier, fullname=name).save()
+def make_user(identifier, name, email=None):
+    u = User(identifier=identifier, fullname=name, email=email).save()
     token = Token(
         token=random_string(9)
     ).save()

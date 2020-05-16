@@ -290,7 +290,7 @@ class UserAttachedNode(FullyContainedNode):
             except ValueError:
                 raise MisconfiguredProvider(
                     'User returned by hierarchy provider is not in the form '
-                    '("identifier", {data}), got: {}'.format(user)
+                    '("identifier", "data"), got: {user}'.format(user=user)
                 )
 
             return get_or_create(identifier, data)

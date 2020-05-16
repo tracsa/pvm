@@ -1317,7 +1317,7 @@ def test_data_mix_pointer_unique(mongo, client, config):
     # set pointers in executions
     exec_01_json['pointer'] = ptr_01_json
 
-    res = client.get(f'/v1/inbox')
+    res = client.get('/v1/inbox')
 
     ans = json.loads(res.data)
 
@@ -1358,7 +1358,7 @@ def test_data_mix_pointerless(mongo, client, config):
     # clean pointers
     ptr_01_json.pop('execution')
 
-    res = client.get(f'/v1/inbox')
+    res = client.get('/v1/inbox')
 
     ans = json.loads(res.data)
 
@@ -1590,7 +1590,7 @@ def test_data_mix_filter_pointer_key(mongo, client, config):
     exec_01_json['pointer'] = ptr_01_json
     exec_02_json['pointer'] = ptr_02_json
 
-    res = client.get(f'/v1/inbox?pointer.node_id=mid_node')
+    res = client.get('/v1/inbox?pointer.node_id=mid_node')
 
     ans = json.loads(res.data)
 
@@ -1649,7 +1649,7 @@ def test_data_mix_filter_exclude_pointer_key(mongo, client, config):
     exec_01_json['pointer'] = ptr_01_json
     exec_02_json['pointer'] = ptr_02_json
 
-    res = client.get(f'/v1/inbox?exclude=pointer.node_id')
+    res = client.get('/v1/inbox?exclude=pointer.node_id')
 
     ans = json.loads(res.data)
 
@@ -1707,7 +1707,7 @@ def test_data_mix_filter_include_pointer_key(mongo, client, config):
     exec_01_json = {'pointer': ptr_01_json}
     exec_02_json = {'pointer': ptr_02_json}
 
-    res = client.get(f'/v1/inbox?include=pointer.node_id')
+    res = client.get('/v1/inbox?include=pointer.node_id')
 
     ans = json.loads(res.data)
 
@@ -1806,7 +1806,7 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
     }
 
     # user not found
-    res = client.get(f'/v1/inbox?user_identifier=not_an_user')
+    res = client.get('/v1/inbox?user_identifier=not_an_user')
 
     ans = json.loads(res.data)
 
@@ -2026,7 +2026,7 @@ def test_data_mix_filter_actor_identifier(mongo, client, config):
     exec_03_json['pointer'] = ptr_03_json
     exec_04_json['pointer'] = ptr_04_json
 
-    res = client.get(f'/v1/inbox?actor_identifier=foo')
+    res = client.get('/v1/inbox?actor_identifier=foo')
 
     ans = json.loads(res.data)
 
@@ -2039,7 +2039,7 @@ def test_data_mix_filter_actor_identifier(mongo, client, config):
     }
 
     # user not found
-    res = client.get(f'/v1/inbox?actor_identifier=not_an_user')
+    res = client.get('/v1/inbox?actor_identifier=not_an_user')
 
     ans = json.loads(res.data)
 
@@ -2051,7 +2051,7 @@ def test_data_mix_filter_actor_identifier(mongo, client, config):
 
     # aditional query
     res = client.get(
-        f'/v1/inbox?actor_identifier=foo&process_name=simple.2018-02-19.xml')
+        '/v1/inbox?actor_identifier=foo&process_name=simple.2018-02-19.xml')
 
     ans = json.loads(res.data)
 
@@ -2064,7 +2064,7 @@ def test_data_mix_filter_actor_identifier(mongo, client, config):
 
     # aditional query fails
     res = client.get(
-        f'/v1/inbox?actor_identifier=zas&process_name=not_a_process')
+        '/v1/inbox?actor_identifier=zas&process_name=not_a_process')
 
     ans = json.loads(res.data)
 
@@ -2208,7 +2208,7 @@ def test_data_mix_filter_include(mongo, client, config):
         item: exec_01_json[item] for item in ['name', 'process_name']
     }
 
-    res = client.get(f'/v1/inbox?include=name,process_name')
+    res = client.get('/v1/inbox?include=name,process_name')
 
     ans = json.loads(res.data)
 
@@ -2265,7 +2265,7 @@ def test_data_mix_filter_exclude(mongo, client, config):
     exec_01_json.pop('name')
     exec_01_json.pop('process_name')
 
-    res = client.get(f'/v1/inbox?exclude=name,process_name')
+    res = client.get('/v1/inbox?exclude=name,process_name')
 
     ans = json.loads(res.data)
 
@@ -2323,7 +2323,7 @@ def test_data_mix_filter_include_exlcude(mongo, client, config):
         item: exec_01_json[item] for item in ['name', 'process_name']
     }
 
-    res = client.get(f'/v1/inbox?include=name,process_name&exclude=name')
+    res = client.get('/v1/inbox?include=name,process_name&exclude=name')
 
     ans = json.loads(res.data)
 

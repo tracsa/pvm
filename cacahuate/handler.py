@@ -236,10 +236,14 @@ class Handler:
         values = self.compact_values(input)
 
         # update state
-        collection = self.get_mongo()[
+        exe_collection = self.get_mongo()[
             self.config['EXECUTION_COLLECTION']
         ]
-        mongo_exe = collection.find_one_and_update(
+        ptr_collection = self.get_mongo()[
+            self.config['POINTER_COLLECTION']
+        ]
+
+        mongo_exe = exe_collection.find_one_and_update(
             {'id': execution.id},
             {
                 '$addToSet': {
@@ -262,7 +266,7 @@ class Handler:
 
         context = get_values(mongo_exe)
 
-        # update execution name
+        # update execution's name and description
         execution.name = render_or(
             execution.name_template,
             execution.name,
@@ -275,11 +279,19 @@ class Handler:
         )
         execution.save()
 
-        collection.update_one(
+        exe_collection.update_one(
             {'id': execution.id},
             {'$set': {
                 'name': execution.name,
                 'description': execution.description,
+            }},
+        )
+
+        ptr_collection.update_many(
+            {'execution.id': execution.id},
+            {'$set': {
+                'execution.name': execution.name,
+                'execution.description': execution.description,
             }},
         )
 

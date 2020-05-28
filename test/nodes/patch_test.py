@@ -185,12 +185,12 @@ def test_patch_set_value(config, mongo):
         'comment': 'pee is not a valid reason',
         'inputs': [
             {
-                'ref': 'requester.juan.0:exit_form.reason',
+                'ref': 'requester.juan.1:exit_form.reason',
                 'value': 'am hungry',
                 'value_caption': 'am hungry',
             },
             {
-                'ref': 'requester.juan.1:code_form.code',
+                'ref': 'requester.juan.0:code_form.code',
                 'value': 'alakazam',
                 'value_caption': 'alakazam',
             },

@@ -418,10 +418,6 @@ def test_patch_set_value_multiple(config, mongo):
     # unexistant key doesn't update
     assert 'costo' not in _form['inputs']['items']
 
-    execution = mongo[config["EXECUTION_COLLECTION"]].find_one({
-        'id': execution.id,
-    })
-
     expected_values = {
         'viaticos': [{'galletas': 'yes'}],
         'condicionales': [{'comportamiento': 'bueno'}],
@@ -432,4 +428,4 @@ def test_patch_set_value_multiple(config, mongo):
             {'regalo': 'Brobocop'},
         ],
     }
-    assert execution['values'] == expected_values
+    assert e_state['values'] == expected_values

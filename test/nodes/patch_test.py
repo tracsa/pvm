@@ -185,12 +185,12 @@ def test_patch_set_value(config, mongo):
         'comment': 'pee is not a valid reason',
         'inputs': [
             {
-                'ref': 'requester.juan.0:exit_form.reason',
+                'ref': 'requester.juan.1:exit_form.reason',
                 'value': 'am hungry',
                 'value_caption': 'am hungry',
             },
             {
-                'ref': 'requester.juan.1:code_form.code',
+                'ref': 'requester.juan.0:code_form.code',
                 'value': 'alakazam',
                 'value_caption': 'alakazam',
             },
@@ -208,10 +208,16 @@ def test_patch_set_value(config, mongo):
 
     # values sent are set
     actor = exc_state['state']['items']['requester']['actors']['items']['juan']
-    _input = actor['forms'][0]['inputs']['items']['reason']
 
-    assert _input['value'] == 'am hungry'
-    assert _input['value_caption'] == 'am hungry'
+    _input_0 = actor['forms'][0]['inputs']['items']['code']
+
+    assert _input_0['value'] == 'alakazam'
+    assert _input_0['value_caption'] == 'alakazam'
+
+    _input_1 = actor['forms'][1]['inputs']['items']['reason']
+
+    assert _input_1['value'] == 'am hungry'
+    assert _input_1['value_caption'] == 'am hungry'
 
     execution = mongo[config["EXECUTION_COLLECTION"]].find_one({
         'id': execution.id,
@@ -412,10 +418,6 @@ def test_patch_set_value_multiple(config, mongo):
     # unexistant key doesn't update
     assert 'costo' not in _form['inputs']['items']
 
-    execution = mongo[config["EXECUTION_COLLECTION"]].find_one({
-        'id': execution.id,
-    })
-
     expected_values = {
         'viaticos': [{'galletas': 'yes'}],
         'condicionales': [{'comportamiento': 'bueno'}],
@@ -426,4 +428,4 @@ def test_patch_set_value_multiple(config, mongo):
             {'regalo': 'Brobocop'},
         ],
     }
-    assert execution['values'] == expected_values
+    assert e_state['values'] == expected_values

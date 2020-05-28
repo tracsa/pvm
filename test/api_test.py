@@ -930,17 +930,30 @@ def test_patch_set_value(client, mongo, config, mocker):
         '$set': {
             'state.items.requester.actors': Map([{
                 "_type": "actor",
-                "forms": [{
-                    '_type': 'form',
-                    'state': 'valid',
-                    'ref': 'exit_form',
-                    'inputs': SortedMap([{
-                        '_type': 'field',
+                "forms": [
+                    {
+                        '_type': 'form',
                         'state': 'valid',
-                        'value': 'yes',
-                        'name': 'reason',
-                    }], key='name').to_json(),
-                }],
+                        'ref': 'exit_form',
+                        'inputs': SortedMap([{
+                            '_type': 'field',
+                            'state': 'valid',
+                            'value': 'want to pee',
+                            'name': 'reason',
+                        }], key='name').to_json(),
+                    },
+                    {
+                        '_type': 'form',
+                        'state': 'valid',
+                        'ref': 'code_form',
+                        'inputs': SortedMap([{
+                            '_type': 'field',
+                            'state': 'valid',
+                            'value': 'kadabra',
+                            'name': 'code',
+                        }], key='name').to_json(),
+                    },
+                ],
                 "state": "valid",
                 "user": {
                     "_type": "user",
@@ -954,11 +967,17 @@ def test_patch_set_value(client, mongo, config, mocker):
     res = client.patch('/v1/execution/{}'.format(exc.id), headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({
-        'comment': 'a comment',
-        'inputs': [{
-            'ref': 'requester.exit_form.reason',
-            'value': 'the reason',
-        }],
+        'comment': 'pee is not a valid reason',
+        'inputs': [
+            {
+                'ref': 'requester.exit_form.reason',
+                'value': 'am hungry',
+            },
+            {
+                'ref': 'requester.code_form.code',
+                'value': 'alakazam',
+            },
+        ],
     }))
 
     assert res.status_code == 202
@@ -973,12 +992,19 @@ def test_patch_set_value(client, mongo, config, mocker):
     json_message = {
         'command': 'patch',
         'execution_id': exc.id,
-        'comment': 'a comment',
-        'inputs': [{
-            'ref': 'requester.juan.0:exit_form.reason',
-            'value': 'the reason',
-            'value_caption': 'the reason',
-        }],
+        'comment': 'pee is not a valid reason',
+        'inputs': [
+            {
+                'ref': 'requester.juan.0:exit_form.reason',
+                'value': 'am hungry',
+                'value_caption': 'am hungry',
+            },
+            {
+                'ref': 'requester.juan.1:code_form.code',
+                'value': 'alakazam',
+                'value_caption': 'alakazam',
+            },
+        ],
     }
 
     assert args['exchange'] == ''

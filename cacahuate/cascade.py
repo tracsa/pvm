@@ -13,8 +13,7 @@ def get_ref_index(state, node, actor, ref, index):
     if int(index) in ref_forms:
         return ref_forms.index(int(index))
 
-    # TODO: analize how this affects execution's value key
-    return 0
+    return None
 
 
 def cascade_invalidate(xml, state, invalidated, comment):
@@ -86,7 +85,8 @@ def cascade_invalidate(xml, state, invalidated, comment):
             updates[input_value_path] = set_values[key]['value']
             updates[input_caption_path] = set_values[key]['value_caption']
 
-            updates[values_input_path] = set_values[key]['value']
+            if ref_index is not None:
+                updates[values_input_path] = set_values[key]['value']
 
         # forms
         if input_state == 'valid' and (

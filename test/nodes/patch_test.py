@@ -208,10 +208,16 @@ def test_patch_set_value(config, mongo):
 
     # values sent are set
     actor = exc_state['state']['items']['requester']['actors']['items']['juan']
-    _input = actor['forms'][0]['inputs']['items']['reason']
 
-    assert _input['value'] == 'am hungry'
-    assert _input['value_caption'] == 'am hungry'
+    _input_0 = actor['forms'][0]['inputs']['items']['code']
+
+    assert _input_0['value'] == 'alakazam'
+    assert _input_0['value_caption'] == 'alakazam'
+
+    _input_1 = actor['forms'][1]['inputs']['items']['reason']
+
+    assert _input_1['value'] == 'am hungry'
+    assert _input_1['value_caption'] == 'am hungry'
 
     execution = mongo[config["EXECUTION_COLLECTION"]].find_one({
         'id': execution.id,

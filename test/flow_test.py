@@ -241,5 +241,5 @@ def test_variable_proc_name_pointers(config, mongo):
     expected_desc = 'Description is also variable: 1, 2, 3'
 
     for item in cursor:
-        assert item['execution']['name'] = expected_name
-        assert item['execution']['description'] = expected_desc
+        assert item['execution']['name'] == expected_name
+        assert item['execution']['description'] == expected_desc

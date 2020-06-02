@@ -76,33 +76,76 @@ def fetch_user_info(user_identifier):
 @app.route('/v1/execution', methods=['GET'])
 @pagination
 def execution_list():
-    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
-
     dict_args = request.args.to_dict()
 
-    query = dict(
-        (k, dict_args[k]) for k in dict_args
+    # get queries
+    def format_query(q):
+        try:
+            formated_q = json.loads(q)
+        except JSONDecodeError:
+            formated_q = q
+        return formated_q
+
+    # format query
+    exe_query = dict(
+        (k, format_query(v)) for k, v in dict_args.items()
         if k not in app.config['INVALID_FILTERS']
     )
 
+    # sort
+    srt = {'$sort': {'started_at': -1}}
+    sort_query = exe_query.pop('sort', None)
+    if sort_query and sort_query.split(',', 1)[0]:
+        try:
+            key, order = sort_query.split(',', 1)
+        except ValueError:
+            key, order = sort_query, 'ASCENDING'
+
+        if order not in ['ASCENDING', 'DESCENDING']:
+            order = 'ASCENDING'
+
+        order = getattr(pymongo, order)
+        srt = {'$sort': {key: order}}
+
     # filter for user_identifier
-    user_identifier = query.pop('user_identifier', None)
+    user_identifier = exe_query.pop('user_identifier', None)
     if user_identifier is not None:
         user = User.get_by('identifier', user_identifier)
         if user is not None:
             execution_list = [item.id for item in user.proxy.activities.get()]
         else:
             execution_list = []
-        query['id'] = {
+        exe_query['id'] = {
             '$in': execution_list,
         }
 
+    # filter for exclude/include
+    exclude_fields = exe_query.pop('exclude', '')
+    exclude_list = [s.strip() for s in exclude_fields.split(',') if s]
+    exclude_map = {item: 0 for item in exclude_list}
+
+    include_fields = exe_query.pop('include', '')
+    include_list = [s.strip() for s in include_fields.split(',') if s]
+    include_map = {item: 1 for item in include_list}
+
+    # store project for future use
+    prjct = {**include_map} or {**exclude_map}
+
+    exe_pipeline = [
+        {'$match': exe_query},
+        srt,
+        {'$skip': g.offset},
+        {'$limit': g.limit},
+    ]
+
+    if prjct:
+        exe_pipeline.append({'$project': prjct})
+
+    exe_collection = mongo.db[app.config['EXECUTION_COLLECTION']]
     return jsonify({
         "data": list(map(
             json_prepare,
-            collection.find(query).sort([
-                ('started_at', pymongo.DESCENDING)
-            ]).skip(g.offset).limit(g.limit)
+            exe_collection.aggregate(exe_pipeline, allowDiskUse=True),
         )),
     })
 
@@ -521,6 +564,7 @@ def fetch_pointers():
         if k not in app.config['INVALID_FILTERS']
     )
 
+    # sort
     srt = {'$sort': {'started_at': -1}}
     sort_query = ptr_query.pop('sort', None)
     if sort_query and sort_query.split(',', 1)[0]:
@@ -534,6 +578,18 @@ def fetch_pointers():
 
         order = getattr(pymongo, order)
         srt = {'$sort': {key: order}}
+
+    # filter for user_identifier
+    user_identifier = ptr_query.pop('user_identifier', None)
+    if user_identifier is not None:
+        user = User.get_by('identifier', user_identifier)
+        if user is not None:
+            pointer_list = [item.id for item in user.proxy.tasks.get()]
+        else:
+            pointer_list = []
+        ptr_query['id'] = {
+            '$in': pointer_list,
+        }
 
     # filter for exclude/include
     exclude_fields = ptr_query.pop('exclude', '')

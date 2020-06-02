@@ -378,6 +378,34 @@ def test_call_handler_delete_process(config, mongo):
         'id': execution_id
     })
 
+    ptr_id_1 = 'RANDOMPOINTERNAME'
+    ptr_id_2 = 'MORERANDOMNAME'
+    ptr_id_3 = 'NOTSORANDOMNAME'
+
+    mongo[config["POINTER_COLLECTION"]].insert_many([
+        {
+            'execution': {
+                'id': execution_id,
+            },
+            'state': 'finished',
+            'id': ptr_id_1,
+        },
+        {
+            'execution': {
+                'id': execution_id,
+            },
+            'state': 'ongoing',
+            'id': ptr_id_2,
+        },
+        {
+            'execution': {
+                'id': execution_id[::-1],
+            },
+            'state': 'ongoing',
+            'id': ptr_id_3,
+        },
+    ])
+
     handler(channel, method, properties, body)
 
     reg = next(mongo[config["EXECUTION_COLLECTION"]].find())
@@ -388,6 +416,16 @@ def test_call_handler_delete_process(config, mongo):
 
     assert Execution.count() == 0
     assert Pointer.count() == 0
+
+    assert mongo[config["POINTER_COLLECTION"]].find_one({
+        'id': ptr_id_1,
+    })['state'] == 'finished'
+    assert mongo[config["POINTER_COLLECTION"]].find_one({
+        'id': ptr_id_2,
+    })['state'] == 'cancelled'
+    assert mongo[config["POINTER_COLLECTION"]].find_one({
+        'id': ptr_id_3,
+    })['state'] == 'ongoing'
 
 
 def test_resistance_unexisteng_hierarchy_backend(config, mongo):

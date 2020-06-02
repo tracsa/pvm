@@ -484,6 +484,7 @@ class Handler:
             }, {
                 '$set': {
                     'state': 'cancelled',
+                    'finished_at': datetime.now(),
                     'patch': {
                         'comment': message['comment'],
                         'inputs': message['inputs'],
@@ -533,15 +534,29 @@ class Handler:
         for pointer in execution.proxy.pointers.get():
             pointer.delete()
 
-        collection = self.get_mongo()[
+        exe_collection = self.get_mongo()[
             self.config['EXECUTION_COLLECTION']
         ]
 
-        collection.update_one({
+        exe_collection.update_one({
             'id': execution.id,
         }, {
             '$set': {
                 'status': 'cancelled',
+                'finished_at': datetime.now()
+            }
+        })
+
+        ptr_collection = self.get_mongo()[
+            self.config['POINTER_COLLECTION']
+        ]
+
+        ptr_collection.update_many({
+            'execution.id': execution.id,
+            'state': 'ongoing',
+        }, {
+            '$set': {
+                'state': 'cancelled',
                 'finished_at': datetime.now()
             }
         })

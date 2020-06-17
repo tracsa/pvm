@@ -594,7 +594,6 @@ def test_invalidated_conditional(config, mongo):
     process_filename = 'condition_invalidated.2019-10-08.xml'
     ptr = make_pointer(process_filename, 'start_node')
     execution = ptr.proxy.execution.get()
-    channel = MagicMock()
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
         '_type': 'execution',
@@ -604,6 +603,8 @@ def test_invalidated_conditional(config, mongo):
         ).get_state(),
     })
 
+    # initial rabbit call
+    channel = MagicMock()
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
@@ -617,15 +618,19 @@ def test_invalidated_conditional(config, mongo):
             },
         ])],
     }, channel)
+    channel.basic_publish.assert_called_once()
+
+    # arrives to if_node
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'if_node'
 
-    handler.call({
+    # if_node's condition is True
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
         'input': [Form.state_json('if_node', [
             {
-                'name': 'condition',
                 'name': 'condition',
                 'state': 'valid',
                 'type': 'bool',
@@ -634,16 +639,25 @@ def test_invalidated_conditional(config, mongo):
             },
         ])],
         'user_identifier': '__system__',
-    }, channel)
-    ptr = Pointer.get_all()[0]
-    assert ptr.node_id == 'validation_node'
+    }
+    assert json.loads(args['body']) == rabbit_call
 
-    # first call to validation
+    # if rabbit call
+    channel.reset_mock()
+    handler.call(rabbit_call, channel)
+    channel.basic_publish.assert_called_once()
+
+    # arrives to if_validation
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'if_validation_node'
+
+    # if's call to validation
+    channel.reset_mock()
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
-        'input': [Form.state_json('validation_node', [
+        'input': [Form.state_json('if_validation_node', [
             {
                 'name': 'response',
                 'value': 'reject',
@@ -663,10 +677,14 @@ def test_invalidated_conditional(config, mongo):
             },
         ])],
     }, channel)
+    channel.basic_publish.assert_called_once()
+
+    # returns to start_node
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'start_node'
 
-    channel = MagicMock()
+    # second lap
+    channel.reset_mock()
     handler.call({
         'command': 'step',
         'pointer_id': ptr.id,
@@ -680,18 +698,18 @@ def test_invalidated_conditional(config, mongo):
             },
         ])],
     }, channel)
+    channel.basic_publish.assert_called_once()
+
+    # arrives to if_node again
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'if_node'
 
-    # rabbit called
-    channel.basic_publish.assert_called_once()
     args = channel.basic_publish.call_args[1]
     rabbit_call = {
         'command': 'step',
         'pointer_id': ptr.id,
         'input': [Form.state_json('if_node', [
             {
-                'name': 'condition',
                 'name': 'condition',
                 'state': 'valid',
                 'type': 'bool',
@@ -703,12 +721,205 @@ def test_invalidated_conditional(config, mongo):
     }
     assert json.loads(args['body']) == rabbit_call
 
+    # if second rabbit call
+    channel.reset_mock()
     handler.call(rabbit_call, channel)
+    channel.basic_publish.assert_called_once()
 
-    # pointer moved
-    assert Pointer.get(ptr.id) is None
-    # Execution finished
-    assert Pointer.get_all() == []
+    # arrives to elif_node
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'elif_node'
+
+    # elif node's condition is true
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'input': [Form.state_json('elif_node', [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': True,
+                'value_caption': 'True',
+            },
+        ])],
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
+
+    # elif rabbit call
+    channel.reset_mock()
+    handler.call(rabbit_call, channel)
+    channel.basic_publish.assert_called_once()
+
+    # arrives to elif_validation
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'elif_validation_node'
+
+    # elif's call to validation
+    channel.reset_mock()
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [Form.state_json('elif_validation_node', [
+            {
+                'name': 'response',
+                'value': 'reject',
+                'value_caption': 'reject',
+            },
+            {
+                'name': 'comment',
+                'value': 'Ugly... nope',
+                'value_caption': 'Ugly... nope',
+            },
+            {
+                'name': 'inputs',
+                'value': [{
+                    'ref': 'start_node.juan.0:form1.value',
+                }],
+                'value_caption': '',
+            },
+        ])],
+    }, channel)
+    channel.basic_publish.assert_called_once()
+
+    # returns to start_node
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'start_node'
+
+    # third lap
+    channel.reset_mock()
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [Form.state_json('form1', [
+            {
+                'name': 'value',
+                'type': 'int',
+                'value': 0,
+                'value_caption': '0',
+            },
+        ])],
+    }, channel)
+    channel.basic_publish.assert_called_once()
+
+    # arrives to if_node again again
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'if_node'
+
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'input': [Form.state_json('if_node', [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': False,
+                'value_caption': 'False',
+            },
+        ])],
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
+
+    # if third rabbit call
+    channel.reset_mock()
+    handler.call(rabbit_call, channel)
+    channel.basic_publish.assert_called_once()
+
+    # arrives to elif_node again
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'elif_node'
+
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'input': [Form.state_json('elif_node', [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': False,
+                'value_caption': 'False',
+            },
+        ])],
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
+
+    # elif second rabbit call
+    channel.reset_mock()
+    handler.call(rabbit_call, channel)
+    channel.basic_publish.assert_called_once()
+
+    # arrives to else_node
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'else_node'
+
+    # else node's condition is true
+    args = channel.basic_publish.call_args[1]
+    rabbit_call = {
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'input': [Form.state_json('else_node', [
+            {
+                'name': 'condition',
+                'state': 'valid',
+                'type': 'bool',
+                'value': True,
+                'value_caption': 'True',
+            },
+        ])],
+        'user_identifier': '__system__',
+    }
+    assert json.loads(args['body']) == rabbit_call
+
+    # else rabbit call
+    channel.reset_mock()
+    handler.call(rabbit_call, channel)
+    channel.basic_publish.assert_called_once()
+
+    # arrives to if_validation
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'else_validation_node'
+
+    # else's call to validation
+    channel.reset_mock()
+    handler.call({
+        'command': 'step',
+        'pointer_id': ptr.id,
+        'user_identifier': user.identifier,
+        'input': [Form.state_json('else_validation_node', [
+            {
+                'name': 'response',
+                'value': 'reject',
+                'value_caption': 'reject',
+            },
+            {
+                'name': 'comment',
+                'value': 'What? No!',
+                'value_caption': 'What? No!',
+            },
+            {
+                'name': 'inputs',
+                'value': [{
+                    'ref': 'start_node.juan.0:form1.value',
+                }],
+                'value_caption': '',
+            },
+        ])],
+    }, channel)
+    channel.basic_publish.assert_called_once()
+
+    # returns to start_node
+    ptr = Pointer.get_all()[0]
+    assert ptr.node_id == 'start_node'
 
     # state is coherent
     state = next(mongo[config["EXECUTION_COLLECTION"]].find({
@@ -716,7 +927,6 @@ def test_invalidated_conditional(config, mongo):
     }))
 
     del state['_id']
-    del state['finished_at']
 
     assert state == {
         '_type': 'execution',
@@ -726,26 +936,32 @@ def test_invalidated_conditional(config, mongo):
         'state': {
             '_type': ':sorted_map',
             'items': {
+
                 'start_node': {
                     '_type': 'node',
                     'type': 'action',
                     'id': 'start_node',
-                    'state': 'valid',
-                    'comment': 'I do not like it',
+                    'state': 'ongoing',
+                    'comment': 'What? No!',
                     'actors': {
                         '_type': ':map',
                         'items': {
                             'juan': {
                                 '_type': 'actor',
-                                'forms': [Form.state_json('form1', [
-                                    {
-                                        'name': 'value',
-                                        'type': 'int',
-                                        'value': -3,
-                                        'value_caption': '-3',
-                                    },
-                                ])],
-                                'state': 'valid',
+                                'forms': [Form.state_json(
+                                    'form1',
+                                    [
+                                        {
+                                            'name': 'value',
+                                            'type': 'int',
+                                            'value': 0,
+                                            'value_caption': '0',
+                                            'state': 'invalid',
+                                        },
+                                    ],
+                                    state='invalid',
+                                )],
+                                'state': 'invalid',
                                 'user': {
                                     '_type': 'user',
                                     'identifier': 'juan',
@@ -763,23 +979,27 @@ def test_invalidated_conditional(config, mongo):
                     '_type': 'node',
                     'type': 'if',
                     'id': 'if_node',
-                    'state': 'valid',
-                    'comment': 'I do not like it',
+                    'state': 'invalid',
+                    'comment': 'What? No!',
                     'actors': {
                         '_type': ':map',
                         'items': {
                             '__system__': {
                                 '_type': 'actor',
-                                'forms': [Form.state_json('if_node', [
-                                    {
-                                        'name': 'condition',
-                                        'value': False,
-                                        'value_caption': 'False',
-                                        'type': 'bool',
-                                        'state': 'valid',
-                                    },
-                                ])],
-                                'state': 'valid',
+                                'forms': [Form.state_json(
+                                    'if_node',
+                                    [
+                                        {
+                                            'name': 'condition',
+                                            'value': False,
+                                            'value_caption': 'False',
+                                            'type': 'bool',
+                                            'state': 'invalid',
+                                        },
+                                    ],
+                                    state='invalid',
+                                )],
+                                'state': 'invalid',
                                 'user': {
                                     '_type': 'user',
                                     'identifier': '__system__',
@@ -793,69 +1013,322 @@ def test_invalidated_conditional(config, mongo):
                     'description': 'IF if_node',
                 },
 
-                'validation_node': {
+                'if_validation_node': {
                     '_type': 'node',
                     'type': 'validation',
-                    'id': 'validation_node',
+                    'id': 'if_validation_node',
                     'state': 'invalid',
-                    'comment': 'I do not like it',
+                    'comment': 'What? No!',
                     'actors': {
                         '_type': ':map',
                         'items': {
                             'juan': {
                                 '_type': 'actor',
-                                'forms': [Form.state_json('validation_node', [
-                                    {
-                                        'name': 'response',
-                                        'value': 'reject',
-                                        'value_caption': 'reject',
-                                        'state': 'invalid',
-                                    },
-                                    {
-                                        'name': 'comment',
-                                        'value': 'I do not like it',
-                                        'value_caption': 'I do not like it',
-                                    },
-                                    {
-                                        'name': 'inputs',
-                                        'value': [{
-                                            'ref': 'start_node.juan.0:form1'
-                                                   '.value',
-                                        }],
-                                        'value_caption': '',
-                                    },
-                                ], state='invalid')],
+                                'forms': [Form.state_json(
+                                    'if_validation_node',
+                                    [
+                                        {
+                                            'name': 'response',
+                                            'value': 'reject',
+                                            'value_caption': 'reject',
+                                        },
+                                        {
+                                            'name': 'comment',
+                                            'value': 'I do not like it',
+                                            'value_caption': (
+                                                'I do not like it'
+                                            ),
+                                        },
+                                        {
+                                            'name': 'inputs',
+                                            'value': [{
+                                                'ref': (
+                                                    'start_node.juan.0:form1'
+                                                    '.value'
+                                                ),
+                                            }],
+                                            'value_caption': '',
+                                        },
+                                    ],
+                                    state='invalid',
+                                )],
                                 'state': 'invalid',
                                 'user': {
                                     '_type': 'user',
-                                    'identifier': 'juan',
                                     'fullname': 'Juan',
+                                    'identifier': 'juan'
                                 },
-                            },
-                        },
+                            }
+                        }
                     },
-                    'milestone': False,
                     'name': 'The validation',
                     'description': 'This node invalidates the original value',
+                    'milestone': False,
                 },
+
+                'elif_node': {
+                    '_type': 'node',
+                    'type': 'elif',
+                    'id': 'elif_node',
+                    'state': 'invalid',
+                    'comment': 'What? No!',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            '__system__': {
+                                '_type': 'actor',
+                                'state': 'invalid',
+                                'user': {
+                                    '_type': 'user',
+                                    'fullname': 'System',
+                                    'identifier': '__system__'
+                                },
+                                'forms': [Form.state_json(
+                                    'elif_node',
+                                    [
+                                        {
+                                            'name': 'condition',
+                                            'value': False,
+                                            'value_caption': 'False',
+                                            'type': 'bool',
+                                            'state': 'invalid',
+                                        },
+                                    ],
+                                    state='invalid',
+                                )],
+                            }
+                        }
+                    },
+                    'name': 'ELIF elif_node',
+                    'description': 'ELIF elif_node',
+                    'milestone': False,
+                },
+
+                'elif_validation_node': {
+                    '_type': 'node',
+                    'type': 'validation',
+                    'id': 'elif_validation_node',
+                    'state': 'invalid',
+                    'comment': 'What? No!',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'state': 'invalid',
+                                'user': {
+                                    '_type': 'user',
+                                    'fullname': 'Juan',
+                                    'identifier': 'juan'
+                                },
+                                'forms': [Form.state_json(
+                                    'elif_validation_node',
+                                    [
+                                        {
+                                            'name': 'response',
+                                            'value': 'reject',
+                                            'value_caption': 'reject',
+                                            'state': 'invalid',
+                                        },
+                                        {
+                                            'name': 'comment',
+                                            'value': 'Ugly... nope',
+                                            'value_caption': (
+                                                'Ugly... nope'
+                                            ),
+                                        },
+                                        {
+                                            'name': 'inputs',
+                                            'value': [{
+                                                'ref': (
+                                                    'start_node.juan.0:form1'
+                                                    '.value'
+                                                ),
+                                            }],
+                                            'value_caption': '',
+                                        },
+                                    ],
+                                    state='invalid',
+                                )],
+                            }
+                        }
+                    },
+                    'name': 'The validation',
+                    'description': (
+                        'This node also invalidates the original value'
+                    ),
+                    'milestone': False,
+                },
+
+                'else_node': {
+                    '_type': 'node',
+                    'type': 'else',
+                    'id': 'else_node',
+                    'state': 'invalid',
+                    'comment': 'What? No!',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            '__system__': {
+                                '_type': 'actor',
+                                'state': 'invalid',
+                                'user': {
+                                    '_type': 'user',
+                                    'fullname': 'System',
+                                    'identifier': '__system__'
+                                },
+                                'forms': [Form.state_json(
+                                    'else_node',
+                                    [
+                                        {
+                                            'name': 'condition',
+                                            'value': True,
+                                            'value_caption': 'True',
+                                            'type': 'bool',
+                                            'state': 'invalid',
+                                        },
+                                    ],
+                                    state='invalid',
+                                )],
+                            }
+                        }
+                    },
+                    'name': 'ELSE else_node',
+                    'description': 'ELSE else_node',
+                    'milestone': False,
+                },
+
+                'else_validation_node': {
+                    '_type': 'node',
+                    'type': 'validation',
+                    'id': 'else_validation_node',
+                    'state': 'invalid',
+                    'comment': 'What? No!',
+                    'actors': {
+                        '_type': ':map',
+                        'items': {
+                            'juan': {
+                                '_type': 'actor',
+                                'state': 'invalid',
+                                'user': {
+                                    '_type': 'user',
+                                    'fullname': 'Juan',
+                                    'identifier': 'juan'
+                                },
+                                'forms': [Form.state_json(
+                                    'else_validation_node',
+                                    [
+                                        {
+                                            'name': 'response',
+                                            'value': 'reject',
+                                            'value_caption': 'reject',
+                                            'state': 'invalid',
+                                        },
+                                        {
+                                            'name': 'comment',
+                                            'value': 'What? No!',
+                                            'value_caption': 'What? No!',
+                                        },
+                                        {
+                                            'name': 'inputs',
+                                            'value': [{
+                                                'ref': (
+                                                    'start_node.juan.0:form1'
+                                                    '.value'
+                                                ),
+                                            }],
+                                            'value_caption': '',
+                                        },
+                                    ],
+                                    state='invalid'),
+                                ],
+                            }
+                        }
+                    },
+                    'name': 'The validation',
+                    'description': (
+                        'This node invalidates the original value, too'
+                    ),
+                    'milestone': False,
+                }
             },
-            'item_order': ['start_node', 'if_node', 'validation_node'],
+            'item_order': [
+                'start_node',
+                'if_node',
+                'if_validation_node',
+                'elif_node',
+                'elif_validation_node',
+                'else_node',
+                'else_validation_node'
+            ],
         },
-        'status': 'finished',
+
         'values': {
-            'form1': [{'value': -3}],
-            'if_node': [{'condition': False}],
-            'validation_node': [{
-                'comment': 'I do not like it',
-                'inputs': [{'ref': 'start_node.juan.0:form1.value'}],
-                'response': 'reject',
-            }],
+            'form1': [
+                {
+                    'value': 0,
+                }
+            ],
+            'if_node': [
+                {
+                    'condition': False,
+                }
+            ],
+            'if_validation_node': [
+                {
+                    'response': 'reject',
+                    'comment': 'I do not like it',
+                    'inputs': [
+                        {
+                            'ref': 'start_node.juan.0:form1.value'
+                        },
+                    ],
+                },
+            ],
+            'elif_node': [
+                {
+                    'condition': False,
+                },
+            ],
+            'elif_validation_node': [
+                {
+                    'response': 'reject',
+                    'comment': 'Ugly... nope',
+                    'inputs': [
+                        {
+                            'ref': 'start_node.juan.0:form1.value',
+                        },
+                    ],
+                },
+            ],
+            'else_node': [
+                {
+                    'condition': True,
+                },
+            ],
+            'else_validation_node': [
+                {
+                    'response': 'reject',
+                    'comment': 'What? No!',
+                    'inputs': [
+                        {
+                            'ref': 'start_node.juan.0:form1.value',
+                        },
+                    ],
+                },
+            ],
         },
+
         'actors': {
             'start_node': 'juan',
             'if_node': '__system__',
-            'validation_node': 'juan',
+            'if_validation_node': 'juan',
+            'elif_node': '__system__',
+            'elif_validation_node': 'juan',
+            'else_node': '__system__',
+            'else_validation_node': 'juan',
         },
+
         'actor_list': [
             {
                 'node': 'start_node',
@@ -866,8 +1339,24 @@ def test_invalidated_conditional(config, mongo):
                 'identifier': '__system__',
             },
             {
-                'node': 'validation_node',
+                'node': 'if_validation_node',
                 'identifier': 'juan',
             },
+            {
+                'node': 'elif_node',
+                'identifier': '__system__',
+            },
+            {
+                'node': 'elif_validation_node',
+                'identifier': 'juan',
+            },
+            {
+                'node': 'else_node',
+                'identifier': '__system__',
+            },
+            {
+                'node': 'else_validation_node',
+                'identifier': 'juan',
+            }
         ],
     }

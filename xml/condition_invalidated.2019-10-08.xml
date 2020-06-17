@@ -26,7 +26,7 @@
       <condition>form1.value > 0</condition>
       <block>
 
-        <validation id="validation_node" >
+        <validation id="if_validation_node" >
           <dependencies>
             <dep>form1.value</dep>
           </dependencies>
@@ -41,5 +41,44 @@
 
       </block>
     </if>
+
+    <elif id="elif_node">
+      <condition>0 > form1.value</condition>
+      <block>
+
+        <validation id="elif_validation_node" >
+          <dependencies>
+            <dep>form1.value</dep>
+          </dependencies>
+          <node-info>
+            <name>The validation</name>
+            <description>This node also invalidates the original value</description>
+          </node-info>
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#start_node</param>
+          </auth-filter>
+        </validation>
+
+      </block>
+    </elif>
+
+    <else id="else_node">
+      <block>
+
+        <validation id="else_validation_node" >
+          <dependencies>
+            <dep>form1.value</dep>
+          </dependencies>
+          <node-info>
+            <name>The validation</name>
+            <description>This node invalidates the original value, too</description>
+          </node-info>
+          <auth-filter backend="backref">
+            <param name="identifier" type="ref">user#start_node</param>
+          </auth-filter>
+        </validation>
+
+      </block>
+    </else>
   </process>
 </process-spec>

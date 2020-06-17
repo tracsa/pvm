@@ -725,7 +725,7 @@ class Conditional(Node):
         on changes, so this function just returns this node's ref'''
         actor = next(iter(node_state['actors']['items'].keys()))
 
-        return {'{node}.{actor}.0:approval.response'.format(
+        return {'{node}.{actor}.0:approval.condition'.format(
             node=self.id,
             actor=actor,
         )}
@@ -764,6 +764,16 @@ class Else(Node):
                 'value_caption': 'True',
             },
         ])]
+
+    def dependent_refs(self, invalidated, node_state):
+        ''' ELSE nodes should alwas be invalidated in case the value they depend
+        on changes, so this function just returns this node's ref'''
+        actor = next(iter(node_state['actors']['items'].keys()))
+
+        return {'{node}.{actor}.0:approval.condition'.format(
+            node=self.id,
+            actor=actor,
+        )}
 
 
 class CaptureValue:

@@ -1031,6 +1031,7 @@ def test_invalidated_conditional(config, mongo):
                                             'name': 'response',
                                             'value': 'reject',
                                             'value_caption': 'reject',
+                                            'state': 'invalid',
                                         },
                                         {
                                             'name': 'comment',

@@ -562,6 +562,26 @@ def test_validation_requirements(client):
         'execution_id': exc.id,
         'node_id': 'approval_node',
         'response': 'reject',
+        'inputs': [],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'inputs' must be a list",
+                'code': 'validation.required_list',
+                'where': 'request.body.inputs',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval_node',
+        'response': 'reject',
         'inputs': ['de'],
     }))
 

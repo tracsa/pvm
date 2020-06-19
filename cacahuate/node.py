@@ -526,7 +526,10 @@ class Validation(UserAttachedNode):
             if 'inputs' not in json_data:
                 raise RequiredInputError('inputs', 'request.body.inputs')
 
-            if type(json_data['inputs']) is not list:
+            if any([
+                type(json_data['inputs']) is not list,
+                len(json_data['inputs']) == 0,
+            ]):
                 raise RequiredListError('inputs', 'request.body.inputs')
 
             for index, field in enumerate(json_data['inputs']):
@@ -538,6 +541,16 @@ class Validation(UserAttachedNode):
 
                 if errors:
                     raise BadRequest(errors)
+
+            if 'comment' not in json_data:
+                raise RequiredInputError('comment', 'request.body.comment')
+
+            if type(json_data['comment']) is not str:
+                raise BadRequest([{
+                    'detail': '\'comment\' must be a str',
+                    'code': 'validation.invalid',
+                    'where': 'request.body.comment',
+                }])
 
         return [Form.state_json(self.id, [
             {

@@ -562,6 +562,26 @@ def test_validation_requirements(client):
         'execution_id': exc.id,
         'node_id': 'approval_node',
         'response': 'reject',
+        'inputs': [],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'inputs' must be a list",
+                'code': 'validation.required_list',
+                'where': 'request.body.inputs',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval_node',
+        'response': 'reject',
         'inputs': ['de'],
     }))
 
@@ -615,6 +635,51 @@ def test_validation_requirements(client):
                 'detail': "'inputs.0.ref' value invalid",
                 'code': 'validation.invalid',
                 'where': 'request.body.inputs.0.ref',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval_node',
+        'response': 'reject',
+        'inputs': [{
+            'ref': 'start_node.juan.0:work.task',
+        }],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'comment' is required",
+                'code': 'validation.required',
+                'where': 'request.body.comment',
+            },
+        ],
+    }
+
+    res = client.post('/v1/pointer', headers={**{
+        'Content-Type': 'application/json',
+    }, **make_auth(juan)}, data=json.dumps({
+        'execution_id': exc.id,
+        'node_id': 'approval_node',
+        'response': 'reject',
+        'inputs': [{
+            'ref': 'start_node.juan.0:work.task',
+        }],
+        'comment': [],
+    }))
+
+    assert res.status_code == 400
+    assert json.loads(res.data) == {
+        'errors': [
+            {
+                'detail': "'comment' must be a str",
+                'code': 'validation.invalid',
+                'where': 'request.body.comment',
             },
         ],
     }

@@ -639,7 +639,6 @@ def test_validation_requirements(client):
         ],
     }
 
-
     res = client.post('/v1/pointer', headers={**{
         'Content-Type': 'application/json',
     }, **make_auth(juan)}, data=json.dumps({

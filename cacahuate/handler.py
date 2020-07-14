@@ -284,6 +284,8 @@ class Handler:
             {'$set': {
                 'name': execution.name,
                 'description': execution.description,
+                'values._execution.0.name': execution.name,
+                'values._execution.0.description': execution.description,
             }},
         )
 

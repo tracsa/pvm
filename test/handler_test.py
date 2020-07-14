@@ -165,7 +165,12 @@ def test_teardown(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': state,
-        'values': {},
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        },
         'actors': {
             'start_node': 'juan',
         },
@@ -324,6 +329,10 @@ def test_teardown(config, mongo):
     }
 
     assert reg['values'] == {
+        '_execution': [{
+            'name': '',
+            'description': '',
+        }],
         'mid_form': [{
             'data': 'yes',
         }],

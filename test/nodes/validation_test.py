@@ -41,6 +41,12 @@ def test_approve(config, mongo):
         'actors': {
             'start_node': 'juan',
         },
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        },
     })
 
     # thing to test
@@ -169,6 +175,12 @@ def test_reject(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': state,
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        },
     })
 
     # will teardown the approval node
@@ -317,6 +329,10 @@ def test_reject(config, mongo):
             'item_order': ['start_node', 'approval_node', 'final_node'],
         },
         'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
             'approval_node': [{
                 'comment': 'I do not like it',
                 'response': 'reject',
@@ -385,6 +401,12 @@ def test_reject_with_dependencies(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, 'validation-reloaded').get_state(),
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        },
     })
 
     # first call to node1
@@ -726,6 +748,10 @@ def test_reject_with_dependencies(config, mongo):
         },
         'status': 'finished',
         'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
             'node4': [{
                 'comment': 'I like it',
                 'inputs': None,

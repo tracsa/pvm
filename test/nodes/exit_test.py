@@ -19,6 +19,12 @@ def test_exit_interaction(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, execution.process_name).get_state(),
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        },
     })
 
     # first node
@@ -153,4 +159,10 @@ def test_exit_interaction(config, mongo):
                 'identifier': '__system__',
             },
         ],
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        },
     }

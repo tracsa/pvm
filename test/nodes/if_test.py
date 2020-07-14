@@ -601,6 +601,12 @@ def test_invalidated_conditional(config, mongo):
         'state': Xml.load(
             config, execution.process_name
         ).get_state(),
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        },
     })
 
     # initial rabbit call
@@ -1265,6 +1271,10 @@ def test_invalidated_conditional(config, mongo):
         },
 
         'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
             'form1': [
                 {
                     'value': 0,

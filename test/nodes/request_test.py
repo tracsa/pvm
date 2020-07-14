@@ -291,6 +291,12 @@ def test_store_data_from_response(config, mocker, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, 'request-captures').get_state(),
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        }
     })
 
     # teardown of first node and wakeup of request node
@@ -427,6 +433,10 @@ def test_store_data_from_response(config, mocker, mongo):
         'description': 'Request request_node',
     }
     assert state['values'] == {
+        '_execution': [{
+            'name': '',
+            'description': '',
+        }],
         'capture1': [{
             'name': expected_name,
         }],

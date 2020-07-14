@@ -18,6 +18,12 @@ def test_patch_invalidate(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, 'exit_request').get_state(),
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        },
     })
 
     # requester fills the form
@@ -107,6 +113,10 @@ def test_patch_invalidate(config, mongo):
     })
 
     expected_values = {
+        '_execution': [{
+            'name': '',
+            'description': '',
+        }],
         'auth_form': [{'auth': 'yes'}],
         'code_form': [{'code': 'kadabra'}],
         'exit_form': [{'reason': 'want to pee'}],
@@ -125,6 +135,12 @@ def test_patch_set_value(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, 'exit_request').get_state(),
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        },
     })
 
     # requester fills the form
@@ -224,6 +240,10 @@ def test_patch_set_value(config, mongo):
     })
 
     expected_values = {
+        '_execution': [{
+            'name': '',
+            'description': '',
+        }],
         'auth_form': [{'auth': 'yes'}],
         'code_form': [{'code': 'alakazam'}],
         'exit_form': [{'reason': 'am hungry'}],
@@ -242,6 +262,12 @@ def test_patch_set_value_multiple(config, mongo):
         '_type': 'execution',
         'id': execution.id,
         'state': Xml.load(config, 'gift-request').get_state(),
+        'values': {
+            '_execution': [{
+                'name': '',
+                'description': '',
+            }],
+        }
     })
 
     # requester fills the form
@@ -419,6 +445,10 @@ def test_patch_set_value_multiple(config, mongo):
     assert 'costo' not in _form['inputs']['items']
 
     expected_values = {
+        '_execution': [{
+            'name': '',
+            'description': '',
+        }],
         'viaticos': [{'galletas': 'yes'}],
         'condicionales': [{'comportamiento': 'bueno'}],
         'if_malo': [{'condition': False}],

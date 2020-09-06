@@ -19,6 +19,8 @@ class Execution(Model):
         'cacahuate.models.User',
         inverse='activities'
     )
+    started_at = fields.Datetime()
+    finished_at = fields.Datetime(required=False)
 
 
 class Pointer(Model):

@@ -292,8 +292,7 @@ class Handler:
         ptr_collection.update_many(
             {'execution.id': execution.id},
             {'$set': {
-                'execution.name': execution.name,
-                'execution.description': execution.description,
+                'execution': execution.to_json(),
             }},
         )
 
@@ -326,7 +325,7 @@ class Handler:
             'execution.id': execution.id,
         }, {
             '$set': {
-                'execution.finished_at': execution.finished_at,
+                'execution': execution.to_json(),
             }
         })
 
@@ -580,7 +579,7 @@ class Handler:
             'execution.id': execution.id,
         }, {
             '$set': {
-                'execution.finished_at': execution.finished_at
+                'execution': execution.to_json(),
             }
         })
 

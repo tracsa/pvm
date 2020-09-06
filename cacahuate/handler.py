@@ -545,6 +545,7 @@ class Handler:
 
     def cancel_execution(self, message):
         execution = Execution.get_or_exception(message['execution_id'])
+        execution.status = 'cancelled'
         execution.finished_at = datetime.now()
 
         for pointer in execution.proxy.pointers.get():
@@ -558,7 +559,7 @@ class Handler:
             'id': execution.id,
         }, {
             '$set': {
-                'status': 'cancelled',
+                'status': execution.status,
                 'finished_at': execution.finished_at
             }
         })

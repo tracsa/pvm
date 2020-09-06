@@ -21,6 +21,7 @@ class Execution(Model):
     )
     started_at = fields.Datetime()
     finished_at = fields.Datetime(required=False)
+    status = fields.Text()
 
 
 class Pointer(Model):

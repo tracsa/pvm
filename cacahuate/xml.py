@@ -150,6 +150,8 @@ class Xml:
             name_template=self.name_template(),
             description=self.get_description(values),
             description_template=self.description_template(),
+            started_at=datetime.now(),
+            status='ongoing',
         ).save()
         pointer = Pointer(
             node_id=node.id,
@@ -169,8 +171,8 @@ class Xml:
             'name': execution.name,
             'process_name': execution.process_name,
             'description': execution.description,
-            'status': 'ongoing',
-            'started_at': datetime.now(),
+            'status': execution.status,
+            'started_at': execution.started_at,
             'finished_at': None,
             'state': self.get_state(),
             'values': {

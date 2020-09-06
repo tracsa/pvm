@@ -62,6 +62,7 @@ class Handler:
 
         # node's lifetime ends here
         self.teardown(node, pointer, user, input)
+        execution.reload()
 
         # compute the next node in the sequence
         try:
@@ -292,8 +293,7 @@ class Handler:
         ptr_collection.update_many(
             {'execution.id': execution.id},
             {'$set': {
-                'execution.name': execution.name,
-                'execution.description': execution.description,
+                'execution': execution.to_json(),
             }},
         )
 
@@ -307,14 +307,27 @@ class Handler:
 
     def finish_execution(self, execution):
         """ shuts down this execution and every related object """
+        execution.status = 'finished'
+        execution.finished_at = datetime.now()
+        execution.save()
+
         mongo = self.get_mongo()
-        collection = mongo[self.config['EXECUTION_COLLECTION']]
-        collection.update_one({
+        exe_collection = mongo[self.config['EXECUTION_COLLECTION']]
+        exe_collection.update_one({
             'id': execution.id,
         }, {
             '$set': {
-                'status': 'finished',
-                'finished_at': datetime.now()
+                'status': execution.status,
+                'finished_at': execution.finished_at,
+            }
+        })
+
+        ptr_collection = mongo[self.config['POINTER_COLLECTION']]
+        ptr_collection.update_many({
+            'execution.id': execution.id,
+        }, {
+            '$set': {
+                'execution': execution.to_json(),
             }
         })
 
@@ -532,6 +545,8 @@ class Handler:
 
     def cancel_execution(self, message):
         execution = Execution.get_or_exception(message['execution_id'])
+        execution.status = 'cancelled'
+        execution.finished_at = datetime.now()
 
         for pointer in execution.proxy.pointers.get():
             pointer.delete()
@@ -544,8 +559,8 @@ class Handler:
             'id': execution.id,
         }, {
             '$set': {
-                'status': 'cancelled',
-                'finished_at': datetime.now()
+                'status': execution.status,
+                'finished_at': execution.finished_at
             }
         })
 
@@ -559,7 +574,15 @@ class Handler:
         }, {
             '$set': {
                 'state': 'cancelled',
-                'finished_at': datetime.now()
+                'finished_at': execution.finished_at
+            }
+        })
+
+        ptr_collection.update_many({
+            'execution.id': execution.id,
+        }, {
+            '$set': {
+                'execution': execution.to_json(),
             }
         })
 

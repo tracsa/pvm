@@ -7,7 +7,13 @@ from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import Action, Form
 from cacahuate.xml import Xml
 
-from .utils import make_pointer, make_user, assert_near_date, random_string
+from .utils import (
+    make_date,
+    make_pointer,
+    make_user,
+    assert_near_date,
+    random_string,
+)
 
 
 def test_recover_step(config):
@@ -46,6 +52,8 @@ def test_create_pointer(config):
         name_template='nombre',
         description='description',
         description_template='description',
+        started_at=make_date(2020, 8, 21, 4, 5, 6),
+        status='ongoing',
     ).save()
     pointer = handler.create_pointer(node, exc)
     execution = pointer.proxy.execution.get()

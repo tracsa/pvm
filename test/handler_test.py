@@ -53,6 +53,7 @@ def test_create_pointer(config):
         description='description',
         description_template='description',
         started_at=make_date(2020, 8, 21, 4, 5, 6),
+        status='ongoing',
     ).save()
     pointer = handler.create_pointer(node, exc)
     execution = pointer.proxy.execution.get()

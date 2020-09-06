@@ -2765,6 +2765,7 @@ def test_task_read(client, config, mongo):
     execution = ptr.proxy.execution.get()
 
     execution.started_at = make_date(2020, 8, 21, 4, 5, 6)
+    execution.status = 'ongoing'
     execution.save()
 
     state = Xml.load(config, execution.process_name).get_state()
@@ -2796,6 +2797,7 @@ def test_task_read(client, config, mongo):
                 'description_template': '',
                 'started_at': '2020-08-21T04:05:06Z',
                 'finished_at': None,
+                'status': 'ongoing',
             },
             'form_array': [
                 {
@@ -2866,6 +2868,7 @@ def test_task_validation(client, mongo, config):
             'process_name': execution.process_name,
             'started_at': None,
             'finished_at': None,
+            'status': None,
         },
         'fields': [
             {
@@ -2940,6 +2943,7 @@ def test_task_with_prev_work(client, config, mongo):
             'process_name': execution.process_name,
             'started_at': None,
             'finished_at': None,
+            'status': None,
         },
         'form_array': [{
             'inputs': [

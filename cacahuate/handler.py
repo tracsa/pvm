@@ -307,6 +307,7 @@ class Handler:
 
     def finish_execution(self, execution):
         """ shuts down this execution and every related object """
+        execution.status = 'finished'
         execution.finished_at = datetime.now()
         execution.save()
 
@@ -316,7 +317,7 @@ class Handler:
             'id': execution.id,
         }, {
             '$set': {
-                'status': 'finished',
+                'status': execution.status,
                 'finished_at': execution.finished_at,
             }
         })

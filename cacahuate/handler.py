@@ -544,6 +544,7 @@ class Handler:
 
     def cancel_execution(self, message):
         execution = Execution.get_or_exception(message['execution_id'])
+        execution.finished_at = datetime.now()
 
         for pointer in execution.proxy.pointers.get():
             pointer.delete()
@@ -557,7 +558,7 @@ class Handler:
         }, {
             '$set': {
                 'status': 'cancelled',
-                'finished_at': datetime.now()
+                'finished_at': execution.finished_at
             }
         })
 
@@ -571,7 +572,15 @@ class Handler:
         }, {
             '$set': {
                 'state': 'cancelled',
-                'finished_at': datetime.now()
+                'finished_at': execution.finished_at
+            }
+        })
+
+        ptr_collection.update_many({
+            'execution.id': execution.id,
+        }, {
+            '$set': {
+                'execution.finished_at': execution.finished_at
             }
         })
 

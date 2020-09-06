@@ -307,14 +307,26 @@ class Handler:
 
     def finish_execution(self, execution):
         """ shuts down this execution and every related object """
+        execution.finished_at = datetime.now()
+        execution.save()
+
         mongo = self.get_mongo()
-        collection = mongo[self.config['EXECUTION_COLLECTION']]
-        collection.update_one({
+        exe_collection = mongo[self.config['EXECUTION_COLLECTION']]
+        exe_collection.update_one({
             'id': execution.id,
         }, {
             '$set': {
                 'status': 'finished',
-                'finished_at': datetime.now()
+                'finished_at': execution.finished_at,
+            }
+        })
+
+        ptr_collection = mongo[self.config['POINTER_COLLECTION']]
+        ptr_collection.update_many({
+            'execution.id': execution.id,
+        }, {
+            '$set': {
+                'execution.finished_at': execution.finished_at,
             }
         })
 

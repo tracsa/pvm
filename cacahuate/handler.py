@@ -62,6 +62,7 @@ class Handler:
 
         # node's lifetime ends here
         self.teardown(node, pointer, user, input)
+        execution.reload()
 
         # compute the next node in the sequence
         try:

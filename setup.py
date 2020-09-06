@@ -63,7 +63,7 @@ setup(
         'Flask-Cors',
         'Flask_PyMongo < 2.0',
         'case_conversion',
-        'coralillo >= 0.8',
+        'coralillo >= 0.8, < 1.0',
         'flask >= 1.0',
         'itacate',
         'lark-parser >= 0.6',

@@ -50,8 +50,7 @@ def requires_auth(view):
         token = Token.get_by('token', token)
 
         if (
-            user is None or token is None or
-            token.proxy.user.get().id != user.id
+            user is None or token is None or token.proxy.user.get().id != user.id
         ):
             raise Unauthorized([{
                 'detail': 'Your credentials are invalid, sorry',

@@ -908,7 +908,8 @@ def data_mix():
     if actor_identifier is not None:
         collection = mongo.db[app.config['EXECUTION_COLLECTION']]
         cursor = collection.aggregate([
-            {'$match': {
+            {
+                '$match': {
                     'state.item_order': {
                         '$exists': True,
                         '$nin': [None, {}],
@@ -916,13 +917,16 @@ def data_mix():
                     'actors': {
                         '$exists': True,
                     },
-            }},
-            {'$project': {
-                '_id': 0,
-                'id': 1,
-                'state.item_order': 1,
-                'actors': 1,
-            }},
+                },
+            },
+            {
+                '$project': {
+                    '_id': 0,
+                    'id': 1,
+                    'state.item_order': 1,
+                    'actors': 1,
+                },
+            },
         ])
 
         aid_exe_set = set()
@@ -1159,9 +1163,11 @@ def process_statistics():
         {"$match": {"status": "finished"}},
         {"$skip": g.offset},
         {"$limit": g.limit},
-        {"$project": {"difference_time": {
-            "$subtract": ["$finished_at", "$started_at"]
-            }, "process":{"id": "$process.id"},
+        {"$project": {
+            "difference_time": {
+                "$subtract": ["$finished_at", "$started_at"],
+            },
+            "process":{"id": "$process.id"},
         }},
 
         {"$group": {

@@ -1909,8 +1909,7 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
 
     # aditional query
     res = client.get('/v1/inbox?user_identifier={}&process_name={}'.format(
-            juan.identifier,
-            'simple.2018-02-19.xml',
+        juan.identifier, 'simple.2018-02-19.xml',
     ))
 
     ans = json.loads(res.data)
@@ -1924,8 +1923,7 @@ def test_data_mix_filter_user_identifier(mongo, client, config):
 
     # aditional query fails
     res = client.get('/v1/inbox?user_identifier={}&process_name={}'.format(
-            juan.identifier,
-            'not_a_process',
+        juan.identifier, 'not_a_process',
     ))
 
     ans = json.loads(res.data)
@@ -3489,7 +3487,7 @@ def test_start_process_error_405(client, mongo, config):
 
 
 def test_node_statistics(client, mongo, config):
-    def make_node_reg(process_id,  node_id, started_at, finished_at):
+    def make_node_reg(process_id, node_id, started_at, finished_at):
         return {
             'started_at': started_at,
             'finished_at': finished_at,
@@ -3517,7 +3515,7 @@ def test_node_statistics(client, mongo, config):
             'simple.2018-02-19', 'test1',
             make_date(),
             make_date(2018, 5, 10, 8, 2, 9)
-            ),
+        ),
         make_node_reg(
             'simple.2018-02-19', 'test2',
             make_date(),
@@ -3652,7 +3650,7 @@ def test_pagination_v1_log(client, mongo, config):
             'simple.2018-02-19', 'mid_node',
             make_date(2018, 5, 21, 6, 6, 6),
             make_date(2018, 5, 21, 6, 6, 6)
-            ),
+        ),
         make_node_reg(
             'simple.2018-02-19', 'mid_node',
             make_date(2018, 5, 22, 7, 7, 7),
@@ -3707,7 +3705,7 @@ def test_pagination_v1_log_all(client, mongo, config):
             'simple.2018-02-19', 'mid_node',
             make_date(2018, 5, 21, 6, 6, 6),
             make_date(2018, 5, 21, 6, 6, 6)
-            ),
+        ),
         make_node_reg(
             'cccccccc',
             'simple.2018-02-19', 'mid_node',

@@ -1,14 +1,16 @@
 import http
 import copy
-from coralillo.errors import ModelNotFoundError
-from datetime import datetime
+import re
+import os
+
 import flask
 from flask import g
 from flask import request, jsonify, json
-import os
 import pika
 import pymongo
-import re
+from simplejson.errors import JSONDecodeError
+
+from coralillo.errors import ModelNotFoundError
 
 from cacahuate.errors import InputError, RequiredListError, RequiredDictError
 from cacahuate.errors import RequiredInputError, RequiredStrError
@@ -24,25 +26,7 @@ from cacahuate.node import make_node
 from cacahuate.rabbit import get_channel
 from cacahuate.xml import Xml, form_to_dict, get_text, get_element_by
 from cacahuate.node import make_input
-
-from simplejson.errors import JSONDecodeError
-
-
-DATE_FIELDS = [
-    'started_at',
-    'finished_at',
-]
-
-
-def json_prepare(obj):
-    if obj.get('_id'):
-        del obj['_id']
-
-    for field in DATE_FIELDS:
-        if obj.get(field) and type(obj[field]) == datetime:
-            obj[field] = obj[field].isoformat()
-
-    return obj
+from cacahuate.mongo import json_prepare
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -142,6 +126,7 @@ def execution_list():
         exe_pipeline.append({'$project': prjct})
 
     exe_collection = mongo.db[app.config['EXECUTION_COLLECTION']]
+
     return jsonify({
         "data": list(map(
             json_prepare,

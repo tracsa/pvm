@@ -1,4 +1,11 @@
+from datetime import datetime
+
 from cacahuate.jsontypes import MultiFormDict
+
+DATE_FIELDS = [
+    'started_at',
+    'finished_at',
+]
 
 
 def get_values(execution_data):
@@ -12,3 +19,17 @@ def get_values(execution_data):
         }
     except KeyError:
         return dict()
+
+
+def json_prepare(obj):
+    ''' Takes ``obj`` from a mongo collection and returns it *as is* with two
+    minor changes:
+
+    * ``_id`` key removed
+    * objects of type ``datetime`` converted to their string isoformat representation
+    '''
+    return {
+        k: v if not isinstance(v, datetime) else v.isoformat()
+        for k, v in obj.items()
+        if k != '_id'
+    }

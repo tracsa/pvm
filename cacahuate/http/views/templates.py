@@ -1,6 +1,5 @@
 import json
 import os
-from datetime import datetime
 
 from coralillo.errors import ModelNotFoundError
 from flask import render_template_string, make_response, current_app as app
@@ -8,7 +7,7 @@ import jinja2
 from flask import Blueprint
 
 from cacahuate.http.mongo import mongo
-from cacahuate.mongo import get_values
+from cacahuate.mongo import get_values, json_prepare
 
 bp = Blueprint('summary', __name__)
 
@@ -18,23 +17,6 @@ def to_pretty_json(value):
 
 
 jinja2.environment.DEFAULT_FILTERS['pretty'] = to_pretty_json
-
-
-DATE_FIELDS = [
-    'started_at',
-    'finished_at',
-]
-
-
-def json_prepare(obj):
-    if obj.get('_id'):
-        del obj['_id']
-
-    for field in DATE_FIELDS:
-        if obj.get(field) and type(obj[field]) == datetime:
-            obj[field] = obj[field].isoformat()
-
-    return obj
 
 
 @bp.route('/v1/execution/<id>/summary', methods=['GET'])

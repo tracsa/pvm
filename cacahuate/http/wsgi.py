@@ -29,11 +29,11 @@ CORS(app)
 os.environ['TZ'] = app.config.get('TIMEZONE', 'UTC')
 time.tzset()
 
-# Bind the database
+# Bind the redis database
 cora = Coralillo(app, id_function=yuid)
 bind_models(cora._engine)
 
-# The database
+# The mongo database
 mongo.init_app(app)
 create_indexes(app.config)
 

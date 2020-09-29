@@ -953,8 +953,6 @@ def test_datetime_input_none(client):
         }]
     }))
 
-    print(res.data)
-
     assert res.status_code == 201
 
     res = client.post('/v1/execution', headers={**{

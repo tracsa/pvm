@@ -28,7 +28,8 @@ class Handler:
         self.mongo = None
 
     def __call__(self, channel, method, properties, body: bytes):
-        ''' the main callback of cacahuate '''
+        ''' the main callback of cacahuate, gets called when a new message
+        arrives from rabbitmq. '''
         message = json.loads(body)
 
         if message['command'] in self.config['COMMANDS']:
@@ -51,6 +52,8 @@ class Handler:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def call(self, message: dict, channel):
+        ''' The actual main callback of cacahuate. The logic goes here, the
+        previous function just wraps some error handling logic '''
         pointer, user, input = self.recover_step(message)
         execution = pointer.proxy.execution.get()
 
@@ -185,7 +188,7 @@ class Handler:
         else:
             notified_users = []
 
-        # do some work (can raise an exception
+        # do some work (can raise an exception)
         if not node.is_async():
             input = node.work(self.config, state, channel, self.get_mongo())
         else:

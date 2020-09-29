@@ -7,6 +7,7 @@ distintos componentes de cacahuate.
 .. toctree::
    :maxdepth: 3
 
+   pointer_lifecycle
    xml
    docs
    utils

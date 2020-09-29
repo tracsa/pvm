@@ -13,7 +13,8 @@ from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
 from cacahuate.jsontypes import Map
 from cacahuate.cascade import cascade_invalidate, track_next_node
-from cacahuate.utils import render_or, get_values
+from cacahuate.mongo import get_values
+from cacahuate.templates import render_or
 
 LOGGER = logging.getLogger(__name__)
 

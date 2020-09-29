@@ -1,16 +1,16 @@
+import logging.config
+import os
+import time
+
 from flask import Flask
 from flask.logging import default_handler
 from flask_coralillo import Coralillo
 from flask_cors import CORS
 from yuid import yuid
 
-import logging.config
-import os
-import time
-
 from cacahuate.indexes import create_indexes
 from cacahuate.models import bind_models
-from cacahuate.mongo import mongo
+from cacahuate.http.mongo import mongo
 from cacahuate.http.views import templates
 
 # The flask application

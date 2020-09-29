@@ -12,7 +12,8 @@ import pika
 from cacahuate.errors import ProcessNotFound, ElementNotFound, MalformedProcess
 from cacahuate.jsontypes import SortedMap
 from cacahuate.models import Execution, Pointer
-from cacahuate.utils import render_or, compact_values
+from cacahuate.forms import compact_values
+from cacahuate.templates import render_or
 
 XML_ATTRIBUTES = {
     'public': lambda a: a == 'true',

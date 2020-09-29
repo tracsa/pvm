@@ -4,8 +4,7 @@ from string import ascii_letters
 
 from cacahuate.http.errors import Unauthorized
 from cacahuate.http.wsgi import app
-from cacahuate.models import User, Token
-from cacahuate.utils import get_or_create
+from cacahuate.models import User, Token, get_or_create_user
 
 
 @app.route('/v1/auth/signin/<AuthProvider:backend>', methods=['POST'])
@@ -13,7 +12,7 @@ def signin(backend):
     # this raises AuthenticationError exception if failed
     identifier, data = backend.authenticate(**request.form.to_dict())
 
-    user = get_or_create(identifier, data)
+    user = get_or_create_user(identifier, data)
 
     # creates auth token
     if user.proxy.tokens.count() > 0:

@@ -4,7 +4,7 @@ from cacahuate.errors import RequiredInputError, HierarchyError, \
     MisconfiguredProvider
 from cacahuate.http.errors import BadRequest, Forbidden
 from cacahuate.http.wsgi import app
-from cacahuate.utils import user_import
+from cacahuate.imports import user_import
 
 
 def validate_json(json_data: dict, req: list):

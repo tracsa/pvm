@@ -17,8 +17,10 @@ from cacahuate.grammar import Condition, ConditionTransformer
 from cacahuate.http.errors import BadRequest
 from cacahuate.inputs import make_input
 from cacahuate.jsontypes import Map, SortedMap
-from cacahuate.utils import get_or_create, user_import, get_values
-from cacahuate.utils import render_or
+from cacahuate.mongo import get_values
+from cacahuate.templates import render_or
+from cacahuate.models import get_or_create_user
+from cacahuate.imports import user_import
 from cacahuate.xml import get_text, NODES, Xml
 from cacahuate.cascade import cascade_invalidate, track_next_node
 
@@ -293,7 +295,7 @@ class UserAttachedNode(FullyContainedNode):
                     '("identifier", "data"), got: {user}'.format(user=user)
                 )
 
-            return get_or_create(identifier, data)
+            return get_or_create_user(identifier, data)
 
         return list(map(render_users, users))
 

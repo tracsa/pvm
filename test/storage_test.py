@@ -5,7 +5,7 @@ from cacahuate.handler import Handler
 from cacahuate.models import Pointer
 from cacahuate.node import Form
 from cacahuate.xml import Xml
-from cacahuate.utils import get_values
+from cacahuate.mongo import get_values
 
 from .utils import make_pointer, make_user, random_string
 

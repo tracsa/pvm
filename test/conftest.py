@@ -17,6 +17,7 @@ TESTING_SETTINGS = {
     'PROCESS_ENV': {
         'FOO': 'var',
     },
+    'TEMPLATE_PATH': os.path.join(os.path.dirname(__file__), 'templates'),
 }
 
 

@@ -1,9 +1,9 @@
 import json
-import os
+from os import path
 
 from coralillo.errors import ModelNotFoundError
-from flask import render_template_string, make_response
-import jinja2
+from flask import make_response
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from cacahuate.http.mongo import mongo
 from cacahuate.http.wsgi import app
@@ -12,9 +12,6 @@ from cacahuate.mongo import make_context, json_prepare
 
 def to_pretty_json(value):
     return json.dumps(value, sort_keys=True, indent=4, separators=(',', ': '))
-
-
-jinja2.environment.DEFAULT_FILTERS['pretty'] = to_pretty_json
 
 
 @app.route('/v1/execution/<id>/summary', methods=['GET'])
@@ -34,51 +31,38 @@ def execution_template(id):
     if 'process_name' not in exc:
         return 'Not supported for old processes', 409
 
-    # prepare default template
-    default = ['<div><b>Available keys</b></div>']
     context = make_context(execution, app.config)
 
-    for key in context:
-        token = '<div>{}</div>'
-        default.append(token.format(key, key))
-
-    template_string = ''.join(default)
-
     # load template
-    template_dir = app.config['TEMPLATE_PATH']
     process_name = execution['process_name']
     name, version, _ = process_name.split('.')
 
-    # file or folder
-    ff_name = '.'.join([name, version])
+    # Loaders will be inserted in inverse order and then reversed. The fallback
+    # is the default template at ``templates/index.html``
+    paths = [
+        path.join(path.dirname(path.realpath(__file__)), '../../templates'),
+    ]
 
-    template_name = None
-    # If template file exists...
-    if os.path.isfile(
-        os.path.join(template_dir, ff_name + '.html')
-    ):
-        template_name = ff_name + '.html'
-    # Else check for any folder...
-    elif os.path.isfile(
-        os.path.join(template_dir, ff_name + '/', 'template.html')
-    ):
-        # set loader for "includes"
-        custom_loader = jinja2.ChoiceLoader([
-            jinja2.FileSystemLoader([
-                app.config['TEMPLATE_PATH'] + '/' + ff_name,
-            ]),
-        ])
-        app.jinja_loader = custom_loader
+    if app.config['TEMPLATE_PATH'] is not None and path.isdir(app.config['TEMPLATE_PATH']):
+        paths.append(app.config['TEMPLATE_PATH'])
 
-        # ... and return the "main template"
-        template_name = ff_name + '/template.html'
+        process_dir = path.join(app.config['TEMPLATE_PATH'], name)
+        if path.isdir(process_dir):
+            paths.append(process_dir)
 
-    if template_name:
-        with open(os.path.join(template_dir, template_name), 'r') as contents:
-            template_string = contents.read()
+        process_version_dir = path.join(
+            process_dir, version
+        )
+        if path.isdir(process_version_dir):
+            paths.append(process_version_dir)
 
-    # return template interpolation
+    env = Environment(
+        loader=FileSystemLoader(reversed(paths)),
+        autoescape=select_autoescape(['html', 'xml'])
+    )
+    env.filters['pretty'] = to_pretty_json
+
     return make_response(
-        render_template_string(template_string, **context),
+        env.get_template('index.html').render(**context),
         200,
     )

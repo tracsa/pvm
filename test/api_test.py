@@ -3742,19 +3742,25 @@ def test_name_with_if(client, mongo, config):
 
 
 def test_get_xml(client):
-
     res = client.get('/v1/process/validation-multiform.xml')
     assert res.status_code == 200
     assert res.headers['Content-Type'] == 'text/xml; charset=utf-8'
     assert res.data.startswith(b'<?xml version="1.0" encoding="UTF-8"?>')
 
 
-def test_execution_summary(client, mongo, config):
+def test_execution_summary_default_template(client, mongo, config):
     mongo[config["EXECUTION_COLLECTION"]].insert_many([
         {
             'id': EXECUTION_ID,
-            'process_name': 'not-default-required-input.2018-04-04.html',
+            'process_name': 'some-random-process.2018-04-04.xml',
             'values': {
+                '_execution': [{
+                    'name': 'My process',
+                    'id': 'some id',
+                    'process_name': 'some-random-process.2020-09-29.xml',
+                    'description': 'some description',
+                    'started_at': datetime(2020, 9, 29),
+                }],
                 'auth_form': [
                     {
                         'name': 'Jorge Juan',
@@ -3767,20 +3773,75 @@ def test_execution_summary(client, mongo, config):
 
     res = client.get(f'/v1/execution/{EXECUTION_ID}/summary')
 
-    expected = '\n'.join([
-        '<p>The form was filled by <b>Jorge Juan</b></p>',
-        '<p>He/She is voting for <b>amlo</b></p>'
-    ])
+    expected = '''<!DOCTYPE html>
+<html>
+  <head>
+    <title>Proceso - My process</title>
+  </head>
+  <body>
+    <h1>My process</h1>
+    <table>
+      <tr>
+        <th>ID</th>
+        <td>some id</td>
+      </tr>
+      <tr>
+        <th>Nombre</th>
+        <td>My process</td>
+      </tr>
+      <tr>
+        <th>Fuente</th>
+        <td>some-random-process.2020-09-29.xml</td>
+      </tr>
+      <tr>
+        <th>Descripción</th>
+        <td>some description</td>
+      </tr>
+      <tr>
+        <th>Inicio</th>
+        <td>2020-09-29 00:00:00+00:00</td>
+      </tr>
+    </table>
+  </body>
+</html>'''
 
-    assert expected == res.data.decode("utf-8")
+    assert expected == res.data.decode('utf8')
 
 
-def test_execution_summary_nested(client, mongo, config):
+def test_execution_summary_version_level(client, mongo, config):
     mongo[config["EXECUTION_COLLECTION"]].insert_many([
         {
             'id': EXECUTION_ID,
-            'process_name': 'simple.2018-02-19.html',
+            'process_name': 'version-level-template.2020-09-29.xml',
             'values': {
+                '_execution': {
+                },
+                'auth_form': [
+                    {
+                        'name': 'Jorge Juan',
+                        'elections': 'amlo',
+                    },
+                ],
+            },
+        },
+    ])
+
+    res = client.get(f'/v1/execution/{EXECUTION_ID}/summary')
+
+    expected = b'''<p>The form was filled by <b>Jorge Juan</b></p>
+<p>He/She is voting for <b>amlo</b></p>'''
+
+    assert expected == res.data
+
+
+def test_execution_summary_process_level(client, mongo, config):
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        {
+            'id': EXECUTION_ID,
+            'process_name': 'process-level-template.2018-02-19.xml',
+            'values': {
+                '_execution': {
+                },
                 'start_form': [
                     {
                         'data': 'Foo',
@@ -3802,6 +3863,71 @@ def test_execution_summary_nested(client, mongo, config):
         '<p>mid_node: Bar</p>',
         '<p>start_form and mid_form: "Foo" and "Bar"</p>',
     ])
+
+    assert expected == res.data.decode("utf-8")
+
+
+def test_execution_summary_template_overides1(client, mongo, config):
+    # use version-overriden template
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        {
+            'id': EXECUTION_ID,
+            'process_name': 'template-overrides.2020-09-29.xml',
+            'values': {
+                '_execution': {
+                },
+                'start_form': [
+                    {
+                        'data': 'Foo',
+                    },
+                ],
+                'mid_form': [
+                    {
+                        'data': 'Bar',
+                    },
+                ],
+            },
+        },
+    ])
+
+    res = client.get(f'/v1/execution/{EXECUTION_ID}/summary')
+
+    expected = '''version level template
+
+General block
+Version level custom block'''
+
+    assert expected == res.data.decode("utf-8")
+
+
+def test_execution_summary_template_overides2(client, mongo, config):
+    mongo[config["EXECUTION_COLLECTION"]].insert_many([
+        {
+            'id': EXECUTION_ID,
+            'process_name': 'template-overrides.2020-09-30.xml',
+            'values': {
+                '_execution': {
+                },
+                'start_form': [
+                    {
+                        'data': 'Foo',
+                    },
+                ],
+                'mid_form': [
+                    {
+                        'data': 'Bar',
+                    },
+                ],
+            },
+        },
+    ])
+
+    res = client.get(f'/v1/execution/{EXECUTION_ID}/summary')
+
+    expected = '''process level template
+
+General block
+Process level custom block'''
 
     assert expected == res.data.decode("utf-8")
 

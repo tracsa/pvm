@@ -1,4 +1,3 @@
-import json
 from os import path
 
 from coralillo.errors import ModelNotFoundError
@@ -10,8 +9,8 @@ from cacahuate.http.wsgi import app
 from cacahuate.mongo import make_context
 
 
-def to_pretty_json(value):
-    return json.dumps(value, sort_keys=True, indent=4, separators=(',', ': '))
+def datetimeformat(value, format='%Y-%m-%d %H:%M:%S%z'):
+    return value.strftime(format)
 
 
 @app.route('/v1/execution/<id>/summary', methods=['GET'])
@@ -58,7 +57,11 @@ def execution_template(id):
         loader=FileSystemLoader(reversed(paths)),
         autoescape=select_autoescape(['html', 'xml'])
     )
-    env.filters['pretty'] = to_pretty_json
+
+    env.filters['datetimeformat'] = datetimeformat
+
+    for name, function in app.config['JINJA_FILTERS'].items():
+        env.filters[name] = function
 
     return make_response(
         env.get_template('summary.html').render(**context),

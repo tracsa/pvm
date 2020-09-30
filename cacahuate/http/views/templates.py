@@ -7,7 +7,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from cacahuate.http.mongo import mongo
 from cacahuate.http.wsgi import app
-from cacahuate.mongo import make_context, json_prepare
+from cacahuate.mongo import make_context
 
 
 def to_pretty_json(value):
@@ -20,15 +20,13 @@ def execution_template(id):
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
     try:
-        exc = next(collection.find({'id': id}))
+        execution = next(collection.find({'id': id}))
     except StopIteration:
         raise ModelNotFoundError(
             'Specified execution never existed, and never will'
         )
 
-    execution = json_prepare(exc)
-
-    if 'process_name' not in exc:
+    if 'process_name' not in execution:
         return 'Not supported for old processes', 409
 
     context = make_context(execution, app.config)

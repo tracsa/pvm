@@ -177,7 +177,7 @@
 </div>
 <div class="section" id="valores-siempre-presentes">
 <h3>Valores siempre presentes<a class="headerlink" href="#valores-siempre-presentes" title="Enlazar permanentemente con este título">¶</a></h3>
-<p>Por conveniencia se añade además información sobre la ejecución actual a este contexto. Los datos agregados tienen la estructura siguiente:</p>
+<p>Por conveniencia se añade además información sobre la ejecución actual a este contexto y variables de entorno que se pueden configurar al iniciar los servicios de cacahuate. Los datos agregados tienen la estructura siguiente:</p>
 <div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
    <span class="nt">&quot;_execution&quot;</span><span class="p">:</span> <span class="p">{</span>
       <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;nf384d34&quot;</span><span class="p">,</span>
@@ -185,7 +185,22 @@
       <span class="nt">&quot;process_name&quot;</span><span class="p">:</span> <span class="s2">&quot;archivo.2019-10-30.xml&quot;</span><span class="p">,</span>
       <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Descripción del proceso&quot;</span><span class="p">,</span>
       <span class="nt">&quot;started_at&quot;</span><span class="p">:</span> <span class="s2">&quot;2019-10-30T21:57:51.927624+00:00&quot;</span>
+   <span class="p">},</span>
+   <span class="nt">&quot;_env&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;FOO&quot;</span><span class="p">:</span> <span class="s2">&quot;var&quot;</span>
    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Y los puedes usar como:</p>
+<div class="highlight-jinja notranslate"><div class="highlight"><pre><span></span><span class="cp">{{</span> <span class="nv">_execution.name</span> <span class="cp">}}</span><span class="x"> </span><span class="cp">{{</span> <span class="nv">_env.FOO</span> <span class="cp">}}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>Por defecto la llave <code class="docutils literal notranslate"><span class="pre">_env</span></code> está vacía, pero puedes establecer valores para la misma en tu archivo de configuraciones, usando la variable <code class="docutils literal notranslate"><span class="pre">PROCESS_ENV</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># settings.py</span>
+
+<span class="n">PROCESS_ENV</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s1">&#39;FOO&#39;</span><span class="p">:</span> <span class="s1">&#39;var&#39;</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>

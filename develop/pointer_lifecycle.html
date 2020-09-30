@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ciclo de de vida de un proceso &#8212; documentación de Cacahuate - 2.7.0</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" />
+    <link rel="next" title="Extendiendo el lenguaje XML de cacahuate" href="xml.html" />
+    <link rel="prev" title="Desarrollo" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="ciclo-de-de-vida-de-un-proceso">
+<h1>Ciclo de de vida de un proceso<a class="headerlink" href="#ciclo-de-de-vida-de-un-proceso" title="Enlazar permanentemente con este título">¶</a></h1>
+<p>Cada proceso está conformado por <em>nodos</em> acomodados en orden cronológico que definien los pasos necesarios para su realización.</p>
+<img alt="../_images/proceso.png" src="../_images/proceso.png" />
+<p>Estos nodos pueden representar la participación de una persona o un sistema en la historia del proceso.</p>
+<p>El proceso inicia con una petición <code class="docutils literal notranslate"><span class="pre">[POST]</span> <span class="pre">/v1/execution</span></code> la cual creará los siguientes objetos:</p>
+<ul class="simple">
+<li><p>Un apuntador en redis hacia el primer nodo del proceso</p></li>
+<li><p>Un objeto <strong>execution</strong> en redis que representa la instancia actual del proceso</p></li>
+<li><p>Un registro en mongodb de la información recolectada en este primer nodo</p></li>
+<li><p>Un registro en mongodb para esta instancia (ejecución) del proceso.</p></li>
+</ul>
+<p>El primer nodo de un proceso es especial pues no presenta el ciclo de vida completo de un nodo tradicional enmedio o al final del proceso, pues para el primero nodo la información se recolecta inmediatamente en la petición que lo inicia.</p>
+<div class="section" id="ciclo-de-vida-de-un-nodo">
+<h2>Ciclo de vida de un nodo<a class="headerlink" href="#ciclo-de-vida-de-un-nodo" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Para los nodos en los que interviene un humano o sistema externo el ciclo de vida consiste en ser «despertados» por el manejador, lo cual dispara el mecanismo de notificación del(los) actor(es) responsable(s) del nodo. En ese momento el nodo queda en pausa hasta que la información es provista por medio de una petición <code class="docutils literal notranslate"><span class="pre">[POST]</span> <span class="pre">/v1/pointer</span></code>, la cual marcará el nodo como completado y continuará con el proceso.</p>
+<img alt="../_images/ciclo_de_vida_de_un_nodo.png" src="../_images/ciclo_de_vida_de_un_nodo.png" />
+<ol class="arabic simple">
+<li><p>Nodo es <em>despertado</em> por el manejador</p></li>
+<li><p>El manejador encuentra a los actores responsables del nodo y los notifica</p></li>
+<li><p>El nodo es notificado de que existe información provista por alguno de los actores responsables</p></li>
+<li><p>El manejador busca y despierta al siguiente nodo</p></li>
+</ol>
+<p>Cada instancia de un proceso tiene siempre alguna cantidad variable de apuntadores <em>vivos</em> que apuntan a cierto nodo del proceso que está <em>pendiente</em>. En general hay exactamente uno pero hay espacio para la futura implementación de tareas paralelas, con lo cual habría varios.</p>
+<div class="section" id="nodos-sincronos">
+<h3>Nodos síncronos<a class="headerlink" href="#nodos-sincronos" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>También existen nodos síncronos que realizan tareas muy sencillas que no requieren un proceso de notificación, como puede ser el nodo condicional <code class="docutils literal notranslate"><span class="pre">IF</span></code>. En estos casos el manejador emite una señal que será recibida por él mismo unos milisegundos más tarde y que le indicará que debe continuar con el procesamiento del nodo.</p>
+<img alt="../_images/nodo_sincrono.png" src="../_images/nodo_sincrono.png" />
+</div>
+</div>
+<div class="section" id="fin-de-un-proceso">
+<h2>Fin de un proceso<a class="headerlink" href="#fin-de-un-proceso" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>La conclusión de un proceso está marcada por el último nodo de un proceso. Cuando el manejador trate de buscar el nodo siguiente y no encuentre uno determinará que se trata del fin del proceso y realizará algunas tareas de mantenimiento, como son:</p>
+<ul class="simple">
+<li><p>Eliminar todos los apuntadores de redos</p></li>
+<li><p>Eliminar el objeto <code class="docutils literal notranslate"><span class="pre">execution</span></code> de redis</p></li>
+<li><p>Registrar la fecha de conclusión del proceso en mongodb</p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Cacahuate</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegación</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Instalación</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage/index.html">Almacenamiento</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Desarrollo</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Ciclo de de vida de un proceso</a></li>
+<li class="toctree-l2"><a class="reference internal" href="xml.html">Extendiendo el lenguaje XML de cacahuate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="docs.html">Escribiendo documentación</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">Utilidades internas</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../xml/index.html">Escribiendo XMLs</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Desarrollo</a><ul>
+      <li>Previous: <a href="index.html" title="capítulo anterior">Desarrollo</a></li>
+      <li>Next: <a href="xml.html" title="próximo capítulo">Extendiendo el lenguaje XML de cacahuate</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Búsqueda rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Ir a" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Abraham Toriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/develop/pointer_lifecycle.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

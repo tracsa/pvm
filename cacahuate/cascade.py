@@ -90,8 +90,7 @@ def cascade_invalidate(xml, state, invalidated, comment):
 
         # forms
         if input_state == 'valid' and (
-                form_state_path not in updates or
-                updates[form_state_path] == 'valid'):
+                form_state_path not in updates or updates[form_state_path] == 'valid'):
             form_state = 'valid'
         else:
             form_state = 'invalid'
@@ -100,8 +99,7 @@ def cascade_invalidate(xml, state, invalidated, comment):
 
         # actors
         if form_state == 'valid' and (
-                actor_state_path not in updates or
-                updates[actor_state_path] == 'valid'):
+                actor_state_path not in updates or updates[actor_state_path] == 'valid'):
             actor_state = 'valid'
         else:
             actor_state = 'invalid'
@@ -110,8 +108,7 @@ def cascade_invalidate(xml, state, invalidated, comment):
 
         # nodes
         if actor_state == 'valid' and (
-                node_state_path not in updates or
-                updates[node_state_path] == 'valid'):
+                node_state_path not in updates or updates[node_state_path] == 'valid'):
             node_state = 'valid'
         else:
             node_state = 'invalid'

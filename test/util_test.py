@@ -1,4 +1,4 @@
-from cacahuate.utils import clear_username
+from cacahuate.models import clear_username
 
 
 def test_clear_email():

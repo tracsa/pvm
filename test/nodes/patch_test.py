@@ -28,7 +28,7 @@ def test_patch_invalidate(config, mongo):
 
     # requester fills the form
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -58,7 +58,7 @@ def test_patch_invalidate(config, mongo):
 
     # manager says yes
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -145,7 +145,7 @@ def test_patch_set_value(config, mongo):
 
     # requester fills the form
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -175,7 +175,7 @@ def test_patch_set_value(config, mongo):
 
     # manager says yes
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -272,7 +272,7 @@ def test_patch_set_value_multiple(config, mongo):
 
     # requester fills the form
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -342,7 +342,7 @@ def test_patch_set_value_multiple(config, mongo):
     assert ptr.node_id == 'if_malo'
 
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,

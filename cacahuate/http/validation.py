@@ -4,7 +4,7 @@ from cacahuate.errors import RequiredInputError, HierarchyError, \
     MisconfiguredProvider
 from cacahuate.http.errors import BadRequest, Forbidden
 from cacahuate.http.wsgi import app
-from cacahuate.utils import user_import
+from cacahuate.imports import user_import
 
 
 def validate_json(json_data: dict, req: list):
@@ -39,7 +39,7 @@ def validate_auth(node, user, state=None):
     hipro = HiPro(app.config)
 
     try:
-        hipro.validate_user(user, **node.resolve_params(state))
+        hipro.validate_user(user, **node.resolve_params(state, app.config))
     except HierarchyError:
         raise Forbidden([{
             'detail': 'The provided credentials do not match the specified'

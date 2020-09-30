@@ -22,7 +22,7 @@ def test_resolve_params(config):
         },
     }
 
-    assert node.resolve_params(state) == {
+    assert node.resolve_params(state, config) == {
         "identifier": 'juan',
         "relation": 'manager',
         "reason": 'nones',

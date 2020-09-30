@@ -5,29 +5,8 @@ from cacahuate.handler import Handler
 from cacahuate.models import Pointer
 from cacahuate.node import Form
 from cacahuate.xml import Xml
-from cacahuate.utils import get_values
 
 from .utils import make_pointer, make_user, random_string
-
-
-def test_get_values():
-    execution = {
-        'values': {
-            'form1': [
-                {
-                    'input1': 'A',
-                },
-                {
-                    'input1': 'B',
-                },
-            ],
-        },
-    }
-
-    context = get_values(execution)
-
-    assert context['form1']['input1'] == 'B'
-    assert list(context['form1'].all())[0]['input1'] == 'A'
 
 
 def test_send_request_multiple(config, mongo, mocker):
@@ -59,7 +38,7 @@ def test_send_request_multiple(config, mongo, mocker):
         'state': Xml.load(config, execution.process_name).get_state(),
     })
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,

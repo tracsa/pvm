@@ -1,8 +1,9 @@
-from coralillo.errors import ModelNotFoundError
 from datetime import datetime
+import logging
+
+from coralillo.errors import ModelNotFoundError
 from pymongo import MongoClient
 import pymongo
-import logging
 import pika
 import simplejson as json
 
@@ -13,7 +14,8 @@ from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
 from cacahuate.jsontypes import Map
 from cacahuate.cascade import cascade_invalidate, track_next_node
-from cacahuate.utils import render_or, get_values
+from cacahuate.mongo import make_context, pointer_entry
+from cacahuate.templates import render_or
 
 LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +29,8 @@ class Handler:
         self.mongo = None
 
     def __call__(self, channel, method, properties, body: bytes):
-        ''' the main callback of cacahuate '''
+        ''' the main callback of cacahuate, gets called when a new message
+        arrives from rabbitmq. '''
         message = json.loads(body)
 
         if message['command'] in self.config['COMMANDS']:
@@ -35,7 +38,7 @@ class Handler:
                 if message['command'] == 'cancel':
                     self.cancel_execution(message)
                 elif message['command'] == 'step':
-                    self.call(message, channel)
+                    self.step(message, channel)
                 elif message['command'] == 'patch':
                     self.patch(message, channel)
             except (ModelNotFoundError, CannotMove, ElementNotFound,
@@ -49,7 +52,9 @@ class Handler:
         if not self.config['RABBIT_NO_ACK']:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
-    def call(self, message: dict, channel):
+    def step(self, message: dict, channel):
+        ''' Handles deleting a pointer from the current node and creating a new
+        one on the next '''
         pointer, user, input = self.recover_step(message)
         execution = pointer.proxy.execution.get()
 
@@ -107,10 +112,7 @@ class Handler:
         # Return next node by simple adjacency, works for actions and accepted
         # validations
 
-        collection = self.get_mongo()[
-            self.config['EXECUTION_COLLECTION']
-        ]
-        state = next(collection.find({'id': execution.id}))
+        state = next(self.execution_collection().find({'id': execution.id}))
 
         try:
             while True:
@@ -122,7 +124,7 @@ class Handler:
                 )
 
                 # refresh state because previous call might have changed it
-                state = next(collection.find({'id': execution.id}))
+                state = next(self.execution_collection().find({'id': execution.id}))
 
                 if node.id in state['state']['items']:
                     if state['state']['items'][node.id]['state'] == 'valid':
@@ -137,15 +139,9 @@ class Handler:
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
 
-        # TODO remove this code from here since it doesn't belong to the limits
-        # of the handler
-        # BEGIN ------------
-        exc_col = self.get_mongo()[self.config['EXECUTION_COLLECTION']]
-        ptr_col = self.get_mongo()[self.config['POINTER_COLLECTION']]
-
         # get currect execution context
-        exc_doc = next(exc_col.find({'id': execution.id}))
-        context = get_values(exc_doc)
+        exc_doc = next(self.execution_collection().find({'id': execution.id}))
+        context = make_context(exc_doc, self.config)
 
         # interpolate
         rendered_name = render_or(node.name, node.name, context)
@@ -153,13 +149,8 @@ class Handler:
             node.description, node.description, context
         )
 
-        node.name = rendered_name
-        node.description = rendered_description
-        # END ------------
-        # TODO read note above, this code does not belong here
-
         # create a pointer in this node
-        pointer = self.create_pointer(node, execution)
+        pointer = self._create_pointer(node.id, rendered_name, rendered_description, execution)
         LOGGER.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,
             node.id,
@@ -167,7 +158,7 @@ class Handler:
         ))
 
         # mark this node as ongoing
-        exc_col.update_one({
+        self.execution_collection().update_one({
             'id': execution.id,
         }, {
             '$set': {
@@ -176,7 +167,9 @@ class Handler:
         })
 
         # update registry about this pointer
-        ptr_col.insert_one(node.pointer_entry(execution, pointer))
+        self.pointer_collection().insert_one(pointer_entry(
+            node, rendered_name, rendered_description, execution, pointer
+        ))
 
         # notify someone (can raise an exception
         if isinstance(node, UserAttachedNode):
@@ -184,14 +177,14 @@ class Handler:
         else:
             notified_users = []
 
-        # do some work (can raise an exception
+        # do some work (can raise an exception)
         if not node.is_async():
             input = node.work(self.config, state, channel, self.get_mongo())
         else:
             input = []
 
         # set actors to this pointer (means everything succeeded)
-        ptr_col.update_one({
+        self.pointer_collection().update_one({
             'id': pointer.id,
         }, {
             '$set': {
@@ -220,8 +213,7 @@ class Handler:
         }
 
         # update pointer
-        collection = self.get_mongo()[self.config['POINTER_COLLECTION']]
-        collection.update_one({
+        self.pointer_collection().update_one({
             'id': pointer.id,
         }, {
             '$set': {
@@ -237,14 +229,7 @@ class Handler:
         values = self.compact_values(input)
 
         # update state
-        exe_collection = self.get_mongo()[
-            self.config['EXECUTION_COLLECTION']
-        ]
-        ptr_collection = self.get_mongo()[
-            self.config['POINTER_COLLECTION']
-        ]
-
-        mongo_exe = exe_collection.find_one_and_update(
+        mongo_exe = self.execution_collection().find_one_and_update(
             {'id': execution.id},
             {
                 '$addToSet': {
@@ -265,7 +250,7 @@ class Handler:
             return_document=pymongo.collection.ReturnDocument.AFTER,
         )
 
-        context = get_values(mongo_exe)
+        context = make_context(mongo_exe, self.config)
 
         # update execution's name and description
         execution.name = render_or(
@@ -280,7 +265,7 @@ class Handler:
         )
         execution.save()
 
-        exe_collection.update_one(
+        self.execution_collection().update_one(
             {'id': execution.id},
             {'$set': {
                 'name': execution.name,
@@ -290,7 +275,7 @@ class Handler:
             }},
         )
 
-        ptr_collection.update_many(
+        self.pointer_collection().update_many(
             {'execution.id': execution.id},
             {'$set': {
                 'execution': execution.to_json(),
@@ -311,9 +296,7 @@ class Handler:
         execution.finished_at = datetime.now()
         execution.save()
 
-        mongo = self.get_mongo()
-        exe_collection = mongo[self.config['EXECUTION_COLLECTION']]
-        exe_collection.update_one({
+        self.execution_collection().update_one({
             'id': execution.id,
         }, {
             '$set': {
@@ -322,8 +305,7 @@ class Handler:
             }
         })
 
-        ptr_collection = mongo[self.config['POINTER_COLLECTION']]
-        ptr_collection.update_many({
+        self.pointer_collection().update_many({
             'execution.id': execution.id,
         }, {
             '$set': {
@@ -433,6 +415,12 @@ class Handler:
 
         return self.mongo
 
+    def execution_collection(self):
+        return self.get_mongo()[self.config['EXECUTION_COLLECTION']]
+
+    def pointer_collection(self):
+        return self.get_mongo()[self.config['POINTER_COLLECTION']]
+
     def get_contact_channels(self, user: User):
         return [('email', {
             'recipient': user.get_contact_info('email'),
@@ -440,13 +428,13 @@ class Handler:
             'template': 'assigned-task.html',
         })]
 
-    def create_pointer(self, node, execution: Execution):
+    def _create_pointer(self, node_id: str, name: str, description: str, execution: Execution):
         ''' Given a node, its process, and a specific execution of the former
         create a persistent pointer to the current execution state '''
         pointer = Pointer(
-            node_id=node.id,
-            name=node.name,
-            description=node.description,
+            node_id=node_id,
+            name=name,
+            description=description,
         ).save()
 
         pointer.proxy.execution.set(execution)
@@ -478,13 +466,6 @@ class Handler:
     def patch(self, message, channel):
         execution = Execution.get_or_exception(message['execution_id'])
         xml = Xml.load(self.config, execution.process_name, direct=True)
-        mongo = self.get_mongo()
-        execution_collection = mongo[
-            self.config['EXECUTION_COLLECTION']
-        ]
-        pointer_collection = mongo[
-            self.config['POINTER_COLLECTION']
-        ]
 
         # set nodes with pointers as unfilled, delete pointers
         updates = {}
@@ -494,7 +475,7 @@ class Handler:
                 node=pointer.node_id,
             )] = 'unfilled'
             pointer.delete()
-            pointer_collection.update_one({
+            self.pointer_collection().update_one({
                 'id': pointer.id,
             }, {
                 '$set': {
@@ -507,14 +488,14 @@ class Handler:
                 },
             })
 
-        execution_collection.update_one({
+        self.execution_collection().update_one({
             'id': execution.id,
         }, {
             '$set': updates,
         })
 
         # retrieve updated state
-        state = next(execution_collection.find({'id': execution.id}))
+        state = next(self.execution_collection().find({'id': execution.id}))
 
         state_updates = cascade_invalidate(
             xml,
@@ -524,17 +505,14 @@ class Handler:
         )
 
         # update state
-        collection = mongo[
-            self.config['EXECUTION_COLLECTION']
-        ]
-        collection.update_one({
+        self.execution_collection().update_one({
             'id': state['id'],
         }, {
             '$set': state_updates,
         })
 
         # retrieve updated state
-        state = next(execution_collection.find({'id': execution.id}))
+        state = next(self.execution_collection().find({'id': execution.id}))
 
         first_invalid_node = track_next_node(
             xml, state, self.get_mongo(), self.config
@@ -551,11 +529,7 @@ class Handler:
         for pointer in execution.proxy.pointers.get():
             pointer.delete()
 
-        exe_collection = self.get_mongo()[
-            self.config['EXECUTION_COLLECTION']
-        ]
-
-        exe_collection.update_one({
+        self.execution_collection().update_one({
             'id': execution.id,
         }, {
             '$set': {
@@ -564,11 +538,7 @@ class Handler:
             }
         })
 
-        ptr_collection = self.get_mongo()[
-            self.config['POINTER_COLLECTION']
-        ]
-
-        ptr_collection.update_many({
+        self.pointer_collection().update_many({
             'execution.id': execution.id,
             'state': 'ongoing',
         }, {
@@ -578,7 +548,7 @@ class Handler:
             }
         })
 
-        ptr_collection.update_many({
+        self.pointer_collection().update_many({
             'execution.id': execution.id,
         }, {
             '$set': {

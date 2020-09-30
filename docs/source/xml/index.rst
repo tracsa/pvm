@@ -172,7 +172,7 @@ Este último ejemplo y el que le precede producen el mismo resultado. Para mayor
 Valores siempre presentes
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Por conveniencia se añade además información sobre la ejecución actual a este contexto. Los datos agregados tienen la estructura siguiente:
+Por conveniencia se añade además información sobre la ejecución actual a este contexto y variables de entorno que se pueden configurar al iniciar los servicios de cacahuate. Los datos agregados tienen la estructura siguiente:
 
 .. code-block:: json
 
@@ -183,5 +183,24 @@ Por conveniencia se añade además información sobre la ejecución actual a est
          "process_name": "archivo.2019-10-30.xml",
          "description": "Descripción del proceso",
          "started_at": "2019-10-30T21:57:51.927624+00:00"
+      },
+      "_env": {
+         "FOO": "var"
       }
+   }
+
+Y los puedes usar como:
+
+.. code-block:: jinja
+
+   {{ _execution.name }} {{ _env.FOO }}
+
+Por defecto la llave ``_env`` está vacía, pero puedes establecer valores para la misma en tu archivo de configuraciones, usando la variable ``PROCESS_ENV``:
+
+.. code-block:: python
+
+   # settings.py
+
+   PROCESS_ENV = {
+      'FOO': 'var',
    }

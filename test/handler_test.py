@@ -55,7 +55,7 @@ def test_create_pointer(config):
         started_at=make_date(2020, 8, 21, 4, 5, 6),
         status='ongoing',
     ).save()
-    pointer = handler.create_pointer(node, exc)
+    pointer = handler._create_pointer(node.id, 'name', 'description', exc)
     execution = pointer.proxy.execution.get()
 
     assert pointer.node_id == 'start_node'
@@ -87,7 +87,7 @@ def test_wakeup(config, mongo):
     channel = MagicMock()
 
     # will wakeup the second node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': pointer.id,
         'user_identifier': juan.identifier,
@@ -203,7 +203,7 @@ def test_teardown(config, mongo):
     channel = MagicMock()
 
     # will teardown mid_node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': p_0.id,
         'user_identifier': manager.identifier,

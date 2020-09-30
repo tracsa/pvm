@@ -1,17 +1,16 @@
+import logging.config
+import os
+import time
+
 from flask import Flask
 from flask.logging import default_handler
 from flask_coralillo import Coralillo
 from flask_cors import CORS
 from yuid import yuid
 
-import logging.config
-import os
-import time
-
 from cacahuate.indexes import create_indexes
 from cacahuate.models import bind_models
-from cacahuate.mongo import mongo
-from cacahuate.http.views import templates
+from cacahuate.http.mongo import mongo
 
 # The flask application
 app = Flask(__name__)
@@ -29,11 +28,11 @@ CORS(app)
 os.environ['TZ'] = app.config.get('TIMEZONE', 'UTC')
 time.tzset()
 
-# Bind the database
+# Bind the redis database
 cora = Coralillo(app, id_function=yuid)
 bind_models(cora._engine)
 
-# The database
+# The mongo database
 mongo.init_app(app)
 create_indexes(app.config)
 
@@ -43,8 +42,7 @@ import cacahuate.http.converters  # noqa
 # Views
 import cacahuate.http.views.api  # noqa
 import cacahuate.http.views.auth  # noqa
-
-app.register_blueprint(templates.bp)
+import cacahuate.http.views.templates  # noqa
 
 # Error handlers
 import cacahuate.http.error_handlers  # noqa

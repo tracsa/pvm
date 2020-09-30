@@ -1,6 +1,8 @@
 import sys
 import inspect
+
 from coralillo import Model, fields
+from coralillo.errors import ModelNotFoundError
 
 
 class Execution(Model):
@@ -59,6 +61,31 @@ class Token(Model):
     ''' allows a user to make requests through the api '''
     token = fields.Text(index=True)
     user = fields.ForeignIdRelation(User, inverse='tokens')
+
+
+def clear_username(string):
+    ''' because mongo usernames have special requirements '''
+    string = string.strip()
+
+    if string.startswith('$'):
+        string = string[1:]
+
+    try:
+        string = string[:string.index('@')]
+    except ValueError:
+        pass
+
+    return string.replace('.', '')
+
+
+def get_or_create_user(identifier, data):
+    identifier = clear_username(identifier)
+    data['identifier'] = identifier
+
+    try:
+        return User.get_by_or_exception('identifier', identifier)
+    except ModelNotFoundError:
+        return User(**data).save()
 
 
 def bind_models(eng):

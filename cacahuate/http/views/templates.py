@@ -1,15 +1,13 @@
-from coralillo.errors import ModelNotFoundError
-from flask import render_template_string, make_response, current_app as app
-from datetime import datetime
-import jinja2
 import json
 import os
-from flask import Blueprint
 
-from cacahuate.mongo import mongo
-from cacahuate.utils import get_values
+from coralillo.errors import ModelNotFoundError
+from flask import render_template_string, make_response
+import jinja2
 
-bp = Blueprint('summary', __name__)
+from cacahuate.http.mongo import mongo
+from cacahuate.http.wsgi import app
+from cacahuate.mongo import make_context, json_prepare
 
 
 def to_pretty_json(value):
@@ -19,24 +17,7 @@ def to_pretty_json(value):
 jinja2.environment.DEFAULT_FILTERS['pretty'] = to_pretty_json
 
 
-DATE_FIELDS = [
-    'started_at',
-    'finished_at',
-]
-
-
-def json_prepare(obj):
-    if obj.get('_id'):
-        del obj['_id']
-
-    for field in DATE_FIELDS:
-        if obj.get(field) and type(obj[field]) == datetime:
-            obj[field] = obj[field].isoformat()
-
-    return obj
-
-
-@bp.route('/v1/execution/<id>/summary', methods=['GET'])
+@app.route('/v1/execution/<id>/summary', methods=['GET'])
 def execution_template(id):
     # load values
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
@@ -55,7 +36,7 @@ def execution_template(id):
 
     # prepare default template
     default = ['<div><b>Available keys</b></div>']
-    context = get_values(execution)
+    context = make_context(execution, app.config)
 
     for key in context:
         token = '<div>{}</div>'
@@ -87,7 +68,7 @@ def execution_template(id):
                 app.config['TEMPLATE_PATH'] + '/' + ff_name,
             ]),
         ])
-        bp.jinja_loader = custom_loader
+        app.jinja_loader = custom_loader
 
         # ... and return the "main template"
         template_name = ff_name + '/template.html'

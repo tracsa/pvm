@@ -1,7 +1,6 @@
 ''' This file defines some basic classes that map the behaviour of the
 equivalent xml nodes '''
 from case_conversion import pascalcase
-from datetime import datetime
 from jinja2 import Template, TemplateError
 import logging
 import re
@@ -17,8 +16,10 @@ from cacahuate.grammar import Condition, ConditionTransformer
 from cacahuate.http.errors import BadRequest
 from cacahuate.inputs import make_input
 from cacahuate.jsontypes import Map, SortedMap
-from cacahuate.utils import get_or_create, user_import, get_values
-from cacahuate.utils import render_or
+from cacahuate.mongo import make_context
+from cacahuate.templates import render_or
+from cacahuate.models import get_or_create_user
+from cacahuate.imports import user_import
 from cacahuate.xml import get_text, NODES, Xml
 from cacahuate.cascade import cascade_invalidate, track_next_node
 
@@ -154,19 +155,6 @@ class Node:
 
         return found_refs
 
-    def pointer_entry(self, execution, pointer, notified_users=None):
-        return {
-            'id': pointer.id,
-            'started_at': datetime.now(),
-            'finished_at': None,
-            'execution': execution.to_json(),
-            'node': self.to_json(),
-            'actors': Map([], key='identifier').to_json(),
-            'process_id': execution.process_name,
-            'notified_users': notified_users or [],
-            'state': 'ongoing',
-        }
-
     def get_state(self):
         return {
             '_type': 'node',
@@ -178,14 +166,6 @@ class Node:
             'name': self.name,
             'description': self.description,
             'milestone': hasattr(self, 'milestone'),
-        }
-
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'type': type(self).__name__.lower(),
         }
 
 
@@ -241,7 +221,7 @@ class UserAttachedNode(FullyContainedNode):
                 filter_node.getElementsByTagName('param')
             ))
 
-    def resolve_params(self, state=None):
+    def resolve_params(self, state, config):
         computed_params = {}
 
         for param in self.auth_params:
@@ -255,7 +235,7 @@ class UserAttachedNode(FullyContainedNode):
                     try:
                         _form, _input = req.split('.')
 
-                        value = get_values(state)[_form][_input]
+                        value = make_context(state, config)[_form][_input]
                     except ValueError:
                         value = None
             else:
@@ -277,7 +257,7 @@ class UserAttachedNode(FullyContainedNode):
         hierarchy_provider = HiPro(config)
 
         users = hierarchy_provider.find_users(
-            **self.resolve_params(state)
+            **self.resolve_params(state, config)
         )
 
         def render_users(user):
@@ -293,7 +273,7 @@ class UserAttachedNode(FullyContainedNode):
                     '("identifier", "data"), got: {user}'.format(user=user)
                 )
 
-            return get_or_create(identifier, data)
+            return get_or_create_user(identifier, data)
 
         return list(map(render_users, users))
 
@@ -449,7 +429,7 @@ class Validation(UserAttachedNode):
         return True
 
     def next(self, xml, state, mongo, config, *, skip_reverse=False):
-        context = get_values(state)
+        context = make_context(state, config)
 
         if skip_reverse or context[self.id]['response'] == 'accept':
             return super().next(xml, state, mongo, config)
@@ -654,7 +634,7 @@ class Call(FullyContainedNode):
 
         xmliter = iter(xml)
         node = make_node(next(xmliter), xmliter)
-        context = get_values(state)
+        context = make_context(state, config)
 
         data = {
             'form_array': [f.render(context) for f in self.forms],
@@ -708,7 +688,7 @@ class Conditional(Node):
         # consume up to this node
         ifnode = xmliter.find(lambda e: e.getAttribute('id') == self.id)
 
-        if not get_values(state)[self.id]['condition']:
+        if not make_context(state, config)[self.id]['condition']:
             xmliter.expand(ifnode)
 
         return make_node(xmliter.next_skipping_elifelse(), xmliter)
@@ -717,7 +697,7 @@ class Conditional(Node):
         tree = Condition().parse(self.condition)
 
         try:
-            value = ConditionTransformer(get_values(state)).transform(tree)
+            value = ConditionTransformer(make_context(state, config)).transform(tree)
         except ValueError as e:
             raise InconsistentState('Could not evaluate condition: {}'.format(
                 str(e)
@@ -997,7 +977,7 @@ class Request(FullyContainedNode):
         return data_forms
 
     def work(self, config, state, channel, mongo):
-        data_forms = self.make_request(get_values(state))
+        data_forms = self.make_request(make_context(state, config))
 
         return [
             Form.state_json(data_form['id'], [

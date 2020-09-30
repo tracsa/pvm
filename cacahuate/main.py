@@ -155,7 +155,7 @@ def _validate_file(filename, verbose=False):
                         "{}:{} variable used in condition "
                         "is not defined '{}'".format(
                             filename, sw.lineno,
-                            reference_form+'.'+field_form,
+                            reference_form + '.' + field_form,
                         )
                     )
 
@@ -191,7 +191,7 @@ def _validate_file(filename, verbose=False):
                     raise MalformedProcess(
                         "{}:{} Referenced param does not exist '{}'".format(
                             filename, sw.lineno,
-                            reference_form+'.'+field_form,
+                            reference_form + '.' + field_form,
                         )
                     )
             elif ref_type == 'user':

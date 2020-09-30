@@ -3,7 +3,7 @@ from werkzeug.routing import BaseConverter
 
 from cacahuate.errors import MisconfiguredProvider
 from cacahuate.http.wsgi import app
-from cacahuate.utils import user_import
+from cacahuate.imports import user_import
 
 
 class AuthProviderConverter(BaseConverter):

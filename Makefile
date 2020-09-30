@@ -17,7 +17,7 @@ pytest:
 	pytest -xvv
 
 lint:
-	flake8 --exclude=.env,.tox,dist,docs,build,*.egg,.venv .
+	flake8 --exclude=.env,.tox,dist,docs,build,*.egg,.venv --max-line-length 99 .
 
 xmllint:
 	xmllint --noout --relaxng cacahuate/xml/process-spec.rng xml/*.xml

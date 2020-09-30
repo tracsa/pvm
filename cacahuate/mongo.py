@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from cacahuate.jsontypes import MultiFormDict
+from cacahuate.jsontypes import MultiFormDict, Map
 
 DATE_FIELDS = [
     'started_at',
@@ -32,4 +32,23 @@ def json_prepare(obj):
         k: v if not isinstance(v, datetime) else v.isoformat()
         for k, v in obj.items()
         if k != '_id'
+    }
+
+
+def pointer_entry(node, name, description, execution, pointer, notified_users=None):
+    return {
+        'id': pointer.id,
+        'started_at': datetime.now(),
+        'finished_at': None,
+        'execution': execution.to_json(),
+        'node': {
+            'id': node.id,
+            'name': name,
+            'description': description,
+            'type': type(node).__name__.lower(),
+        },
+        'actors': Map([], key='identifier').to_json(),
+        'process_id': execution.process_name,
+        'notified_users': notified_users or [],
+        'state': 'ongoing',
     }

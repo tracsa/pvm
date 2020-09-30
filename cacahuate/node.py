@@ -1,7 +1,6 @@
 ''' This file defines some basic classes that map the behaviour of the
 equivalent xml nodes '''
 from case_conversion import pascalcase
-from datetime import datetime
 from jinja2 import Template, TemplateError
 import logging
 import re
@@ -156,19 +155,6 @@ class Node:
 
         return found_refs
 
-    def pointer_entry(self, execution, pointer, notified_users=None):
-        return {
-            'id': pointer.id,
-            'started_at': datetime.now(),
-            'finished_at': None,
-            'execution': execution.to_json(),
-            'node': self.to_json(),
-            'actors': Map([], key='identifier').to_json(),
-            'process_id': execution.process_name,
-            'notified_users': notified_users or [],
-            'state': 'ongoing',
-        }
-
     def get_state(self):
         return {
             '_type': 'node',
@@ -180,14 +166,6 @@ class Node:
             'name': self.name,
             'description': self.description,
             'milestone': hasattr(self, 'milestone'),
-        }
-
-    def to_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'type': type(self).__name__.lower(),
         }
 
 

@@ -14,6 +14,8 @@ from cacahuate.jsontypes import SortedMap
 from cacahuate.models import Execution, Pointer
 from cacahuate.forms import compact_values
 from cacahuate.templates import render_or
+from cacahuate.mongo import pointer_entry
+
 
 XML_ATTRIBUTES = {
     'public': lambda a: a == 'true',
@@ -142,18 +144,24 @@ class Xml:
 
     def start(self, node, input, mongo, channel, user_identifier):
         # the first set of values
-        values = compact_values(input)
+        context = compact_values(input)
 
         # save the data
         execution = Execution(
             process_name=self.filename,
-            name=self.get_name(values),
+            name=self.get_name(context),
             name_template=self.name_template(),
-            description=self.get_description(values),
+            description=self.get_description(context),
             description_template=self.description_template(),
             started_at=datetime.now(),
             status='ongoing',
         ).save()
+
+        rendered_name = render_or(node.name, node.name, context)
+        rendered_description = render_or(
+            node.description, node.description, context
+        )
+
         pointer = Pointer(
             node_id=node.id,
             name=node.name,
@@ -163,7 +171,9 @@ class Xml:
 
         # log to mongo
         collection = mongo[self.config['POINTER_COLLECTION']]
-        collection.insert_one(node.pointer_entry(execution, pointer))
+        collection.insert_one(pointer_entry(
+            node, rendered_name, rendered_description, execution, pointer
+        ))
 
         collection = mongo[self.config['EXECUTION_COLLECTION']]
         collection.insert_one({

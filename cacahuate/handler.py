@@ -14,7 +14,7 @@ from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
 from cacahuate.jsontypes import Map
 from cacahuate.cascade import cascade_invalidate, track_next_node
-from cacahuate.mongo import get_values
+from cacahuate.mongo import get_values, pointer_entry
 from cacahuate.templates import render_or
 
 LOGGER = logging.getLogger(__name__)
@@ -139,10 +139,6 @@ class Handler:
         ''' Waking up a node often means to notify someone or something about
         the execution, this is the first step in node's lifecycle '''
 
-        # TODO remove this code from here since it doesn't belong to the limits
-        # of the handler
-        # BEGIN ------------
-
         # get currect execution context
         exc_doc = next(self.execution_collection().find({'id': execution.id}))
         context = get_values(exc_doc)
@@ -153,13 +149,8 @@ class Handler:
             node.description, node.description, context
         )
 
-        node.name = rendered_name
-        node.description = rendered_description
-        # END ------------
-        # TODO read note above, this code does not belong here
-
         # create a pointer in this node
-        pointer = self.create_pointer(node, execution)
+        pointer = self._create_pointer(node.id, rendered_name, rendered_description, execution)
         LOGGER.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,
             node.id,
@@ -176,7 +167,9 @@ class Handler:
         })
 
         # update registry about this pointer
-        self.pointer_collection().insert_one(node.pointer_entry(execution, pointer))
+        self.pointer_collection().insert_one(pointer_entry(
+            node, rendered_name, rendered_description, execution, pointer
+        ))
 
         # notify someone (can raise an exception
         if isinstance(node, UserAttachedNode):
@@ -435,13 +428,13 @@ class Handler:
             'template': 'assigned-task.html',
         })]
 
-    def create_pointer(self, node, execution: Execution):
+    def _create_pointer(self, node_id: str, name: str, description: str, execution: Execution):
         ''' Given a node, its process, and a specific execution of the former
         create a persistent pointer to the current execution state '''
         pointer = Pointer(
-            node_id=node.id,
-            name=node.name,
-            description=node.description,
+            node_id=node_id,
+            name=name,
+            description=description,
         ).save()
 
         pointer.proxy.execution.set(execution)

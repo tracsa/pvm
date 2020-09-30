@@ -55,7 +55,7 @@ def test_create_pointer(config):
         started_at=make_date(2020, 8, 21, 4, 5, 6),
         status='ongoing',
     ).save()
-    pointer = handler.create_pointer(node, exc)
+    pointer = handler._create_pointer(node.id, 'name', 'description', exc)
     execution = pointer.proxy.execution.get()
 
     assert pointer.node_id == 'start_node'

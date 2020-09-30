@@ -5,12 +5,12 @@ from cacahuate.handler import Handler
 from cacahuate.models import Pointer
 from cacahuate.node import Form
 from cacahuate.xml import Xml
-from cacahuate.mongo import get_values
+from cacahuate.mongo import make_context
 
 from .utils import make_pointer, make_user, random_string
 
 
-def test_get_values():
+def test_make_context():
     execution = {
         'values': {
             'form1': [
@@ -24,7 +24,7 @@ def test_get_values():
         },
     }
 
-    context = get_values(execution)
+    context = make_context(execution)
 
     assert context['form1']['input1'] == 'B'
     assert list(context['form1'].all())[0]['input1'] == 'A'

@@ -8,7 +8,7 @@ DATE_FIELDS = [
 ]
 
 
-def get_values(execution_data):
+def make_context(execution_data):
     ''' the proper and only way to get the ``'values'`` key out of
     an execution document from mongo. It takes care of the transformations
     needed for it to work in jinja templates and other contexts where the

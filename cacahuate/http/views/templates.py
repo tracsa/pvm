@@ -7,7 +7,7 @@ import jinja2
 from flask import Blueprint
 
 from cacahuate.http.mongo import mongo
-from cacahuate.mongo import get_values, json_prepare
+from cacahuate.mongo import make_context, json_prepare
 
 bp = Blueprint('summary', __name__)
 
@@ -38,7 +38,7 @@ def execution_template(id):
 
     # prepare default template
     default = ['<div><b>Available keys</b></div>']
-    context = get_values(execution)
+    context = make_context(execution)
 
     for key in context:
         token = '<div>{}</div>'

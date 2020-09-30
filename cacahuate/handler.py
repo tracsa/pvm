@@ -14,7 +14,7 @@ from cacahuate.xml import Xml
 from cacahuate.node import make_node, UserAttachedNode
 from cacahuate.jsontypes import Map
 from cacahuate.cascade import cascade_invalidate, track_next_node
-from cacahuate.mongo import get_values, pointer_entry
+from cacahuate.mongo import make_context, pointer_entry
 from cacahuate.templates import render_or
 
 LOGGER = logging.getLogger(__name__)
@@ -141,7 +141,7 @@ class Handler:
 
         # get currect execution context
         exc_doc = next(self.execution_collection().find({'id': execution.id}))
-        context = get_values(exc_doc)
+        context = make_context(exc_doc)
 
         # interpolate
         rendered_name = render_or(node.name, node.name, context)
@@ -250,7 +250,7 @@ class Handler:
             return_document=pymongo.collection.ReturnDocument.AFTER,
         )
 
-        context = get_values(mongo_exe)
+        context = make_context(mongo_exe)
 
         # update execution's name and description
         execution.name = render_or(

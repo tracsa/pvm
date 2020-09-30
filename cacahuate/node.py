@@ -16,7 +16,7 @@ from cacahuate.grammar import Condition, ConditionTransformer
 from cacahuate.http.errors import BadRequest
 from cacahuate.inputs import make_input
 from cacahuate.jsontypes import Map, SortedMap
-from cacahuate.mongo import get_values
+from cacahuate.mongo import make_context
 from cacahuate.templates import render_or
 from cacahuate.models import get_or_create_user
 from cacahuate.imports import user_import
@@ -235,7 +235,7 @@ class UserAttachedNode(FullyContainedNode):
                     try:
                         _form, _input = req.split('.')
 
-                        value = get_values(state)[_form][_input]
+                        value = make_context(state)[_form][_input]
                     except ValueError:
                         value = None
             else:
@@ -429,7 +429,7 @@ class Validation(UserAttachedNode):
         return True
 
     def next(self, xml, state, mongo, config, *, skip_reverse=False):
-        context = get_values(state)
+        context = make_context(state)
 
         if skip_reverse or context[self.id]['response'] == 'accept':
             return super().next(xml, state, mongo, config)
@@ -634,7 +634,7 @@ class Call(FullyContainedNode):
 
         xmliter = iter(xml)
         node = make_node(next(xmliter), xmliter)
-        context = get_values(state)
+        context = make_context(state)
 
         data = {
             'form_array': [f.render(context) for f in self.forms],
@@ -688,7 +688,7 @@ class Conditional(Node):
         # consume up to this node
         ifnode = xmliter.find(lambda e: e.getAttribute('id') == self.id)
 
-        if not get_values(state)[self.id]['condition']:
+        if not make_context(state)[self.id]['condition']:
             xmliter.expand(ifnode)
 
         return make_node(xmliter.next_skipping_elifelse(), xmliter)
@@ -697,7 +697,7 @@ class Conditional(Node):
         tree = Condition().parse(self.condition)
 
         try:
-            value = ConditionTransformer(get_values(state)).transform(tree)
+            value = ConditionTransformer(make_context(state)).transform(tree)
         except ValueError as e:
             raise InconsistentState('Could not evaluate condition: {}'.format(
                 str(e)
@@ -977,7 +977,7 @@ class Request(FullyContainedNode):
         return data_forms
 
     def work(self, config, state, channel, mongo):
-        data_forms = self.make_request(get_values(state))
+        data_forms = self.make_request(make_context(state))
 
         return [
             Form.state_json(data_form['id'], [

@@ -2,14 +2,12 @@ import json
 import os
 
 from coralillo.errors import ModelNotFoundError
-from flask import render_template_string, make_response, current_app as app
+from flask import render_template_string, make_response
 import jinja2
-from flask import Blueprint
 
 from cacahuate.http.mongo import mongo
+from cacahuate.http.wsgi import app
 from cacahuate.mongo import make_context, json_prepare
-
-bp = Blueprint('summary', __name__)
 
 
 def to_pretty_json(value):
@@ -19,7 +17,7 @@ def to_pretty_json(value):
 jinja2.environment.DEFAULT_FILTERS['pretty'] = to_pretty_json
 
 
-@bp.route('/v1/execution/<id>/summary', methods=['GET'])
+@app.route('/v1/execution/<id>/summary', methods=['GET'])
 def execution_template(id):
     # load values
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
@@ -70,7 +68,7 @@ def execution_template(id):
                 app.config['TEMPLATE_PATH'] + '/' + ff_name,
             ]),
         ])
-        bp.jinja_loader = custom_loader
+        app.jinja_loader = custom_loader
 
         # ... and return the "main template"
         template_name = ff_name + '/template.html'

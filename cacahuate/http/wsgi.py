@@ -11,7 +11,6 @@ from yuid import yuid
 from cacahuate.indexes import create_indexes
 from cacahuate.models import bind_models
 from cacahuate.http.mongo import mongo
-from cacahuate.http.views import templates
 
 # The flask application
 app = Flask(__name__)
@@ -43,8 +42,7 @@ import cacahuate.http.converters  # noqa
 # Views
 import cacahuate.http.views.api  # noqa
 import cacahuate.http.views.auth  # noqa
-
-app.register_blueprint(templates.bp)
+import cacahuate.http.views.templates  # noqa
 
 # Error handlers
 import cacahuate.http.error_handlers  # noqa

@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resumen de un proceso &#8212; documentación de Cacahuate - 2.7.0</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../_static/translations.js"></script>
+    <link rel="index" title="Índice" href="../genindex.html" />
+    <link rel="search" title="Búsqueda" href="../search.html" />
+    <link rel="prev" title="API Http" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="resumen-de-un-proceso">
+<h1>Resumen de un proceso<a class="headerlink" href="#resumen-de-un-proceso" title="Enlazar permanentemente con este título">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/execution/&lt;id&gt;/summary</span></code></p>
+<p>Es posible ver cierta información relevante de un proceso en curso dado su <code class="docutils literal notranslate"><span class="pre">id</span></code> utilizando el endpoint de resumen de proceso. Por defecto se desplegará información muy simple como la fecha de inicio, el nombre y el archivo fuente. Nada demasiado emocionante en realidad.</p>
+<div class="section" id="sistema-de-templates">
+<h2>Sistema de templates<a class="headerlink" href="#sistema-de-templates" title="Enlazar permanentemente con este título">¶</a></h2>
+<p>Lo realmente emocionante es el sistema de templates que te permitirá construir tus propias vistas de resumen de procesos. Funciona como sigue.</p>
+<p>Cacahuate tiene por defecto un template para resumen de proceso llamado <code class="docutils literal notranslate"><span class="pre">summary.html</span></code> ubicado en una carpeta interna de templates (<code class="docutils literal notranslate"><span class="pre">cacahuate/templates/summary.html</span></code>). Para modificarlo puedes establecer la configuración <code class="docutils literal notranslate"><span class="pre">TEMPLATE_PATH</span></code> hacia una carpeta donde quieras guardar tus templates:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># settings.py</span>
+<span class="n">TEMPLATE_PATH</span> <span class="o">=</span> <span class="s1">&#39;/opt/myinstance/templates&#39;</span>
+</pre></div>
+</div>
+<p>En dicha carpeta puedes guardar un archivo <code class="docutils literal notranslate"><span class="pre">summary.html</span></code> usando la sintaxis y poder de <a class="reference external" href="https://jinja.palletsprojects.com/en/2.11.x/">Jinja</a>. Por conveniencia podrías querer tener un template de resumen para cada tipo de proceso, para esto basta con crear una carpeta con el nombre del proceso y si esta tiene un archivo <code class="docutils literal notranslate"><span class="pre">summary.html</span></code> será usado como template:</p>
+<p><code class="docutils literal notranslate"><span class="pre">/opt/myinstance/templates/my-process/summary.html</span></code></p>
+<p>Este mecanismo se puede refinar aun más dando la posibilidad de crear un template específico para una versión de cierto proceso:</p>
+<p><code class="docutils literal notranslate"><span class="pre">/opt/myinstance/templates/my-process/2020-09-30/summary.html</span></code></p>
+<p>Siendo este el último nivel de especificidad.</p>
+<div class="section" id="reutilizacion-de-bloques">
+<h3>Reutilización de bloques<a class="headerlink" href="#reutilizacion-de-bloques" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>Puede ser que tus diseños de template de más de un proceso compartarn un bloque, o incluso que quieras reciclar un layout. Por esta razón el sistema de resolución de templates realiza un proceso escalonado que concluye con la carpeta de templates de cacahuate. Si consultas la página de resumen de un template y suponiendo que tu variable <code class="docutils literal notranslate"><span class="pre">TEMPLATE_PATH</span></code> tiene el valor <code class="docutils literal notranslate"><span class="pre">/opt/myinstance/templates</span></code> las siguientes rutas estarán disponibles en el <code class="docutils literal notranslate"><span class="pre">PATH</span></code> de Jinja:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/opt/myinstance/templates/my-process/2020-09-30/
+/opt/myinstance/templates/my-process/
+/opt/myinstance/templates/
+/path/to/cacahuate/templates
+</pre></div>
+</div>
+<p>Y serán accedidas exactamente en ese orden. De manera que puedes tener bloques o layouts accessibles para todos los templates en <code class="docutils literal notranslate"><span class="pre">/opt/myinstance/templates</span></code> y algunos overrides en la carpeta específica de un proceso o de una versión de un proceso.</p>
+</div>
+<div class="section" id="variables">
+<h3>Variables<a class="headerlink" href="#variables" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>En los templates de resumen estarán disponibles las mismas variables que se detallan <a class="reference external" href="../xml">aquí</a>. Además los valores de fecha (de momento solamente <code class="docutils literal notranslate"><span class="pre">started_at</span></code>) son un objeto <code class="docutils literal notranslate"><span class="pre">datetime.datetime</span></code> de python al que puedes dar formato usando un <a class="reference external" href="https://jinja.palletsprojects.com/en/2.11.x/api/#custom-filters">filtro personalizado</a> de jinja o el filtro incluído <code class="docutils literal notranslate"><span class="pre">datetimeformat</span></code>.</p>
+</div>
+<div class="section" id="filtros">
+<h3>Filtros<a class="headerlink" href="#filtros" title="Enlazar permanentemente con este título">¶</a></h3>
+<p>Además de los <a class="reference external" href="https://jinja.palletsprojects.com/en/2.11.x/templates/#list-of-builtin-filters">filtros básicos de jinja</a> cacahuate incluye el filtro <code class="docutils literal notranslate"><span class="pre">datetimeformat</span></code> que por defecto formatea una fecha en formato ISO. También acepta un argumento <code class="docutils literal notranslate"><span class="pre">format</span></code> para cambiar su comportamiento:</p>
+<div class="highlight-jinja notranslate"><div class="highlight"><pre><span></span><span class="x">ISO: </span><span class="cp">{{</span> <span class="nv">_execution.started_at</span> <span class="o">|</span> <span class="nf">datetimeformat</span> <span class="cp">}}</span><span class="x"></span>
+<span class="x">es_MX: </span><span class="cp">{{</span> <span class="nv">_execution.started_at</span> <span class="o">|</span> <span class="nf">datetimeformat</span><span class="o">(</span><span class="nv">format</span><span class="o">=</span><span class="s1">&#39;%d/%m/%Y %H:%M&#39;</span><span class="o">)</span> <span class="cp">}}</span><span class="x"></span>
+</pre></div>
+</div>
+<p>Puedes añadir tus propios filtros de jinja usando la configuración <code class="docutils literal notranslate"><span class="pre">JINJA_FILTERS</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># settings.py</span>
+
+<span class="k">def</span> <span class="nf">ismybirthday</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">month</span> <span class="o">==</span> <span class="mi">5</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">day</span> <span class="o">==</span> <span class="mi">10</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;Today is my birthday!&#39;</span>
+    <span class="k">return</span> <span class="s1">&#39;Is not my birthday&#39;</span>
+
+ <span class="n">JINJA_FILTERS</span> <span class="o">=</span> <span class="p">{</span>
+     <span class="s1">&#39;ismybirthday&#39;</span><span class="p">:</span> <span class="n">ismybirthday</span><span class="p">,</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+<p>y los puedes usar en tus templates:</p>
+<div class="highlight-jinja notranslate"><div class="highlight"><pre><span></span><span class="cp">{{</span> <span class="nv">_execution.started_at</span> <span class="o">|</span> <span class="nf">ismybirthday</span> <span class="cp">}}</span><span class="x"></span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Cacahuate</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navegación</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Instalación</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../storage/index.html">Almacenamiento</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../develop/index.html">Desarrollo</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../xml/index.html">Escribiendo XMLs</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Http</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Resumen de un proceso</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">API Http</a><ul>
+      <li>Previous: <a href="index.html" title="capítulo anterior">API Http</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Búsqueda rápida</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Ir a" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Abraham Toriz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/api/summary.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

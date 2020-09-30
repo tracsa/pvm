@@ -38,7 +38,7 @@ def execution_template(id):
     name, version, _ = process_name.split('.')
 
     # Loaders will be inserted in inverse order and then reversed. The fallback
-    # is the default template at ``templates/index.html``
+    # is the default template at ``templates/summary.html``
     paths = [
         path.join(path.dirname(path.realpath(__file__)), '../../templates'),
     ]
@@ -63,6 +63,6 @@ def execution_template(id):
     env.filters['pretty'] = to_pretty_json
 
     return make_response(
-        env.get_template('index.html').render(**context),
+        env.get_template('summary.html').render(**context),
         200,
     )

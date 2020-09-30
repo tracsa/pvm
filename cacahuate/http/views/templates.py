@@ -36,7 +36,7 @@ def execution_template(id):
 
     # prepare default template
     default = ['<div><b>Available keys</b></div>']
-    context = make_context(execution)
+    context = make_context(execution, app.config)
 
     for key in context:
         token = '<div>{}</div>'

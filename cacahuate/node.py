@@ -221,7 +221,7 @@ class UserAttachedNode(FullyContainedNode):
                 filter_node.getElementsByTagName('param')
             ))
 
-    def resolve_params(self, state=None):
+    def resolve_params(self, state, config):
         computed_params = {}
 
         for param in self.auth_params:
@@ -235,7 +235,7 @@ class UserAttachedNode(FullyContainedNode):
                     try:
                         _form, _input = req.split('.')
 
-                        value = make_context(state)[_form][_input]
+                        value = make_context(state, config)[_form][_input]
                     except ValueError:
                         value = None
             else:
@@ -257,7 +257,7 @@ class UserAttachedNode(FullyContainedNode):
         hierarchy_provider = HiPro(config)
 
         users = hierarchy_provider.find_users(
-            **self.resolve_params(state)
+            **self.resolve_params(state, config)
         )
 
         def render_users(user):
@@ -429,7 +429,7 @@ class Validation(UserAttachedNode):
         return True
 
     def next(self, xml, state, mongo, config, *, skip_reverse=False):
-        context = make_context(state)
+        context = make_context(state, config)
 
         if skip_reverse or context[self.id]['response'] == 'accept':
             return super().next(xml, state, mongo, config)
@@ -634,7 +634,7 @@ class Call(FullyContainedNode):
 
         xmliter = iter(xml)
         node = make_node(next(xmliter), xmliter)
-        context = make_context(state)
+        context = make_context(state, config)
 
         data = {
             'form_array': [f.render(context) for f in self.forms],
@@ -688,7 +688,7 @@ class Conditional(Node):
         # consume up to this node
         ifnode = xmliter.find(lambda e: e.getAttribute('id') == self.id)
 
-        if not make_context(state)[self.id]['condition']:
+        if not make_context(state, config)[self.id]['condition']:
             xmliter.expand(ifnode)
 
         return make_node(xmliter.next_skipping_elifelse(), xmliter)
@@ -697,7 +697,7 @@ class Conditional(Node):
         tree = Condition().parse(self.condition)
 
         try:
-            value = ConditionTransformer(make_context(state)).transform(tree)
+            value = ConditionTransformer(make_context(state, config)).transform(tree)
         except ValueError as e:
             raise InconsistentState('Could not evaluate condition: {}'.format(
                 str(e)
@@ -977,7 +977,7 @@ class Request(FullyContainedNode):
         return data_forms
 
     def work(self, config, state, channel, mongo):
-        data_forms = self.make_request(make_context(state))
+        data_forms = self.make_request(make_context(state, config))
 
         return [
             Form.state_json(data_form['id'], [

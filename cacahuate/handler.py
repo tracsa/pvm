@@ -141,7 +141,7 @@ class Handler:
 
         # get currect execution context
         exc_doc = next(self.execution_collection().find({'id': execution.id}))
-        context = make_context(exc_doc)
+        context = make_context(exc_doc, self.config)
 
         # interpolate
         rendered_name = render_or(node.name, node.name, context)
@@ -250,7 +250,7 @@ class Handler:
             return_document=pymongo.collection.ReturnDocument.AFTER,
         )
 
-        context = make_context(mongo_exe)
+        context = make_context(mongo_exe, self.config)
 
         # update execution's name and description
         execution.name = render_or(

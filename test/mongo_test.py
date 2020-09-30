@@ -3,7 +3,7 @@ Tests the cacahuate.mongo module
 '''
 from datetime import datetime
 
-from cacahuate.mongo import json_prepare
+from cacahuate.mongo import json_prepare, make_context
 
 
 def test_json_prepare():
@@ -29,3 +29,24 @@ def test_json_prepare():
     assert obj['_id'] == obj_id
     assert obj['started_at'] == started_at
     assert obj['finished_at'] == finished_at
+
+
+def test_make_context(config):
+    execution = {
+        'values': {
+            'form1': [
+                {
+                    'input1': 'A',
+                },
+                {
+                    'input1': 'B',
+                },
+            ],
+        },
+    }
+    context = make_context(execution, config)
+
+    assert context['form1']['input1'] == 'B'
+    assert list(context['form1'].all())[0]['input1'] == 'A'
+
+    assert context['_env']['FOO'] == 'var'

@@ -39,7 +39,7 @@ def validate_auth(node, user, state=None):
     hipro = HiPro(app.config)
 
     try:
-        hipro.validate_user(user, **node.resolve_params(state))
+        hipro.validate_user(user, **node.resolve_params(state, app.config))
     except HierarchyError:
         raise Forbidden([{
             'detail': 'The provided credentials do not match the specified'

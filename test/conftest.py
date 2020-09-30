@@ -14,6 +14,9 @@ TESTING_SETTINGS = {
         'hardcoded': 'test.hardcoded_hierarchy',
         'noparam': 'test.noparam_hierarchy',
     },
+    'PROCESS_ENV': {
+        'FOO': 'var',
+    },
 }
 
 

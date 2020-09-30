@@ -8,17 +8,22 @@ DATE_FIELDS = [
 ]
 
 
-def make_context(execution_data):
+def make_context(execution_data, config):
     ''' the proper and only way to get the ``'values'`` key out of
     an execution document from mongo. It takes care of the transformations
     needed for it to work in jinja templates and other contexts where the
     multiplicity of answers (multiforms) is relevant. '''
+    context = {}
+
     try:
-        return {
-            k: MultiFormDict(v) for k, v in execution_data['values'].items()
-        }
+        for key, value in execution_data['values'].items():
+            context[key] = MultiFormDict(value)
     except KeyError:
-        return dict()
+        pass
+
+    context['_env'] = config['PROCESS_ENV']
+
+    return context
 
 
 def json_prepare(obj):

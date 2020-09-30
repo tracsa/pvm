@@ -115,3 +115,7 @@ INVALID_FILTERS = (
     'limit',
     'offset',
 )
+
+PROCESS_ENV = {
+    # 'CUSTOM_VAR': 'its value',
+}

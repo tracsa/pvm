@@ -87,7 +87,7 @@ def test_wakeup(config, mongo):
     channel = MagicMock()
 
     # will wakeup the second node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': pointer.id,
         'user_identifier': juan.identifier,
@@ -203,7 +203,7 @@ def test_teardown(config, mongo):
     channel = MagicMock()
 
     # will teardown mid_node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': p_0.id,
         'user_identifier': manager.identifier,

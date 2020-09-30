@@ -24,7 +24,7 @@ def test_call_node(config, mongo):
     })
 
     # teardown of first node and wakeup of call node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -90,7 +90,7 @@ def test_call_node(config, mongo):
     assert reg['name'] == 'Simplest process ever started with: ' + value
 
     # teardown of the call node and end of first execution
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': '__system__',
@@ -119,7 +119,7 @@ def test_call_node_render(config, mongo):
     })
 
     # teardown of first node and wakeup of call node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -185,7 +185,7 @@ def test_call_node_render(config, mongo):
     assert reg['name'] == 'Simplest process ever started with: ' + value
 
     # teardown of the call node and end of first execution
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': '__system__',

@@ -38,7 +38,7 @@ class Handler:
                 if message['command'] == 'cancel':
                     self.cancel_execution(message)
                 elif message['command'] == 'step':
-                    self.call(message, channel)
+                    self.step(message, channel)
                 elif message['command'] == 'patch':
                     self.patch(message, channel)
             except (ModelNotFoundError, CannotMove, ElementNotFound,
@@ -52,9 +52,9 @@ class Handler:
         if not self.config['RABBIT_NO_ACK']:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
-    def call(self, message: dict, channel):
-        ''' The actual main callback of cacahuate. The logic goes here, the
-        previous function just wraps some error handling logic '''
+    def step(self, message: dict, channel):
+        ''' Handles deleting a pointer from the current node and creating a new
+        one on the next '''
         pointer, user, input = self.recover_step(message)
         execution = pointer.proxy.execution.get()
 

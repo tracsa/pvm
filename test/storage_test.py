@@ -59,7 +59,7 @@ def test_send_request_multiple(config, mongo, mocker):
         'state': Xml.load(config, execution.process_name).get_state(),
     })
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,

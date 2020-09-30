@@ -28,7 +28,7 @@ def test_exit_interaction(config, mongo):
     })
 
     # first node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -49,7 +49,7 @@ def test_exit_interaction(config, mongo):
     }
 
     # exit node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': '__system__',

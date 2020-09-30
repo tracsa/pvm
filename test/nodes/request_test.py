@@ -39,7 +39,7 @@ def test_handle_request_node(config, mocker, mongo):
     })
 
     # teardown of first node and wakeup of request node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -101,7 +101,7 @@ def test_handle_request_node(config, mocker, mongo):
         'input': expected_inputs,
     }
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': '__system__',
@@ -300,7 +300,7 @@ def test_store_data_from_response(config, mocker, mongo):
     })
 
     # teardown of first node and wakeup of request node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -396,7 +396,7 @@ def test_store_data_from_response(config, mocker, mongo):
         'input': expected_inputs,
     }
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': '__system__',

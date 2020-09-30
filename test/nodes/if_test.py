@@ -24,7 +24,7 @@ def test_true_condition_node(config, mongo):
         'state': Xml.load(config, execution.process_name).get_state(),
     })
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -62,7 +62,7 @@ def test_true_condition_node(config, mongo):
     }
     assert json.loads(args['body']) == rabbit_call
 
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
 
     # pointer moved
     assert Pointer.get(ptr.id) is None
@@ -85,7 +85,7 @@ def test_false_condition_node(config, mongo):
         'state': Xml.load(config, execution.process_name).get_state(),
     })
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -123,7 +123,7 @@ def test_false_condition_node(config, mongo):
     }
     assert json.loads(args['body']) == rabbit_call
 
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
 
     # pointer moved
     assert Pointer.get(ptr.id) is None
@@ -145,7 +145,7 @@ def test_anidated_conditions(config, mongo):
         'state': Xml.load(config, 'anidated-conditions').get_state(),
     })
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -181,14 +181,14 @@ def test_anidated_conditions(config, mongo):
     }
     assert json.loads(args['body']) == rabbit_call
 
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
 
     # assertions
     assert Pointer.get(ptr.id) is None
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'b'
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -225,14 +225,14 @@ def test_anidated_conditions(config, mongo):
     }
     assert json.loads(args['body']) == rabbit_call
 
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
 
     # assertions
     assert Pointer.get(ptr.id) is None
     ptr = Pointer.get_all()[0]
     assert ptr.node_id == 'f'
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -263,7 +263,7 @@ def test_ifelifelse_if(config, mongo):
         'state': Xml.load(config, 'else').get_state(),
     })
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -302,7 +302,7 @@ def test_ifelifelse_if(config, mongo):
     assert json.loads(args['body']) == rabbit_call
 
     channel = MagicMock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
 
     # pointer moved
     assert Pointer.get(ptr.id) is None
@@ -315,7 +315,7 @@ def test_ifelifelse_if(config, mongo):
     assert args['exchange'] == 'charpe_notify'
 
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -347,7 +347,7 @@ def test_ifelifelse_elif(config, mongo):
         'state': Xml.load(config, 'else').get_state(),
     })
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -387,7 +387,7 @@ def test_ifelifelse_elif(config, mongo):
     assert json.loads(args['body']) == rabbit_call
 
     channel = MagicMock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
 
     # pointer moved
     assert Pointer.get(ptr.id) is None
@@ -415,7 +415,7 @@ def test_ifelifelse_elif(config, mongo):
     assert json.loads(args['body']) == rabbit_call
 
     channel = MagicMock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
 
     # pointer moved
     assert Pointer.get(ptr.id) is None
@@ -428,7 +428,7 @@ def test_ifelifelse_elif(config, mongo):
     assert args['exchange'] == 'charpe_notify'
 
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -460,7 +460,7 @@ def test_ifelifelse_else(config, mongo):
         'state': Xml.load(config, 'else').get_state(),
     })
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -500,7 +500,7 @@ def test_ifelifelse_else(config, mongo):
     assert json.loads(args['body']) == rabbit_call
 
     channel = MagicMock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
 
     # pointer moved
     assert Pointer.get(ptr.id) is None
@@ -527,7 +527,7 @@ def test_ifelifelse_else(config, mongo):
     assert json.loads(args['body']) == rabbit_call
 
     channel = MagicMock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
 
     # pointer moved
     assert Pointer.get(ptr.id) is None
@@ -554,7 +554,7 @@ def test_ifelifelse_else(config, mongo):
     assert json.loads(args['body']) == rabbit_call
 
     channel = MagicMock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
 
     # pointer moved
     assert Pointer.get(ptr.id) is None
@@ -567,7 +567,7 @@ def test_ifelifelse_else(config, mongo):
     assert args['exchange'] == 'charpe_notify'
 
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -611,7 +611,7 @@ def test_invalidated_conditional(config, mongo):
 
     # initial rabbit call
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -650,7 +650,7 @@ def test_invalidated_conditional(config, mongo):
 
     # if rabbit call
     channel.reset_mock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
     channel.basic_publish.assert_called_once()
 
     # arrives to if_validation
@@ -659,7 +659,7 @@ def test_invalidated_conditional(config, mongo):
 
     # if's call to validation
     channel.reset_mock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -691,7 +691,7 @@ def test_invalidated_conditional(config, mongo):
 
     # second lap
     channel.reset_mock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -729,7 +729,7 @@ def test_invalidated_conditional(config, mongo):
 
     # if second rabbit call
     channel.reset_mock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
     channel.basic_publish.assert_called_once()
 
     # arrives to elif_node
@@ -756,7 +756,7 @@ def test_invalidated_conditional(config, mongo):
 
     # elif rabbit call
     channel.reset_mock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
     channel.basic_publish.assert_called_once()
 
     # arrives to elif_validation
@@ -765,7 +765,7 @@ def test_invalidated_conditional(config, mongo):
 
     # elif's call to validation
     channel.reset_mock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -797,7 +797,7 @@ def test_invalidated_conditional(config, mongo):
 
     # third lap
     channel.reset_mock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -835,7 +835,7 @@ def test_invalidated_conditional(config, mongo):
 
     # if third rabbit call
     channel.reset_mock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
     channel.basic_publish.assert_called_once()
 
     # arrives to elif_node again
@@ -861,7 +861,7 @@ def test_invalidated_conditional(config, mongo):
 
     # elif second rabbit call
     channel.reset_mock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
     channel.basic_publish.assert_called_once()
 
     # arrives to else_node
@@ -888,7 +888,7 @@ def test_invalidated_conditional(config, mongo):
 
     # else rabbit call
     channel.reset_mock()
-    handler.call(rabbit_call, channel)
+    handler.step(rabbit_call, channel)
     channel.basic_publish.assert_called_once()
 
     # arrives to if_validation
@@ -897,7 +897,7 @@ def test_invalidated_conditional(config, mongo):
 
     # else's call to validation
     channel.reset_mock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,

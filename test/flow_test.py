@@ -26,7 +26,7 @@ def test_variable_proc_name(config, mongo):
     execution = xml.start(node, input, mongo, channel, user.identifier)
     ptr = execution.proxy.pointers.get()[0]
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -42,7 +42,7 @@ def test_variable_proc_name(config, mongo):
     assert execution.name == 'Variable name process in step 1'
     assert execution.description == 'Description is also variable: 1, , '
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -65,7 +65,7 @@ def test_variable_proc_name(config, mongo):
     assert execution.name == 'Variable name process in step 2'
     assert execution.description == 'Description is also variable: 1, 2, '
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -102,7 +102,7 @@ def test_variable_proc_name_mix(config, mongo):
     execution = xml.start(node, input, mongo, channel, user.identifier)
     ptr = execution.proxy.pointers.get()[0]
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -118,7 +118,7 @@ def test_variable_proc_name_mix(config, mongo):
     assert execution.name == 'Variable name process in step 10'
     assert execution.description == 'Description is also variable: 1, , '
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -141,7 +141,7 @@ def test_variable_proc_name_mix(config, mongo):
     assert execution.name == 'Variable name process in step 210'
     assert execution.description == 'Description is also variable: 1, 2, '
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -177,7 +177,7 @@ def test_variable_proc_name_pointers(config, mongo):
     execution = xml.start(node, input, mongo, channel, user.identifier)
     ptr = execution.proxy.pointers.get()[0]
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -193,7 +193,7 @@ def test_variable_proc_name_pointers(config, mongo):
     assert execution.name == 'Variable name process in step 10'
     assert execution.description == 'Description is also variable: 1, , '
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -216,7 +216,7 @@ def test_variable_proc_name_pointers(config, mongo):
     assert execution.name == 'Variable name process in step 210'
     assert execution.description == 'Description is also variable: 1, 2, '
 
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,

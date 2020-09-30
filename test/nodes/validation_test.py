@@ -50,7 +50,7 @@ def test_approve(config, mongo):
     })
 
     # thing to test
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -184,7 +184,7 @@ def test_reject(config, mongo):
     })
 
     # will teardown the approval node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -410,7 +410,7 @@ def test_reject_with_dependencies(config, mongo):
     })
 
     # first call to node1
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -426,7 +426,7 @@ def test_reject_with_dependencies(config, mongo):
     assert ptr.node_id == 'node2'
 
     # first call to node2
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -442,7 +442,7 @@ def test_reject_with_dependencies(config, mongo):
     assert ptr.node_id == 'node3'
 
     # first call to node3
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -458,7 +458,7 @@ def test_reject_with_dependencies(config, mongo):
     assert ptr.node_id == 'node4'
 
     # first call to validation
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -486,7 +486,7 @@ def test_reject_with_dependencies(config, mongo):
     assert ptr.node_id == 'node1'
 
     # second call to node1
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -502,7 +502,7 @@ def test_reject_with_dependencies(config, mongo):
     assert ptr.node_id == 'node2'
 
     # second call to node2
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -518,7 +518,7 @@ def test_reject_with_dependencies(config, mongo):
     assert ptr.node_id == 'node4'
 
     # second call to validation
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -544,7 +544,7 @@ def test_reject_with_dependencies(config, mongo):
     assert ptr.node_id == 'node5'
 
     # first call to last node
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -807,7 +807,7 @@ def test_invalidate_all_nodes(config, mongo):
     })
 
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,
@@ -824,24 +824,24 @@ def test_invalidate_all_nodes(config, mongo):
     args = channel.basic_publish.call_args[1]
 
     channel = MagicMock()
-    handler.call(json.loads(args['body']), channel)
+    handler.step(json.loads(args['body']), channel)
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'call_node'
     args = channel.basic_publish.call_args[1]
 
     channel = MagicMock()
-    handler.call(json.loads(args['body']), channel)
+    handler.step(json.loads(args['body']), channel)
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'if_node'
     args = channel.basic_publish.call_args[1]
 
     channel = MagicMock()
-    handler.call(json.loads(args['body']), channel)
+    handler.step(json.loads(args['body']), channel)
     ptr = execution.proxy.pointers.get()[0]
     assert ptr.node_id == 'validation_node'
 
     channel = MagicMock()
-    handler.call({
+    handler.step({
         'command': 'step',
         'pointer_id': ptr.id,
         'user_identifier': user.identifier,

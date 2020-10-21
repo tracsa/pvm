@@ -224,9 +224,9 @@ class UserAttachedNode(FullyContainedNode):
     def resolve_params(self, state, config):
         computed_params = {}
 
-        try:
+        if state:
             context = make_context(state, config)
-        except TypeError:
+        else
             context = None
 
         for param in self.auth_params:

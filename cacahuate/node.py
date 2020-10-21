@@ -226,7 +226,7 @@ class UserAttachedNode(FullyContainedNode):
 
         if state:
             context = make_context(state, config)
-        else
+        else:
             context = None
 
         for param in self.auth_params:
@@ -244,7 +244,7 @@ class UserAttachedNode(FullyContainedNode):
                     except ValueError:
                         value = None
             else:
-                return render_or(param.value, param.value, context)
+                value = render_or(param.value, param.value, context)
 
             computed_params[param.name] = value
 

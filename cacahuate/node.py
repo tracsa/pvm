@@ -226,7 +226,7 @@ class UserAttachedNode(FullyContainedNode):
 
         try:
             context = make_context(state, config)
-        except ValueError:
+        except TypeError:
             context = None
 
         for param in self.auth_params:

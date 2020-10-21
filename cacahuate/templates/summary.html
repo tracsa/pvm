@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Proceso - {{ _execution.name }}</title>
+  </head>
+  <body>
+    <h1>{{ _execution.name }}</h1>
+    <table>
+      <tr>
+        <th>ID</th>
+        <td>{{ _execution.id }}</td>
+      </tr>
+      <tr>
+        <th>Nombre</th>
+        <td>{{ _execution.name }}</td>
+      </tr>
+      <tr>
+        <th>Fuente</th>
+        <td>{{ _execution.process_name }}</td>
+      </tr>
+      <tr>
+        <th>Descripción</th>
+        <td>{{ _execution.description }}</td>
+      </tr>
+      <tr>
+        <th>Inicio</th>
+        <td>{{ _execution.started_at }}</td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -223,6 +223,7 @@ class UserAttachedNode(FullyContainedNode):
 
     def resolve_params(self, state, config):
         computed_params = {}
+        context = make_context(state, config)
 
         for param in self.auth_params:
             if state is not None and param.type == 'ref':
@@ -235,11 +236,11 @@ class UserAttachedNode(FullyContainedNode):
                     try:
                         _form, _input = req.split('.')
 
-                        value = make_context(state, config)[_form][_input]
+                        value = context[_form][_input]
                     except ValueError:
                         value = None
             else:
-                value = param.value
+                return render_or(param.value, param.value, context)
 
             computed_params[param.name] = value
 

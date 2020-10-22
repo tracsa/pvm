@@ -224,10 +224,7 @@ class UserAttachedNode(FullyContainedNode):
     def resolve_params(self, state, config):
         computed_params = {}
 
-        if state:
-            context = make_context(state, config)
-        else:
-            context = None
+        context = make_context(state or {}, config)
 
         for param in self.auth_params:
             if state is not None and param.type == 'ref':

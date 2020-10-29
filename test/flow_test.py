@@ -231,15 +231,14 @@ def test_variable_proc_name_pointers(config, mongo):
     }, channel)
 
     # now check pointers last state
-    cursor = mongo[config["POINTER_COLLECTION"]].find({
-        'execution.id': execution.id,
-    })
+    query = {'execution.id': execution.id}
 
-    assert cursor.count() == 3
+    assert mongo[config["POINTER_COLLECTION"]].count_documents(query) == 3
 
     expected_name = 'Variable name process in step 3210'
     expected_desc = 'Description is also variable: 1, 2, 3'
 
+    cursor = mongo[config["POINTER_COLLECTION"]].find(query)
     for item in cursor:
         assert item['execution']['name'] == expected_name
         assert item['execution']['description'] == expected_desc

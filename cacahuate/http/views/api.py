@@ -77,7 +77,7 @@ def execution_list():
     )
 
     # sort
-    srt = {'$sort': {'started_at': -1}}
+    srt = {'started_at': -1}
     sort_query = exe_query.pop('sort', None)
     if sort_query and sort_query.split(',', 1)[0]:
         try:
@@ -89,7 +89,7 @@ def execution_list():
             order = 'ASCENDING'
 
         order = getattr(pymongo, order)
-        srt = {'$sort': {key: order}}
+        srt = {key: order}
 
     # filter for user_identifier
     user_identifier = exe_query.pop('user_identifier', None)
@@ -115,23 +115,19 @@ def execution_list():
     # store project for future use
     prjct = {**include_map} or {**exclude_map}
 
-    exe_pipeline = [
-        {'$match': exe_query},
-        srt,
-        {'$skip': g.offset},
-        {'$limit': g.limit},
-    ]
-
-    if prjct:
-        exe_pipeline.append({'$project': prjct})
-
     exe_collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
+    if prjct:
+        cursor = exe_collection.find(exe_query, prjct).sort(list(srt.items()))
+    else:
+        cursor = exe_collection.find(exe_query).sort(list(srt.items()))
+
     return jsonify({
-        "data": list(map(
+        'total_count': exe_collection.count_documents(exe_query),
+        'data': list(map(
             json_prepare,
-            exe_collection.aggregate(exe_pipeline, allowDiskUse=True),
-        )),
+            cursor.skip(g.offset).limit(g.limit),
+        ))
     })
 
 
@@ -550,7 +546,7 @@ def fetch_pointers():
     )
 
     # sort
-    srt = {'$sort': {'started_at': -1}}
+    srt = {'started_at': -1}
     sort_query = ptr_query.pop('sort', None)
     if sort_query and sort_query.split(',', 1)[0]:
         try:
@@ -562,7 +558,7 @@ def fetch_pointers():
             order = 'ASCENDING'
 
         order = getattr(pymongo, order)
-        srt = {'$sort': {key: order}}
+        srt = {key: order}
 
     # filter for user_identifier
     user_identifier = ptr_query.pop('user_identifier', None)
@@ -588,21 +584,18 @@ def fetch_pointers():
     # store project for future use
     prjct = {**include_map} or {**exclude_map}
 
-    ptr_pipeline = [
-        {'$match': ptr_query},
-        srt,
-        {'$skip': g.offset},
-        {'$limit': g.limit},
-    ]
+    ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
 
     if prjct:
-        ptr_pipeline.append({'$project': prjct})
+        cursor = ptr_collection.find(ptr_query, prjct).sort(list(srt.items()))
+    else:
+        cursor = ptr_collection.find(ptr_query).sort(list(srt.items()))
 
-    ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
     return jsonify({
+        'total_count': ptr_collection.count_documents(ptr_query),
         'pointers': list(map(
             json_prepare,
-            ptr_collection.aggregate(ptr_pipeline, allowDiskUse=True),
+            cursor.skip(g.offset).limit(g.limit),
         ))
     })
 

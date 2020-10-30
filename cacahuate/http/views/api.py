@@ -117,13 +117,17 @@ def execution_list():
 
     exe_collection = mongo.db[app.config['EXECUTION_COLLECTION']]
 
-    if prjct:
-        cursor = exe_collection.find(exe_query, prjct).sort(list(srt.items()))
-    else:
-        cursor = exe_collection.find(exe_query).sort(list(srt.items()))
+    try:
+        cursor_count = exe_collection.count_documents(exe_query)
+        cursor = exe_collection.find(
+            exe_query,
+            prjct or None,
+        ).sort(list(srt.items()))
+    except pymongo.errors.OperationFailure:
+        flask.abort(400, 'Malformed query')
 
     return jsonify({
-        'total_count': exe_collection.count_documents(exe_query),
+        'total_count': cursor_count,
         'data': list(map(
             json_prepare,
             cursor.skip(g.offset).limit(g.limit),
@@ -586,13 +590,17 @@ def fetch_pointers():
 
     ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
 
-    if prjct:
-        cursor = ptr_collection.find(ptr_query, prjct).sort(list(srt.items()))
-    else:
-        cursor = ptr_collection.find(ptr_query).sort(list(srt.items()))
+    try:
+        cursor_count = ptr_collection.count_documents(ptr_query)
+        cursor = ptr_collection.find(
+            ptr_query,
+            prjct or None,
+        ).sort(list(srt.items()))
+    except pymongo.errors.OperationFailure:
+        flask.abort(400, 'Malformed query')
 
     return jsonify({
-        'total_count': ptr_collection.count_documents(ptr_query),
+        'total_count': cursor_count,
         'pointers': list(map(
             json_prepare,
             cursor.skip(g.offset).limit(g.limit),

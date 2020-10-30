@@ -3093,6 +3093,7 @@ def test_execution_list(client, mongo, config):
 
     assert res.status_code == 200
     assert data == {
+        'total_count': 1,
         'data': [{
             'status': 'ongoing',
         }],
@@ -3124,6 +3125,7 @@ def test_execution_filter_key_valid(client, mongo, config):
 
     assert res.status_code == 200
     assert data == {
+        'total_count': 2,
         'data': [
             {
                 'id': 1,
@@ -3150,6 +3152,7 @@ def test_execution_filter_key_invalid(client, mongo, config):
 
     assert res.status_code == 200
     assert data == {
+        'total_count': 1,
         'data': [
             {
                 'id': 1,
@@ -3197,6 +3200,7 @@ def test_execution_filter_user(mongo, client, config):
 
     assert res.status_code == 200
     assert ans == {
+        'total_count': 3,
         "data": [
             exec_04_json,
             exec_02_json,
@@ -3212,6 +3216,7 @@ def test_execution_filter_value_invalid(client, mongo, config):
 
     assert res.status_code == 200
     assert data == {
+        'total_count': 0,
         'data': [],
     }
 
@@ -3817,6 +3822,7 @@ def test_fetch_pointers(client, mongo, config):
         item['finished_at'] = item['finished_at'].isoformat() + '+00:00'
 
     assert data_simple == {
+        'total_count': 5,
         'pointers': expected_pointers_simple,
     }
 
@@ -3836,6 +3842,7 @@ def test_fetch_pointers(client, mongo, config):
         item['finished_at'] = item['finished_at'].isoformat() + '+00:00'
 
     assert data_sorted == {
+        'total_count': 5,
         'pointers': expected_pointers_sorted,
     }
 
@@ -3855,6 +3862,7 @@ def test_fetch_pointers(client, mongo, config):
     ]
 
     assert data_include == {
+        'total_count': 5,
         'pointers': expected_pointers_include,
     }
 
@@ -3870,6 +3878,7 @@ def test_fetch_pointers(client, mongo, config):
         item['finished_at'] = item['finished_at'].isoformat() + '+00:00'
 
     assert data_limit == {
+        'total_count': 5,
         'pointers': expected_pointers_limit,
     }
 
@@ -3887,6 +3896,7 @@ def test_fetch_pointers(client, mongo, config):
         item['finished_at'] = item['finished_at'].isoformat() + '+00:00'
 
     assert data_offset == {
+        'total_count': 5,
         'pointers': expected_pointers_offset,
     }
 

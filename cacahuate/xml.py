@@ -157,22 +157,21 @@ class Xml:
             status='ongoing',
         ).save()
 
-        rendered_name = render_or(node.name, node.name, context)
-        rendered_description = render_or(
-            node.description, node.description, context
-        )
-
         pointer = Pointer(
             node_id=node.id,
-            name=node.name,
-            description=node.description,
+            name=node.get_name(context),
+            description=node.get_description(context),
         ).save()
         pointer.proxy.execution.set(execution)
 
         # log to mongo
         collection = mongo[self.config['POINTER_COLLECTION']]
         collection.insert_one(pointer_entry(
-            node, rendered_name, rendered_description, execution, pointer
+            node,
+            pointer.name,
+            pointer.description,
+            execution,
+            pointer
         ))
 
         collection = mongo[self.config['EXECUTION_COLLECTION']]

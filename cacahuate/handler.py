@@ -143,14 +143,13 @@ class Handler:
         exc_doc = next(self.execution_collection().find({'id': execution.id}))
         context = make_context(exc_doc, self.config)
 
-        # interpolate
-        rendered_name = render_or(node.name, node.name, context)
-        rendered_description = render_or(
-            node.description, node.description, context
-        )
-
         # create a pointer in this node
-        pointer = self._create_pointer(node.id, rendered_name, rendered_description, execution)
+        pointer = self._create_pointer(
+            node.id,
+            node.get_name(context),
+            node.get_description(context),
+            execution,
+        )
         LOGGER.debug('Created pointer p:{} n:{} e:{}'.format(
             pointer.id,
             node.id,
@@ -163,12 +162,14 @@ class Handler:
         }, {
             '$set': {
                 'state.items.{}.state'.format(node.id): 'ongoing',
+                'state.items.{}.name'.format(node.id): pointer.name,
+                'state.items.{}.description'.format(node.id): pointer.description,
             },
         })
 
         # update registry about this pointer
         self.pointer_collection().insert_one(pointer_entry(
-            node, rendered_name, rendered_description, execution, pointer
+            node, pointer.name, pointer.description, execution, pointer
         ))
 
         # notify someone (can raise an exception

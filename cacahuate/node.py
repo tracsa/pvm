@@ -168,6 +168,30 @@ class Node:
             'milestone': hasattr(self, 'milestone'),
         }
 
+    # Interpolate name
+    def get_name(self, context={}):
+        return render_or(self._name, self._name, context)
+
+    def set_name(self, name):
+        self._name = name
+
+    name = property(get_name, set_name)
+
+    def name_template(self):
+        return self._name
+
+    # Interpolate description
+    def get_description(self, context={}):
+        return render_or(self._description, self._description, context)
+
+    def set_description(self, description):
+        self._description = description
+
+    description = property(get_description, set_description)
+
+    def description_template(self):
+        return self._description
+
 
 class FullyContainedNode(Node):
     ''' this type of node can load all of the xml element to memory as oposed

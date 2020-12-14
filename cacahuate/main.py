@@ -17,7 +17,7 @@ import time
 from cacahuate.errors import MalformedProcess
 from cacahuate.grammar import Condition
 from cacahuate.indexes import create_indexes
-from cacahuate.loop import Loop
+from cacahuate.loop import start as loop
 from cacahuate.models import bind_models
 from cacahuate.xml import NODES, get_text
 
@@ -48,8 +48,7 @@ def main():
     create_indexes(config)
 
     # start the loop
-    loop = Loop(config)
-    loop.start()
+    loop(config)
 
 
 def rng_path():

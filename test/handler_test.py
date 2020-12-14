@@ -1,11 +1,13 @@
 from datetime import datetime
 from unittest.mock import MagicMock
 import simplejson as json
+import pytest
 
 from cacahuate.handler import Handler
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.node import Action, Form
 from cacahuate.xml import Xml
+from cacahuate.errors import MisconfiguredProvider, InconsistentState
 
 from .utils import (
     make_date,
@@ -381,8 +383,6 @@ def test_finish_execution(config, mongo):
 def test_call_handler_delete_process(config, mongo):
     handler = Handler(config)
     channel = MagicMock()
-    method = {'delivery_tag': True}
-    properties = ""
     pointer = make_pointer('simple.2018-02-19.xml', 'requester')
     execution_id = pointer.proxy.execution.get().id
     body = '{"command":"cancel", "execution_id":"%s", "pointer_id":"%s"}'\
@@ -423,7 +423,7 @@ def test_call_handler_delete_process(config, mongo):
         },
     ])
 
-    handler(channel, method, properties, body)
+    handler(channel, body)
 
     reg = next(mongo[config["EXECUTION_COLLECTION"]].find())
 
@@ -445,7 +445,7 @@ def test_call_handler_delete_process(config, mongo):
     })['state'] == 'ongoing'
 
 
-def test_resistance_unexisteng_hierarchy_backend(config, mongo):
+def test_resistance_unexistent_hierarchy_backend(config, mongo):
     handler = Handler(config)
 
     ptr = make_pointer('wrong.2018-04-11.xml', 'start_node')
@@ -458,13 +458,13 @@ def test_resistance_unexisteng_hierarchy_backend(config, mongo):
         'state': Xml.load(config, exc.process_name).get_state(),
     })
 
-    # this is what we test
-    handler(MagicMock(), MagicMock(), None, json.dumps({
-        'command': 'step',
-        'pointer_id': ptr.id,
-        'user_identifier': user.identifier,
-        'input': {},
-    }))
+    with pytest.raises(MisconfiguredProvider):
+        handler(MagicMock(), json.dumps({
+            'command': 'step',
+            'pointer_id': ptr.id,
+            'user_identifier': user.identifier,
+            'input': {},
+        }))
 
 
 def test_resistance_hierarchy_return(config, mongo):
@@ -480,13 +480,13 @@ def test_resistance_hierarchy_return(config, mongo):
         'state': Xml.load(config, exc.process_name).get_state(),
     })
 
-    # this is what we test
-    handler(MagicMock(), MagicMock(), None, json.dumps({
-        'command': 'step',
-        'pointer_id': ptr.id,
-        'user_identifier': user.identifier,
-        'input': {},
-    }))
+    with pytest.raises(MisconfiguredProvider):
+        handler(MagicMock(), json.dumps({
+            'command': 'step',
+            'pointer_id': ptr.id,
+            'user_identifier': user.identifier,
+            'input': {},
+        }))
 
 
 def test_resistance_hierarchy_item(config, mongo):
@@ -502,13 +502,13 @@ def test_resistance_hierarchy_item(config, mongo):
         'state': Xml.load(config, exc.process_name).get_state(),
     })
 
-    # this is what we test
-    handler(MagicMock(), MagicMock(), None, json.dumps({
-        'command': 'step',
-        'pointer_id': ptr.id,
-        'user_identifier': user.identifier,
-        'input': {},
-    }))
+    with pytest.raises(MisconfiguredProvider):
+        handler(MagicMock(), json.dumps({
+            'command': 'step',
+            'pointer_id': ptr.id,
+            'user_identifier': user.identifier,
+            'input': {},
+        }))
 
 
 def test_resistance_node_not_found(config, mongo):
@@ -524,23 +524,23 @@ def test_resistance_node_not_found(config, mongo):
         'state': Xml.load(config, exc.process_name).get_state(),
     })
 
-    # this is what we test
-    handler(MagicMock(), MagicMock(), None, json.dumps({
-        'command': 'step',
-        'pointer_id': ptr.id,
-        'user_identifier': user.identifier,
-        'input': {},
-    }))
+    with pytest.raises(MisconfiguredProvider):
+        handler(MagicMock(), json.dumps({
+            'command': 'step',
+            'pointer_id': ptr.id,
+            'user_identifier': user.identifier,
+            'input': {},
+        }))
 
 
 def test_resistance_dead_pointer(config):
     handler = Handler(config)
 
-    # this is what we test
-    handler(MagicMock(), MagicMock(), None, json.dumps({
-        'command': 'step',
-        'pointer_id': 'nones',
-    }))
+    with pytest.raises(InconsistentState):
+        handler(MagicMock(), json.dumps({
+            'command': 'step',
+            'pointer_id': 'nones',
+        }))
 
 
 def test_compact_values(config):

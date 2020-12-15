@@ -12,11 +12,13 @@ LOGGER = logging.getLogger(__name__)
 
 
 def ack_message(channel, delivery_tag, ok):
-    if channel.is_open():
+    if channel.is_open:
         if ok:
+            LOGGER.debug('Message acked {}'.format(delivery_tag))
             channel.basic_ack(delivery_tag)
         else:
-            channel.basic_reject(delivery_tag)
+            LOGGER.debug('Message rejected {}'.format(delivery_tag))
+            channel.basic_reject(delivery_tag, requeue=False)
     else:
         LOGGER.warning("Found closed channel while trying to ACK")
 
@@ -26,14 +28,27 @@ def handler_loop(connection, config, queue):
 
     LOGGER.info('Handler thread started')
 
+    # A Rabbitmq connection specific to this thread
+    thread_connection = pika.BlockingConnection(pika.ConnectionParameters(
+        host=config['RABBIT_HOST'],
+        credentials=pika.PlainCredentials(
+            config['RABBIT_USER'],
+            config['RABBIT_PASS'],
+        ),
+    ))
+    thread_channel = thread_connection.channel()
+
     while True:
         stop, (channel, method, properties, body) = queue.get()
 
+        LOGGER.debug('Message read from queue: {}'.format(method.delivery_tag))
+
         if stop:
+            LOGGER.debug('Stop request received from queue')
             break
 
         try:
-            handler(channel, body)
+            handler(thread_channel, body)
 
             cb = partial(ack_message, channel, method.delivery_tag, True)
         except Exception:
@@ -88,7 +103,7 @@ def start(config):
         channel.start_consuming()
     except KeyboardInterrupt:
         LOGGER.info('cacahuate stopped')
-        queue.put((True, None))
+        queue.put((True, (None, None, None, None)))
         channel.stop_consuming()
         thread.join()
 

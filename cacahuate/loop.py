@@ -41,11 +41,11 @@ def handler_loop(connection, config, queue):
     while True:
         stop, (channel, method, properties, body) = queue.get()
 
-        LOGGER.debug('Message read from queue: {}'.format(method.delivery_tag))
-
         if stop:
             LOGGER.debug('Stop request received from queue')
             break
+
+        LOGGER.debug('Message read from queue: {}'.format(method.delivery_tag))
 
         try:
             handler(thread_channel, body)

@@ -26,7 +26,9 @@ def main():
     # Load the config
     config = Config(os.path.dirname(os.path.realpath(__file__)))
     config.from_object('cacahuate.settings')
-    config.from_envvar('CACAHUATE_SETTINGS', silent=True)
+
+    if os.getenv('CACAHUATE_SETTINGS'):
+        config.from_envvar('CACAHUATE_SETTINGS', silent=False)
 
     # Set the timezone
     os.environ['TZ'] = config['TIMEZONE']

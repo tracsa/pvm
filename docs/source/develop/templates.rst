@@ -1,14 +1,5 @@
-Resumen de un proceso
-=====================
-
-``[GET] /v1/execution/<id>/summary``
-
-Es posible ver cierta información relevante de un proceso en curso dado su ``id`` utilizando el endpoint de resumen de proceso. Por defecto se desplegará información muy simple como la fecha de inicio, el nombre y el archivo fuente. Nada demasiado emocionante en realidad.
-
 Sistema de templates
 --------------------
-
-Lo realmente emocionante es el sistema de templates que te permitirá construir tus propias vistas de resumen de procesos. Funciona como sigue.
 
 Cacahuate tiene por defecto un template para resumen de proceso llamado ``summary.html`` ubicado en una carpeta interna de templates (``cacahuate/templates/summary.html``). Para modificarlo puedes establecer la configuración ``TEMPLATE_PATH`` hacia una carpeta donde quieras guardar tus templates:
 

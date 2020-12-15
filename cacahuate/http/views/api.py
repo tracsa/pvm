@@ -29,15 +29,12 @@ from cacahuate.node import make_input
 from cacahuate.mongo import json_prepare
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 @requires_json
 def index():
-    if request.method == 'GET':
-        return {
-            'hello': 'world',
-        }
-    elif request.method == 'POST':
-        return request.json
+    return {
+        'hello': 'world',
+    }
 
 
 @app.route('/v1/user/_identifier/<user_identifier>/info', methods=['GET'])

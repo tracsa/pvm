@@ -471,6 +471,7 @@ def test_start_process(client, mocker, config, mongo):
             }],
         },
         'actors': {},
+        'actor_list': [],
     }
 
 

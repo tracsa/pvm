@@ -195,6 +195,7 @@ class Xml:
                 }],
             },
             'actors': {},
+            'actor_list': [],
         })
 
         # trigger rabbit

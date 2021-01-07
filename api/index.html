@@ -12,11 +12,9 @@
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
-    <script src="../_static/language_data.js"></script>
     <script src="../_static/translations.js"></script>
     <link rel="index" title="Índice" href="../genindex.html" />
     <link rel="search" title="Búsqueda" href="../search.html" />
-    <link rel="next" title="Resumen de un proceso" href="summary.html" />
     <link rel="prev" title="Escribiendo XMLs" href="../xml/index.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -36,18 +34,71 @@
             
   <div class="section" id="api-http">
 <h1>API Http<a class="headerlink" href="#api-http" title="Enlazar permanentemente con este título">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="summary.html">Resumen de un proceso</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="summary.html#sistema-de-templates">Sistema de templates</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="summary.html#reutilizacion-de-bloques">Reutilización de bloques</a></li>
-<li class="toctree-l3"><a class="reference internal" href="summary.html#variables">Variables</a></li>
-<li class="toctree-l3"><a class="reference internal" href="summary.html#filtros">Filtros</a></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
+<p>A continuación se describen los diferentes endpoints HTTP de cacahuate.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/</span></code></p>
+<p>Existe con el único propósito de mostrar un mensaje al pedir la raíz de la API.</p>
+<div class="section" id="autenticacion">
+<h2>Autenticación<a class="headerlink" href="#autenticacion" title="Enlazar permanentemente con este título">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">[POST]</span> <span class="pre">/v1/auth/signin/&lt;AuthProvider:backend&gt;</span></code></p>
+<p>Inicia sesión.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/auth/whoami</span></code></p>
+<p>Provee información sobre el token dado.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/user/_identifier/&lt;user_identifier&gt;/info</span></code></p>
+<p>Provee información sobre el usuario indicado.</p>
+</div>
+<div class="section" id="procesos">
+<h2>Procesos<a class="headerlink" href="#procesos" title="Enlazar permanentemente con este título">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/process</span></code></p>
+<p>Lista procesos disponibles.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/process/&lt;id&gt;/statistics</span></code></p>
+<p>Muestra estadísticas del proceso dado.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/process/&lt;name&gt;</span></code></p>
+<p>Muestra información sobre el proceso dado.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/process/&lt;name&gt;.xml</span></code></p>
+<p>Muestra información sobre la versión específica del proceso.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/process/statistics</span></code></p>
+<p>Muestra estadísticas sobre todos los procesos.</p>
+</div>
+<div class="section" id="ejecuciones">
+<h2>Ejecuciones<a class="headerlink" href="#ejecuciones" title="Enlazar permanentemente con este título">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/execution</span></code></p>
+<p>Lista todas las ejecuciones en curso.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[POST]</span> <span class="pre">/v1/execution</span></code></p>
+<p>Inicia la ejecución de un proceso.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[DELETE]</span> <span class="pre">/v1/execution/&lt;id&gt;</span></code></p>
+<p>Fuerza una ejecución a terminar.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/execution/&lt;id&gt;</span></code></p>
+<p>Obtén el estado de una ejecución en curso.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[PATCH]</span> <span class="pre">/v1/execution/&lt;id&gt;</span></code></p>
+<p>Cambia el estado de una ejecución en curso.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[PUT]</span> <span class="pre">/v1/execution/&lt;id&gt;/user</span></code></p>
+<p>Añade un usuario como candidato para resolver un puntero activo.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/execution/&lt;id&gt;/summary</span></code></p>
+<p>Resumen de una ejecución en curso.</p>
+</div>
+<div class="section" id="punteros">
+<h2>Punteros<a class="headerlink" href="#punteros" title="Enlazar permanentemente con este título">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/pointer</span></code></p>
+<p>Listado de punteros.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[POST]</span> <span class="pre">/v1/pointer</span></code></p>
+<p>Resuelve un nodo y mueve la ejecución al siguiente.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/pointer/&lt;id&gt;</span></code></p>
+<p>Estado de un puntero.</p>
+</div>
+<div class="section" id="algunas-otras-cosas">
+<h2>Algunas otras cosas<a class="headerlink" href="#algunas-otras-cosas" title="Enlazar permanentemente con este título">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/inbox</span></code></p>
+<p>None.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/log</span></code></p>
+<p>None.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/log/&lt;id&gt;</span></code></p>
+<p>None.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/activity</span></code></p>
+<p>None.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/task</span></code></p>
+<p>None.</p>
+<p><code class="docutils literal notranslate"><span class="pre">[GET]</span> <span class="pre">/v1/task/&lt;id&gt;</span></code></p>
+<p>None.</p>
 </div>
 </div>
 
@@ -74,7 +125,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../develop/index.html">Desarrollo</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../xml/index.html">Escribiendo XMLs</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Http</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="summary.html">Resumen de un proceso</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#autenticacion">Autenticación</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#procesos">Procesos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ejecuciones">Ejecuciones</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#punteros">Punteros</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#algunas-otras-cosas">Algunas otras cosas</a></li>
 </ul>
 </li>
 </ul>
@@ -84,7 +139,6 @@
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
       <li>Previous: <a href="../xml/index.html" title="capítulo anterior">Escribiendo XMLs</a></li>
-      <li>Next: <a href="summary.html" title="próximo capítulo">Resumen de un proceso</a></li>
   </ul></li>
 </ul>
 </div>
@@ -114,7 +168,7 @@
       &copy;2018, Abraham Toriz.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.3.0</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.4.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

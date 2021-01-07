@@ -53,6 +53,7 @@ def pointer_entry(node, name, description, execution, pointer, notified_users=No
             'type': type(node).__name__.lower(),
         },
         'actors': Map([], key='identifier').to_json(),
+        'actor_list': [],
         'process_id': execution.process_name,
         'notified_users': notified_users or [],
         'state': 'ongoing',

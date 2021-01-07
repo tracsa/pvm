@@ -132,6 +132,7 @@ def test_wakeup(config, mongo):
         '_type': ':map',
         'items': {},
     }
+    assert reg['actor_list'] == []
     assert reg['notified_users'] == [manager.to_json()]
     assert reg['state'] == 'ongoing'
 
@@ -200,6 +201,7 @@ def test_teardown(config, mongo):
             '_type': ':map',
             'items': {},
         },
+        'actor_list': [],
     })
 
     channel = MagicMock()
@@ -256,6 +258,12 @@ def test_teardown(config, mongo):
             },
         },
     }
+    assert reg['actor_list'] == [
+        {
+            'identifier': 'manager',
+            'form': 'mid_form',
+        },
+    ]
 
     # tasks where deleted from user
     assert manager.proxy.tasks.count() == 0

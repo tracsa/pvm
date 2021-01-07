@@ -32,6 +32,7 @@ def test_approve(config, mongo):
             '_type': ':map',
             'items': {},
         },
+        'actor_list': [],
     })
 
     mongo[config["EXECUTION_COLLECTION"]].insert_one({
@@ -87,6 +88,12 @@ def test_approve(config, mongo):
     assert_near_date(reg['finished_at'])
     assert reg['execution']['id'] == ptr.execution
     assert reg['node']['id'] == 'approval_node'
+    assert reg['actor_list'] == [
+        {
+            'identifier': 'juan',
+            'form': 'approval_node',
+        },
+    ]
     assert reg['actors'] == {
         '_type': ':map',
         'items': {
@@ -148,6 +155,7 @@ def test_reject(config, mongo):
             '_type': ':map',
             'items': {},
         },
+        'actor_list': [],
     })
 
     state = Xml.load(config, 'validation.2018-05-09').get_state()
@@ -355,6 +363,12 @@ def test_reject(config, mongo):
     assert (reg['finished_at'] - datetime.now()).total_seconds() < 2
     assert reg['execution']['id'] == ptr.execution
     assert reg['node']['id'] == 'approval_node'
+    assert reg['actor_list'] == [
+        {
+            'identifier': 'juan',
+            'form': 'approval_node',
+        },
+    ]
     assert reg['actors'] == {
         '_type': ':map',
         'items': {

@@ -197,7 +197,7 @@ class Handler:
         if not node.is_async():
             return pointer, input
 
-    def teardown(self, node, pointer, user, input):
+    def teardown(self, node, pointer, user, forms):
         ''' finishes the node's lifecycle '''
         execution = pointer.proxy.execution.get()
         execution.proxy.actors.add(user)
@@ -210,7 +210,7 @@ class Handler:
                 'fullname',
                 'identifier',
             ]),
-            'forms': input,
+            'forms': forms,
         }
 
         # update pointer
@@ -224,10 +224,16 @@ class Handler:
                     [actor_json],
                     key=lambda a: a['user']['identifier']
                 ).to_json(),
+                'actor_list': [
+                    {
+                        'identifier': user.identifier,
+                        'form': form['ref'],
+                    } for form in forms
+                ],
             },
         })
 
-        values = self.compact_values(input)
+        values = self.compact_values(forms)
 
         # update state
         mongo_exe = self.execution_collection().find_one_and_update(

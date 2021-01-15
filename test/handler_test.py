@@ -258,8 +258,12 @@ def test_teardown(config, mongo):
     }
     assert reg['actor_list'] == [
         {
-            'identifier': 'manager',
             'form': 'mid_form',
+            'actor': {
+                '_type': 'user',
+                'fullname': None,
+                'identifier': 'manager',
+            },
         },
     ]
 

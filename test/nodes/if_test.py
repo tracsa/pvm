@@ -1343,31 +1343,59 @@ def test_invalidated_conditional(config, mongo):
         'actor_list': [
             {
                 'node': 'start_node',
-                'identifier': 'juan',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'Juan',
+                    'identifier': 'juan',
+                },
             },
             {
                 'node': 'if_node',
-                'identifier': '__system__',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'System',
+                    'identifier': '__system__',
+                },
             },
             {
                 'node': 'if_validation_node',
-                'identifier': 'juan',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'Juan',
+                    'identifier': 'juan',
+                },
             },
             {
                 'node': 'elif_node',
-                'identifier': '__system__',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'System',
+                    'identifier': '__system__',
+                },
             },
             {
                 'node': 'elif_validation_node',
-                'identifier': 'juan',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'Juan',
+                    'identifier': 'juan',
+                },
             },
             {
                 'node': 'else_node',
-                'identifier': '__system__',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'System',
+                    'identifier': '__system__',
+                },
             },
             {
                 'node': 'else_validation_node',
-                'identifier': 'juan',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'Juan',
+                    'identifier': 'juan',
+                },
             }
         ],
     }

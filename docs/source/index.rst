@@ -13,6 +13,7 @@ Documentación
    storage/index
    develop/index
    xml/index
+   api/index
 
 Índices y tablas
 ----------------

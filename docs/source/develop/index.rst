@@ -11,3 +11,4 @@ distintos componentes de cacahuate.
    xml
    docs
    utils
+   templates

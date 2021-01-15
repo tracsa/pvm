@@ -226,8 +226,12 @@ class Handler:
                 ).to_json(),
                 'actor_list': [
                     {
-                        'identifier': user.identifier,
                         'form': form['ref'],
+                        'actor': user.to_json(include=[
+                            '_type',
+                            'fullname',
+                            'identifier',
+                        ]),
                     } for form in forms
                 ],
             },

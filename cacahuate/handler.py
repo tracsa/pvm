@@ -213,8 +213,12 @@ class Handler:
                 ).to_json(),
                 'actor_list': [
                     {
-                        'identifier': user.identifier,
                         'form': form['ref'],
+                        'actor': user.to_json(include=[
+                            '_type',
+                            'fullname',
+                            'identifier',
+                        ]),
                     } for form in forms
                 ],
             },
@@ -223,15 +227,40 @@ class Handler:
         values = self.compact_values(forms)
 
         # update state
+        self.execution_collection().update_one(
+            {
+                'id': execution.id,
+                '$or': [
+                    {
+                        'actor_list.node': node.id,
+                        'actor_list.actor.identifier': {
+                            '$ne': user.identifier,
+                        },
+                    },
+                    {
+                        'actor_list.node': {
+                            '$ne': node.id,
+                        },
+                    },
+                ],
+            },
+            {
+                '$push': {
+                    'actor_list': {
+                        'node': node.id,
+                        'actor': user.to_json(include=[
+                            '_type',
+                            'fullname',
+                            'identifier',
+                        ]),
+                    },
+                },
+            },
+        )
+
         mongo_exe = self.execution_collection().find_one_and_update(
             {'id': execution.id},
             {
-                '$addToSet': {
-                    'actor_list': {
-                        'node': node.id,
-                        'identifier': user.identifier,
-                    },
-                },
                 '$set': {**{
                     'state.items.{node}.state'.format(node=node.id): 'valid',
                     'state.items.{node}.actors.items.{identifier}'.format(

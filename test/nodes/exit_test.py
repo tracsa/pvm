@@ -152,11 +152,19 @@ def test_exit_interaction(config, mongo):
         'actor_list': [
             {
                 'node': 'start_node',
-                'identifier': 'juan',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'Juan',
+                    'identifier': 'juan',
+                },
             },
             {
                 'node': 'exit',
-                'identifier': '__system__',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'System',
+                    'identifier': '__system__',
+                },
             },
         ],
         'values': {

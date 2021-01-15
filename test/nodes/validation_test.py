@@ -90,8 +90,12 @@ def test_approve(config, mongo):
     assert reg['node']['id'] == 'approval_node'
     assert reg['actor_list'] == [
         {
-            'identifier': 'juan',
             'form': 'approval_node',
+            'actor': {
+                '_type': 'user',
+                'fullname': 'Juan',
+                'identifier': 'juan',
+            },
         },
     ]
     assert reg['actors'] == {
@@ -352,7 +356,11 @@ def test_reject(config, mongo):
         },
         'actor_list': [{
             'node': 'approval_node',
-            'identifier': 'juan',
+            'actor': {
+                '_type': 'user',
+                'fullname': 'Juan',
+                'identifier': 'juan',
+            },
         }],
     }
 
@@ -365,8 +373,12 @@ def test_reject(config, mongo):
     assert reg['node']['id'] == 'approval_node'
     assert reg['actor_list'] == [
         {
-            'identifier': 'juan',
             'form': 'approval_node',
+            'actor': {
+                '_type': 'user',
+                'fullname': 'Juan',
+                'identifier': 'juan',
+            },
         },
     ]
     assert reg['actors'] == {
@@ -786,23 +798,43 @@ def test_reject_with_dependencies(config, mongo):
         'actor_list': [
             {
                 'node': 'node1',
-                'identifier': 'juan',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'Juan',
+                    'identifier': 'juan',
+                },
             },
             {
                 'node': 'node2',
-                'identifier': 'juan',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'Juan',
+                    'identifier': 'juan',
+                },
             },
             {
                 'node': 'node3',
-                'identifier': 'juan',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'Juan',
+                    'identifier': 'juan',
+                },
             },
             {
                 'node': 'node4',
-                'identifier': 'juan',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'Juan',
+                    'identifier': 'juan',
+                },
             },
             {
                 'node': 'node5',
-                'identifier': 'juan',
+                'actor': {
+                    '_type': 'user',
+                    'fullname': 'Juan',
+                    'identifier': 'juan',
+                },
             },
         ],
     }

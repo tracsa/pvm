@@ -3244,6 +3244,7 @@ def test_add_user(client, mocker, config, mongo):
         },
         'notified_users': [],
         'execution': exc.to_json(),
+        'state': 'ongoing',
     })
 
     # user has no task assigned
@@ -3299,6 +3300,7 @@ def test_add_user_new(client, mocker, config, mongo):
         },
         'notified_users': [],
         'execution': exc.to_json(),
+        'state': 'ongoing',
     })
 
     # user has no task assigned
@@ -3380,6 +3382,7 @@ def test_add_user_duplicate(client, mocker, config, mongo):
         },
         'notified_users': [],
         'execution': exc.to_json(),
+        'state': 'ongoing',
     })
 
     # user has no task assigned

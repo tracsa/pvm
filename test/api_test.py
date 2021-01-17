@@ -3245,7 +3245,7 @@ def test_add_user(client, mocker, config, mongo):
     assert luis.proxy.tasks.count() == 0
 
     # add the user
-    res = client.put(
+    res = client.post(
         '/v1/execution/{}/user'.format(exc.id),
         headers={
             **{'Content-Type': 'application/json'},
@@ -3296,7 +3296,7 @@ def test_add_user_new(client, mocker, config, mongo):
     assert beto.proxy.tasks.count() == 0
 
     # add the user
-    res = client.put(
+    res = client.post(
         '/v1/execution/{}/user'.format(exc.id),
         headers={
             **{'Content-Type': 'application/json'},
@@ -3322,7 +3322,7 @@ def test_add_user_new(client, mocker, config, mongo):
     assert notified_users == [luis.to_json()]
 
     # add the second user
-    res = client.put(
+    res = client.post(
         '/v1/execution/{}/user'.format(exc.id),
         headers={
             **{'Content-Type': 'application/json'},
@@ -3371,7 +3371,7 @@ def test_add_user_duplicate(client, mocker, config, mongo):
     assert luis.proxy.tasks.count() == 0
 
     # add the user
-    res = client.put(
+    res = client.post(
         '/v1/execution/{}/user'.format(exc.id),
         headers={
             **{'Content-Type': 'application/json'},
@@ -3397,7 +3397,7 @@ def test_add_user_duplicate(client, mocker, config, mongo):
     assert notified_users == [luis.to_json()]
 
     # add the second user
-    res = client.put(
+    res = client.post(
         '/v1/execution/{}/user'.format(exc.id),
         headers={
             **{'Content-Type': 'application/json'},
@@ -3436,7 +3436,7 @@ def test_add_user_requirements_id(client, mocker, config, mongo):
     })
 
     # try add the user
-    res = client.put(
+    res = client.post(
         '/v1/execution/{}/user'.format(exc.id),
         headers={
             **{'Content-Type': 'application/json'},
@@ -3465,7 +3465,7 @@ def test_add_user_requirements_node(client, mocker, config, mongo):
     })
 
     # try add the user
-    res = client.put(
+    res = client.post(
         '/v1/execution/{}/user'.format(exc.id),
         headers={
             **{'Content-Type': 'application/json'},

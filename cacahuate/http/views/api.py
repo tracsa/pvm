@@ -373,17 +373,30 @@ def execution_add_user(exe_id):
     ptr = ptr_collection.find_one({
         'execution.id': exe_id,
         'id': pointer.id,
+        'node.id': node_id,
+        'state': 'ongoing',
     })
 
-    notified_users = ptr.get('notified_users', [])
+    if not ptr:
+        raise BadRequest([{
+            'detail': f'{node_id} does not have a live pointer',
+            'code': 'validation.no_live_pointer',
+            'where': 'request.body.node_id',
+        }])
+
     if user_json['identifier'] not in [
-        x['identifier'] for x in notified_users
+        x['identifier'] for x in ptr['notified_users']
     ]:
-        notified_users.append(user_json)
+        ptr['notified_users'].append(user_json)
 
     ptr_collection.update_one(
-        {'id': pointer.id},
-        {'$set': {'notified_users': notified_users}},
+        {
+            'execution.id': exe_id,
+            'id': pointer.id,
+            'node.id': node_id,
+            'state': 'ongoing',
+        },
+        {'$set': {'notified_users': ptr['notified_users']}},
     )
 
     return jsonify(user_json), 200

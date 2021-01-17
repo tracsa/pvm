@@ -331,16 +331,16 @@ def execution_patch(id):
     }), 202
 
 
-@app.route('/v1/execution/<id>/user', methods=['PUT'])
+@app.route('/v1/execution/<exe_id>/user', methods=['POST'])
 @requires_auth
-def execution_add_user(id):
+def execution_add_user(exe_id):
     ''' adds the user as a candidate for solving the given node, only if the
     node has an active pointer. '''
     # TODO possible race condition introduced here. How does this code work in
     # case the handler is moving the pointer?
 
     # get execution
-    execution = Execution.get_or_exception(id)
+    execution = Execution.get_or_exception(exe_id)
 
     # validate the members needed
     validate_json(request.json, ['identifier', 'node_id'])
@@ -366,16 +366,22 @@ def execution_add_user(id):
     # update user
     user.proxy.tasks.add(pointer)
 
-    # update pointer
-    collection = mongo.db[app.config['POINTER_COLLECTION']]
-    db_pointer = collection.find_one({'id': pointer.id})
     user_json = user.to_json()
-    notified_users = db_pointer.get('notified_users', [])
 
-    if user_json not in notified_users:
-        notified_users.append(user.to_json())
+    # update pointer
+    ptr_collection = mongo.db[app.config['POINTER_COLLECTION']]
+    ptr = ptr_collection.find_one({
+        'execution.id': exe_id,
+        'id': pointer.id,
+    })
 
-    collection.update_one(
+    notified_users = ptr.get('notified_users', [])
+    if user_json['identifier'] not in [
+        x['identifier'] for x in notified_users
+    ]:
+        notified_users.append(user_json)
+
+    ptr_collection.update_one(
         {'id': pointer.id},
         {'$set': {'notified_users': notified_users}},
     )

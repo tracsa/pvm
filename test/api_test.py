@@ -3237,9 +3237,14 @@ def test_add_user(client, mocker, config, mongo):
         'state': Xml.load(config, exc.process_name, direct=True).get_state(),
     })
 
-    pointer = ptr.to_json()
-    pointer['execution'] = exc.to_json()
-    mongo[config["POINTER_COLLECTION"]].insert_one(pointer)
+    mongo[config["POINTER_COLLECTION"]].insert_one({
+        'id': ptr.id,
+        'node': {
+            'id': ptr.node_id,
+        },
+        'notified_users': [],
+        'execution': exc.to_json(),
+    })
 
     # user has no task assigned
     assert luis.proxy.tasks.count() == 0
@@ -3287,9 +3292,14 @@ def test_add_user_new(client, mocker, config, mongo):
         'state': Xml.load(config, exc.process_name, direct=True).get_state(),
     })
 
-    pointer = ptr.to_json()
-    pointer['execution'] = exc.to_json()
-    mongo[config["POINTER_COLLECTION"]].insert_one(pointer)
+    mongo[config["POINTER_COLLECTION"]].insert_one({
+        'id': ptr.id,
+        'node': {
+            'id': ptr.node_id,
+        },
+        'notified_users': [],
+        'execution': exc.to_json(),
+    })
 
     # user has no task assigned
     assert luis.proxy.tasks.count() == 0
@@ -3363,9 +3373,14 @@ def test_add_user_duplicate(client, mocker, config, mongo):
         'state': Xml.load(config, exc.process_name, direct=True).get_state(),
     })
 
-    pointer = ptr.to_json()
-    pointer['execution'] = exc.to_json()
-    mongo[config["POINTER_COLLECTION"]].insert_one(pointer)
+    mongo[config["POINTER_COLLECTION"]].insert_one({
+        'id': ptr.id,
+        'node': {
+            'id': ptr.node_id,
+        },
+        'notified_users': [],
+        'execution': exc.to_json(),
+    })
 
     # user has no task assigned
     assert luis.proxy.tasks.count() == 0

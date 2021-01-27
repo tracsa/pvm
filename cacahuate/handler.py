@@ -506,6 +506,17 @@ class Handler:
         # set nodes with pointers as unfilled, delete pointers
         updates = {}
 
+        user = User.get_by(
+            'identifier',
+            message.get('user_identifier'),
+        )
+
+        if user is None:
+            if message.get('user_identifier') == '__system__':
+                user = User(identifier='__system__', fullname='System').save()
+            else:
+                raise InconsistentState('sent identifier of unexisten user')
+
         for pointer in execution.proxy.pointers.q():
             updates['state.items.{node}.state'.format(
                 node=pointer.node_id,
@@ -520,6 +531,11 @@ class Handler:
                     'patch': {
                         'comment': message['comment'],
                         'inputs': message['inputs'],
+                        'actor': user.to_json(include=[
+                            '_type',
+                            'fullname',
+                            'identifier',
+                        ]),
                     },
                 },
             })

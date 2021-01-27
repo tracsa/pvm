@@ -967,6 +967,7 @@ def test_patch_just_invalidate(client, mongo, config, mocker):
         'inputs': [{
             'ref': 'requester.juan.0:exit_form.reason',
         }],
+        'user_identifier': 'juan',
     }
 
     assert args['exchange'] == ''
@@ -1071,6 +1072,7 @@ def test_patch_set_value(client, mongo, config, mocker):
                 'value_caption': 'alakazam',
             },
         ],
+        'user_identifier': 'juan',
     }
 
     assert args['exchange'] == ''

@@ -154,6 +154,7 @@ def process_status(id):
 
 
 @app.route('/v1/execution/<id>', methods=['PATCH'])
+@requires_auth
 def execution_patch(id):
     execution = Execution.get_or_exception(id)
     collection = mongo.db[app.config['EXECUTION_COLLECTION']]
@@ -322,6 +323,7 @@ def execution_patch(id):
             'execution_id': execution.id,
             'comment': request.json['comment'],
             'inputs': processed_inputs,
+            'user_identifier': g.user.identifier,
         }),
         properties=pika.BasicProperties(
             delivery_mode=2,

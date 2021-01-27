@@ -6,6 +6,13 @@ from pymongo import MongoClient
 
 from cacahuate.models import bind_models as bimo
 
+
+def ismybirthday(value):
+    if value.month == 5 and value.day == 10:
+        return 'Today is my birthday!'
+    return 'Is not my birthday'
+
+
 TESTING_SETTINGS = {
     'CUSTOM_LOGIN_PROVIDERS': {
         'hardcoded': 'test.hardcoded_login',
@@ -16,6 +23,10 @@ TESTING_SETTINGS = {
     },
     'PROCESS_ENV': {
         'FOO': 'var',
+    },
+    'TEMPLATE_PATH': os.path.join(os.path.dirname(__file__), 'templates'),
+    'JINJA_FILTERS': {
+        'ismybirthday': ismybirthday,
     },
 }
 

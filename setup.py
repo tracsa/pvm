@@ -47,7 +47,7 @@ setup(
     ],
 
     package_data={
-        'cacahuate': ['grammars/*.g', 'xml/*.rng', 'version.txt'],
+        'cacahuate': ['grammars/*.g', 'xml/*.rng', 'version.txt', 'templates/*.html'],
     },
 
     entry_points={

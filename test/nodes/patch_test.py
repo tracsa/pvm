@@ -107,6 +107,11 @@ def test_patch_invalidate(config, mongo):
     })
 
     assert security_pointer_state['state'] == 'cancelled'
+    assert security_pointer_state['patch']['actor'] == {
+          '_type': 'user',
+          'fullname': 'Juan',
+          'identifier': 'juan',
+    }
 
     execution = mongo[config["EXECUTION_COLLECTION"]].find_one({
         'id': execution.id,

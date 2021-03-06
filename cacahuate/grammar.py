@@ -33,6 +33,12 @@ class ConditionTransformer(Transformer):
     def __init__(self, values):
         self._values = values
 
+    def const_true(self, _):
+        return True
+
+    def const_false(self, _):
+        return False
+
     def op_eq(self, _):
         return operator.eq
 

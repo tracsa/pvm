@@ -80,6 +80,23 @@ def test_logic_operators():
     tree = Condition().parse('set.A OR set.B')
     assert ConditionTransformer(values).transform(tree) is True
 
+    tree = Condition().parse('set.A AND set.B OR set.A')
+    assert ConditionTransformer(values).transform(tree) is True
+
+    tree = Condition().parse('set.B OR set.B OR set.A')
+    assert ConditionTransformer(values).transform(tree) is True
+
+    tree = Condition().parse('set.A AND set.B AND set.A')
+    assert ConditionTransformer(values).transform(tree) is False
+
+
+def test_constants():
+    tree = Condition().parse('TRUE')
+    assert ConditionTransformer({}).transform(tree) is True
+
+    tree = Condition().parse('FALSE')
+    assert ConditionTransformer({}).transform(tree) is False
+
 
 def test_no():
     values = {
@@ -116,5 +133,10 @@ def test_everything():
 
     tree = Condition().parse(
         '!!3<0 OR !(form.input == "0" AND ("da" != "de"))'
+    )
+    assert ConditionTransformer(values).transform(tree) is True
+
+    tree = Condition().parse(
+        'FALSE OR !(form.input == "0" AND TRUE)'
     )
     assert ConditionTransformer(values).transform(tree) is True

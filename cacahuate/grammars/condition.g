@@ -13,6 +13,8 @@ atom_expr: "(" or_test ")"
          | string
          | ref
          | number
+         | "TRUE" -> const_true
+         | "FALSE" -> const_false
 
 ref: variable "." variable
 

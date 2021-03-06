@@ -88,11 +88,21 @@ class ConditionTransformer(Transformer):
     def test_aux(self, tokens):
         if len(tokens) == 1:
             return tokens[0]
+
         if len(tokens) == 2:
             op, right = tokens
             return op(right)
-        left, op, right = tokens
-        return op(left, right)
+
+        if len(tokens) == 3:
+            left, op, right = tokens
+            return op(left, right)
+
+        return self.test_aux(
+            [tokens[1](
+                tokens[0],
+                tokens[2],
+            )] + tokens[3:],
+        )
 
     def or_test(self, tokens):
         return self.test_aux(tokens)

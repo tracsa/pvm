@@ -7,7 +7,7 @@ import pymongo
 import pika
 import simplejson as json
 
-from cacahuate.errors import CannotMove, ElementNotFound, InconsistentState
+from cacahuate.errors import InconsistentState
 from cacahuate.errors import MisconfiguredProvider, EndOfProcess
 from cacahuate.models import Execution, Pointer, User
 from cacahuate.xml import Xml
@@ -22,35 +22,27 @@ LOGGER = logging.getLogger(__name__)
 
 class Handler:
     ''' The actual process machine, it is in charge of moving the pointers
-    among the graph of nodes '''
+    through the graph of nodes '''
 
     def __init__(self, config):
         self.config = config
         self.mongo = None
 
-    def __call__(self, channel, method, properties, body: bytes):
+    def __call__(self, channel, body: bytes):
         ''' the main callback of cacahuate, gets called when a new message
         arrives from rabbitmq. '''
         message = json.loads(body)
 
-        if message['command'] in self.config['COMMANDS']:
-            try:
-                if message['command'] == 'cancel':
-                    self.cancel_execution(message)
-                elif message['command'] == 'step':
-                    self.step(message, channel)
-                elif message['command'] == 'patch':
-                    self.patch(message, channel)
-            except (ModelNotFoundError, CannotMove, ElementNotFound,
-                    MisconfiguredProvider, InconsistentState) as e:
-                LOGGER.error(str(e))
+        if message['command'] == 'cancel':
+            self.cancel_execution(message)
+        elif message['command'] == 'step':
+            self.step(message, channel)
+        elif message['command'] == 'patch':
+            self.patch(message, channel)
         else:
             LOGGER.warning(
                 'Unrecognized command {}'.format(message['command'])
             )
-
-        if not self.config['RABBIT_NO_ACK']:
-            channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def step(self, message: dict, channel):
         ''' Handles deleting a pointer from the current node and creating a new
@@ -87,11 +79,6 @@ class Handler:
         # Sync nodes are queued immediatly
         if qdata:
             new_pointer, new_input = qdata
-
-            channel.queue_declare(
-                queue=self.config['RABBIT_QUEUE'],
-                durable=True
-            )
 
             channel.basic_publish(
                 exchange='',
@@ -137,7 +124,7 @@ class Handler:
 
     def wakeup(self, node, execution, channel, state):
         ''' Waking up a node often means to notify someone or something about
-        the execution, this is the first step in node's lifecycle '''
+        the execution, this is the first step in a node's lifecycle '''
 
         # get currect execution context
         exc_doc = next(self.execution_collection().find({'id': execution.id}))

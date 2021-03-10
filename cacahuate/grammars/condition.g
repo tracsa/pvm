@@ -15,6 +15,9 @@ atom_expr: "(" or_test ")"
          | number
          | "TRUE" -> const_true
          | "FALSE" -> const_false
+         | "[" [testlist_comp] "]" -> list
+
+testlist_comp: (or_test) (("," or_test)+ [","] | ",")
 
 ref: variable "." variable
 
@@ -34,6 +37,8 @@ comp_op: "==" -> op_eq
        | "<=" -> op_lte
        | ">" -> op_gt
        | ">=" -> op_gte
+       | "IN" -> op_in
+       | "NOT IN" -> op_not_in
 
 // common atoms
 

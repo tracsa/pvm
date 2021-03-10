@@ -133,16 +133,16 @@ def test_list():
     assert ConditionTransformer({}).transform(tree) == [1, 2, 3]
 
     tree = Condition().parse('3 IN [1, 2, 3]')
-    assert ConditionTransformer({}).transform(tree) == True
+    assert ConditionTransformer({}).transform(tree) is True
 
     tree = Condition().parse('4 NOT IN [1, 2, 3]')
-    assert ConditionTransformer({}).transform(tree) == True
+    assert ConditionTransformer({}).transform(tree) is True
 
     tree = Condition().parse('4 IN [1, 2, 3]')
-    assert ConditionTransformer({}).transform(tree) == False
+    assert ConditionTransformer({}).transform(tree) is False
 
     tree = Condition().parse('[1, 2, 3] == [1, 2, 3,]')
-    assert ConditionTransformer({}).transform(tree) == True
+    assert ConditionTransformer({}).transform(tree) is True
 
 
 def test_everything():

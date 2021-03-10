@@ -126,7 +126,7 @@ def test_list():
     tree = Condition().parse('["hello",]')
     assert ConditionTransformer({}).transform(tree) == ['hello']
 
-    tree = Condition().parse('[0,]')
+    tree = Condition().parse('[0]')
     assert ConditionTransformer({}).transform(tree) == [0]
 
     tree = Condition().parse('[1, 2, 3]')
@@ -164,5 +164,10 @@ def test_everything():
 
     tree = Condition().parse(
         'FALSE OR !(form.input == "0" AND TRUE)'
+    )
+    assert ConditionTransformer(values).transform(tree) is True
+
+    tree = Condition().parse(
+        'form.input IN ["no"] OR 1 == 2'
     )
     assert ConditionTransformer(values).transform(tree) is True

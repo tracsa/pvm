@@ -17,7 +17,7 @@ atom_expr: "(" or_test ")"
          | "FALSE" -> const_false
          | "[" [testlist_comp] "]" -> list
 
-testlist_comp: (or_test) (("," or_test)+ [","] | ",")
+testlist_comp: or_test | or_test (("," or_test)+ [","] | ",")
 
 ref: variable "." variable
 

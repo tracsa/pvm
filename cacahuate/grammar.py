@@ -66,6 +66,12 @@ class ConditionTransformer(Transformer):
     def op_not(self, _):
         return operator.not_
 
+    def op_in(self, _):
+        return lambda x, y: x in y
+
+    def op_not_in(self, _):
+        return lambda x, y: x not in y
+
     def variable(self, tokens):
         # just copy the token as string
         return tokens[0][:]
@@ -103,6 +109,12 @@ class ConditionTransformer(Transformer):
                 tokens[2],
             )] + tokens[3:],
         )
+
+    def testlist_comp(self, tokens):
+        return tokens
+
+    def list(self, tokens):
+        return list(*tokens)
 
     def or_test(self, tokens):
         return self.test_aux(tokens)

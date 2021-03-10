@@ -119,6 +119,32 @@ def test_no():
     assert ConditionTransformer(values).transform(tree) is True
 
 
+def test_list():
+    tree = Condition().parse('[]')
+    assert ConditionTransformer({}).transform(tree) == []
+
+    tree = Condition().parse('["hello",]')
+    assert ConditionTransformer({}).transform(tree) == ['hello']
+
+    tree = Condition().parse('[0]')
+    assert ConditionTransformer({}).transform(tree) == [0]
+
+    tree = Condition().parse('[1, 2, 3]')
+    assert ConditionTransformer({}).transform(tree) == [1, 2, 3]
+
+    tree = Condition().parse('3 IN [1, 2, 3]')
+    assert ConditionTransformer({}).transform(tree) is True
+
+    tree = Condition().parse('4 NOT IN [1, 2, 3]')
+    assert ConditionTransformer({}).transform(tree) is True
+
+    tree = Condition().parse('4 IN [1, 2, 3]')
+    assert ConditionTransformer({}).transform(tree) is False
+
+    tree = Condition().parse('[1, 2, 3] == [1, 2, 3,]')
+    assert ConditionTransformer({}).transform(tree) is True
+
+
 def test_everything():
     values = {
         'form': {
@@ -138,5 +164,10 @@ def test_everything():
 
     tree = Condition().parse(
         'FALSE OR !(form.input == "0" AND TRUE)'
+    )
+    assert ConditionTransformer(values).transform(tree) is True
+
+    tree = Condition().parse(
+        'form.input IN ["no"] OR 1 == 2'
     )
     assert ConditionTransformer(values).transform(tree) is True

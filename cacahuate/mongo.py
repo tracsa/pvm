@@ -21,7 +21,7 @@ def make_context(execution_data, config):
     except KeyError:
         pass
 
-    context['_env'] = config['PROCESS_ENV']
+    context['_env'] = config.get('PROCESS_ENV') or {}
 
     return context
 

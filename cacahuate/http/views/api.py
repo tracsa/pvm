@@ -3,6 +3,8 @@ import copy
 import re
 import os
 
+from cacahuate.mongo import make_context
+
 import flask
 from flask import g
 from flask import request, jsonify, json
@@ -489,10 +491,16 @@ def continue_process():
     xml = Xml.load(app.config, execution.process_name, direct=True)
     xmliter = iter(xml)
 
+    collection = mongo.db[app.config['EXECUTION_COLLECTION']]
+    state = collection.find_one({
+        'id': execution.id,
+    }) or {}
+
     try:
         continue_point = make_node(
             xmliter.find(lambda e: e.getAttribute('id') == node_id),
-            xmliter
+            xmliter,
+            context=make_context(state, {}),
         )
     except ElementNotFound:
         raise BadRequest([{
@@ -775,10 +783,12 @@ def task_read(id):
     # Append node info
     json_data['node_type'] = node.tagName
 
+    context = make_context(state, {})
+
     # Append forms
     forms = []
     for form in node.getElementsByTagName('form'):
-        forms.append(form_to_dict(form))
+        forms.append(form_to_dict(form, context=context))
     json_data['form_array'] = forms
 
     # If any append previous work done

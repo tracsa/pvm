@@ -352,6 +352,16 @@
   <define name="option">
     <element name="option">
       <attribute name="value"><text/></attribute>
+      <optional>
+        <attribute name="label">
+          <text />
+        </attribute>
+      </optional>
+      <optional>
+        <attribute name="ref">
+          <text />
+        </attribute>
+      </optional>
       <text/>
     </element>
   </define>

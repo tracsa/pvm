@@ -6,6 +6,8 @@ import ast
 import re
 import numbers
 
+from jsonpath_rw import parse as jsonpathparse
+
 from cacahuate.errors import InvalidInputError, RequiredListError
 from cacahuate.errors import MisconfiguredProvider, RequiredIntError
 from cacahuate.errors import RequiredFloatError, RequiredStrError
@@ -29,10 +31,9 @@ INPUTS = [
 
 
 class Option:
-
-    def __init__(self, element):
-        self.label = get_text(element)
-        self.value = element.getAttribute('value')
+    def __init__(self, label, value):
+        self.label = label
+        self.value = value
 
     def to_json(self):
         return {
@@ -44,7 +45,7 @@ class Option:
 class Input:
     """docstring for Input"""
 
-    def __init__(self, element):
+    def __init__(self, element, *args, **kwargs):
         self.type = element.getAttribute('type')
         self.required = element.getAttribute('required') == 'required'
         self.name = element.getAttribute('name')
@@ -186,9 +187,10 @@ class CurrencyInput(FloatInput):
 
 
 class FiniteOptionInput(Input):
-
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(self, element, context=None, *args, **kwargs):
+        super().__init__(element, *args, **kwargs)
+        if not context:
+            context = {}
 
         self.options = []
 
@@ -196,7 +198,28 @@ class FiniteOptionInput(Input):
 
         if len(opttag) > 0:
             for opt in opttag[0].getElementsByTagName('option'):
-                self.options.append(Option(opt))
+                ref_attr = opt.getAttribute('ref')
+                if ref_attr:
+                    ref_type, ref_path = ref_attr.split('#')
+                    if ref_type == 'form':
+                        if not len(jsonpathparse(ref_path).find(context)):
+                            continue
+
+                        label_path = opt.getAttribute('label')
+                        value_path = opt.getAttribute('value')
+
+                        match = jsonpathparse(ref_path).find(context)[0].value.all()
+                        for localdata in match:
+                            self.options.append(Option(
+                                jsonpathparse(value_path).find(localdata)[0].value,
+                                jsonpathparse(label_path).find(localdata)[0].value,
+                            ))
+
+                else:
+                    self.options.append(Option(
+                        opt.getAttribute('label') or get_text(opt),
+                        opt.getAttribute('value'),
+                    ))
 
     def __contains__(self, item):
         for opt in self.options:
@@ -280,8 +303,8 @@ class SelectInput(RadioInput):
 
 class FileInput(Input):
 
-    def __init__(self, element):
-        super().__init__(element)
+    def __init__(self, element, *args, **kwargs):
+        super().__init__(element, *args, **kwargs)
 
         self.provider = element.getAttribute('provider')
 
@@ -437,9 +460,12 @@ class LinkInput(Input):
         return curated
 
 
-def make_input(element):
+def make_input(element, context=None):
     ''' returns a build Input object given an Element object '''
     classattr = element.getAttribute('type')
+
+    if not context:
+        context = {}
 
     if classattr not in INPUTS:
         raise ValueError(
@@ -449,4 +475,4 @@ def make_input(element):
     class_name = pascalcase(classattr) + 'Input'
     available_classes = __import__(__name__).inputs
 
-    return getattr(available_classes, class_name)(element)
+    return getattr(available_classes, class_name)(element, context)

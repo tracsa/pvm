@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="https://tracsa.github.io/vi-xml/proceso_transform.xsl" ?>
+<process-spec>
+  <process-info>
+    <author>KYSXD</author>
+    <date>2021-04-15</date>
+    <name>Select ref</name>
+    <description>Proceso que usa como opciones los formularios de otro paso</description>
+    <public>true</public>
+  </process-info>
+  <process>
+    <action id="fill_options">
+      <node-info>
+        <name>Fill options</name>
+        <description>Set options for future usage</description>
+      </node-info>
+
+      <auth-filter backend="anyone"></auth-filter>
+
+      <form-array>
+        <form id="reusable_options" multiple="multiple">
+          <input
+            type="text"
+            label="Random text"
+            name="random"
+            required="required"
+          />
+          <input
+            type="text"
+            label="Value"
+            name="value"
+            required="required"
+          />
+          <input
+            type="text"
+            label="Label"
+            name="label"
+            required="required"
+          />
+        </form>
+      </form-array>
+    </action>
+
+    <action id="inputs_node">
+      <node-info>
+        <name>Use options</name>
+        <description>Just use the options</description>
+      </node-info>
+
+      <auth-filter backend="hardcoded"></auth-filter>
+
+      <form-array>
+        <form id="user">
+          <input
+            type="text"
+            label="Nombre"
+            name="name"
+            required="required"
+          />
+          <input
+            type="select"
+            label="Selecciona Opcion"
+            name="selected_option"
+            required="required"
+          >
+            <options>
+              <option
+                value="$.value"
+                label="$.label"
+                ref="form#reusable_options"
+              />
+            </options>
+          </input>
+        </form>
+      </form-array>
+    </action>
+
+    <exit id="exit" />
+  </process>
+</process-spec>

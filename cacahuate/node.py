@@ -36,7 +36,10 @@ class AuthParam:
 
 class Form:
 
-    def __init__(self, element):
+    def __init__(self, element, context=None):
+        if not context:
+            context = {}
+
         self.ref = element.getAttribute('id')
         self.multiple = self.calc_range(element.getAttribute('multiple'))
 
@@ -44,7 +47,7 @@ class Form:
         self.inputs = []
 
         for input_el in element.getElementsByTagName('input'):
-            self.inputs.append(make_input(input_el))
+            self.inputs.append(make_input(input_el, context))
 
     def calc_range(self, attr):
         range = (1, 1)
@@ -100,7 +103,7 @@ class Node:
     ''' An XML tag that represents an action or instruction for the virtual
     machine '''
 
-    def __init__(self, element, xmliter):
+    def __init__(self, element, xmliter, *args, **kwargs):
         for attrname, value in element.attributes.items():
             setattr(self, attrname, value)
 
@@ -198,8 +201,8 @@ class FullyContainedNode(Node):
     to nodes that contain blocks of nodes, thus not being able of loading
     themselves to memory from the begining '''
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         xmliter.parser.expandNode(element)
 
@@ -209,8 +212,8 @@ class UserAttachedNode(FullyContainedNode):
     and containing a common structure like auth-filter and node-info
     '''
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         # node info
         node_info = element.getElementsByTagName('node-info')
@@ -308,8 +311,8 @@ class Action(UserAttachedNode):
     ''' A node from the process's graph. It is initialized from an Element
     '''
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, context=None, *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         # Form resolving
         self.form_array = []
@@ -318,7 +321,7 @@ class Action(UserAttachedNode):
 
         if len(form_array) > 0:
             for form_el in form_array[0].getElementsByTagName('form'):
-                self.form_array.append(Form(form_el))
+                self.form_array.append(Form(form_el, context=context))
 
     def is_async(self):
         return True
@@ -439,8 +442,8 @@ class Validation(UserAttachedNode):
 
     VALID_RESPONSES = ('accept', 'reject')
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         # Dependency resolving
         self.dependencies = []
@@ -593,8 +596,8 @@ class Validation(UserAttachedNode):
 
 class CallFormInput(Node):
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         self.value = get_text(element)
         self.type = element.getAttribute('type')
@@ -613,8 +616,8 @@ class CallFormInput(Node):
 
 class CallForm(Node):
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         self.inputs = []
 
@@ -637,8 +640,8 @@ class CallForm(Node):
 class Call(FullyContainedNode):
     ''' Calls a subprocess '''
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         self.name = 'Call ' + self.id
         self.description = 'Call ' + self.id
@@ -679,8 +682,8 @@ class Call(FullyContainedNode):
 class Exit(FullyContainedNode):
     ''' A node that kills an execution with some status '''
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         self.name = 'Exit ' + self.id
         self.description = 'Exit ' + self.id
@@ -697,8 +700,8 @@ class Exit(FullyContainedNode):
 
 class Conditional(Node):
 
-    def __init__(self, element, xmliter, type='IF'):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, type='IF', *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         self.name = type + ' ' + self.id
         self.description = type + ' ' + self.id
@@ -752,14 +755,14 @@ class Conditional(Node):
 
 class If(Conditional):
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter, 'IF')
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, 'IF', *args, **kwargs)
 
 
 class Elif(Conditional):
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter, 'ELIF')
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, 'ELIF', *args, **kwargs)
 
 
 class Else(Node):
@@ -767,8 +770,8 @@ class Else(Node):
     def is_async(self):
         return False
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         self.name = 'ELSE ' + self.id
         self.description = 'ELSE ' + self.id
@@ -869,8 +872,8 @@ class Capture:
 class Request(FullyContainedNode):
     ''' A node that makes a TCP Request '''
 
-    def __init__(self, element, xmliter):
-        super().__init__(element, xmliter)
+    def __init__(self, element, xmliter, *args, **kwargs):
+        super().__init__(element, xmliter, *args, **kwargs)
 
         self.name = 'Request ' + self.id
         self.description = 'Request ' + self.id
@@ -1050,7 +1053,10 @@ class Request(FullyContainedNode):
         return refs
 
 
-def make_node(element, xmliter) -> Node:
+def make_node(element, xmliter, context=None) -> Node:
+    if not context:
+        context = {}
+
     ''' returns a build Node object given an Element object '''
     if element.tagName not in NODES:
         raise ValueError(
@@ -1060,4 +1066,4 @@ def make_node(element, xmliter) -> Node:
     class_name = pascalcase(element.tagName)
     available_classes = __import__(__name__).node
 
-    return getattr(available_classes, class_name)(element, xmliter)
+    return getattr(available_classes, class_name)(element, xmliter, context)

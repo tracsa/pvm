@@ -22,7 +22,13 @@ to work. I recommend using `pipenv` or `virtualenv` in your python projetcs ;)
 * run the tests (`pytest`)
 
 you can control your cacahuate installation using this three environment
-variables: `CACAHUATE_SETTINGS`, `FLASK_APP`, `FLASK_DEBUG`.
+variables:
+
+`CACAHUATE_SETTINGS`: absolute path to a settings file
+
+`FLASK_APP`: import path to wsgi module (`cacahuate.http.wsgi`)
+
+`FLASK_DEBUG`: set to `1` to turn on flask's debugging
 
 Installation
 ------------

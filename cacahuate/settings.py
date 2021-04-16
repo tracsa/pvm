@@ -4,10 +4,12 @@ base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
 
 # Rabbitmq
 RABBIT_HOST = 'localhost'
+RABBIT_USER = 'guest'
+RABBIT_PASS = 'guest'
+RABBIT_HEARTBEAT = 30  # Server default is 60 seconds
 RABBIT_QUEUE = 'cacahuate_process'
 RABBIT_NOTIFY_EXCHANGE = 'charpe_notify'
 RABBIT_CONSUMER_TAG = 'cacahuate_consumer_1'
-RABBIT_NO_ACK = True
 
 # Default logging config
 LOGGING = {
@@ -50,8 +52,8 @@ LOGGING = {
 # Where to store xml files
 XML_PATH = os.path.join(base_dir, 'xml')
 
-# Where to store template files
-TEMPLATE_PATH = os.path.join(base_dir, 'template')
+# Custom path to templates
+TEMPLATE_PATH = None
 
 # Mongodb
 MONGO_URI = os.getenv('CACAHUATE_MONGO_URI', 'mongodb://localhost/cacahuate')
@@ -65,12 +67,6 @@ PAGINATION_OFFSET = 0
 
 # Time stuff
 TIMEZONE = 'UTC'
-
-# Supported commands for cacahuate
-COMMANDS = [
-    'step',
-    'cancel',
-]
 
 # For ephimeral objects, like executions and pointers
 REDIS_HOST = 'localhost'

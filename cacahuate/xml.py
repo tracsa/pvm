@@ -1,6 +1,7 @@
 from collections import deque
 from datetime import datetime, timezone
 from typing import TextIO, Callable
+from jsonpath_rw import parse as jsonpathparse
 from xml.dom import pulldom
 from xml.dom.minidom import Element
 import xml.dom.minidom as minidom
@@ -450,17 +451,41 @@ SUPPORTED_ATTRS = {
 }
 
 
-def input_to_dict(input):
+def input_to_dict(input, context=None):
+    if not context:
+        context = {}
+
     input_attrs = [
         (attr, func(input.getAttribute(attr)))
         for attr, func in SUPPORTED_ATTRS.items()
-    ] + [('options', list(map(
-        lambda e: {
-            'value': e.getAttribute('value'),
-            'label': get_text(e),
-        },
-        input.getElementsByTagName('option'),
-    )))]
+    ]
+
+    options = []
+    for opt in input.getElementsByTagName('option'):
+        ref_attr = opt.getAttribute('ref')
+        if ref_attr:
+            ref_type, ref_path = ref_attr.split('#')
+            if ref_type == 'form':
+                if not len(jsonpathparse(ref_path).find(context)):
+                    pass
+
+                label_path = opt.getAttribute('label')
+                value_path = opt.getAttribute('value')
+
+                match = jsonpathparse(ref_path).find(context)[0].value.all()
+                for localdata in match:
+                    options.append({
+                        'value': jsonpathparse(value_path).find(localdata)[0].value,
+                        'label': jsonpathparse(label_path).find(localdata)[0].value,
+                    })
+
+        else:
+            options.append({
+                'value': opt.getAttribute('value'),
+                'label': opt.getAttribute('label') or get_text(opt),
+            })
+
+    input_attrs.append(('options', options))
 
     return dict(filter(
         lambda a: a[1],
@@ -468,7 +493,10 @@ def input_to_dict(input):
     ))
 
 
-def form_to_dict(form):
+def form_to_dict(form, context=None):
+    if not context:
+        context = {}
+
     inputs = form.getElementsByTagName('input')
 
     form_dict = {
@@ -480,7 +508,7 @@ def form_to_dict(form):
         form_dict['multiple'] = form.getAttribute('multiple')
 
     for input in inputs:
-        form_dict['inputs'].append(input_to_dict(input))
+        form_dict['inputs'].append(input_to_dict(input, context=context))
 
     return form_dict
 

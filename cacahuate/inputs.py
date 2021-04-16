@@ -203,7 +203,7 @@ class FiniteOptionInput(Input):
                     ref_type, ref_path = ref_attr.split('#')
                     if ref_type == 'form':
                         if not len(jsonpathparse(ref_path).find(context)):
-                            pass
+                            continue
 
                         label_path = opt.getAttribute('label')
                         value_path = opt.getAttribute('value')

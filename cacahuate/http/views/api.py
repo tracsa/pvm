@@ -34,6 +34,8 @@ from cacahuate.mongo import json_prepare
 @app.route('/', methods=['GET', 'POST'])
 @requires_json
 def index():
+    ''' This is here to provide a successful response for the / url and also to
+    provide a test for the json middleware '''
     if request.method == 'GET':
         return {
             'hello': 'world',

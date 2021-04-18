@@ -417,7 +417,7 @@ class Action(UserAttachedNode):
             ref = form_specs.ref
 
             # Ignore unexpected forms
-            while len(form_array) > index and form_array[index]['ref'] != ref:
+            while len(form_array) > index and (form_array[index].get('ref') != ref):
                 index += 1
 
             # Collect expected forms

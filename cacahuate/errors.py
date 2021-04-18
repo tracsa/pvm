@@ -95,8 +95,8 @@ class InputError(Exception):
 
 
 class WellKnownInputError(InputError):
-    detail = None
-    code = None
+    detail = ""
+    code = ""
 
     def __init__(self, input, where):
         self.input = input

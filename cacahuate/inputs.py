@@ -211,8 +211,8 @@ class FiniteOptionInput(Input):
                         match = jsonpathparse(ref_path).find(context)[0].value.all()
                         for localdata in match:
                             self.options.append(Option(
-                                jsonpathparse(value_path).find(localdata)[0].value,
                                 jsonpathparse(label_path).find(localdata)[0].value,
+                                jsonpathparse(value_path).find(localdata)[0].value,
                             ))
 
                 else:
